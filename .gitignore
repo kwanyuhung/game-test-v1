@@ -1,0 +1,10 @@
+# Godot 4
+.godot/
+*.import
+
+# Build artifacts
+bin/
+
+# OS
+.DS_Store
+Thumbs.db
