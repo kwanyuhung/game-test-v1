@@ -1,150 +1,140 @@
-﻿# player.gd
-# Player character with shopping cart. Handles movement, cart following, and item interaction.
-
+# player.gd
 class_name Player
 extends CharacterBody2D
 
-const SPEED := 120.0
-const CART_OFFSET := 14.0
+const SPEED := 90.0
+const CELL_SIZE := 16
 
-var _sprite: Sprite2D
 var _cart: ShoppingCart
 var _cart_sprite: Sprite2D
-var _cart_node: Node2D
+var _cart_offset: Vector2 = Vector2(0, 12)
+var _world_ref = null
+var _nearby_section = null
+var _current_zone := ""
+var _sprite: Sprite2D
 
-var _facing_dir := Vector2.DOWN
-var _interact_target: Dictionary = {}
-var _interact_prompt: String = ""
-var _world: Node2D = null
-
-signal cart_count_changed(count: int)
-signal interact_prompt_changed(prompt: String)
-signal checkout_available
+signal cart_updated(count: int)
+signal zone_changed(zone_name: String)
+signal interact_requested
 
 func _init() -> void:
-	_sprite = Sprite2D.new()
 	_cart = ShoppingCart.new()
-	_cart_sprite = Sprite2D.new()
-	_cart_node = Node2D.new()
-	
-	_cart_node.name = "CartNode"
-	_cart_sprite.name = "CartSprite"
-	add_child(_cart_node)
-	_cart_node.add_child(_cart_sprite)
-	add_child(_sprite)
 	add_child(_cart)
-	
-	_cart.cart_updated.connect(_on_cart_updated)
+
+func set_world(world) -> void:
+	_world_ref = world
 
 func _ready() -> void:
-	_sprite.texture = PixelArtGenerator.make_player(16)
+	_build_sprite()
+	_build_cart_sprite()
+
+func _build_sprite() -> void:
+	_sprite = Sprite2D.new()
+	_sprite.texture = _make_player_tex()
 	_sprite.hframes = 1
 	_sprite.vframes = 1
-	_sprite.position = Vector2.ZERO
+	add_child(_sprite)
 	
-	_cart_sprite.texture = PixelArtGenerator.make_cart()
-	_cart_sprite.hframes = 1
-	_cart_sprite.vframes = 1
-	
-	var col := CollisionShape2D.new()
-	var shape := RectangleShape2D.new()
+	var col = CollisionShape2D.new()
+	var shape = RectangleShape2D.new()
 	shape.size = Vector2(10, 10)
 	col.shape = shape
 	col.position = Vector2.ZERO
 	add_child(col)
 
+func _build_cart_sprite() -> void:
+	_cart_sprite = Sprite2D.new()
+	_cart_sprite.texture = _make_cart_tex()
+	_cart_sprite.position = _cart_offset
+	add_child(_cart_sprite)
+
+func _make_player_tex() -> Texture2D:
+	var img = Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	_fill(6, 1, 4, 1, Color(0.96, 0.80, 0.65), img)
+	_fill(5, 2, 6, 3, Color(0.96, 0.80, 0.65), img)
+	_fill(6, 5, 4, 1, Color(0.85, 0.65, 0.50), img)
+	_set_pixel(7, 3, Color(0.15, 0.10, 0.08), img)
+	_set_pixel(9, 3, Color(0.15, 0.10, 0.08), img)
+	_fill(4, 6, 8, 5, Color(0.91, 0.76, 0.44), img)
+	_fill(3, 7, 2, 3, Color(0.91, 0.76, 0.44), img)
+	_fill(11, 7, 2, 3, Color(0.91, 0.76, 0.44), img)
+	_fill(5, 6, 6, 1, Color(0.98, 0.88, 0.58), img)
+	_fill(5, 11, 3, 3, Color(0.25, 0.25, 0.45), img)
+	_fill(8, 11, 3, 3, Color(0.25, 0.25, 0.45), img)
+	_fill(4, 13, 4, 2, Color(0.35, 0.25, 0.20), img)
+	_fill(8, 13, 4, 2, Color(0.35, 0.25, 0.20), img)
+	_fill(4, 15, 8, 1, Color(0, 0, 0, 0.18), img)
+	return ImageTexture.create_from_image(img)
+
+func _make_cart_tex() -> Texture2D:
+	var img = Image.create(20, 14, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	_fill(2, 2, 16, 1, Color(0.65, 0.65, 0.70), img)
+	_fill(2, 9, 16, 1, Color(0.65, 0.65, 0.70), img)
+	_fill(2, 3, 1, 6, Color(0.65, 0.65, 0.70), img)
+	_fill(17, 3, 1, 6, Color(0.65, 0.65, 0.70), img)
+	_fill(1, 1, 2, 1, Color(0.75, 0.28, 0.28), img)
+	_fill(1, 1, 1, 4, Color(0.75, 0.28, 0.28), img)
+	_set_pixel(3, 11, Color(0.30, 0.30, 0.30), img)
+	_set_pixel(16, 11, Color(0.30, 0.30, 0.30), img)
+	return ImageTexture.create_from_image(img)
+
+func _fill(x: int, y: int, w: int, h: int, col: Color, img: Image) -> void:
+	x = clampi(x, 0, 20); y = clampi(y, 0, 14)
+	w = clampi(w, 0, 20 - x); h = clampi(h, 0, 14 - y)
+	if w <= 0 or h <= 0:
+		return
+	for px in range(x, x + w):
+		for py in range(y, y + h):
+			img.set_pixel(px, py, col)
+
+func _set_pixel(x: int, y: int, col: Color, img: Image) -> void:
+	if x < 0 or x >= 20 or y < 0 or y >= 14:
+		return
+	img.set_pixel(x, y, col)
+
 func _physics_process(delta: float) -> void:
-	var input_dir := _read_input()
+	var input_dir = Vector2(
+		Input.get_axis("move_left", "move_right"),
+		Input.get_axis("move_up", "move_down")
+	)
 	
-	if input_dir.length() > 0.1:
-		_facing_dir = input_dir.normalized()
-		var move_vel := _facing_dir * SPEED
-		var collided := move_and_collide(move_vel * delta)
-		_update_cart_position()
-	
-	_update_interaction_prompt()
+	if input_dir.length() > 0.0:
+		input_dir = input_dir.normalized()
+		var new_pos = position + input_dir * SPEED * delta
+		new_pos.x = clampf(new_pos.x, 20.0, 1260.0)
+		new_pos.y = clampf(new_pos.y, 20.0, 740.0)
+		position = new_pos
+		
+		var cart_target = position + _cart_offset
+		_cart_sprite.position = _cart_sprite.position.lerp(_cart_offset, 0.15)
+		
+		if absf(input_dir.x) > 0.1:
+			_sprite.flip_h = input_dir.x < 0.0
+		
+		var t = Time.get_ticks_msec() / 1000.0
+		var bob = sin(t * 10.0) * 0.04
+		_sprite.scale = Vector2(1.0, 1.0 + bob)
 	
 	if Input.is_action_just_pressed("interact"):
-		_do_interact()
+		interact_requested.emit()
 
-func _read_input() -> Vector2:
-	var v := Vector2.ZERO
-	if Input.is_action_pressed("move_up"):    v.y -= 1
-	if Input.is_action_pressed("move_down"):  v.y += 1
-	if Input.is_action_pressed("move_left"): v.x -= 1
-	if Input.is_action_pressed("move_right"): v.x += 1
-	return v.normalized() if v.length() > 1 else v
-
-func _update_cart_position() -> void:
-	var offset := -_facing_dir * CART_OFFSET
-	var perp := Vector2(-_facing_dir.y, _facing_dir.x) * 4.0
-	_cart_node.position = offset + perp
-	if absf(_facing_dir.x) > 0.5:
-		_cart_sprite.flip_v = false
-		_cart_sprite.flip_h = _facing_dir.x < 0
-
-func _update_interaction_prompt() -> void:
-	if _world == null:
-		return
-	
-	var best: Dictionary = {}
-	var best_dist := INF
-	
-	for aisle in _get_aisles():
-		var result: Dictionary = aisle.check_proximity(global_position)
-		if result.size() > 0 and result.get("distance", INF) < best_dist:
-			best = result
-			best_dist = result.get("distance", INF)
-	
-	for counter in _get_checkout_counters():
-		var d := global_position.distance_to(counter.global_position)
-		if d < 36 and _cart.get_count() > 0:
-			if d < best_dist:
-				best = {"type": "checkout", "counter": counter}
-				best_dist = d
-	
-	_interact_target = best
-	if best.has("product"):
-		_interact_prompt = "[E] Pick up %s — $%.2f" % [best["product"].name, best["product"].price]
-	elif best.has("type") and best["type"] == "checkout":
-		_interact_prompt = "[E] Checkout ( %d items — $%.2f )" % [_cart.get_count(), _cart.get_total()]
+func set_nearby_section(section) -> void:
+	_nearby_section = section
+	if section != null:
+		var def = section.get_def()
+		_current_zone = def.name
+		zone_changed.emit(_current_zone)
 	else:
-		_interact_prompt = ""
-	
-	interact_prompt_changed.emit(_interact_prompt)
+		_current_zone = ""
+		zone_changed.emit("")
 
-func _do_interact() -> void:
-	if _interact_target.has("product"):
-		var aisle: SupermarketAisle = _interact_target.get("aisle_ref")
-		if aisle and aisle.try_pickup(global_position):
-			var product = _interact_target["product"]
-			_cart.add_item(product)
-	elif _interact_target.has("type") and _interact_target["type"] == "checkout":
-		checkout_available.emit()
+func get_nearby_section():
+	return _nearby_section
 
-func _on_cart_updated(_items: Array) -> void:
-	cart_count_changed.emit(_cart.get_count())
-
-func set_world(world: Node2D) -> void:
-	_world = world
-
-func get_cart() -> ShoppingCart:
+func get_cart():
 	return _cart
 
-func _get_aisles() -> Array:
-	if _world == null:
-		return []
-	var aisles: Array = []
-	for child in _world.get_children():
-		if child is SupermarketAisle:
-			aisles.append(child)
-	return aisles
-
-func _get_checkout_counters() -> Array:
-	if _world == null:
-		return []
-	var counters: Array = []
-	for child in _world.get_children():
-		if child.has_method("is_checkout_counter"):
-			counters.append(child)
-	return counters
+func get_current_zone() -> String:
+	return _current_zone

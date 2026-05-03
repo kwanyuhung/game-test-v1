@@ -1,228 +1,250 @@
-# Supermarket Prototype — SPEC.md
+# Pixel Supermarket — SPEC.md
 
 ## 1. Project Overview
 
 **Name:** Pixel Supermarket  
-**Type:** 2D interactive simulation / prototype  
-**Core:** A top-down pixel art supermarket where the player walks around, picks up items with a shopping cart, and checks out.  
-**Scale:** 12 aisles, 200+ products  
-**Target:** Extendable prototype — modular aisle/product system for future game dev work.  
-**Engine:** Godot 4.6 (2D scene, pixel art aesthetic)
-
-**Image Generation Note:** The `image_generate` tool (MiniMax) is unavailable in the current sandbox environment due to a system-level `fsync` restriction (EPERM). All pixel art is generated programmatically via `pixel_art_generator.gd` — this produces consistent, deterministic sprites without external dependencies.
+**Type:** 2D interactive supermarket simulation  
+**Core:** Walk through a cozy pixel-art supermarket, browse fully-stocked sections, pick up items into your cart, and checkout.  
+**Style:** Warmart / Kairosoft — warm lighting, charming pixel art, cozy atmosphere.  
+**Scale:** 6 interactive sections, 200+ products, 8 AI shoppers  
+**Engine:** Godot 4.6 (Forward+, 2D, pixel art)
 
 ---
 
 ## 2. Visual & Rendering Specification
 
 ### Resolution & Scaling
-- **Game resolution:** 320×180 (16:9, very low-res for crisp pixel art)
-- **Viewport scaling:** `stretch_mode = "integer"` — renders at integer scale, fullscreen
-- **Pixel art filter:** `Snap 2D Transforms To Pixel` = ON
+- **Game:** 320×180 px (16:9)  
+- **Scale:** Integer倍缩放，全屏填充  
+- **Pixel filter:** Snap 2D Transforms To Pixel = ON
 
-### Scene Setup
-- **Camera:** Follows player (smooth lerp, no rotation)
-- **Lighting:** Flat shading, no dynamic lights — pure sprite-based
-- **Environment:** Dark charcoal floor (#2a2a2e), supermarket tiles
+### Camera
+- Player follows with smooth lerp (0.1 factor)
+- 3× zoom (shows ~106×60 tiles)
+- Constrained to world bounds
 
-### Visual Style — Pixel Art Palette
-| Element | Color |
+### Color Palette
+| Element | Hex |
 |---|---|
-| Floor | #2a2a2e (dark charcoal) |
-| Floor tile lines | #363640 |
-| Shelf / Aisle | #8b7355 (warm wood brown) |
-| Shelf top highlight | #a08060 |
-| Player | #e8c170 (warm yellow, stands out) |
-| Cart | #c0c0c0 (silver) |
-| Products — produce | #5a9c4a (green) |
-| Products — dairy | #e8e8a0 (cream) |
-| Products — drinks | #4a8cc7 (blue) |
-| Products — snacks | #d48a3a (orange) |
-| Products — meat | #c05050 (red) |
-| Checkout desk | #7a6a8a (muted purple) |
-| UI background | #1a1a1f |
+| Floor | #2a2a2e |
+| Floor accent tile | #363640 |
+| Warm wood shelves | #8b7355 |
+| Shelf highlight | #a08060 |
+| Player | #e8c170 |
+| Cart | #c8c8d0 |
+| Refrigerator body | #b0c8e0 |
+| Refrigerator light | #80d0ff |
+| Produce glow | #90d060 |
+| Bakery warm | #f0c070 |
+| Checkout | #7a6a8a |
+| UI background | #1a1a1f (alpha 0.92) |
 | UI text | #f0f0e8 |
+| UI accent | #e8c170 |
 
 ### Sprite Generation
-All sprites generated procedurally via `Image` + `Texture2D` — no external assets required.
-
-- **Tile size:** 16×16 pixels (logical)
-- **Player sprite:** 16×16 yellow figure
-- **Cart sprite:** 20×16
-- **Product sprites:** 8×8 or 12×12 items on shelf
-- **Shelf unit:** Multi-tile, 16px per cell
+All sprites are procedural via `pixel_art_generator.gd` — no external assets.
 
 ---
 
-## 3. Supermarket Layout
+## 3. Section System — Core Feature
 
-### Grid
-- Cell size: 16×16 game pixels
-- World size: 80×60 cells = 1280×960 game pixels
-- Camera view: ~40×23 cells visible at 320×180
+Each **Section** is a distinct zone with:
+- Unique visual treatment (lighting, shelf style)
+- A fixed set of **slots** holding **Products**
+- An **interaction zone** — player enters to "browse"
+- A **Section Browse UI** — shows ALL products in that section
+- Product **respawn** after pickup
 
-### Zones
+### Sections (6 total)
+
 ```
 ┌─────────────────────────────────────────────────┐
-│  Entrance / Exit                                │
-│  [PLAYER START]                                  │
-├─────────────────────────────────────────────────┤
-│                                                  │
-│  AISLE A        AISLE B        AISLE C           │
-│  [Shelves]     [Shelves]      [Shelves]          │
-│                                                  │
-│  AISLE D        AISLE E        AISLE F           │
-│  [Shelves]     [Shelves]      [Shelves]          │
-│                                                  │
-├─────────────────────────────────────────────────┤
-│  CHECKOUT COUNTERS (3 registers)                 │
-│  [REG1] [REG2] [REG3]                           │
+│  ENTRANCE / EXIT                                │
+│  Player starts here                              │
+├─────────┬──────────┬──────────┬────────────────┤
+│DAIRY    │PRODUCE   │BAKERY    │ DRINKS         │
+│Chiller  │Open stall│Shelves   │ Glass cooler   │
+│(Fridge) │(Warm)    │(Warm)    │ (Cold/Blue)    │
+├─────────┼──────────┼──────────┼────────────────┤
+│SNACKS   │MEAT/DELI │PANTRY    │ FROZEN         │
+│Tall     │Counter   │Shelves   │ Freezer chest  │
+│shelves  │(Red)     │(Brown)   │ (Cold/White)   │
+├─────────┴──────────┴──────────┴────────────────┤
+│  CHECKOUT COUNTERS × 3                          │
 └─────────────────────────────────────────────────┘
 ```
 
-### Aisle Contents (extendable via data)
-| Aisle | Products | Color Tag |
+### Interaction Model
+1. Player walks near a section → zone label appears: `[E] Browse SECTION NAME`
+2. Player presses `E` → **Section Browse Panel** opens
+3. Panel shows a **grid of ALL products** in that section (page if many)
+4. Player **clicks a product** or presses **number key** → item added to cart
+5. Panel stays open so player can keep shopping
+6. Press `ESC` or `E` again → close panel, back to walking
+
+### Section Browse Panel
+- Dark overlay (0.85 alpha) over game world
+- Header: Section name + icon
+- Product grid: 4 columns × scrollable rows
+- Each product: 32×32 sprite, name, price
+- Highlight on hover/keyboard select
+- Cart count shown at bottom
+- `[E] Add to Cart` / `[ESC] Close`
+
+---
+
+## 4. Product Data
+
+200+ products across 6 sections × sub-categories:
+
+| Section | Sub-categories | Products |
 |---|---|---|
-| A | Apples, Bananas, Carrots, Lettuce | Green |
-| B | Milk, Cheese, Yogurt, Butter | Cream |
-| C | Cola, Juice, Water, Tea | Blue |
-| D | Chips, Cookies, Candy, Chocolate | Orange |
-| E | Chicken, Beef, Pork, Fish | Red |
-| F | Bread, Rice, Pasta, Cereal | Brown |
+| Produce | Fruits, Vegetables, Fresh Herbs | 35 |
+| Dairy | Milk, Cheese, Yogurt, Butter/Cream | 28 |
+| Bakery | Bread, Cakes, Pastries, Buns | 24 |
+| Drinks | Water, Juice, Soda, Tea, Coffee, Energy | 32 |
+| Snacks | Chips, Cookies, Candy, Chocolate, Nuts | 30 |
+| Meat/Deli | Chicken, Beef, Pork, Fish, Ham/Sausage | 24 |
+| Pantry | Rice, Pasta, Cereal, Condiments, Oil, Soup | 40 |
+| Frozen | Ice Cream, Frozen Meals, Frozen Veg | 22 |
 
-### Checkout
-- 3 checkout lanes
-- Each has a conveyor belt and register
-- Player walks to counter → press interact → cart contents converted to receipt → total shown
-
----
-
-## 4. Interaction Specification
-
-### Player Controls
-| Input | Action |
-|---|---|
-| W / ↑ | Move up |
-| S / ↓ | Move down |
-| A / ← | Move left |
-| D / → | Move right |
-| E | Interact (pick up item / checkout) |
-| Tab | Open/close cart inventory UI |
-| ESC | Pause / resume |
-
-### Movement
-- Player moves at 80 px/sec (5 cells/sec)
-- Cart moves with player, offset behind
-- Player cannot walk through shelves or walls
-- Smooth movement, 8-directional
-
-### Item Pickup
-1. Player walks adjacent to a shelf (within 1 tile)
-2. The nearest product highlights (white outline)
-3. Press `E` → item is removed from shelf, added to cart
-4. Shelf slot becomes empty (visual: darker square)
-5. Product respawns after 30 seconds
-
-### Cart System
-- Cart holds up to 20 items
-- Cart follows player with a fixed offset (1 tile behind in movement direction)
-- Cart has a visible list of items (Tab UI)
-- Cart is blocked by shelves — player must navigate around
-
-### Checkout
-1. Player walks to any checkout counter
-2. Press `E` at register
-3. Cart UI opens → receipt shows item list + total
-4. Press `E` again → items cleared, "THANK YOU!" message
-5. Cart is now empty
-
----
-
-## 5. UI Specification
-
-### HUD (Always visible)
-- Top-left: Cart item count badge (e.g., "🛒 3")
-- Top-right: Current zone name (e.g., "AISLE A — PRODUCE")
-- Bottom: Interaction prompt when near item (e.g., "[E] Pick up Apple — $1.50")
-
-### Cart Inventory (Tab)
-- Dark semi-transparent panel, full screen overlay
-- Grid of item icons (64×64 display per item)
-- Item name + price per row
-- Total at bottom
-- "[E] Checkout" or "[Tab] Close"
-
-### Checkout Screen
-- Full receipt style
-- Item list with prices
-- Subtotal / Tax / Total
-- "THANK YOU FOR SHOPPING!" / Press E to continue
-
----
-
-## 6. Architecture — Extensibility
-
-### Data-Driven Product System
-```gdscript
-# Products defined as a Resource / Dictionary
-# Easy to add new products without changing code:
-#   add_product("aisle_a", {"name": "Avocado", "price": 2.99, "color": Color(0.4, 0.8, 0.3)})
+Each product:
+```
+Product {
+  id: String
+  name: String (localized feel)
+  price: float
+  color: Color
+  shape: int (0-7, for pixel art)
+  section: String
+  subcategory: String
+}
 ```
 
-### Aisle Module
-- Each aisle is a `SupermarketAisle` node
-- Accepts a product list as a parameter
-- Handles respawning, empty states
+---
 
-### Cart Module
-- `ShoppingCart` node attached to player
-- Inventory is just an Array of product IDs
-- Serializable — could save/load
+## 5. Pixel Art Sprites (Programmatic)
+
+### Player (16×16)
+- Warm yellow body (#e8c170)
+- Simple 2-frame walk animation (bobbing)
+- Faces movement direction (flip_h)
+
+### Shopping Cart (20×16)
+- Silver/gray metal frame
+- Red handle accent
+- Shows stacked items on top when cart has items
+
+### Section Backgrounds
+- **Refrigerator:** Light blue-gray glass door, white interior, cold glow
+- **Produce:** Green-tinted floor, warm overhead lamp glow
+- **Bakery:** Warm orange/brown, golden floor
+- **Shelves:** Wood brown, 3D top highlight
+
+### Products (8×8 base)
+7 shapes: round, rectangle, bottle, can, box, tub, tall bottle
 
 ---
 
-## 7. File Structure
+## 6. AI Customers
+
+8 NPCs wandering the store:
+- Procedural sprite (head + upper + lower body)
+- Walk → pause → walk loop
+- Avoid walls/shelves (simple boundary check)
+- Walking bob animation
+
+---
+
+## 7. Interaction Specification
+
+### Controls
+| Key | Action |
+|---|---|
+| WASD / Arrows | Move |
+| E | Interact (browse section at zone / confirm) |
+| ESC | Close panel |
+| Tab | Toggle cart inventory |
+| 1-9 | Quick-add product by number (in section view) |
+
+### Cart
+- Holds up to **30 items**
+- Follows player (rubber-band offset)
+- Cart icon + count in HUD
+- Cart blocks narrow passages (player must route around)
+
+### Checkout
+- 3 checkout lanes at bottom
+- Walk to counter + press `E`
+- Receipt shows: items, subtotal, tax (6%), total
+- "THANK YOU!" → cart clears
+
+---
+
+## 8. HUD Layout
+
+- **Top-left:** Cart icon + item count
+- **Top-center:** Current section name (when inside zone)
+- **Bottom-center:** Context action prompt `[E] Browse DRINKS`
+- **Bottom-right:** Mini-map placeholder (section names only)
+
+---
+
+## 9. File Structure
 
 ```
 game-test/
 ├── project.godot
 ├── SPEC.md
 ├── scenes/
-│   ├── main.tscn              # Main game scene
-│   ├── player.tscn            # Player + cart combined
-│   ├── supermarket_aisle.tscn # Reusable aisle template
-│   ├── checkout_counter.tscn  # Checkout lane
+│   ├── main.tscn
+│   ├── player.tscn
+│   ├── section.tscn          # Generic section template
+│   ├── checkout_lane.tscn
 │   └── ui/
+│       ├── hud.tscn
+│       ├── section_browse.tscn
 │       ├── cart_panel.tscn
-│       ├── checkout_screen.tscn
-│       └── hud.tscn
+│       └── checkout_screen.tscn
 ├── scripts/
-│   ├── main.gd
-│   ├── player.gd
+│   ├── main.gd               # World builder, spawns sections
+│   ├── player.gd             # Movement + cart following
 │   ├── shopping_cart.gd
-│   ├── supermarket_aisle.gd
-│   ├── product_sprite.gd      # Generates pixel art product textures
-│   ├── checkout_counter.gd
+│   ├── section.gd            # Section logic + interaction zone
+│   ├── checkout_lane.gd
+│   ├── product_data.gd       # 200+ products
+│   ├── product.gd            # Product class
+│   ├── pixel_art_generator.gd
+│   ├── npc_controller.gd
+│   ├── npc_sprite.gd
 │   └── ui/
+│       ├── hud.gd
+│       ├── section_browse.gd
 │       ├── cart_panel.gd
-│       ├── checkout_screen.gd
-│       └── hud.gd
+│       └── checkout_screen.gd
 └── assets/
-    └── (all generated via code, no external files)
+    └── (all procedural — no external files)
 ```
 
 ---
 
-## 8. Acceptance Criteria
+## 10. Implementation Priority
 
-- [x] Player can walk in 8 directions, cart follows
-- [x] Player cannot walk through shelves/walls
-- [x] Walking adjacent to product shows interaction prompt
-- [x] Pressing E picks up product → appears in cart
-- [x] Cart inventory shows all items + total price
-- [x] Player can go to checkout, see receipt, complete purchase
-- [x] Cart empties after checkout
-- [x] Products respawn after 30s
-- [x] Pixel art aesthetic — no blurry scaling
-- [x] Runs at stable 60 FPS
-- [x] Extensible: adding a new product = editing data, not code
+### Phase 1 — Foundation
+- [ ] Restructure world grid with 6 section zones
+- [ ] Section browse panel UI (grid of all products)
+- [ ] E to open section view, click to add to cart
+- [ ] Proper section backgrounds (fridge glass, warm lighting, etc.)
+- [ ] Player inside-zone detection
+
+### Phase 2 — Cart & Checkout
+- [ ] Cart follows player
+- [ ] Cart panel with item list + total
+- [ ] Checkout receipt screen
+- [ ] Cart respawns products over time
+
+### Phase 3 — Polish
+- [ ] 8 AI customers
+- [ ] Mini-map
+- [ ] Sound effects (optional)
+- [ ] Product descriptions on hover

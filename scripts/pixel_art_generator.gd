@@ -1,5 +1,6 @@
 ﻿# pixel_art_generator.gd
 # Generates pixel art textures programmatically — no external assets needed.
+const StoreData = preload("res://scripts/store_data.gd")
 # All sprites are 16×16 or 8×8 depending on usage.
 
 class_name PixelArtGenerator
@@ -11,7 +12,7 @@ const HALF := SIZE / 2
 # ─────────────────────────────────────────────────────────────────────────────
 # PUBLIC: Generate a product sprite at 16×16
 # ─────────────────────────────────────────────────────────────────────────────
-static func make_product(tex_size: int, product: Product) -> Texture2D:
+static func make_product(tex_size: int, product: StoreData.MarketProduct) -> Texture2D:
 	var img := Image.create(tex_size, tex_size, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))  # transparent bg
 	
