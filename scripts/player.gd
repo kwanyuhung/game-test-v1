@@ -16,6 +16,7 @@ var _sprite: Sprite2D
 signal cart_updated(count: int)
 signal zone_changed(zone_name: String)
 signal interact_requested
+signal tab_pressed
 
 func _init() -> void:
 	_cart = ShoppingCart.new()
@@ -119,6 +120,10 @@ func _physics_process(delta: float) -> void:
 	
 	if Input.is_action_just_pressed("interact"):
 		interact_requested.emit()
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
+		tab_pressed.emit()
 
 func set_nearby_section(section) -> void:
 	_nearby_section = section

@@ -14,6 +14,7 @@ var _section_browse: SectionBrowse
 var _current_section_browse = null
 var _checkout_counters: Array = []
 var _nearby_section: Node = null
+var _nearby_checkout: Node = null
 var _in_checkout: bool = false
 var _cart_panel: CanvasLayer
 var _cart_items_lbl: Label
@@ -23,6 +24,8 @@ var _checkout_receipt: Control
 var _checkout_counter_label: Label
 var _checkout_items_lbl: Label
 var _checkout_total_lbl: Label
+var _checkout_receipt_visible: bool = false
+var _cart_panel_visible: bool = false
 
 var _world_bg = null
 var _aisle_labels: Array = []
@@ -300,6 +303,15 @@ func _build_hud() -> void:
 	_checkout_counter_label.visible = false
 	add_child(_checkout_counter_label)
 
+	# Tab hint bottom right
+	var tab_hint := Label.new()
+	tab_hint.name = "TabHint"
+	tab_hint.text = "[TAB] Cart"
+	tab_hint.position = Vector2(264.0, 4.0)
+	tab_hint.add_theme_color_override("font_color", Color(0.45, 0.45, 0.45))
+	tab_hint.add_theme_font_size_override("font_size", 7)
+	add_child(tab_hint)
+
 func _build_sections() -> void:
 	_section_browse = SectionBrowse.new()
 	add_child(_section_browse)
@@ -349,6 +361,8 @@ func _spawn_player() -> void:
 	_player.set_world(self)
 	_player.cart_updated.connect(_on_cart_updated)
 	_player.interact_requested.connect(_on_player_interact)
+	_player.tab_pressed.connect(_on_tab_pressed)
+	_build_cart_panel()
 
 func _build_npcs() -> void:
 	var npc_scene = preload("res://scripts/npc_controller.gd")
@@ -360,6 +374,8 @@ func _build_npcs() -> void:
 
 func _process(_delta: float) -> void:
 	if _current_section_browse != null and _current_section_browse.visible:
+		return
+	if _checkout_receipt_visible:
 		return
 	_update_player_section_proximity()
 	_update_checkout_proximity()
@@ -381,6 +397,8 @@ func _update_player_section_proximity() -> void:
 			nearest = sec
 	
 	_nearby_section = nearest
+	if nearest != null:
+		_checkout_counter_label.visible = false
 	
 	var prompt_bg = get_node_or_null("PromptBg")
 	var prompt_lbl = get_node_or_null("PromptLbl")
@@ -411,6 +429,7 @@ func _update_checkout_proximity() -> void:
 			near_checkout = counter
 			break
 	
+	_nearby_checkout = near_checkout
 	if near_checkout != null:
 		_checkout_counter_label.text = "[E] Checkout at %s" % near_checkout.name.replace("Counter_", "")
 		_checkout_counter_label.visible = true
@@ -418,8 +437,19 @@ func _update_checkout_proximity() -> void:
 		_checkout_counter_label.visible = false
 
 func _on_player_interact() -> void:
+	# Priority: 1) checkout receipt open → close it, 2) section browse
+	if _checkout_receipt_visible:
+		_hide_checkout_receipt()
+		return
 	if _current_section_browse != null and _current_section_browse.visible:
 		return
+	# Priority: 1) near checkout with items → open checkout
+	if _nearby_checkout != null:
+		var cart = _player.get_cart()
+		if cart.get_item_count() > 0:
+			_show_checkout_receipt()
+			return
+	# 2) near section → open section browse
 	if _nearby_section != null:
 		var def = _nearby_section.get_def()
 		var prods = _nearby_section.get_all_products()
@@ -443,3 +473,263 @@ func _on_cart_updated(total_count: int, unique_count: int) -> void:
 		var cart = _player.get_cart()
 		var sub = cart.get_subtotal() if cart != null else 0.0
 		_cart_count_lbl.text = "%d items  $%.2f" % [total_count, sub]
+	if _cart_panel_visible:
+		_refresh_cart_panel()
+
+func _on_tab_pressed() -> void:
+	if _current_section_browse != null and _current_section_browse.visible:
+		return
+	if _checkout_receipt_visible:
+		return
+	if _cart_panel_visible:
+		_hide_cart_panel()
+	else:
+		_show_cart_panel()
+
+# ═══════════════════════════════════════════════════════════════
+# CART PANEL
+# ═══════════════════════════════════════════════════════════════
+func _build_cart_panel() -> void:
+	_cart_panel = CanvasLayer.new()
+	_cart_panel.name = "CartPanel"
+	_cart_panel.visible = false
+	add_child(_cart_panel)
+	# Cart items list
+	_cart_items_lbl = Label.new()
+	_cart_items_lbl.name = "CartItems"
+	_cart_items_lbl.position = Vector2(4.0, 4.0)
+	_cart_items_lbl.size = Vector2(152.0, 110.0)
+	_cart_items_lbl.add_theme_color_override("font_color", Color(0.88, 0.88, 0.82))
+	_cart_items_lbl.add_theme_font_size_override("font_size", 8)
+	_cart_items_lbl.add_theme_constant_override("line_spacing", 2)
+	_cart_panel.add_child(_cart_items_lbl)
+	# Total
+	_cart_total_lbl = Label.new()
+	_cart_total_lbl.name = "CartTotal"
+	_cart_total_lbl.position = Vector2(4.0, 116.0)
+	_cart_total_lbl.add_theme_color_override("font_color", Color(0.90, 0.78, 0.42))
+	_cart_total_lbl.add_theme_font_size_override("font_size", 8)
+	_cart_panel.add_child(_cart_total_lbl)
+
+func _show_cart_panel() -> void:
+	_refresh_cart_panel()
+	_cart_panel.visible = true
+	_cart_panel_visible = true
+
+func _hide_cart_panel() -> void:
+	_cart_panel.visible = false
+	_cart_panel_visible = false
+
+func _refresh_cart_panel() -> void:
+	if _cart_panel == null or _player == null:
+		return
+	var cart = _player.get_cart()
+	var items = cart.get_items()
+	var lines: Array = []
+	lines.append("── SHOPPING CART ──")
+	if items.size() == 0:
+		lines.append("(empty)")
+	else:
+		for entry in items:
+			var prod = entry["product"]
+			var qty = entry["qty"]
+			var line = "%dx %s" % [qty, prod.name]
+			if line.length() > 18:
+				line = line.substr(0, 18)
+			lines.append(line)
+		var sub = cart.get_subtotal()
+		lines.append("")
+		lines.append("Subtotal: $%.2f" % sub)
+	_cart_items_lbl.text = "\n".join(lines)
+	var sub = cart.get_subtotal()
+	var tax = cart.get_tax()
+	var total = cart.get_total()
+	_cart_total_lbl.text = "Sub: $%.2f  Tax: $%.2f\nTOTAL: $%.2f" % [sub, tax, total]
+
+# ═══════════════════════════════════════════════════════════════
+# CHECKOUT RECEIPT
+# ═══════════════════════════════════════════════════════════════
+func _show_checkout_receipt() -> void:
+	_checkout_receipt_visible = true
+	_hide_cart_panel()
+
+	# Dark overlay
+	var ov := ColorRect.new()
+	ov.name = "CROverlay"
+	ov.set_anchors_preset(Control.PRESET_FULL_RECT)
+	ov.color = Color(0.03, 0.03, 0.06, 0.90)
+	ov.gui_input.connect(_on_receipt_input)
+	add_child(ov)
+
+	# Receipt panel — centered, 220x165
+	var pan_x: float = (320.0 - 220.0) * 0.5
+	var pan_y: float = (180.0 - 165.0) * 0.5
+
+	var pan := ColorRect.new()
+	pan.name = "CRPanel"
+	pan.position = Vector2(pan_x, pan_y)
+	pan.size = Vector2(220.0, 165.0)
+	pan.color = Color(0.09, 0.09, 0.13, 1.0)
+	pan.gui_input.connect(_on_receipt_input)
+	add_child(pan)
+
+	# Header
+	var hdr := ColorRect.new()
+	hdr.position = Vector2(pan_x, pan_y)
+	hdr.size = Vector2(220.0, 16.0)
+	hdr.color = Color(0.22, 0.18, 0.30, 1.0)
+	hdr.gui_input.connect(_on_receipt_input)
+	add_child(hdr)
+
+	var hdr_lbl := Label.new()
+	hdr_lbl.text = "═══ CHECKOUT ═══"
+	hdr_lbl.position = Vector2(pan_x + 60.0, pan_y + 3.0)
+	hdr_lbl.add_theme_color_override("font_color", Color(0.90, 0.85, 0.95))
+	hdr_lbl.add_theme_font_size_override("font_size", 9)
+	hdr_lbl.gui_input.connect(_on_receipt_input)
+	add_child(hdr_lbl)
+
+	# Items
+	var cart = _player.get_cart()
+	var items = cart.get_items()
+	var y_pos: float = pan_y + 20.0
+	var line_h: float = 10.0
+
+	for entry in items:
+		var prod = entry["product"]
+		var qty = entry["qty"]
+		var line_lbl := Label.new()
+		line_lbl.position = Vector2(pan_x + 6.0, y_pos)
+		line_lbl.size = Vector2(210.0, line_h)
+		line_lbl.text = "%dx %s" % [qty, prod.name]
+		line_lbl.add_theme_color_override("font_color", Color(0.82, 0.82, 0.78))
+		line_lbl.add_theme_font_size_override("font_size", 8)
+		line_lbl.gui_input.connect(_on_receipt_input)
+		add_child(line_lbl)
+
+		var price_lbl := Label.new()
+		price_lbl.position = Vector2(pan_x + 160.0, y_pos)
+		price_lbl.text = "$%.2f" % (prod.price * qty)
+		price_lbl.add_theme_color_override("font_color", Color(0.82, 0.82, 0.78))
+		price_lbl.add_theme_font_size_override("font_size", 8)
+		price_lbl.gui_input.connect(_on_receipt_input)
+		add_child(price_lbl)
+		y_pos += line_h
+
+	# Divider
+	var div := ColorRect.new()
+	div.position = Vector2(pan_x + 6.0, y_pos + 1.0)
+	div.size = Vector2(208.0, 1.0)
+	div.color = Color(0.30, 0.30, 0.35, 1.0)
+	add_child(div)
+	y_pos += 6.0
+
+	# Totals
+	var sub = cart.get_subtotal()
+	var tax_amt = cart.get_tax()
+	var total = cart.get_total()
+
+	var sub_lbl := Label.new()
+	sub_lbl.position = Vector2(pan_x + 110.0, y_pos)
+	sub_lbl.text = "Subtotal:"
+	sub_lbl.add_theme_color_override("font_color", Color(0.60, 0.60, 0.60))
+	sub_lbl.add_theme_font_size_override("font_size", 8)
+	sub_lbl.gui_input.connect(_on_receipt_input)
+	add_child(sub_lbl)
+	var sub_val := Label.new()
+	sub_val.position = Vector2(pan_x + 160.0, y_pos)
+	sub_val.text = "$%.2f" % sub
+	sub_val.add_theme_color_override("font_color", Color(0.75, 0.75, 0.72))
+	sub_val.add_theme_font_size_override("font_size", 8)
+	sub_val.gui_input.connect(_on_receipt_input)
+	add_child(sub_val)
+	y_pos += line_h
+
+	var tax_lbl := Label.new()
+	tax_lbl.position = Vector2(pan_x + 110.0, y_pos)
+	tax_lbl.text = "Tax (6%):"
+	tax_lbl.add_theme_color_override("font_color", Color(0.60, 0.60, 0.60))
+	tax_lbl.add_theme_font_size_override("font_size", 8)
+	tax_lbl.gui_input.connect(_on_receipt_input)
+	add_child(tax_lbl)
+	var tax_val := Label.new()
+	tax_val.position = Vector2(pan_x + 160.0, y_pos)
+	tax_val.text = "$%.2f" % tax_amt
+	tax_val.add_theme_color_override("font_color", Color(0.75, 0.75, 0.72))
+	tax_val.add_theme_font_size_override("font_size", 8)
+	tax_val.gui_input.connect(_on_receipt_input)
+	add_child(tax_val)
+	y_pos += line_h + 2.0
+
+	# Total line
+	var tot_lbl := Label.new()
+	tot_lbl.position = Vector2(pan_x + 110.0, y_pos)
+	tot_lbl.text = "TOTAL:"
+	tot_lbl.add_theme_color_override("font_color", Color(0.92, 0.78, 0.42))
+	tot_lbl.add_theme_font_size_override("font_size", 9)
+	tot_lbl.gui_input.connect(_on_receipt_input)
+	add_child(tot_lbl)
+	var tot_val := Label.new()
+	tot_val.position = Vector2(pan_x + 160.0, y_pos)
+	tot_val.text = "$%.2f" % total
+	tot_val.add_theme_color_override("font_color", Color(0.95, 0.85, 0.42))
+	tot_val.add_theme_font_size_override("font_size", 9)
+	tot_val.gui_input.connect(_on_receipt_input)
+	add_child(tot_val)
+	y_pos += line_h + 8.0
+
+	# Thank you
+	var thanks := Label.new()
+	thanks.position = Vector2(pan_x + 40.0, y_pos)
+	thanks.text = "THANK YOU FOR SHOPPING!"
+	thanks.add_theme_color_override("font_color", Color(0.72, 0.88, 0.72))
+	thanks.add_theme_font_size_override("font_size", 8)
+	thanks.gui_input.connect(_on_receipt_input)
+	add_child(thanks)
+	y_pos += line_h + 4.0
+
+	# Done prompt
+	var done_lbl := Label.new()
+	done_lbl.position = Vector2(pan_x + 60.0, y_pos)
+	done_lbl.text = "[E] Done"
+	done_lbl.add_theme_color_override("font_color", Color(0.45, 0.45, 0.48))
+	done_lbl.add_theme_font_size_override("font_size", 8)
+	done_lbl.gui_input.connect(_on_receipt_input)
+	add_child(done_lbl)
+
+func _hide_checkout_receipt() -> void:
+	_checkout_receipt_visible = false
+	# Remove all receipt nodes
+	for name in ["CROverlay", "CRPanel"]:
+		var node = get_node_or_null("/root/Main/" + name)
+		if node == null:
+			node = get_node_or_null(name)
+		if node != null:
+			node.queue_free()
+	# Remove all nodes added during receipt
+	var to_remove: Array = []
+	for c in get_children():
+		if c is Label or c is ColorRect:
+			var nm = c.name if c is Label or c is ColorRect else ""
+			if nm in ["CROverlay", "CRPanel"]:
+				continue
+			if c.get_parent() == self and c.position.y >= 0:
+				# Heuristic: receipt nodes are in the center of screen
+				if c is Label and c.position.x >= 40.0 and c.position.x <= 280.0:
+					to_remove.append(c)
+				elif c is ColorRect and c.position.x >= 40.0 and c.position.x <= 280.0:
+					to_remove.append(c)
+	for c in to_remove:
+		c.queue_free()
+
+func _on_receipt_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed:
+		var k = event as InputEventKey
+		if k.keycode == KEY_E or k.keycode == KEY_ESCAPE or k.keycode == KEY_TAB:
+			_finish_checkout()
+
+func _finish_checkout() -> void:
+	_hide_checkout_receipt()
+	var cart = _player.get_cart()
+	cart.clear()
+	_refresh_cart_panel()
