@@ -1,0 +1,853 @@
+# floor_builder.gd
+# ═══════════════════════════════════════════════════════════════════════
+# Data-driven floor renderer. Reads FloorDef + zones from floor_config.gd
+# and builds all visual content. Add new zone types by implementing
+# _build_<type>() and calling it from _build_zone().
+# ═══════════════════════════════════════════════════════════════════════
+class_name FloorBuilder
+extends Node2D
+
+const FloorConfig = preload("res://scripts/floor_config.gd")
+const StoreData = preload("res://scripts/store_data.gd")
+const FoodStallScript = preload("res://scripts/food_stall.gd")
+
+const CELL_SIZE := FloorConfig.CELL_SIZE
+const WORLD_W  := FloorConfig.WORLD_W
+const WORLD_H  := FloorConfig.WORLD_H
+
+var _floor_def: FloorConfig.FloorDef
+var _parent: Node
+var _floor_nodes: Array = []
+var _sections: Array = []
+var _food_stalls: Array = []
+var _checkout_counters: Array = []
+var _aisle_labels: Array = []
+
+signal section_interacted(section_id: String)
+signal stall_interacted(stall_id: String)
+
+func _init() -> void:
+	pass
+
+# Entry point — build an entire floor.
+func build(floor_def: FloorConfig.FloorDef, parent: Node) -> void:
+	_floor_def = floor_def
+	_parent = parent
+	_floor_nodes.clear()
+	_sections.clear()
+	_food_stalls.clear()
+	_checkout_counters.clear()
+	_aisle_labels.clear()
+
+	_build_world_bg()
+	_build_zones()
+	_build_section_zones()
+	_build_checkout_if_needed()
+	_build_floor_sign()
+	_build_shaft_visuals()
+
+# ─── World Background ────────────────────────────────────────────
+
+func _build_world_bg() -> void:
+	var bg := ColorRect.new()
+	bg.size = Vector2(WORLD_W * CELL_SIZE, WORLD_H * CELL_SIZE)
+	bg.position = Vector2.ZERO
+	bg.color = _floor_def.ambient_color.darkened(0.75)
+	_parent.add_child(bg)
+	_floor_nodes.append(bg)
+
+# ─── Zone Router ────────────────────────────────────────────────
+
+func _build_zones() -> void:
+	for zone in _floor_def.zones:
+		_build_zone(zone)
+
+func _build_zone(zone: FloorConfig.Zone) -> void:
+	match zone.type:
+		FloorConfig.ZONE_WALL:         _build_zone_wall(zone)
+		FloorConfig.ZONE_AISLE:        _build_zone_aisle(zone)
+		FloorConfig.ZONE_LOBBY:        _build_zone_lobby(zone)
+		FloorConfig.ZONE_PARKING:      _build_zone_parking(zone)
+		FloorConfig.ZONE_WC:           _build_zone_wc(zone)
+		FloorConfig.ZONE_INFO_DESK:    _build_zone_info_desk(zone)
+		FloorConfig.ZONE_FOOD_STALL:   _build_zone_food_stall(zone)
+		FloorConfig.ZONE_FOOD_COURT:   _build_zone_food_court(zone)
+		FloorConfig.ZONE_COMMON:       _build_zone_common(zone)
+		FloorConfig.ZONE_ROOFTOP:     _build_zone_rooftop(zone)
+		FloorConfig.ZONE_ELEVATOR:     _build_zone_shaft(zone)
+		FloorConfig.ZONE_STAIRS:       _build_zone_stairs(zone)
+		FloorConfig.ZONE_DECOR:         _build_zone_decor(zone)
+		# Unknown types are silently skipped (extensible)
+
+# ─── Individual Zone Builders ───────────────────────────────────
+
+func _build_zone_wall(zone: FloorConfig.Zone) -> void:
+	var r := ColorRect.new()
+	r.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	r.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	r.color = _get_wall_base_color()
+	_parent.add_child(r)
+	_floor_nodes.append(r)
+
+func _build_zone_aisle(zone: FloorConfig.Zone) -> void:
+	var r := ColorRect.new()
+	r.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	r.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	r.color = Color(0.20, 0.19, 0.18)
+	_parent.add_child(r)
+	_floor_nodes.append(r)
+
+func _build_zone_lobby(zone: FloorConfig.Zone) -> void:
+	# Lobby floor — slightly warmer
+	var r := ColorRect.new()
+	r.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	r.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	r.color = Color(0.22, 0.20, 0.18)
+	_parent.add_child(r)
+	_floor_nodes.append(r)
+
+	# Decorative lobby floor stripe
+	var stripe := ColorRect.new()
+	stripe.position = Vector2(zone.x * CELL_SIZE, (zone.y + zone.h - 1) * CELL_SIZE)
+	stripe.size = Vector2(zone.w * CELL_SIZE, 2)
+	stripe.color = Color(0.30, 0.27, 0.24)
+	_parent.add_child(stripe)
+	_floor_nodes.append(stripe)
+
+	# Top wall
+	for tx in range(zone.x, zone.x + zone.w):
+		_set_wall_tile(tx, zone.y)
+
+	# Left & right walls
+	for ty in range(zone.y, zone.y + zone.h):
+		_set_wall_tile(zone.x, ty)
+		_set_wall_tile(zone.x + zone.w - 1, ty)
+
+func _build_zone_parking(zone: FloorConfig.Zone) -> void:
+	# Parking level base — dark asphalt
+	var base := ColorRect.new()
+	base.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	base.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	base.color = Color(0.18, 0.18, 0.20)
+	_parent.add_child(base)
+	_floor_nodes.append(base)
+
+	# Parking slot rows (every 4 tiles down)
+	const SLOT_W := 6
+	const SLOT_H := 3
+	const SLOT_GAP := 1
+	const NUM_SLOTS := 10
+	var sx := zone.x + 2
+	var sy := zone.y + 2
+	var slot_idx := 0
+	while sy + SLOT_H < zone.y + zone.h - 2 and slot_idx < NUM_SLOTS:
+		# Slot bay
+		var bay := ColorRect.new()
+		bay.position = Vector2(sx * CELL_SIZE, sy * CELL_SIZE)
+		bay.size = Vector2(SLOT_W * CELL_SIZE, SLOT_H * CELL_SIZE)
+		bay.color = Color(0.21, 0.21, 0.23)
+		_parent.add_child(bay)
+		_floor_nodes.append(bay)
+
+		# White slot lines
+		for side in [sx, sx + SLOT_W - 1]:
+			var line := ColorRect.new()
+			line.position = Vector2(side * CELL_SIZE, sy * CELL_SIZE)
+			line.size = Vector2(1, SLOT_H * CELL_SIZE)
+			line.color = Color(0.80, 0.80, 0.80, 0.4)
+			_parent.add_child(line)
+			_floor_nodes.append(line)
+
+		# Top/bottom lines
+		var top_l := ColorRect.new()
+		top_l.position = Vector2(sx * CELL_SIZE, sy * CELL_SIZE)
+		top_l.size = Vector2(SLOT_W * CELL_SIZE, 1)
+		top_l.color = Color(0.80, 0.80, 0.80, 0.4)
+		_parent.add_child(top_l)
+		_floor_nodes.append(top_l)
+
+		var bot_l := ColorRect.new()
+		bot_l.position = Vector2(sx * CELL_SIZE, (sy + SLOT_H - 1) * CELL_SIZE)
+		bot_l.size = Vector2(SLOT_W * CELL_SIZE, 1)
+		bot_l.color = Color(0.80, 0.80, 0.80, 0.4)
+		_parent.add_child(bot_l)
+		_floor_nodes.append(bot_l)
+
+		# Slot number
+		var num_lbl := Label.new()
+		num_lbl.text = "%d" % (slot_idx + 1)
+		num_lbl.position = Vector2((sx + SLOT_W * 0.5 - 0.5) * CELL_SIZE, (sy + SLOT_H * 0.5 - 0.5) * CELL_SIZE)
+		num_lbl.add_theme_color_override("font_color", Color(0.40, 0.40, 0.45))
+		num_lbl.add_theme_font_size_override("font_size", 8)
+		_parent.add_child(num_lbl)
+		_floor_nodes.append(num_lbl)
+
+		# 3 NPC cars in first 3 slots
+		if slot_idx < 3:
+			_add_parked_car(sx + SLOT_W // 2 - 1, sy + SLOT_H // 2, slot_idx)
+
+		sx += SLOT_W + SLOT_GAP
+		if sx + SLOT_W > zone.x + zone.w - 2:
+			sx = zone.x + 2
+			sy += SLOT_H + SLOT_GAP
+		slot_idx += 1
+
+func _add_parked_car(tile_x: int, tile_y: int, color_idx: int) -> void:
+	var colors := [Color(0.75, 0.22, 0.18), Color(0.25, 0.40, 0.75), Color(0.30, 0.60, 0.30)]
+	var col := colors[color_idx % 3]
+	var img := Image.create(5 * CELL_SIZE, 3 * CELL_SIZE, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	_fill_img(img, CELL_SIZE, CELL_SIZE >> 1, CELL_SIZE * 3, CELL_SIZE, col)
+	_fill_img(img, CELL_SIZE * 3 >> 1, 0, CELL_SIZE * 2, CELL_SIZE >> 1, col.darkened(0.15))
+	_fill_img(img, CELL_SIZE * 5 >> 1, CELL_SIZE >> 2, CELL_SIZE, CELL_SIZE >> 1, Color(0.50, 0.70, 0.85))
+	_fill_img(img, CELL_SIZE, (CELL_SIZE * 3) >> 2, CELL_SIZE, CELL_SIZE >> 2, Color(0.12, 0.12, 0.12))
+	_fill_img(img, CELL_SIZE * 3, (CELL_SIZE * 3) >> 2, CELL_SIZE, CELL_SIZE >> 2, Color(0.12, 0.12, 0.12))
+	var spr := Sprite2D.new()
+	spr.texture = ImageTexture.create_from_image(img)
+	spr.position = Vector2((tile_x + 0.5) * CELL_SIZE, (tile_y + 0.5) * CELL_SIZE)
+	spr.z_index = 3
+	_parent.add_child(spr)
+	_floor_nodes.append(spr)
+
+func _fill_img(img: Image, x: int, y: int, w: int, h: int, col: Color) -> void:
+	x = clampi(x, 0, img.get_width()); y = clampi(y, 0, img.get_height())
+	w = clampi(w, 0, img.get_width() - x); h = clampi(h, 0, img.get_height() - y)
+	for px in range(x, x + w):
+		for py in range(y, y + h):
+			img.set_pixel(px, py, col)
+
+func _build_zone_wc(zone: FloorConfig.Zone) -> void:
+	# WC booth background
+	var bg := ColorRect.new()
+	bg.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	bg.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	bg.color = Color(0.18, 0.20, 0.24)
+	_parent.add_child(bg)
+	_floor_nodes.append(bg)
+
+	# WC door (centered on bottom edge)
+	var door := ColorRect.new()
+	door.position = Vector2((zone.x + 2) * CELL_SIZE, (zone.y + zone.h - 3) * CELL_SIZE)
+	door.size = Vector2(2 * CELL_SIZE, 3 * CELL_SIZE)
+	door.color = Color(0.50, 0.48, 0.55)
+	_parent.add_child(door)
+	_floor_nodes.append(door)
+
+	# WC label
+	var lbl := Label.new()
+	lbl.text = "WC"
+	lbl.position = Vector2((zone.x + zone.w * 0.5 - 1.5) * CELL_SIZE, (zone.y + 1) * CELL_SIZE)
+	lbl.add_theme_color_override("font_color", Color(0.80, 0.80, 0.90))
+	lbl.add_theme_font_size_override("font_size", 9)
+	_parent.add_child(lbl)
+	_floor_nodes.append(lbl)
+
+	# "Press E" hint
+	var hint := Label.new()
+	hint.text = "[E] Use"
+	hint.position = Vector2((zone.x + 1) * CELL_SIZE, (zone.y + zone.h - 3) * CELL_SIZE + 2)
+	hint.add_theme_color_override("font_color", Color(0.50, 0.50, 0.60))
+	hint.add_theme_font_size_override("font_size", 7)
+	_parent.add_child(hint)
+	_floor_nodes.append(hint)
+
+	# Walls
+	var wc := _get_wall_base_color()
+	var top_w := ColorRect.new()
+	top_w.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	top_w.size = Vector2(zone.w * CELL_SIZE, 2)
+	top_w.color = wc
+	_parent.add_child(top_w); _floor_nodes.append(top_w)
+	var bot_w := ColorRect.new()
+	bot_w.position = Vector2(zone.x * CELL_SIZE, (zone.y + zone.h - 2) * CELL_SIZE)
+	bot_w.size = Vector2(zone.w * CELL_SIZE, 2)
+	bot_w.color = wc.darkened(0.2)
+	_parent.add_child(bot_w); _floor_nodes.append(bot_w)
+	var l_w := ColorRect.new()
+	l_w.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	l_w.size = Vector2(2, zone.h * CELL_SIZE)
+	l_w.color = wc.darkened(0.1)
+	_parent.add_child(l_w); _floor_nodes.append(l_w)
+	var r_w := ColorRect.new()
+	r_w.position = Vector2((zone.x + zone.w - 2) * CELL_SIZE, zone.y * CELL_SIZE)
+	r_w.size = Vector2(2, zone.h * CELL_SIZE)
+	r_w.color = wc.darkened(0.2)
+	_parent.add_child(r_w); _floor_nodes.append(r_w)
+
+func _build_zone_info_desk(zone: FloorConfig.Zone) -> void:
+	var bg := ColorRect.new()
+	bg.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	bg.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	bg.color = Color(0.28, 0.24, 0.22)
+	_parent.add_child(bg)
+	_floor_nodes.append(bg)
+
+	# Desk counter top
+	var top_c := ColorRect.new()
+	top_c.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	top_c.size = Vector2(zone.w * CELL_SIZE, 2)
+	top_c.color = Color(0.55, 0.48, 0.40)
+	_parent.add_child(top_c); _floor_nodes.append(top_c)
+
+	# Info sign
+	var sign := Label.new()
+	sign.text = "INFORMATION"
+	sign.position = Vector2((zone.x + 1) * CELL_SIZE, (zone.y + 1) * CELL_SIZE)
+	sign.add_theme_color_override("font_color", Color(0.90, 0.85, 0.60))
+	sign.add_theme_font_size_override("font_size", 8)
+	_parent.add_child(sign); _floor_nodes.append(sign)
+
+	# Floor directory
+	var dir := Label.new()
+	dir.text = _get_floor_directory()
+	dir.position = Vector2((zone.x + 1) * CELL_SIZE, (zone.y + 2.5) * CELL_SIZE)
+	dir.add_theme_color_override("font_color", Color(0.65, 0.62, 0.55))
+	dir.add_theme_font_size_override("font_size", 7)
+	_parent.add_child(dir); _floor_nodes.append(dir)
+
+func _get_floor_directory() -> String:
+	return "F1:Fresh  F2:Pantry\nF3:Drinks  F4:Snacks\nF5:Frozen  F6:Home\nF7:Health  F8:Toys\nF9:Staff  F10:Cafe"
+
+func _build_zone_food_stall(zone: FloorConfig.Zone) -> void:
+	var stall_id: String = zone.meta.get("stall_id", "jp_ramen")
+	var fd: FloorConfig.FoodStallDef = FloorConfig.get_stall_def(stall_id)
+
+	# ── Stall base floor ──────────────────────────────────────────
+	var base := ColorRect.new()
+	base.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	base.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	base.color = fd.color.darkened(0.78)
+	_parent.add_child(base)
+	_floor_nodes.append(base)
+
+	# ── Counter (front edge, 3 tiles tall) ───────────────────────
+	var counter := ColorRect.new()
+	counter.position = Vector2(zone.x * CELL_SIZE, (zone.y + zone.h - 3) * CELL_SIZE)
+	counter.size = Vector2(zone.w * CELL_SIZE, 3 * CELL_SIZE)
+	counter.color = fd.color.darkened(0.45)
+	_parent.add_child(counter)
+	_floor_nodes.append(counter)
+
+	# Counter top ledge (bright surface)
+	var counter_top := ColorRect.new()
+	counter_top.position = Vector2(zone.x * CELL_SIZE, (zone.y + zone.h - 3) * CELL_SIZE)
+	counter_top.size = Vector2(zone.w * CELL_SIZE, 2)
+	counter_top.color = fd.color.lightened(0.25)
+	_parent.add_child(counter_top)
+	_floor_nodes.append(counter_top)
+
+	# ── Product samples on counter (decorative colored squares) ──
+	var sample_y := (zone.y + zone.h - 4) * CELL_SIZE
+	for i in range(mini(fd.menu.size(), 4)):
+		var item: Dictionary = fd.menu[i]
+		var spx := (zone.x + 1 + i * 3) * CELL_SIZE
+		var samp := ColorRect.new()
+		samp.position = Vector2(spx, sample_y)
+		samp.size = Vector2(CELL_SIZE * 2, CELL_SIZE)
+		samp.color = fd.glow_color.darkened(0.3 + i * 0.1)
+		_parent.add_child(samp)
+		_floor_nodes.append(samp)
+		# Price tag
+		var price_lbl := Label.new()
+		price_lbl.text = "$%.1f" % item.price
+		price_lbl.position = Vector2(spx, sample_y - 10)
+		price_lbl.add_theme_color_override("font_color", fd.glow_color.lightened(0.2))
+		price_lbl.add_theme_font_size_override("font_size", 6)
+		_parent.add_child(price_lbl)
+		_floor_nodes.append(price_lbl)
+
+	# ── Back wall (top section with menu board) ──────────────────
+	var wall_h := zone.h - 3  # counter takes bottom 3 tiles
+	var wc := fd.color.darkened(0.3)
+
+	# Back wall base
+	var bw_bg := ColorRect.new()
+	bw_bg.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	bw_bg.size = Vector2(zone.w * CELL_SIZE, wall_h * CELL_SIZE)
+	bw_bg.color = wc.darkened(0.1)
+	_parent.add_child(bw_bg); _floor_nodes.append(bw_bg)
+
+	# Top stripe
+	var tw := ColorRect.new()
+	tw.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	tw.size = Vector2(zone.w * CELL_SIZE, 2)
+	tw.color = wc
+	_parent.add_child(tw); _floor_nodes.append(tw)
+
+	# Side walls
+	var lw := ColorRect.new()
+	lw.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	lw.size = Vector2(2, zone.h * CELL_SIZE)
+	lw.color = wc.darkened(0.1)
+	_parent.add_child(lw); _floor_nodes.append(lw)
+
+	var rw := ColorRect.new()
+	rw.position = Vector2((zone.x + zone.w - 2) * CELL_SIZE, zone.y * CELL_SIZE)
+	rw.size = Vector2(2, zone.h * CELL_SIZE)
+	rw.color = wc.darkened(0.2)
+	_parent.add_child(rw); _floor_nodes.append(rw)
+
+	# Bottom wall strip (above counter)
+	var bot_wall := ColorRect.new()
+	bot_wall.position = Vector2(zone.x * CELL_SIZE, (zone.y + zone.h - 1) * CELL_SIZE)
+	bot_wall.size = Vector2(zone.w * CELL_SIZE, 1)
+	bot_wall.color = wc.darkened(0.2)
+	_parent.add_child(bot_wall); _floor_nodes.append(bot_wall)
+
+	# ── Menu board on back wall ──────────────────────────────────
+	# Small blackboard-style panel
+	var board_x := (zone.x + 1) * CELL_SIZE
+	var board_y := (zone.y + 1) * CELL_SIZE
+	var board_w := (zone.w - 2) * CELL_SIZE
+	var board_h := (wall_h - 2) * CELL_SIZE
+	if board_w > 0 and board_h > 0:
+		var board := ColorRect.new()
+		board.position = Vector2(board_x, board_y)
+		board.size = Vector2(board_w, board_h)
+		board.color = Color(0.05, 0.12, 0.08)  # dark green chalkboard
+		_parent.add_child(board); _floor_nodes.append(board)
+
+		# Menu item labels on board (show first 3 items)
+		for i in range(mini(fd.menu.size(), 3)):
+			var item: Dictionary = fd.menu[i]
+			var item_lbl := Label.new()
+			item_lbl.text = "  %s  $%.1f" % [item.name, item.price]
+			item_lbl.position = Vector2(board_x + 2, board_y + i * (board_h / 3) + 2)
+			item_lbl.add_theme_color_override("font_color", Color(0.85, 0.90, 0.80))
+			item_lbl.add_theme_font_size_override("font_size", 6)
+			_parent.add_child(item_lbl)
+			_floor_nodes.append(item_lbl)
+
+	# ── Brand glow lantern above stall ───────────────────────────
+	var glow := Sprite2D.new()
+	glow.position = Vector2((zone.x + zone.w * 0.5) * CELL_SIZE, (zone.y - 7) * CELL_SIZE)
+	glow.texture = _make_glow(fd.glow_color)
+	_parent.add_child(glow)
+	_floor_nodes.append(glow)
+
+	# ── Stall name sign (on front of counter) ───────────────────
+	var name_lbl := Label.new()
+	name_lbl.text = fd.name
+	name_lbl.position = Vector2((zone.x + 1) * CELL_SIZE, (zone.y + zone.h - 2.5) * CELL_SIZE)
+	name_lbl.add_theme_color_override("font_color", fd.color.lightened(0.35))
+	name_lbl.add_theme_font_size_override("font_size", 7)
+	_parent.add_child(name_lbl); _floor_nodes.append(name_lbl)
+
+	# Cuisine country tag
+	var cuisine_lbl := Label.new()
+	cuisine_lbl.text = fd.cuisine
+	cuisine_lbl.position = Vector2((zone.x + 1) * CELL_SIZE, (zone.y + zone.h - 1.8) * CELL_SIZE)
+	cuisine_lbl.add_theme_color_override("font_color", fd.color.lightened(0.15))
+	cuisine_lbl.add_theme_font_size_override("font_size", 6)
+	_parent.add_child(cuisine_lbl); _floor_nodes.append(cuisine_lbl)
+
+	# ── [E] Order hint ──────────────────────────────────────────
+	var hint := Label.new()
+	hint.text = "[E] Order"
+	hint.position = Vector2((zone.x + zone.w - 5) * CELL_SIZE, (zone.y + zone.h - 2.5) * CELL_SIZE)
+	hint.add_theme_color_override("font_color", fd.glow_color.lightened(0.3))
+	hint.add_theme_font_size_override("font_size", 7)
+	_parent.add_child(hint); _floor_nodes.append(hint)
+
+	# ── FoodStall interaction node ──────────────────────────────
+	var stall_node := FoodStallScript.new()
+	stall_node.configure(fd, zone)
+	stall_node.name = "Stall_%s" % stall_id
+	_parent.add_child(stall_node)
+	_food_stalls.append(stall_node)
+
+func _build_zone_food_court(zone: FloorConfig.Zone) -> void:
+	# Open dining court floor
+	var floor_c := ColorRect.new()
+	floor_c.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	floor_c.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	floor_c.color = Color(0.24, 0.20, 0.18)
+	_parent.add_child(floor_c)
+	_floor_nodes.append(floor_c)
+
+	# Central lantern row (decorative)
+	for i in range(4):
+		var lx := (zone.x + 10 + i * 16) * CELL_SIZE
+		var ly := (zone.y + 3) * CELL_SIZE
+		var lantern := Sprite2D.new()
+		lantern.position = Vector2(lx, ly)
+		lantern.texture = _make_lantern()
+		lantern.z_index = 4
+		_parent.add_child(lantern)
+		_floor_nodes.append(lantern)
+
+	# Dining tables cluster
+	var table_positions := [
+		Vector2i(zone.x + 20, zone.y + 10),
+		Vector2i(zone.x + 32, zone.y + 10),
+		Vector2i(zone.x + 44, zone.y + 10),
+		Vector2i(zone.x + 20, zone.y + 22),
+		Vector2i(zone.x + 32, zone.y + 22),
+		Vector2i(zone.x + 44, zone.y + 22),
+	]
+	for tp in table_positions:
+		_build_dining_table(tp.x, tp.y)
+
+	# "Food Court" floor label
+	var court_lbl := Label.new()
+	court_lbl.text = "DINING COURT"
+	court_lbl.position = Vector2((zone.x + zone.w * 0.5 - 5) * CELL_SIZE, (zone.y + zone.h - 3) * CELL_SIZE)
+	court_lbl.add_theme_color_override("font_color", Color(0.60, 0.55, 0.50, 0.6))
+	court_lbl.add_theme_font_size_override("font_size", 8)
+	_parent.add_child(court_lbl); _floor_nodes.append(court_lbl)
+
+func _build_dining_table(tile_x: int, tile_y: int) -> void:
+	# Table top
+	var top := ColorRect.new()
+	top.position = Vector2(tile_x * CELL_SIZE, tile_y * CELL_SIZE)
+	top.size = Vector2(3 * CELL_SIZE, 2 * CELL_SIZE)
+	top.color = Color(0.52, 0.48, 0.42)
+	_parent.add_child(top); _floor_nodes.append(top)
+
+	# Chairs (small squares around table)
+	var chair_offsets := [
+		Vector2i(0, -1), Vector2i(2, -1),
+		Vector2i(0, 2),  Vector2i(2, 2),
+		Vector2i(-1, 0), Vector2i(3, 0),
+	]
+	for co in chair_offsets:
+		var chair := ColorRect.new()
+		chair.position = Vector2((tile_x + co.x) * CELL_SIZE, (tile_y + co.y) * CELL_SIZE)
+		chair.size = Vector2(CELL_SIZE, CELL_SIZE)
+		chair.color = Color(0.45, 0.42, 0.40)
+		_parent.add_child(chair); _floor_nodes.append(chair)
+
+func _build_zone_common(zone: FloorConfig.Zone) -> void:
+	var r := ColorRect.new()
+	r.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	r.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	r.color = Color(0.20, 0.19, 0.18)
+	_parent.add_child(r); _floor_nodes.append(r)
+
+func _build_zone_rooftop(zone: FloorConfig.Zone) -> void:
+	# Sky-like open rooftop
+	var r := ColorRect.new()
+	r.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	r.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	r.color = Color(0.45, 0.60, 0.75, 1.0)
+	_parent.add_child(r); _floor_nodes.append(r)
+
+	# "ROOFTOP" large text
+	var lbl := Label.new()
+	lbl.text = "ROOFTOP CAFE"
+	lbl.position = Vector2((zone.x + zone.w * 0.5 - 6) * CELL_SIZE, (zone.y + 1) * CELL_SIZE)
+	lbl.add_theme_color_override("font_color", Color(0.90, 0.88, 0.80))
+	lbl.add_theme_font_size_override("font_size", 10)
+	_parent.add_child(lbl); _floor_nodes.append(lbl)
+
+	# Café tables
+	for tx in range(zone.x + 4, zone.x + zone.w - 6, 10):
+		for ty in range(zone.y + 6, zone.y + zone.h - 4, 8):
+			_build_dining_table(tx, ty)
+
+func _build_zone_shaft(zone: FloorConfig.Zone) -> void:
+	# Elevator shaft visual column
+	var shaft := ColorRect.new()
+	shaft.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	shaft.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	shaft.color = Color(0.30, 0.27, 0.25)
+	_parent.add_child(shaft); _floor_nodes.append(shaft)
+
+	# Border lines
+	var bl := ColorRect.new()
+	bl.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	bl.size = Vector2(1, zone.h * CELL_SIZE)
+	bl.color = Color(0.50, 0.45, 0.40)
+	_parent.add_child(bl); _floor_nodes.append(bl)
+
+	var br := ColorRect.new()
+	br.position = Vector2((zone.x + zone.w - 1) * CELL_SIZE, zone.y * CELL_SIZE)
+	br.size = Vector2(1, zone.h * CELL_SIZE)
+	br.color = Color(0.40, 0.37, 0.35)
+	_parent.add_child(br); _floor_nodes.append(br)
+
+func _build_zone_stairs(zone: FloorConfig.Zone) -> void:
+	var bg := ColorRect.new()
+	bg.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	bg.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	bg.color = Color(0.28, 0.26, 0.24)
+	_parent.add_child(bg); _floor_nodes.append(bg)
+
+	# Step lines
+	var n_steps := 12
+	var step_h := (zone.h * CELL_SIZE) / n_steps
+	for i in range(n_steps):
+		var step_y := zone.y * CELL_SIZE + i * step_h
+		var step_l := ColorRect.new()
+		step_l.position = Vector2(zone.x * CELL_SIZE, step_y)
+		step_l.size = Vector2(zone.w * CELL_SIZE, 2)
+		step_l.color = Color(0.45, 0.42, 0.38)
+		_parent.add_child(step_l); _floor_nodes.append(step_l)
+
+	# "STAIRS" label
+	var lbl := Label.new()
+	lbl.text = "STAIRS"
+	lbl.position = Vector2((zone.x + 0.5) * CELL_SIZE, (zone.y + 1) * CELL_SIZE)
+	lbl.add_theme_color_override("font_color", Color(0.60, 0.60, 0.70))
+	lbl.add_theme_font_size_override("font_size", 7)
+	_parent.add_child(lbl); _floor_nodes.append(lbl)
+
+# ─── Decorative Zone (dining tables, planters, etc.) ───────────────
+# meta can specify: {decor_type: "dining_table"} or just renders as floor.
+func _build_zone_decor(zone: FloorConfig.Zone) -> void:
+	var decor_type: String = zone.meta.get("decor_type", "dining_table")
+	match decor_type:
+		"dining_table":
+			_build_dining_table(zone.x, zone.y)
+		"planter":
+			_build_planter(zone.x, zone.y, zone.w, zone.h)
+		_:
+			# Generic floor patch
+			var r := ColorRect.new()
+			r.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+			r.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+			r.color = Color(0.22, 0.20, 0.18)
+			_parent.add_child(r); _floor_nodes.append(r)
+
+func _build_planter(px: int, py: int, pw: int, ph: int) -> void:
+	# Planter box
+	var box := ColorRect.new()
+	box.position = Vector2(px * CELL_SIZE, py * CELL_SIZE)
+	box.size = Vector2(pw * CELL_SIZE, ph * CELL_SIZE)
+	box.color = Color(0.20, 0.16, 0.12)
+	_parent.add_child(box); _floor_nodes.append(box)
+	# Green top
+	var top := ColorRect.new()
+	top.position = Vector2(px * CELL_SIZE, py * CELL_SIZE)
+	top.size = Vector2(pw * CELL_SIZE, 2)
+	top.color = Color(0.30, 0.52, 0.22)
+	_parent.add_child(top); _floor_nodes.append(top)
+
+# ─── Section Zones ─────────────────────────────────────────────
+
+func _build_section_zones() -> void:
+	for sz: FloorConfig.SectionZone in _floor_def.section_zones:
+		_build_section_zone(sz)
+
+func _build_section_zone(sz: FloorConfig.SectionZone) -> void:
+	var def = StoreData.get_section_def(sz.section_id)
+	if def == null:
+		return
+
+	# Background
+	var bg := ColorRect.new()
+	bg.position = Vector2(sz.x * CELL_SIZE, sz.y * CELL_SIZE)
+	bg.size = Vector2(sz.w * CELL_SIZE, sz.h * CELL_SIZE)
+	bg.color = _get_section_floor(def.style)
+	_parent.add_child(bg); _floor_nodes.append(bg)
+
+	# Walls
+	var wc := _get_section_wall_color(def.style)
+	var tw := ColorRect.new()
+	tw.position = Vector2(sz.x * CELL_SIZE, sz.y * CELL_SIZE)
+	tw.size = Vector2(sz.w * CELL_SIZE, 2)
+	tw.color = wc; _parent.add_child(tw); _floor_nodes.append(tw)
+
+	var bw := ColorRect.new()
+	bw.position = Vector2(sz.x * CELL_SIZE, (sz.y + sz.h - 1) * CELL_SIZE)
+	bw.size = Vector2(sz.w * CELL_SIZE, 2)
+	bw.color = wc.darkened(0.15); _parent.add_child(bw); _floor_nodes.append(bw)
+
+	var lw := ColorRect.new()
+	lw.position = Vector2(sz.x * CELL_SIZE, sz.y * CELL_SIZE)
+	lw.size = Vector2(2, sz.h * CELL_SIZE)
+	lw.color = wc.darkened(0.1); _parent.add_child(lw); _floor_nodes.append(lw)
+
+	var rw := ColorRect.new()
+	rw.position = Vector2((sz.x + sz.w - 1) * CELL_SIZE, sz.y * CELL_SIZE)
+	rw.size = Vector2(2, sz.h * CELL_SIZE)
+	rw.color = wc.darkened(0.2); _parent.add_child(rw); _floor_nodes.append(rw)
+
+	# Glow
+	var glow := Sprite2D.new()
+	glow.position = Vector2((sz.x + sz.w * 0.5) * CELL_SIZE, (sz.y - 6) * CELL_SIZE)
+	glow.texture = _make_glow(def.light_color)
+	_parent.add_child(glow); _floor_nodes.append(glow)
+
+	# Sign
+	var sign := _make_sign(def, sz.w, sz.h)
+	sign.position = Vector2((sz.x + sz.w * 0.5) * CELL_SIZE, (sz.y + 1) * CELL_SIZE)
+	_parent.add_child(sign); _floor_nodes.append(sign)
+
+	# Create SupermarketSection node
+	var sec := preload("res://scripts/section.gd").new()
+	sec.configure(def)
+	sec.position = Vector2(sz.x * CELL_SIZE, sz.y * CELL_SIZE)
+	sec.name = "Section_%s" % def.id
+	_parent.add_child(sec)
+	_sections.append(sec)
+
+	# Section label at bottom
+	var lbl := Label.new()
+	lbl.text = def.name
+	lbl.position = Vector2((sz.x + 1) * CELL_SIZE, (sz.y + sz.h + 1) * CELL_SIZE)
+	lbl.add_theme_color_override("font_color", Color(def.light_color.r * 0.7, def.light_color.g * 0.7, def.light_color.b * 0.7, 0.8))
+	lbl.add_theme_font_size_override("font_size", 8)
+	lbl.z_index = 6
+	_parent.add_child(lbl); _aisle_labels.append(lbl)
+
+# ─── Checkout Counters ─────────────────────────────────────────
+
+func _build_checkout_if_needed() -> void:
+	if not _floor_def.has_checkout:
+		return
+	var lanes := StoreData.CHECKOUT_LANES
+	var CHECKOUT_Y := StoreData.CHECKOUT_Y
+	for lane in lanes:
+		var counter := Node2D.new()
+		counter.position = Vector2(lane["x"] * CELL_SIZE, (CHECKOUT_Y + 2) * CELL_SIZE)
+		counter.name = "Counter_%s" % lane["name"]
+		var bg := ColorRect.new()
+		bg.size = Vector2(CELL_SIZE * 8, CELL_SIZE * 3)
+		bg.color = Color(0.35, 0.28, 0.38)
+		counter.add_child(bg)
+		var top_c := ColorRect.new()
+		top_c.size = Vector2(CELL_SIZE * 8, 2)
+		top_c.color = Color(0.55, 0.45, 0.60)
+		counter.add_child(top_c)
+		var lbl := Label.new()
+		lbl.text = lane["name"]
+		lbl.position = Vector2(CELL_SIZE * 0.5, CELL_SIZE * 0.5)
+		lbl.add_theme_color_override("font_color", Color(0.85, 0.80, 0.90))
+		lbl.add_theme_font_size_override("font_size", 8)
+		counter.add_child(lbl)
+		_parent.add_child(counter)
+		_checkout_counters.append(counter)
+
+# ─── Floor Sign ─────────────────────────────────────────────────
+
+func _build_floor_sign() -> void:
+	var sign_bg := ColorRect.new()
+	sign_bg.position = Vector2(2 * CELL_SIZE, 2 * CELL_SIZE)
+	sign_bg.size = Vector2(8 * CELL_SIZE, 2 * CELL_SIZE)
+	sign_bg.color = Color(0.06, 0.06, 0.10, 0.85)
+	_parent.add_child(sign_bg); _floor_nodes.append(sign_bg)
+
+	var theme_lbl := Label.new()
+	theme_lbl.text = "Floor %s — %s" % [_floor_def.label, _floor_def.theme.replace("_", " ").capitalize()]
+	theme_lbl.position = Vector2(2.5 * CELL_SIZE, 2.3 * CELL_SIZE)
+	theme_lbl.add_theme_color_override("font_color", Color(0.75, 0.72, 0.60))
+	theme_lbl.add_theme_font_size_override("font_size", 8)
+	_parent.add_child(theme_lbl); _floor_nodes.append(theme_lbl)
+
+# ─── Elevator Shaft Visuals ─────────────────────────────────────
+
+func _build_shaft_visuals() -> void:
+	if not _floor_def.has_elevator:
+		return
+	# Floor indicator dots in shaft
+	var shaft_x := FloorConfig.STAIRS_RIGHT_X - 6  # approx elevator x
+	for floor_i in range(FloorConfig.floor_count()):
+		var fy := _floor_y_in_shaft(floor_i)
+		var dot := ColorRect.new()
+		dot.position = Vector2((shaft_x + 0.5) * CELL_SIZE, fy)
+		dot.size = Vector2(CELL_SIZE, 4)
+		var is_current := (floor_i == _floor_def.index)
+		dot.color = Color(0.20, 0.85, 0.45) if is_current else Color(0.40, 0.38, 0.35)
+		_parent.add_child(dot); _floor_nodes.append(dot)
+
+func _floor_y_in_shaft(floor_idx: int) -> float:
+	var base_y := (WORLD_H - 6) * CELL_SIZE
+	var floor_spacing := 4.0 * CELL_SIZE
+	return base_y - floor_idx * floor_spacing
+
+# ─── Wall Tile Helper ──────────────────────────────────────────
+
+func _set_wall_tile(x: int, y: int) -> void:
+	# No-op if no TileMap — walls are purely decorative ColorRects
+	pass
+
+# ─── Style Helpers ─────────────────────────────────────────────
+
+func _get_wall_base_color() -> Color:
+	return Color(0.38, 0.35, 0.32)
+
+func _get_section_floor(style: int) -> Color:
+	match style:
+		StoreData.SectionStyle.FRIDGE:   return Color(0.14, 0.18, 0.24)
+		StoreData.SectionStyle.PRODUCE:  return Color(0.14, 0.19, 0.12)
+		StoreData.SectionStyle.BAKERY:  return Color(0.20, 0.15, 0.10)
+		StoreData.SectionStyle.SHELF:    return Color(0.17, 0.16, 0.15)
+		StoreData.SectionStyle.DELI:     return Color(0.19, 0.13, 0.13)
+		StoreData.SectionStyle.FREEZER:  return Color(0.12, 0.16, 0.22)
+	return Color(0.18, 0.17, 0.16)
+
+func _get_section_wall_color(style: int) -> Color:
+	match style:
+		StoreData.SectionStyle.FRIDGE:   return Color(0.60, 0.78, 0.95)
+		StoreData.SectionStyle.PRODUCE:  return Color(0.60, 0.82, 0.50)
+		StoreData.SectionStyle.BAKERY:   return Color(0.82, 0.62, 0.38)
+		StoreData.SectionStyle.SHELF:    return Color(0.72, 0.65, 0.55)
+		StoreData.SectionStyle.DELI:     return Color(0.88, 0.55, 0.52)
+		StoreData.SectionStyle.FREEZER:  return Color(0.55, 0.78, 0.95)
+	return Color(0.65, 0.60, 0.50)
+
+# ─── Texture Helpers ───────────────────────────────────────────
+
+func _make_glow(col: Color) -> Texture2D:
+	var sz := 48
+	var img := Image.create(sz, sz, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var c := col.darkened(0.2)
+	for y in range(sz):
+		for x in range(sz):
+			var d := Vector2(x - sz * 0.5, y - sz * 0.5).length() / (sz * 0.5)
+			if d < 1.0:
+				var a := (1.0 - d) * 0.35 * c.a
+				img.set_pixel(x, y, Color(c.r, c.g, c.b, a))
+	return ImageTexture.create_from_image(img)
+
+func _make_sign(def, w: int, h: int) -> Sprite2D:
+	var img := Image.create(80, 12, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	_fill_sign_rect(img, 0, 0, 80, 12, _get_section_wall_color(def.style).darkened(0.3))
+	_fill_sign_rect(img, 0, 0, 80, 1, def.light_color.darkened(0.2))
+	_fill_sign_rect(img, 0, 11, 80, 1, def.light_color.darkened(0.4))
+	_fill_sign_rect(img, 0, 0, 1, 12, def.light_color.darkened(0.2))
+	_fill_sign_rect(img, 79, 0, 1, 12, def.light_color.darkened(0.4))
+	var spr := Sprite2D.new()
+	spr.texture = ImageTexture.create_from_image(img)
+	spr.z_index = 5
+	return spr
+
+func _fill_sign_rect(img: Image, x: int, y: int, w: int, h: int, col: Color) -> void:
+	x = clampi(x, 0, 80); y = clampi(y, 0, 12)
+	w = clampi(w, 0, 80 - x); h = clampi(h, 0, 12 - y)
+	for px in range(x, x + w):
+		for py in range(y, y + h):
+			img.set_pixel(px, py, col)
+
+func _make_lantern() -> Texture2D:
+	# Red paper lantern texture
+	var sz := 20
+	var img := Image.create(sz, sz, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var red := Color(0.88, 0.25, 0.20, 0.9)
+	for y in range(sz):
+		for x in range(sz):
+			var cx := x - sz / 2.0
+			var cy := y - sz / 2.0
+			var r := sz / 2.0 - 1.0
+			if cx * cx + cy * cy < r * r:
+				var brightness := 1.0 - (absf(cy) / r) * 0.3
+				img.set_pixel(x, y, Color(red.r * brightness, red.g * brightness, red.b * brightness, red.a))
+	return ImageTexture.create_from_image(img)
+
+# ─── Public Accessors ───────────────────────────────────────────
+
+func get_sections() -> Array:
+	return _sections
+
+func get_food_stalls() -> Array:
+	return _food_stalls
+
+func get_checkout_counters() -> Array:
+	return _checkout_counters
+
+func get_floor_nodes() -> Array:
+	return _floor_nodes
