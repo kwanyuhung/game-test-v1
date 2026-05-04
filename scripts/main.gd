@@ -21,6 +21,8 @@ const MaintenancePanelScript = preload("res://scripts/maintenance_panel.gd")
 const PlayerStatsScript = preload("res://scripts/player_stats.gd")
 const StatsPanelScript = preload("res://scripts/stats_panel.gd")
 const AchievementPopupScript = preload("res://scripts/achievement_popup.gd")
+const WarehouseSystemScript = preload("res://scripts/warehouse_system.gd")
+const ATMPanelScript = preload("res://scripts/atm_panel.gd")
 
 const CELL_SIZE := FloorConfig.CELL_SIZE
 const WORLD_W  := FloorConfig.WORLD_W
@@ -47,6 +49,10 @@ var _nearby_issue: bool = false
 var _target_issue: Object = null  # Issue the player is heading to resolve
 var _player_stats: PlayerStats = null
 var _stats_panel: StatsPanel = null
+var _warehouse: WarehouseSystem = null
+var _nearby_atm: bool = false
+var _atm_panel: ATMPanel = null
+var _nearby_warehouse: bool = false
 var _nearby_elevator: bool = false
 var _nearby_parking: bool = false
 var _nearby_stairs: bool = false
@@ -115,6 +121,12 @@ func _ready() -> void:
 	_maintenance_visual = MaintenanceVisualScript.new()
 	add_child(_maintenance_visual)
 	_maintenance_visual.configure(self)
+
+	# ── Warehouse System ──
+	_warehouse = WarehouseSystemScript.new()
+	add_child(_warehouse)
+	_warehouse.delivery_arrived.connect(_on_warehouse_delivery_arrived)
+	_warehouse.low_stock_warning.connect(_on_warehouse_low_stock)
 
 	# ── Player Stats & Progression ──
 	_player_stats = PlayerStatsScript.new()
@@ -538,6 +550,8 @@ func _process(_delta: float) -> void:
 	_update_claw_machine_proximity()
 	_update_npc_chat_proximity()
 	_update_issue_proximity()
+	_update_atm_proximity()
+	_update_warehouse_proximity()
 
 func _update_elevator_proximity() -> void:
 	if _player == null or _elevator == null:
@@ -679,6 +693,83 @@ func _update_issue_proximity() -> void:
 			prompt_lbl.visible = true
 		if prompt_bg != null:
 			prompt_bg.visible = true
+
+# ─── ATM Proximity ──────────────────────────────────────────────
+func _update_atm_proximity() -> void:
+	_nearby_atm = false
+	if _player == null:
+		return
+	# Check if near any ATM node
+	for node in get_children():
+		if node.has_method("is_nearby") and node.name.begins_with("ATM_"):
+			if node.is_nearby(_player.position):
+				_nearby_atm = true
+				break
+	var prompt_lbl = get_node_or_null("PromptLbl")
+	var prompt_bg = get_node_or_null("PromptBg")
+	if _nearby_atm and not _nearby_elevator and not _nearby_stairs:
+		if prompt_lbl != null:
+			prompt_lbl.text = "[E] Use ATM"
+			prompt_lbl.visible = true
+		if prompt_bg != null:
+			prompt_bg.visible = true
+
+# ─── Warehouse Proximity ────────────────────────────────────────
+func _update_warehouse_proximity() -> void:
+	_nearby_warehouse = false
+	if _player == null or _current_floor_idx != 12:
+		return
+	# On Floor 12 (warehouse), always show the proximity if in range
+	var wh_pos := Vector2(50 * CELL_SIZE, 20 * CELL_SIZE)
+	if _player.position.distance_to(wh_pos) < CELL_SIZE * 10.0:
+		_nearby_warehouse = true
+	var prompt_lbl = get_node_or_null("PromptLbl")
+	var prompt_bg = get_node_or_null("PromptBg")
+	if _nearby_warehouse and not _nearby_elevator and not _nearby_stairs:
+		if prompt_lbl != null:
+			prompt_lbl.text = "[E] Check Warehouse Stock"
+			prompt_lbl.visible = true
+		if prompt_bg != null:
+			prompt_bg.visible = true
+
+func _on_warehouse_delivery_arrived(contents: Dictionary) -> void:
+	notify_telegram("Delivery arrived at warehouse! Stock updated for %d sections." % contents.size())
+
+func _on_warehouse_low_stock(section_id: String) -> void:
+	var section_name := section_id.to_upper()
+	var msg := "Low stock warning: %s section needs restocking!" % section_name
+	if _current_floor_idx == 12:  # on warehouse floor
+		var prompt_lbl = get_node_or_null("PromptLbl")
+		if prompt_lbl != null:
+			prompt_lbl.text = "WARN: %s LOW STOCK" % section_name
+			prompt_lbl.visible = true
+
+func _open_atm_panel() -> void:
+	if _atm_panel != null and _atm_panel.visible:
+		return
+	# Find the nearest ATM
+	var nearest_atm = null
+	for node in get_children():
+		if node.has_method("is_nearby") and node.name.begins_with("ATM_"):
+			if node.is_nearby(_player.position):
+				nearest_atm = node
+				break
+	if nearest_atm == null:
+		return
+	_atm_panel = ATMPanelScript.new()
+	add_child(_atm_panel)
+	_atm_panel.open(nearest_atm)
+	_atm_panel.closed.connect(_on_atm_panel_closed)
+	_atm_panel.withdraw_success.connect(_on_atm_withdraw_success)
+
+func _on_atm_panel_closed() -> void:
+	_atm_panel = null
+
+func _on_atm_withdraw_success(amount: float) -> void:
+	var prompt_lbl = get_node_or_null("PromptLbl")
+	if prompt_lbl != null:
+		prompt_lbl.text = "Withdrew $%.2f" % amount
+		prompt_lbl.visible = true
 
 func _toggle_maintenance_panel() -> void:
 	if _maintenance_panel != null and _maintenance_panel.visible:
@@ -879,6 +970,10 @@ func _on_player_interact() -> void:
 	# Elevator first
 	if _nearby_elevator:
 		_elevator.open_panel(_player.position, _player)
+		return
+	# ATM
+	if _nearby_atm:
+		_open_atm_panel()
 		return
 	# Food stall order
 	if _nearby_stall != null:
@@ -1126,6 +1221,9 @@ func _show_checkout_receipt() -> void:
 		var prod = entry["product"]
 		if _player_stats != null:
 			_player_stats.on_item_bought(prod.id, prod.price * entry["qty"])
+		# Consume stock from warehouse for this section
+		if _warehouse != null and prod.section != "":
+			_warehouse.consume_stock(prod.section, entry["qty"])
 	if _player_stats != null:
 		_player_stats.on_checkout(cart.subtotal(), item_count)
 

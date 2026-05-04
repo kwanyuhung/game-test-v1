@@ -44,6 +44,11 @@ enum BehaviorState {
 	WAITING_FOR_GROUP,
 	ENTERING_STORE,
 	LEAVING_STORE,
+	GOING_TO_CART_PICKUP,
+	AT_CART_PICKUP,
+	SHOPPING_SECTION,
+	GOING_TO_CHECKOUT_NPC,
+	AT_CHECKOUT_NPC,
 }
 
 # ─── Staff Task Definitions ─────────────────────────────────
@@ -97,6 +102,13 @@ var _stroller_sprite: Sprite2D = null
 var _group_leader: NPCController = null   # for group members
 var _group_members: Array = []            # for group leaders
 
+# Shopping cart (customers)
+var _has_cart: bool = false
+var _cart_sprite: Sprite2D = null
+var _cart_pos: Vector2 = Vector2.ZERO  # offset behind the NPC
+var _shopping_list_idx: int = 0         # which section to shop next
+var _at_section_target: bool = false   # true when at target section
+
 # Visual
 var _body_sprite: Sprite2D
 var _name_label: Label
@@ -144,6 +156,14 @@ func configure(actor: ActorData.Actor) -> void:
 		_stroller_sprite.z_index = 2
 		add_child(_stroller_sprite)
 
+	# Shopping cart for customers
+	if actor.role == ActorData.Role.CUSTOMER:
+		_cart_sprite = Sprite2D.new()
+		_cart_sprite.texture = _make_cart_texture()
+		_cart_sprite.z_index = 2
+		add_child(_cart_sprite)
+		_update_cart_position()
+
 	# Collision
 	var col := CollisionShape2D.new()
 	var shape := RectangleShape2D.new()
@@ -167,6 +187,48 @@ func _physics_process(delta: float) -> void:
 	# Update stroller position
 	if _has_stroller and _stroller_sprite != null:
 		_stroller_sprite.position = Vector2(-8, 8)
+
+# ─── Cart Helpers ─────────────────────────────────────────
+func _update_cart_position() -> void:
+	if _cart_sprite == null:
+		return
+	# Position cart behind and to the left of the NPC (facing direction)
+	var cart_offset := Vector2(-12, 6)
+	_cart_sprite.position = cart_offset
+	_cart_sprite.flip_h = false
+
+func _make_cart_texture() -> Texture2D:
+	var W := 16; var H := 14
+	var img := Image.create(W, H, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	# Cart body
+	for y in range(2, H - 2):
+		for x in range(2, W - 2):
+			img.set_pixel(x, y, Color(0.55, 0.55, 0.62))
+	# Grid lines (basket mesh)
+	for y in range(3, H - 3, 2):
+		for x in range(3, W - 3):
+			img.set_pixel(x, y, Color(0.40, 0.40, 0.48))
+	for x in range(3, W - 3, 2):
+		for y in range(3, H - 3):
+			img.set_pixel(x, y, Color(0.40, 0.40, 0.48))
+	# Handle
+	for x in range(W - 2, W):
+		img.set_pixel(x, H * 0.5 as int, Color(0.35, 0.35, 0.40))
+	# Wheels
+	img.set_pixel(3, H - 2, Color(0.20, 0.20, 0.22))
+	img.set_pixel(4, H - 2, Color(0.20, 0.20, 0.22))
+	img.set_pixel(W - 5, H - 2, Color(0.20, 0.20, 0.22))
+	img.set_pixel(W - 4, H - 2, Color(0.20, 0.20, 0.22))
+	return ImageTexture.create_from_image(img)
+
+func _show_cart() -> void:
+	if _cart_sprite != null:
+		_cart_sprite.visible = true
+
+func _hide_cart() -> void:
+	if _cart_sprite != null:
+		_cart_sprite.visible = false
 
 # ─── Behavior State Machine ────────────────────────────────
 
@@ -219,6 +281,19 @@ func _choose_next_behavior() -> void:
 		_choose_customer_behavior()
 
 func _choose_customer_behavior() -> void:
+	# If customer has a shopping list and no cart yet, go get one
+	if _actor.role == ActorData.Role.CUSTOMER and not _actor.shopping_list.is_empty() and not _has_cart:
+		_go_to_cart_pickup()
+		return
+	# If has cart and still has items on list, shop next section
+	if _actor.role == ActorData.Role.CUSTOMER and _has_cart and _shopping_list_idx < _actor.shopping_list.size():
+		_start_shopping_section()
+		return
+	# If cart is full or list done, go to checkout
+	if _actor.role == ActorData.Role.CUSTOMER and _has_cart:
+		_go_to_checkout_npc()
+		return
+	# Default wander behavior
 	var roll := randf()
 	if roll < 0.15:
 		_start_wander()
@@ -491,6 +566,143 @@ func _do_leave_store(delta: float) -> void:
 func _leave_store() -> void:
 	_state = BehaviorState.LEAVING_STORE
 	_state_timer = 20.0
+
+# ─── Cart Shopping Behaviors ─────────────────────────────────
+
+const CART_PICKUP_POS := Vector2(400.0, 600.0)  # Near entrance on ground floor
+const CHECKOUT_NPC_POS := Vector2(350.0, 592.0)  # Near checkout lanes on ground floor
+
+func _go_to_cart_pickup() -> void:
+	_state = BehaviorState.GOING_TO_CART_PICKUP
+	_target_pos = CART_PICKUP_POS
+	_actor.target_floor = 0
+	_state_timer = 20.0
+
+func _do_going_to_cart_pickup(delta: float) -> void:
+	var to_target := _target_pos - global_position
+	var dist := to_target.length()
+	if dist < 8.0:
+		_state = BehaviorState.AT_CART_PICKUP
+		_state_timer = 1.0  # pause to "pick up" cart
+		return
+	var dir := to_target / dist
+	move_and_collide(dir * _get_speed() * delta)
+	_flip_sprite(dir.x)
+
+func _do_at_cart_pickup(delta: float) -> void:
+	_state_timer -= delta
+	if _state_timer <= 0.0:
+		# Got the cart!
+		_has_cart = true
+		_actor.has_cart = true
+		_show_cart()
+		_state = BehaviorState.SHOPPING_SECTION
+		_start_shopping_section()
+
+func _start_shopping_section() -> void:
+	if _shopping_list_idx >= _actor.shopping_list.size():
+		# Done shopping, go to checkout
+		_go_to_checkout_npc()
+		return
+	var entry: Dictionary = _actor.shopping_list[_shopping_list_idx]
+	var section_id: String = entry["section_id"]
+	var section_floor: int = _get_floor_for_section(section_id)
+	# Set target position to section location
+	_target_pos = _get_section_world_pos(section_id, section_floor)
+	_actor.target_floor = section_floor
+	_state = BehaviorState.SHOPPING_SECTION
+	_state_timer = randf_range(4.0, 8.0)  # time to "browse"
+
+func _do_shopping_section(delta: float) -> void:
+	_state_timer -= delta
+	# Walk to section first
+	if _actor.current_floor != _actor.target_floor:
+		# Need to use elevator
+		_start_elevator_travel()
+		return
+	var to_target := _target_pos - global_position
+	var dist := to_target.length()
+	if dist > 10.0:
+		var dir := to_target / dist
+		move_and_collide(dir * _get_speed() * delta)
+		_flip_sprite(dir.x)
+	else:
+		# At section — "browse" for a while
+		if _state_timer <= 0.0:
+			# Add item to cart (simulate)
+			if _shopping_list_idx < _actor.shopping_list.size():
+				var entry: Dictionary = _actor.shopping_list[_shopping_list_idx]
+				var qty: int = int(entry["qty"])
+				_actor.cart_item_count += qty
+				_shopping_list_idx += 1
+			# Done browsing this section, go to next
+			_state = BehaviorState.SHOPPING_SECTION
+			_start_shopping_section()
+
+func _go_to_checkout_npc() -> void:
+	_state = BehaviorState.GOING_TO_CHECKOUT_NPC
+	_target_pos = CHECKOUT_NPC_POS
+	_actor.target_floor = 0
+	_state_timer = 30.0
+
+func _do_going_to_checkout_npc(delta: float) -> void:
+	if _actor.current_floor != 0:
+		_start_elevator_travel()
+		return
+	var to_target := _target_pos - global_position
+	var dist := to_target.length()
+	if dist < 12.0:
+		_state = BehaviorState.AT_CHECKOUT_NPC
+		_state_timer = randf_range(2.0, 5.0)  # time in checkout queue
+		return
+	var dir := to_target / dist
+	move_and_collide(dir * _get_speed() * delta)
+	_flip_sprite(dir.x)
+
+func _do_at_checkout_npc(delta: float) -> void:
+	_state_timer -= delta
+	if _state_timer <= 0.0:
+		# Checkout done! Leave store
+		_actor.cart_item_count = 0
+		_has_cart = false
+		_actor.has_cart = false
+		_hide_cart()
+		_leave_store()
+
+func _get_floor_for_section(section_id: String) -> int:
+	var section_floors := {
+		"produce": 1, "dairy": 1, "bakery": 1, "meat": 1,
+		"pantry": 2, "spices": 2,
+		"drinks": 3, "coffee": 3,
+		"snacks": 4, "candy": 4,
+		"frozen": 5,
+		"clean": 6, "paper": 6,
+		"pharm": 7, "beauty": 7,
+		"toys": 8,
+		"cafe": 10,
+		"pet": 11,
+	}
+	return section_floors.get(section_id, 1)
+
+func _get_section_world_pos(section_id: String, floor: int) -> Vector2:
+	# Returns world position for a section on a given floor
+	# Each floor is 800px tall in world space
+	var floor_base_y := 64.0 + floor * 800.0
+	# Rough section positions
+	var section_x_map := {
+		"produce": 300.0, "dairy": 100.0, "bakery": 700.0, "meat": 350.0,
+		"pantry": 700.0, "spices": 100.0,
+		"drinks": 950.0, "coffee": 700.0,
+		"snacks": 100.0, "candy": 350.0,
+		"frozen": 950.0,
+		"clean": 700.0, "paper": 950.0,
+		"pharm": 100.0, "beauty": 350.0,
+		"toys": 450.0,
+		"cafe": 700.0,
+		"pet": 200.0,
+	}
+	var x := section_x_map.get(section_id, 400.0)
+	return Vector2(x, floor_base_y + 100.0)
 
 # ─── Helpers ────────────────────────────────────────────────
 

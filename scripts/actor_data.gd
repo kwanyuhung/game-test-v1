@@ -214,6 +214,8 @@ class Actor:
 	var energy: float             # 0..1
 	var hunger: float            # 0..1 (0=full, 1=starving)
 	var happiness: float          # 0..1
+	var shopping_list: Array      # [{section_id, qty, fulfilled}] the customer's plan
+	var has_cart: bool            # true once they've picked up a cart
 	var current_floor: int
 	var current_task: StaffTask  # null if no task
 	var target_floor: int
@@ -221,7 +223,7 @@ class Actor:
 
 	func _init() -> void:
 		role = Role.CUSTOMER
-		staff_role = StaffRole.NONE
+		has_cart = false
 		life_stage = LifeStage.ADULT
 		appearance = Appearance.new()
 		group_type = CustomerGroupType.SOLO
@@ -231,6 +233,8 @@ class Actor:
 		energy = 1.0
 		hunger = 0.0
 		happiness = 0.8
+		shopping_list = []
+		has_cart = false
 		current_floor = 0
 		target_floor = 0
 		is_active = true
@@ -262,7 +266,21 @@ class Actor:
 		# Generate a random name
 		var first_names := ["Alex", "Jordan", "Sam", "Morgan", "Taylor", "Casey", "Riley", "Quinn", "Avery", "Blake", "Drew", "Reese", "Finley", "Sage", "River"]
 		a.display_name = first_names[randi() % first_names.size()]
+
+		# Generate shopping list
+		a._generate_shopping_list()
 		return a
+
+	func _generate_shopping_list() -> void:
+		var sections := ["produce", "dairy", "bakery", "meat", "pantry", "snacks", "frozen", "drinks", "beauty", "pet"]
+		var item_count := randi() % 5 + 2  # 2-6 items
+		shopping_list.clear()
+		for i in range(item_count):
+			var sec: String = sections[randi() % sections.size()]
+			# Avoid duplicate sections
+			var existing := shopping_list.filter(func(x): return x.get("section_id") == sec)
+			if existing.is_empty():
+				shopping_list.append({"section_id": sec, "qty": randi() % 3 + 1, "fulfilled": 0})
 
 	static func random_staff(p_role: StaffRole) -> Actor:
 		var a := Actor.new()

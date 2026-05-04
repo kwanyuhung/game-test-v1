@@ -110,6 +110,11 @@ static func _static_init() -> void:
 		FloorDef.new(11, "11", "pet_paradise",
 			Color(0.42, 0.70, 0.55),
 			true, false, true, true),
+
+		# Floor 12 — Warehouse & Receiving Dock
+		FloorDef.new(12, "12", "warehouse",
+			Color(0.55, 0.45, 0.38),
+			false, false, true, false),
 	]
 
 # Floor index → FloorDef

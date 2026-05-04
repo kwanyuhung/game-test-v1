@@ -82,6 +82,8 @@ func _build_zone(zone: FloorConfig.Zone) -> void:
 		FloorConfig.ZONE_DECOR:         _build_zone_decor(zone)
 		FloorConfig.ZONE_CLAW_MACHINE:  _build_zone_claw_machine(zone)
 		FloorConfig.ZONE_PET_ADOPTION:  _build_zone_pet_adoption(zone)
+		FloorConfig.ZONE_WAREHOUSE:      _build_zone_warehouse(zone)
+		FloorConfig.ZONE_ATM:           _build_zone_atm(zone)
 		# Unknown types are silently skipped (extensible)
 
 # ─── Individual Zone Builders ───────────────────────────────────
@@ -869,6 +871,183 @@ func _make_pet_food_bag_texture(pet_idx: int, bag_idx: int) -> Texture2D:
 # ─── Claw Machine Zone ───────────────────────────────────────────────
 # Builds a complete claw machine cabinet with prizes, claw, rail, and
 # interaction zone. meta: {machine_id: String, prize_pool: int (0-3)}.
+
+# ─── Warehouse Zone ─────────────────────────────────────────────────
+# Visual representation of the warehouse receiving dock.
+# Shows shelving units, delivery doors, and stock crates.
+func _build_zone_warehouse(zone: FloorConfig.Zone) -> void:
+	var cx := zone.x * CELL_SIZE
+	var cy := zone.y * CELL_SIZE
+	var cw := zone.w * CELL_SIZE
+	var ch := zone.h * CELL_SIZE
+
+	# Floor
+	var floor_bg := ColorRect.new()
+	floor_bg.position = Vector2(cx, cy)
+	floor_bg.size = Vector2(cw, ch)
+	floor_bg.color = Color(0.38, 0.32, 0.26)
+	_parent.add_child(floor_bg); _floor_nodes.append(floor_bg)
+
+	# Grid lines on floor (warehouse floor markings)
+	for gx in range(cx, cx + cw, CELL_SIZE * 4):
+		var line := ColorRect.new()
+		line.position = Vector2(gx, cy)
+		line.size = Vector2(2, ch)
+		line.color = Color(0.32, 0.28, 0.22)
+		_parent.add_child(line); _floor_nodes.append(line)
+
+	# Shelving units (left side — 3 tall racks)
+	var shelf_colors := [
+		Color(0.50, 0.42, 0.32),
+		Color(0.45, 0.38, 0.28),
+		Color(0.52, 0.44, 0.34),
+	]
+	for rack in range(3):
+		var rx := cx + 8 + rack * (cw * 0.22)
+		var rack_h := ch * 0.85
+		var rack_bg := ColorRect.new()
+		rack_bg.position = Vector2(rx, cy + 8)
+		rack_bg.size = Vector2(cw * 0.18, rack_h)
+		rack_bg.color = shelf_colors[rack % shelf_colors.size()]
+		_parent.add_child(rack_bg); _floor_nodes.append(rack_bg)
+
+		# Shelf rows inside rack
+		for row in range(5):
+			var shelf_y := cy + 8 + row * (rack_h / 5.5)
+			var shelf_plank := ColorRect.new()
+			shelf_plank.position = Vector2(rx + 2, shelf_y)
+			shelf_plank.size = Vector2(cw * 0.18 - 4, 2)
+			shelf_plank.color = Color(0.35, 0.28, 0.20)
+			_parent.add_child(shelf_plank); _floor_nodes.append(shelf_plank)
+
+			# Crate boxes on shelf
+			for col in range(3):
+				var crate_x := rx + 4 + col * (cw * 0.055)
+				var crate_spr := Sprite2D.new()
+				crate_spr.texture = _make_crate_texture(rack, row)
+				crate_spr.position = Vector2(crate_x + CELL_SIZE, shelf_y - CELL_SIZE * 0.5)
+				crate_spr.z_index = 3
+				_parent.add_child(crate_spr); _floor_nodes.append(crate_spr)
+
+	# Loading dock door (right side — large door with stripes)
+	var dock_x := cx + cw * 0.70
+	var dock := ColorRect.new()
+	dock.position = Vector2(dock_x, cy + 8)
+	dock.size = Vector2(cw * 0.25, ch * 0.80)
+	dock.color = Color(0.25, 0.22, 0.18)
+	_parent.add_child(dock); _floor_nodes.append(dock)
+
+	# Dock stripes (yellow/black warning)
+	for st in range(0, dock.size.y as int, 16):
+		var stripe := ColorRect.new()
+		stripe.position = Vector2(dock_x, cy + 8 + st)
+		stripe.size = Vector2(cw * 0.25, 8)
+		stripe.color = Color(0.85, 0.72, 0.20) if (st / 16 % 2 == 0) else Color(0.15, 0.12, 0.08)
+		_parent.add_child(stripe); _floor_nodes.append(stripe)
+
+	# "RECEIVING DOCK" sign
+	var recv_lbl := Label.new()
+	recv_lbl.text = "RECEIVING DOCK"
+	recv_lbl.position = Vector2(cx + 4, cy - 14)
+	recv_lbl.add_theme_color_override("font_color", Color(0.85, 0.72, 0.20))
+	recv_lbl.add_theme_font_size_override("font_size", 10)
+	_parent.add_child(recv_lbl); _floor_nodes.append(recv_lbl)
+
+	var hint_lbl := Label.new()
+	hint_lbl.text = "Stock arrives here. Press E to check warehouse stock."
+	hint_lbl.position = Vector2(cx + 4, cy - 6)
+	hint_lbl.add_theme_color_override("font_color", Color(0.60, 0.60, 0.70))
+	hint_lbl.add_theme_font_size_override("font_size", 6)
+	_parent.add_child(hint_lbl); _floor_nodes.append(hint_lbl)
+
+# ─── ATM Zone ─────────────────────────────────────────────────────
+# ATM machine — standalone or in a wall niche.
+# meta: {atm_id: String}
+func _build_zone_atm(zone: FloorConfig.Zone) -> void:
+	var atm_id: String = zone.meta.get("atm_id", "atm_1")
+	var cx := zone.x * CELL_SIZE
+	var cy := zone.y * CELL_SIZE
+
+	# ATM machine body
+	var machine := ATM.new()
+	machine.position = Vector2(cx + CELL_SIZE * 2, cy + CELL_SIZE * 2)
+	machine.name = "ATM_%s" % atm_id
+	_parent.add_child(machine)
+
+	# Build ATM visual using a simple approach
+	var body := ColorRect.new()
+	body.position = Vector2(cx + CELL_SIZE * 2, cy + CELL_SIZE * 2)
+	body.size = Vector2(CELL_SIZE * 3, CELL_SIZE * 4)
+	body.color = Color(0.15, 0.20, 0.15)
+	_parent.add_child(body); _floor_nodes.append(body)
+
+	# Screen (bright green LCD)
+	var screen := ColorRect.new()
+	screen.position = Vector2(cx + CELL_SIZE * 2 + 4, cy + CELL_SIZE * 2 + 2)
+	screen.size = Vector2(CELL_SIZE * 2 + 2, CELL_SIZE)
+	screen.color = Color(0.08, 0.18, 0.08)
+	_parent.add_child(screen); _floor_nodes.append(screen)
+
+	# Screen glow label
+	var screen_lbl := Label.new()
+	screen_lbl.text = "INSERT CARD"
+	screen_lbl.position = Vector2(cx + CELL_SIZE * 2 + 6, cy + CELL_SIZE * 2 + 3)
+	screen_lbl.add_theme_color_override("font_color", Color(0.30, 0.90, 0.40))
+	screen_lbl.add_theme_font_size_override("font_size", 6)
+	_parent.add_child(screen_lbl); _floor_nodes.append(screen_lbl)
+
+	# Card slot
+	var slot := ColorRect.new()
+	slot.position = Vector2(cx + CELL_SIZE * 3 + 4, cy + CELL_SIZE * 3 + 4)
+	slot.size = Vector2(CELL_SIZE + 2, 3)
+	slot.color = Color(0.08, 0.08, 0.08)
+	_parent.add_child(slot); _floor_nodes.append(slot)
+
+	# Cash dispenser
+	var cash := ColorRect.new()
+	cash.position = Vector2(cx + CELL_SIZE * 2 + 4, cy + CELL_SIZE * 4 + 2)
+	cash.size = Vector2(CELL_SIZE * 2 + 2, CELL_SIZE)
+	cash.color = Color(0.12, 0.18, 0.12)
+	_parent.add_child(cash); _floor_nodes.append(cash)
+
+	# Bank branding label
+	var brand_lbl := Label.new()
+	brand_lbl.text = "STORE BANK"
+	brand_lbl.position = Vector2(cx + CELL_SIZE * 2 + 2, cy + CELL_SIZE * 2 - 10)
+	brand_lbl.add_theme_color_override("font_color", Color(0.20, 0.60, 0.30))
+	brand_lbl.add_theme_font_size_override("font_size", 6)
+	_parent.add_child(brand_lbl); _floor_nodes.append(brand_lbl)
+
+# ─── Crate texture (for warehouse shelves) ─────────────────────────
+func _make_crate_texture(rack_idx: int, row_idx: int) -> Texture2D:
+	var W := 12; var H := 12
+	var img := Image.create(W, H, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+
+	var crate_color := Color(0.65, 0.52, 0.38)
+	if rack_idx % 3 == 1:
+		crate_color = Color(0.55, 0.48, 0.40)
+	elif rack_idx % 3 == 2:
+		crate_color = Color(0.70, 0.55, 0.42)
+
+	# Box fill
+	for y in range(1, H - 1):
+		for x in range(1, W - 1):
+			img.set_pixel(x, y, crate_color)
+
+	# Box border
+	for x in range(W):
+		img.set_pixel(x, 0, crate_color.darkened(0.2))
+		img.set_pixel(x, H - 1, crate_color.darkened(0.2))
+	for y in range(H):
+		img.set_pixel(0, y, crate_color.darkened(0.2))
+		img.set_pixel(W - 1, y, crate_color.darkened(0.2))
+
+	# Tape/stripe on box
+	for x in range(W):
+		img.set_pixel(x, H / 2, crate_color.lightened(0.2))
+
+	return ImageTexture.create_from_image(img)
 func _build_zone_claw_machine(zone: FloorConfig.Zone) -> void:
 	var machine_id: String = zone.meta.get("machine_id", "claw_1")
 	var prize_pool_idx: int = zone.meta.get("prize_pool", 0)
@@ -1139,5 +1318,7 @@ func get_checkout_counters() -> Array:
 
 func get_floor_nodes() -> Array:
 	return _floor_nodes
+
+
 
 
