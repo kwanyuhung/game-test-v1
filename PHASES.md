@@ -118,6 +118,33 @@ Manage the business side of the supermarket.
 - Tax season — file reports, reinvest in store
 - Store reputation score — affects customer volume and staff satisfaction
 
+## DEV MODE — Testing Tools
+Press **F3** to open the Dev Tools panel (dev mode only).
+
+| Button | What it does |
+|--------|-------------|
+| SUPER ACTOR [S] | Spawn a golden-crown test character you can walk around and press E next to any NPC to interact |
+| GOD MODE [G] | Walk through walls, ignore collisions |
+| INFINITE MONEY [M] | Set cash to $999,999 |
+| FAST TIME [T] | Toggle 5x game speed |
+| SPAWN 5 CUSTOMERS | Add 5 test customers to the store |
+| SPAWN 3 STAFF | Add 3 test staff members |
+| ALL ACHIEVEMENTS | Unlock all 12 achievements instantly |
+| MAX STATS | Set XP to max, level to 50 |
+| TRIGGER DELIVERY | Force a warehouse delivery |
+| LOW STOCK ALERT | Trigger low stock warnings on all sections |
+| KILL ALL NPCs | Remove all NPCs from the store |
+
+## Ad Billboards
+Colorful promotional billboards placed throughout the store:
+- **Ground floor**: SUMMER SALE (lobby), MEMBERS ONLY (lobby)
+- **Floor 1 (Shoes)**: SPORT SALE
+- **Floor 2 (Fashion)**: NEW LOOKS!
+- **Floor 3 (Sport)**: GEAR UP!
+- **Floor 4 (Outdoor)**: ADVENTURE!
+- **Floor 5 (Stationery)**: BACK TO SCHOOL!
+- **Floor 10 (Pet)**: ADOPT ME!
+
 ## Ideas for Future Expansion
 
 - **Multiple floors open simultaneously** — elevator ride animation between floors
