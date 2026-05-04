@@ -11,6 +11,7 @@ const TelegramBot = preload("res://scripts/telegram_bot.gd")
 const ElevatorScript = preload("res://scripts/elevator.gd")
 const FoodStallBrowseScript = preload("res://scripts/food_stall_browse.gd")
 const ClawMachine = preload("res://scripts/claw_machine.gd")
+const ActorData = preload("res://scripts/actor_data.gd")
 
 const CELL_SIZE := FloorConfig.CELL_SIZE
 const WORLD_W  := FloorConfig.WORLD_W
@@ -25,6 +26,7 @@ var _nearby_section: Node = null
 var _nearby_checkout: Node = null
 var _nearby_stall: Node = null
 var _nearby_claw_machine: ClawMachine = null
+var _npcs: Array = []
 var _nearby_elevator: bool = false
 var _nearby_parking: bool = false
 var _nearby_stairs: bool = false
@@ -129,7 +131,7 @@ func _clear_floor_nodes() -> void:
 	var to_remove: Array = []
 	for c in get_children():
 		var nm := c.name as String
-		if nm.begins_with("Section_") or nm.begins_with("Counter_") or nm.begins_with("Stall_") or nm.begins_with("Floor_"):
+		if nm.begins_with("Section_") or nm.begins_with("Counter_") or nm.begins_with("Stall_") or nm.begins_with("Floor_") or nm.begins_with("Claw_"):
 			to_remove.append(c)
 	for c in to_remove:
 		c.queue_free()
@@ -297,13 +299,172 @@ func _spawn_player() -> void:
 	_build_cart_panel()
 
 func _build_npcs() -> void:
-	# Only spawn NPCs on retail floors (spawn on floor 1 for now)
+	# ─── Staff per floor ────────────────────────────────────────────
+	# Staff spawn positions (x, y tile coords) per floor
+	var staff_spawns := {
+		0: { "x": [36, 38, 40, 20, 40, 60], "y": [10, 12, 14, 20, 20, 20] },  # Ground: lobby + food street
+		1: { "x": [20, 40, 60, 20, 40], "y": [10, 10, 10, 20, 20] },  # Floor 1
+		2: { "x": [20, 40, 60], "y": [10, 10, 20] },   # Pantry
+		3: { "x": [30, 50, 20], "y": [10, 10, 20] },   # Beverages
+		4: { "x": [20, 40, 60], "y": [10, 10, 20] },   # Snacks
+	}
+
+	var staff_roles := [
+		ActorData.StaffRole.CASHIER,
+		ActorData.StaffRole.SHELF_STOCKER,
+		ActorData.StaffRole.CLEANER,
+		ActorData.StaffRole.SECURITY,
+		ActorData.StaffRole.GREETER,
+		ActorData.StaffRole.MANAGER,
+		ActorData.StaffRole.FLOOR_STAFF,
+	]
+
+	# Spawn 2-3 staff per role across different floors
+	for role in staff_roles:
+		var count := 2 if role == ActorData.StaffRole.SHELF_STOCKER else 1
+		for c in range(count):
+			var floor_idx := c % 5  # distribute across floors 0-4
+			var spawns = staff_spawns.get(floor_idx, {"x": [30], "y": [10]})
+			var sx := spawns["x"][c % spawns["x"].size()] * CELL_SIZE
+			var sy := spawns["y"][c % spawns["y"].size()] * CELL_SIZE
+			_spawn_npc_staff(role, floor_idx, Vector2(sx, sy))
+
+	# ─── Customers — diverse groups ────────────────────────────────
+	# Family with baby (stroller)
+	_spawn_customer_group(ActorData.CustomerGroupType.FAMILY_BABY, 0, Vector2(300, 200))
+	_spawn_customer_group(ActorData.CustomerGroupType.FAMILY_BABY, 0, Vector2(600, 250))
+
+	# Family with toddler
+	_spawn_customer_group(ActorData.CustomerGroupType.FAMILY_TODDLER, 1, Vector2(200, 200))
+	_spawn_customer_group(ActorData.CustomerGroupType.FAMILY_TODDLER, 0, Vector2(500, 400))
+
+	# Two couples
+	_spawn_customer_group(ActorData.CustomerGroupType.TWO_COUPLES, 1, Vector2(400, 300))
+	_spawn_customer_group(ActorData.CustomerGroupType.TWO_COUPLES, 0, Vector2(200, 300))
+
+	# Couple shopping
+	_spawn_customer_group(ActorData.CustomerGroupType.COUPLE, 1, Vector2(300, 400))
+	_spawn_customer_group(ActorData.CustomerGroupType.COUPLE, 3, Vector2(250, 250))
+	_spawn_customer_group(ActorData.CustomerGroupType.COUPLE, 4, Vector2(350, 300))
+
+	# Solo shoppers
+	for i in range(8):
+		var floor_i := i % 5
+		var px := (80 + randi() % 500) as float
+		var py := (80 + randi() % 400) as float
+		_spawn_customer(ActorData.CustomerGroupType.SOLO, floor_i, Vector2(px, py))
+
+	# Pair of friends
+	for i in range(4):
+		var floor_i := (i % 4) + 1
+		var px := (100 + randi() % 400) as float
+		var py := (100 + randi() % 300) as float
+		_spawn_customer_group(ActorData.CustomerGroupType.PAIR, floor_i, Vector2(px, py))
+
+	# Three friends
+	_spawn_customer_group(ActorData.CustomerGroupType.THREE_FRIENDS, 1, Vector2(500, 200))
+	_spawn_customer_group(ActorData.CustomerGroupType.THREE_FRIENDS, 2, Vector2(300, 350))
+
+	# Extended family (2 adults + kids + grandparent)
+	_spawn_customer_group(ActorData.CustomerGroupType.FAMILY_EXTENDED, 1, Vector2(600, 150))
+
+	notify_telegram_npc(_npc_count)
+
+var _npc_count: int = 0
+
+func _spawn_npc_staff(role: int, floor_idx: int, pos: Vector2) -> void:
 	var npc_scene = preload("res://scripts/npc_controller.gd")
-	for i in range(6):
+	var npc = npc_scene.new()
+	var actor = ActorData.Actor.new()
+	actor = ActorData.Actor.random_staff(role)
+	actor.current_floor = floor_idx
+	npc.configure(actor)
+	npc.position = pos
+	npc.name = "Staff_%s_%d" % [actor.display_name.replace(" ", "_"), _npc_count]
+	add_child(npc)
+	_npcs.append(npc)
+	_npc_count += 1
+
+func _spawn_customer(group_type: int, floor_idx: int, pos: Vector2) -> void:
+	var npc_scene = preload("res://scripts/npc_controller.gd")
+	var npc = npc_scene.new()
+	var actor = ActorData.Actor.random_customer(group_type)
+	actor.current_floor = floor_idx
+	npc.configure(actor)
+	npc.position = pos
+	npc.name = "Customer_%d" % _npc_count
+	add_child(npc)
+	_npcs.append(npc)
+	_npc_count += 1
+
+func _spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void:
+	# Spawn a group leader + follow members based on group type
+	var leader = null
+	var offsets := []
+	var has_baby := false
+	var has_toddler := false
+	var has_kids := false
+
+	match group_type:
+		ActorData.CustomerGroupType.FAMILY_BABY:
+			offsets = [Vector2(0,0), Vector2(20,0), Vector2(10,-15)]
+			has_baby = true
+		ActorData.CustomerGroupType.FAMILY_TODDLER:
+			offsets = [Vector2(0,0), Vector2(20,0), Vector2(10,-12)]
+			has_toddler = true
+		ActorData.CustomerGroupType.FAMILY_KIDS:
+			offsets = [Vector2(0,0), Vector2(20,0), Vector2(10,-12), Vector2(30,-12)]
+			has_kids = true
+		ActorData.CustomerGroupType.FAMILY_EXTENDED:
+			offsets = [Vector2(0,0), Vector2(22,0), Vector2(44,0), Vector2(11,-12), Vector2(33,-12), Vector2(-15,0)]
+		ActorData.CustomerGroupType.COUPLE:
+			offsets = [Vector2(0,0), Vector2(20,0)]
+		ActorData.CustomerGroupType.PAIR:
+			offsets = [Vector2(0,0), Vector2(20,0)]
+		ActorData.CustomerGroupType.TWO_COUPLES:
+			offsets = [Vector2(0,0), Vector2(20,0), Vector2(40,0), Vector2(60,0)]
+		ActorData.CustomerGroupType.THREE_FRIENDS:
+			offsets = [Vector2(0,0), Vector2(20,0), Vector2(40,0)]
+		_:
+			offsets = [Vector2(0,0)]
+
+	for i in range(offsets.size()):
+		var npc_scene = preload("res://scripts/npc_controller.gd")
 		var npc = npc_scene.new()
-		npc.position = Vector2(20 * CELL_SIZE + randi() % (40 * CELL_SIZE), 6 * CELL_SIZE + randi() % (10 * CELL_SIZE))
-		npc.name = "NPC_%d" % i
+		var actor = ActorData.Actor.random_customer(group_type)
+		actor.current_floor = floor_idx
+
+		# Children get child appearance
+		if i >= 2 and (has_baby or has_toddler or has_kids):
+			actor.appearance.top_style = randi() % 2  # t-shirt or tank
+			actor.appearance.bottom_style = randi() % 2  # shorts or pants
+			actor.appearance.shoes_style = randi() % 2  # sneakers or sandals
+
+		# Baby/toddler data
+		if has_baby and i == 2:
+			actor.child = ActorData.ChildData.random_infant()
+			actor.life_stage = ActorData.LifeStage.ADULT  # parent, not baby
+		if has_toddler and i == 2:
+			actor.child = ActorData.ChildData.random_toddler()
+			actor.life_stage = ActorData.LifeStage.ADULT
+
+		npc.configure(actor)
+		npc.position = pos + offsets[i] * Vector2(1.0, 1.0)
+
+		var member_name := "Group_%d_Member_%d" % [_npc_count, i]
+		if i == 0:
+			member_name = "GroupLeader_%d" % _npc_count
+		npc.name = member_name
 		add_child(npc)
+		_npcs.append(npc)
+
+		if i == 0:
+			leader = npc
+		else if leader != null:
+			npc.set_group_leader(leader)
+			var leader_actor: ActorData.Actor = leader.get_actor()
+			leader_actor.group_members.append(npc)
+		_npc_count += 1
 
 # ????????????????????????????????????????????????????????????????# GAME LOOP ??Proximity & Input
 # ????????????????????????????????????????????????????????????????

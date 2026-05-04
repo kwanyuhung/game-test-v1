@@ -1,6 +1,6 @@
 # 🏪 Pixel Supermarket — Floor Guide & Interactive Playbook
 
-Welcome to the 10-floor supermarket! Here's everything you can do on each floor.
+Welcome! Here's everything you can do on each floor.
 
 ---
 
@@ -25,7 +25,7 @@ Welcome to the 10-floor supermarket! Here's everything you can do on each floor.
 - Slots 4–10 are free
 
 ### Food Street (Middle — y=17..33)
-- **12 international food stalls** arranged in 3 rows of 4
+- **12 international food stalls** arranged in 3 rows
 - Walk close to any stall counter and press `E` to open the **menu**
 - Navigate menu with `W` (up) and `S` (down), `E` to add to cart
 - Each stall has a **black menu board** showing prices on the back wall
@@ -48,7 +48,7 @@ Welcome to the 10-floor supermarket! Here's everything you can do on each floor.
 
 ### Lobby (Top — y=2..15)
 - **Information Desk** (center): Shows the floor directory
-- **WC** (right): "Press E" — just a sign, no gameplay action
+- **WC** (right): "Press E" — just a sign
 - **Elevator** (right edge): Press `E` to open the floor selector panel
 
 ---
@@ -58,7 +58,7 @@ Welcome to the 10-floor supermarket! Here's everything you can do on each floor.
 Press `E` near the elevator shaft (right edge of every floor) to open the **Floor Selector Panel**.
 
 - Use `W/S` to highlight a floor, `E` to travel
-- The elevator car animates between floors (door open → travel → door close)
+- The elevator car animates between floors
 - You can also use **stairs** — walk to the stairs area (right edge) and press `E`
 
 **Floor Selector:**
@@ -91,9 +91,9 @@ Press `E` near the elevator shaft (right edge of every floor) to open the **Floo
 | **MEAT/DELI** | Fresh meat, sausages, cold cuts | Red glow |
 
 ### How to Browse
-1. Walk close to a section → prompt appears: `[E] Browse`
+1. Walk close to a section → prompt: `[E] Browse`
 2. Press `E` → **Section Browse Panel** opens
-3. Use `W/S` to navigate products, `E` to add to cart with quantity selector
+3. Use `W/S` to navigate products, `E` to add to cart
 4. Press `ESC` to close
 
 ---
@@ -102,70 +102,43 @@ Press `E` near the elevator shaft (right edge of every floor) to open the **Floo
 
 **Theme:** Dry goods, spices, packaged foods
 
-### Sections
 | Section | Description |
 |---------|-------------|
 | **PANTRY** | Rice, pasta, canned goods, cereals |
-| **SPICES** | Seasonings, herbs, flavourings |
-| **SNACKS** | Chips, crackers, biscuits |
-| **CANDY** | Chocolate, sweets, lollipops |
-
-### How to Use
-- Same browse mechanic as Floor 1
-- Products have **descriptions** — shown in the detail panel on the right
+| **SPICES** | Seasonings, herbs |
+| **SNACKS** | Chips, crackers |
+| **CANDY** | Chocolate, sweets |
 
 ---
 
 ## Floor 3 — Beverages 🥤☕
 
-**Theme:** Cold drinks, coffee, tea, water
-
-### Sections
 | Section | Description |
 |---------|-------------|
 | **DRINKS** | Soft drinks, juice, water, energy drinks |
-| **COFFEE** | Coffee beans, ground coffee, espresso pods |
-
-### How to Use
-- Browse like any other section
-- Quantity selector lets you buy multiple bottles/cans
+| **COFFEE** | Coffee beans, espresso pods |
 
 ---
 
 ## Floor 4 — Snacks & Confectionery 🍫🍬
 
-**Theme:** Sweets, chips, impulse-buy layout
-
-### Sections
 | Section | Description |
 |---------|-------------|
 | **SNACKS** | Chips, crackers, popcorn |
 | **CANDY** | Lollipops, gummies, hard sweets |
 
-### Tip: This floor is great for quick impulse additions to your cart!
-
 ---
 
 ## Floor 5 — Frozen Foods 🧊❄️
 
-**Theme:** Ice cream, frozen meals, frozen produce
-
-### Sections
 | Section | Description |
 |---------|-------------|
-| **FROZEN** | Ice cream, frozen pizza, frozen vegetables, fish, meals |
-
-### Visual Style
-- Cold blue ambient lighting
-- Fridge-style sections with glass door appearance
+| **FROZEN** | Ice cream, frozen pizza, frozen vegetables |
 
 ---
 
 ## Floor 6 — Household 🧹🧻
 
-**Theme:** Cleaning products, paper goods
-
-### Sections
 | Section | Description |
 |---------|-------------|
 | **CLEAN** | Detergents, soaps, cleaning sprays |
@@ -175,13 +148,10 @@ Press `E` near the elevator shaft (right edge of every floor) to open the **Floo
 
 ## Floor 7 — Health & Beauty 💊💄
 
-**Theme:** Pharmacy, cosmetics, wellness
-
-### Sections
 | Section | Description |
 |---------|-------------|
 | **PHARM** | Medicines, supplements, vitamins |
-| **BEAUTY** | Skincare, cosmetics, makeup |
+| **BEAUTY** | Skincare, cosmetics |
 
 ---
 
@@ -189,26 +159,19 @@ Press `E` near the elevator shaft (right edge of every floor) to open the **Floo
 
 **Theme:** Neon arcade with 4 claw machines
 
-### The Claw Machine Game
-This is a **skill-based minigame**. Here's how to play:
-
-1. Walk close to any claw machine and press `E`
-2. The machine starts — your **claw begins moving right** automatically
-3. **Controls while playing:**
+### Claw Machine Game
+1. Walk close to any machine and press `E`
+2. Claw **starts moving right** automatically
+3. **Controls:**
    - `A` / `←` — Move claw LEFT
    - `D` / `→` — Move claw RIGHT
-   - `S` / `↓` — **DROP** the claw NOW
-4. The claw descends, tries to grab a prize, then rises
-5. If it grabs a prize, it drops it in the **prize chute** → prize goes to your cart
-6. Each play costs **$1** (deducted from your cart total at checkout)
+   - `S` / `↓` — **DROP** the claw
+4. Claw descends, tries to grab a prize, then rises
+5. If it grabs a prize → prize goes to your cart
+6. Each play costs **$1** (at checkout)
 
-### Tips
-- Drop the claw **before** it reaches the right edge (that's the drop zone)
-- Try to position the claw **over a prize** before dropping
-- Each of the 4 machines has **different colored plush prizes** (red, blue, yellow, mixed)
-- There's a **Prizes display shelf** in the center aisle showing what's available
+**Tips:** Drop before the right edge (drop zone). Each of 4 machines has different colored plush prizes.
 
-### Claw Machine Roster
 | Machine | Prize Theme | Location |
 |---------|-------------|----------|
 | Claw #1 | 🔴 Red Plushies | Left column, top |
@@ -221,53 +184,105 @@ This is a **skill-based minigame**. Here's how to play:
 ## Floor 9 — Staff Room 🔒
 
 **Theme:** Private staff area (restricted)
-
-- Currently **no interactive content** — just a lore element
-- Accessible via elevator like any other floor
-- Could be expanded with staff lockers, break room in future
+- No interactive content — just a lore element
 
 ---
 
 ## Floor 10 — Rooftop Café ☀️☕
 
-**Theme:** Open-air rooftop with Italian, Mexican, and drinks stalls
-
-### Stalls
 | Stall | Cuisine |
 |-------|---------|
 | **Trattoria** | 🇮🇹 Italian (Margherita Pizza, Tiramisu) |
 | **El Taco Loco** | 🇲🇽 Mexican (Tacos, Quesadilla) |
 | **Bubble Tea Bar** | 🧋 Drinks (Milk Tea, Smoothies) |
 
-### How to Use
-- Same food ordering mechanic as Ground Floor Food Street
-- Rooftop ambient lighting is warm and bright
-- Great view from the top of the building!
-
 ---
 
 ## Shopping Cart & Checkout 🛒💳
 
 ### Cart (Press `Tab`)
-- Shows all items you've added from sections and food stalls
+- Shows all items from sections and food stalls
 - Shows subtotal
-- **Important:** Claw machine plays appear as items in your cart ($1 each)
+- Claw machine plays appear as items ($1 each)
 
-### Checkout (Ground Floor only — `y=34..37`)
-1. Go to any **checkout lane** on Floor G (near the lobby)
+### Checkout (Ground Floor only)
+1. Go to any **checkout lane** on Floor G
 2. Press `E` with items in your cart
-3. A **receipt** appears showing:
-   - All items with prices
-   - Subtotal
-   - Tax (8%)
-   - **Total**
+3. A **receipt** appears showing all items, subtotal, tax (8%), total
 4. Receipt auto-closes after a few seconds
 
-### Telegram Bot Integration
-- The game sends Telegram notifications when you:
-  - Browse a section
-  - Check out
-  - Encounter errors
+---
+
+## 🤖 AI People — NPCs
+
+The supermarket is full of AI characters with unique appearances, roles, and behaviors!
+
+### NPC Roles
+
+#### 👔 Staff Members
+Staff wear uniforms and carry out tasks around the store:
+
+| Role | Appearance | Behavior |
+|------|------------|----------|
+| **Cashier** | Blue shirt + dark pants | Works at checkout lanes |
+| **Shelf Stocker** | Grey workwear | Restocks sections on various floors |
+| **Cleaner** | Green workwear | Cleans lobby, food court, checkout |
+| **Security** | Black uniform | Patrols floors, watches for issues |
+| **Greeter** | Red vest | Stands at entrance, welcomes customers |
+| **Manager** | Dark shirt + glasses | Walks floors, inspects areas |
+| **Floor Staff** | Grey polo | Helps customers, organizes shelves |
+
+Each staff member has:
+- **Energy** (0–100%) — drains as they work
+- **Current task** — shown as status label above them
+- **Patrol route** — they walk to different spots
+
+#### 🛒 Customers
+Customers wander the store, browse sections, use the elevator, and shop. They come in different group types:
+
+| Group Type | Description | Members |
+|-----------|-------------|---------|
+| **Solo** | Single shopper | 1 adult |
+| **Couple** | Two people shopping together | 2 adults |
+| **Pair** | Two friends | 2 adults |
+| **Two Couples** | Four friends/partners | 4 adults |
+| **Family + Baby** | Parents with infant | 2 adults + baby in stroller |
+| **Family + Toddler** | Parents with young child | 2 adults + toddler |
+| **Three Friends** | Three companions | 3 adults |
+| **Extended Family** | Large group with grandparent | 2 adults + 2 kids + elderly |
+
+### NPC Appearance System
+Every NPC has randomized appearance:
+
+**Customizable Features:**
+- 🎨 **Skin tone** — 5 different tones
+- 💇 **Hair style** — 4 styles (bob, long, short-neat, buzz)
+- 💇 **Hair color** — 6 natural + fashion colors
+- 👓 **Glasses** — ~25% of NPCs wear glasses
+- 💄 **Makeup** — 3 levels (none, light, full)
+- 👟 **Shoes** — Sneakers, formal, sandals, boots
+- 👜 **Accessories** — None, handbag, backpack, fancy bag
+- 👕 **Top style** — T-shirt, button shirt, sweater, jacket, tank top
+- 👖 **Bottom style** — Pants, skirt, shorts, dress
+- 🎨 **Colors** — Every outfit item has a randomized color
+
+### Baby Cart System
+- **Infants** (0-1 year) sit in strollers with a canopy
+- **Toddlers** (1-5 years) walk alongside parents
+- Parents have a **baby cart** attached (stroller sprite)
+- Strollers have matching color themes
+
+### NPC Status Labels
+Look above each NPC's head to see their current state:
+
+| Label | Meaning |
+|-------|---------|
+| *(empty)* | Idle / wandering |
+| `[patrolling]` | Security/manager walking route |
+| `[working]` | Staff completing a task |
+| `[shopping]` | Customer browsing |
+| `[elevator F3]` | Riding elevator to Floor 3 |
+| `[waiting]` | Group member waiting for leader |
 
 ---
 
@@ -277,7 +292,7 @@ This is a **skill-based minigame**. Here's how to play:
 1. Open `scripts/floor_config.gd`
 2. Append a new `FloorDef` to `FLOOR_DEFS`
 3. Define zones using `Z()` for generic zones or `SZ()` for retail sections
-4. The floor is automatically rendered — no code needed!
+4. Done! The floor is automatically rendered.
 
 **Example:**
 ```gdscript
@@ -298,15 +313,18 @@ FLOOR_DEFS.append(FloorDef.new(
 ### Adding a New Zone Type
 1. Add `const ZONE_MY_TYPE := "my_type"` to `floor_config.gd`
 2. Add a `_build_zone_my_type(zone)` function to `floor_builder.gd`
-3. Add `FloorConfig.ZONE_MY_TYPE: _build_zone_my_type(zone)` to the match statement in `_build_zone()`
+3. Add `FloorConfig.ZONE_MY_TYPE: _build_zone_my_type(zone)` to the match in `_build_zone()`
+
+### Adding a New Staff Role
+1. Add to `ActorData.StaffRole` enum in `actor_data.gd`
+2. Add task templates to `STAFF_TASK_TEMPLATES` in `npc_controller.gd`
+3. Add behavior in `_choose_staff_behavior()` or `_do_<behavior>()`
 
 ### Adding Products
-- Products are in `scripts/store_data.gd`
-- Add to the `CATALOG` array in `_static_init()`
+Products are in `scripts/store_data.gd` — add to the `CATALOG` array.
 
 ### Adding Food Stalls
-- Stalls are in `scripts/floor_config.gd` in the `FoodStallDef.ALL` array
-- Add a new entry to add more cuisines
+Stalls are in `scripts/floor_config.gd` in the `FoodStallDef.ALL` array.
 
 ---
 
@@ -322,4 +340,14 @@ FLOOR_DEFS.append(FloorDef.new(
 
 ---
 
-_Current as of Phase 2 — Ground Floor Food Street + Full 10-Floor Layout + Arcade Claw Machines_
+## Telegram Bot Integration
+
+The game sends Telegram notifications for:
+- ✅ Section browse
+- 💳 Checkout completion
+- 🛒 Cart updates
+- ❌ Game errors
+
+---
+
+_Current as of Phase 3 — Full NPC System with Staff Roles, Customer Groups, and Arcade Claw Machines_
