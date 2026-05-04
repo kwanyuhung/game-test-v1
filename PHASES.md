@@ -9,11 +9,14 @@
 - **Floor 4 — Outdoor**: Fishing, Hiking, Running, Camping, Cycling
 - **Floor 5 — Stationery & Plants**: Office Supplies, School Stationery, Indoor Plants, Garden Plants
 - **Floor 6 — Staff Areas**: Locker Room, Staff Lounge, Training Room
-- **Floor 7 — Back Office**: Admin Office, HR Department, Open Office
-- **Floor 8 — Executive Office**: Exec Suite, Board Room, Secretaries
+- **Floor 7 — Back Office**: Admin Office, HR Department, Open Office, **Monitor Room (CCTV)**
+- **Floor 8 — Executive Office**: Exec Suite, Board Room, Secretaries, **Monitor Room (CCTV)**
 - **Floor 9 — Rooftop Café**: Food stalls, outdoor dining
 - **Floor 10 — Pet Paradise**: Adoption corner, pet supplies
 - **Floor 11 — Warehouse**: Receiving dock, stock shelves
+
+**Monitor Room (CCTV) — Floors 7 & 8:**
+Press **E** near the monitor room zone to open the CCTV panel — live grid showing all 12 floor feeds with customer counts, stock levels, and issue alerts.
 
 Player movement across all floors, section browsing.
 
