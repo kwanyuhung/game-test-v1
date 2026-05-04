@@ -66,6 +66,11 @@ const ZONE_CUSTOMER_SERVICE := "customer_service" # customer service desk
 const ZONE_LOYALTY_KIOSK    := "loyalty_kiosk"   # loyalty / membership kiosk
 const ZONE_GIFT_WRAP        := "gift_wrap"       # gift wrapping station
 const ZONE_DIGITAL_KIOSK    := "digital_kiosk"   # digital info kiosk / store map
+			# Phase H ??Home Electronics (Ground Floor extension)
+			Z(ZONE_PHONE_GADGETS,    8, 11, 18, 6, {"name": "PHONES & GADGETS", "color": Color(0.35, 0.55, 0.80)}),
+			Z(ZONE_SMART_HOME,      28, 11, 18, 6, {"name": "SMART HOME", "color": Color(0.40, 0.60, 0.70)}),
+			Z(ZONE_ELECTRONICS,     48, 11, 18, 6, {"name": "ELECTRONICS", "color": Color(0.45, 0.50, 0.65)}),
+			Z(ZONE_REPAIR_COUNTER,   8, 18, 18, 6, {"name": "REPAIR COUNTER", "color": Color(0.60, 0.45, 0.40)}),
 const ZONE_JUICE_BAR       := "juice_bar"       # fresh juice counter
 const ZONE_HEALTH_FOOD      := "health_food"     # health food shelf
 const ZONE_SMOOTHIE         := "smoothie"        # smoothie station
@@ -75,6 +80,10 @@ const ZONE_KIDS_CLOTHING    := "kids_clothing"   # kids clothing section
 const ZONE_NURSING_ROOM     := "nursing_room"    # nursing / baby room
 const ZONE_FAMILY_WC        := "family_wc"      # family restroom / changing
 const ZONE_KIDS_CLUB        := "kids_club"       # kids club reception
+const ZONE_PHONE_GADGETS   := "phone_gadgets"   # phone / gadget accessories
+const ZONE_SMART_HOME     := "smart_home"     # smart home devices
+const ZONE_ELECTRONICS    := "electronics"     # general electronics shelf
+const ZONE_REPAIR_COUNTER := "repair_counter"  # tech repair / service counter
 
 # ── Zone helper ─────────────────────────────────────────────────
 static func Z(ztype: String, x: int, y: int, w: int, h: int, meta: Dictionary = {}) -> Dictionary:
@@ -1920,6 +1929,22 @@ e
 	# ── Floor 13 — Kids Kingdom (Phase K) ───────────────────────────────────────
 	FLOOR_DEFS.append(FloorDef.new(
 		13, "13", "kids_kingdom", Color(0.72, 0.58, 0.80),
+	# ?? Floor 14 ??Electronics Megastore (Phase H) ???????????????????????????????
+	FLOOR_DEFS.append(FloorDef.new(
+		14, "14", "electronics", Color(0.35, 0.45, 0.65),
+		[
+			Z(ZONE_COMMON,           2,  3, 78, 38),
+			Z(ZONE_PHONE_GADGETS,    2,  3, 30, 18, {"name": "PHONES & GADGETS", "color": Color(0.35, 0.55, 0.80)}),
+			Z(ZONE_SMART_HOME,      34,  3, 30, 18, {"name": "SMART HOME", "color": Color(0.40, 0.60, 0.70)}),
+			Z(ZONE_ELECTRONICS,      2, 23, 38, 16, {"name": "ELECTRONICS", "color": Color(0.45, 0.50, 0.65)}),
+			Z(ZONE_REPAIR_COUNTER,  42, 23, 36, 16, {"name": "REPAIR COUNTER", "color": Color(0.60, 0.45, 0.40)}),
+			Z(ZONE_AD,             66,  4,  4,  6, {"ad_id": "tech_sale", "ad_text": "TECH SALE!", "ad_color": Color(0.30, 0.60, 1.0)}),
+			Z(ZONE_ELEVATOR,       80,  2,  4, 40),
+			Z(ZONE_STAIRS,        84,  2,  6, 40),
+		],
+		[],
+		true, false, true, true
+	))
 		[
 			Z(ZONE_COMMON,          2,  3, 78, 38),
 			Z(ZONE_KIDS_PLAY,       2,  3, 32, 22, {"name": "PLAY ZONE", "color": Color(0.80, 0.60, 0.90)}),
@@ -1949,6 +1974,9 @@ static func get_stall_def(stall_id: String) -> Dictionary:
 
 static func get_all_stalls() -> Array:
 	return FoodStallDef.get_all()
+
+
+
 
 
 

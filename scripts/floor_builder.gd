@@ -115,6 +115,10 @@ func _build_zone(zone: FloorConfig.Zone) -> void:
 		FloorConfig.ZONE_NURSING_ROOM:       _build_zone_nursing_room(zone)
 		FloorConfig.ZONE_FAMILY_WC:           _build_zone_family_wc(zone)
 		FloorConfig.ZONE_KIDS_CLUB:          _build_zone_kids_club(zone)
+		FloorConfig.ZONE_PHONE_GADGETS:    _build_zone_phone_gadgets(zone)
+		FloorConfig.ZONE_SMART_HOME:       _build_zone_smart_home(zone)
+		FloorConfig.ZONE_ELECTRONICS:       _build_zone_electronics(zone)
+		FloorConfig.ZONE_REPAIR_COUNTER:   _build_zone_repair_counter(zone)
 		# Unknown types are silently skipped (extensible)
 
 # ─── Individual Zone Builders ───────────────────────────────────
@@ -2551,6 +2555,115 @@ func _make_zone_label(text: String, pos: Vector2, col: Color) -> Label:
 
 func _make_plank(pos: Vector2, sz: Vector2, col: Color) -> ColorRect:
 	var r := ColorRect.new(); r.position = pos; r.size = sz; r.color = col; return r
+
+# ??? Phase H: Home Electronics & Tech Zones ?????????????????????????????????????
+
+func _build_zone_phone_gadgets(zone: FloorConfig.Zone) -> void:
+	var name: String = zone.meta.get("name", "PHONES & GADGETS")
+	var zone_color: Color = zone.meta.get("color", Color(0.35, 0.55, 0.80))
+	var cx := zone.x * CELL_SIZE; var cy := zone.y * CELL_SIZE
+	var cw := zone.w * CELL_SIZE; var ch := zone.h * CELL_SIZE
+	var bg := ColorRect.new(); bg.position = Vector2(cx, cy); bg.size = Vector2(cw, ch)
+	bg.color = zone_color.darkened(0.35); _parent.add_child(bg); _floor_nodes.append(bg)
+	var tl := _make_zone_label(name, Vector2(cx + 4, cy - 14), zone_color.lightened(0.3)); _parent.add_child(tl); _floor_nodes.append(tl)
+	# Phone display stands
+	for i in range(4):
+		var px := cx + 8 + i * ((cw - 16) / 4.0)
+		# Stand base
+		var stand := ColorRect.new()
+		stand.position = Vector2(px, cy + ch * 0.55); stand.size = Vector2((cw - 16) / 5.5, ch * 0.30)
+		stand.color = Color(0.25, 0.28, 0.35); _parent.add_child(stand); _floor_nodes.append(stand)
+		# Phone on stand
+		var phone := ColorRect.new()
+		phone.position = Vector2(px + 2, cy + ch * 0.25); phone.size = Vector2((cw - 16) / 7.0, ch * 0.30)
+		phone.color = Color(0.15, 0.15, 0.20); _parent.add_child(phone); _floor_nodes.append(phone)
+		# Screen glow
+		var glow := ColorRect.new()
+		glow.position = Vector2(px + 3, cy + ch * 0.27); glow.size = Vector2((cw - 16) / 7.5, ch * 0.22)
+		glow.color = zone_color.lightened(0.3); _parent.add_child(glow); _floor_nodes.append(glow)
+	# Accessory hooks below
+	for i in range(6):
+		var ax := cx + 6 + i * ((cw - 12) / 6.0)
+		var acc := ColorRect.new()
+		acc.position = Vector2(ax, cy + ch * 0.72); acc.size = Vector2((cw - 12) / 7.5, ch * 0.15)
+		acc.color = [Color(0.90, 0.90, 0.95), Color(0.90, 0.85, 0.90), Color(0.85, 0.90, 0.90)][i % 3]
+		_parent.add_child(acc); _floor_nodes.append(acc)
+
+func _build_zone_smart_home(zone: FloorConfig.Zone) -> void:
+	var name: String = zone.meta.get("name", "SMART HOME")
+	var zone_color: Color = zone.meta.get("color", Color(0.40, 0.60, 0.70))
+	var cx := zone.x * CELL_SIZE; var cy := zone.y * CELL_SIZE
+	var cw := zone.w * CELL_SIZE; var ch := zone.h * CELL_SIZE
+	var bg := ColorRect.new(); bg.position = Vector2(cx, cy); bg.size = Vector2(cw, ch)
+	bg.color = zone_color.darkened(0.35); _parent.add_child(bg); _floor_nodes.append(bg)
+	var tl := _make_zone_label(name, Vector2(cx + 4, cy - 14), zone_color.lightened(0.3)); _parent.add_child(tl); _floor_nodes.append(tl)
+	# Smart device shelves ??speakers, cameras, displays
+	var dev_colors := [Color(0.30, 0.30, 0.35), Color(0.35, 0.35, 0.40), Color(0.25, 0.30, 0.35), Color(0.40, 0.35, 0.30)]
+	for row in range(3):
+		var sy := cy + 16 + row * (ch * 0.28)
+		var plank := _make_plank(Vector2(cx + 4, sy), Vector2(cw - 8, 2), zone_color.darkened(0.4)); _parent.add_child(plank); _floor_nodes.append(plank)
+		for col in range(4):
+			var dx := cx + 6 + col * ((cw - 12) / 4.0)
+			var dh := 12 + (col % 2) * 6
+			var dev := ColorRect.new()
+			dev.position = Vector2(dx, sy - dh); dev.size = Vector2((cw - 12) / 5.5, dh)
+			dev.color = dev_colors[(row + col) % dev_colors.size()]; _parent.add_child(dev); _floor_nodes.append(dev)
+			# LED indicator dot
+			var led := ColorRect.new()
+			led.position = Vector2(dx + 2, sy - dh - 3); led.size = Vector2(3, 3)
+			led.color = Color(0.20, 0.90, 0.50); _parent.add_child(led); _floor_nodes.append(led)
+
+func _build_zone_electronics(zone: FloorConfig.Zone) -> void:
+	var name: String = zone.meta.get("name", "ELECTRONICS")
+	var zone_color: Color = zone.meta.get("color", Color(0.45, 0.50, 0.65))
+	var cx := zone.x * CELL_SIZE; var cy := zone.y * CELL_SIZE
+	var cw := zone.w * CELL_SIZE; var ch := zone.h * CELL_SIZE
+	var bg := ColorRect.new(); bg.position = Vector2(cx, cy); bg.size = Vector2(cw, ch)
+	bg.color = zone_color.darkened(0.35); _parent.add_child(bg); _floor_nodes.append(bg)
+	var tl := _make_zone_label(name, Vector2(cx + 4, cy - 14), zone_color.lightened(0.3)); _parent.add_child(tl); _floor_nodes.append(tl)
+	# TV display wall
+	var tv_bg := ColorRect.new()
+	tv_bg.position = Vector2(cx + cw * 0.1, cy + ch * 0.1); tv_bg.size = Vector2(cw * 0.8, ch * 0.5)
+	tv_bg.color = Color(0.10, 0.10, 0.12); _parent.add_child(tv_bg); _floor_nodes.append(tv_bg)
+	var tv_screen := ColorRect.new()
+	tv_screen.position = Vector2(cx + cw * 0.12, cy + ch * 0.12); tv_screen.size = Vector2(cw * 0.76, ch * 0.46)
+	tv_screen.color = Color(0.15, 0.25, 0.50); _parent.add_child(tv_screen); _floor_nodes.append(tv_screen)
+	# Speaker blocks
+	for i in range(3):
+		var sp_x := cx + 8 + i * ((cw - 16) / 3.0)
+		var sp := ColorRect.new()
+		sp.position = Vector2(sp_x, cy + ch * 0.65); sp.size = Vector2((cw - 16) / 4.5, ch * 0.22)
+		sp.color = Color(0.25, 0.25, 0.30); _parent.add_child(sp); _floor_nodes.append(sp)
+
+func _build_zone_repair_counter(zone: FloorConfig.Zone) -> void:
+	var name: String = zone.meta.get("name", "REPAIR COUNTER")
+	var zone_color: Color = zone.meta.get("color", Color(0.60, 0.45, 0.40))
+	var cx := zone.x * CELL_SIZE; var cy := zone.y * CELL_SIZE
+	var cw := zone.w * CELL_SIZE; var ch := zone.h * CELL_SIZE
+	var bg := ColorRect.new(); bg.position = Vector2(cx, cy); bg.size = Vector2(cw, ch)
+	bg.color = zone_color.darkened(0.30); _parent.add_child(bg); _floor_nodes.append(bg)
+	var tl := _make_zone_label(name, Vector2(cx + 4, cy - 14), zone_color.lightened(0.2)); _parent.add_child(tl); _floor_nodes.append(tl)
+	# Workbench counter
+	var bench := ColorRect.new()
+	bench.position = Vector2(cx + 4, cy + ch * 0.40); bench.size = Vector2(cw - 8, ch * 0.35)
+	bench.color = Color(0.40, 0.35, 0.30); _parent.add_child(bench); _floor_nodes.append(bench)
+	# Tool pegboard above
+	var board := ColorRect.new()
+	board.position = Vector2(cx + 4, cy + ch * 0.15); board.size = Vector2(cw - 8, ch * 0.22)
+	board.color = Color(0.50, 0.42, 0.35); _parent.add_child(board); _floor_nodes.append(board)
+	# Tool outlines
+	var tool_colors := [Color(0.80, 0.60, 0.30), Color(0.70, 0.70, 0.70), Color(0.90, 0.40, 0.40), Color(0.60, 0.80, 0.60)]
+	for i in range(4):
+		var tx := cx + 8 + i * ((cw - 16) / 4.0)
+		var tool := ColorRect.new()
+		tool.position = Vector2(tx, cy + ch * 0.17); tool.size = Vector2((cw - 16) / 6.0, ch * 0.18)
+		tool.color = tool_colors[i]; _parent.add_child(tool); _floor_nodes.append(tool)
+	var hint := Label.new(); hint.text = "[E] Tech Support"
+	hint.position = Vector2(cx + 4, cy + ch - 18)
+	hint.add_theme_color_override("font_color", Color(0.90, 0.80, 0.80))
+	hint.add_theme_font_size_override("font_size", 7)
+	_parent.add_child(hint); _floor_nodes.append(hint)
+
 # ─── Public Accessors ───────────────────────────────────────────
 
 func get_sections() -> Array:
@@ -2567,6 +2680,8 @@ func get_checkout_counters() -> Array:
 
 func get_floor_nodes() -> Array:
 	return _floor_nodes
+
+
 
 
 

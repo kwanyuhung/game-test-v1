@@ -119,6 +119,11 @@ static func _static_init() -> void:
 
 		# Floor 13 — Kids Kingdom (Phase K)
 		FloorDef.new(13, '13', 'kids_kingdom',
+
+		# Floor 14 — Electronics Megastore (Phase H)
+		FloorDef.new(14, '14', 'electronics',
+			Color(0.35, 0.45, 0.65),
+			true, false, true, true),
 			Color(0.72, 0.58, 0.80),
 			true, false, true, true),
 
