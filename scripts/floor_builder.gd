@@ -96,6 +96,7 @@ func _build_zone(zone: FloorConfig.Zone) -> void:
 		FloorConfig.ZONE_OFFICE_DESK:   _build_zone_office_desk(zone)
 		FloorConfig.ZONE_EXEC_OFFICE:   _build_zone_exec_office(zone)
 		FloorConfig.ZONE_AD:           _build_zone_ad(zone)
+		FloorConfig.ZONE_MONITOR_ROOM:  _build_zone_monitor_room(zone)
 		# Unknown types are silently skipped (extensible)
 
 # ─── Individual Zone Builders ───────────────────────────────────
@@ -1956,6 +1957,157 @@ func _build_zone_ad(zone: FloorConfig.Zone) -> void:
 	id_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6))
 	id_lbl.add_theme_font_size_override("font_size", 5)
 	_parent.add_child(id_lbl); _floor_nodes.append(id_lbl)
+
+
+# Monitor Room / CCTV Room Zone
+# Bank of screens showing floor status indicators.
+# On Floor 7 (Back Office) and Floor 8 (Executive Office).
+func _build_zone_monitor_room(zone: FloorConfig.Zone) -> void:
+	var name: String = zone.meta.get('name', 'MONITORING')
+	var zone_color: Color = zone.meta.get('color', Color(0.20, 0.25, 0.30))
+	var cx := zone.x * CELL_SIZE
+	var cy := zone.y * CELL_SIZE
+	var cw := zone.w * CELL_SIZE
+	var ch := zone.h * CELL_SIZE
+
+	# Dark room background
+	var bg := ColorRect.new()
+	bg.position = Vector2(cx, cy)
+	bg.size = Vector2(cw, ch)
+	bg.color = zone_color.darkened(0.1)
+	_parent.add_child(bg)
+	_floor_nodes.append(bg)
+
+	# Room name label
+	var title_lbl := Label.new()
+	title_lbl.text = name
+	title_lbl.position = Vector2(cx + 4, cy - 14)
+	title_lbl.add_theme_color_override('font_color', Color(0.30, 0.80, 1.0))
+	title_lbl.add_theme_font_size_override('font_size', 9)
+	_parent.add_child(title_lbl)
+	_floor_nodes.append(title_lbl)
+
+	# SUBTITLE
+	var sub_lbl := Label.new()
+	sub_lbl.text = 'LIVE FEED - ALL FLOORS'
+	sub_lbl.position = Vector2(cx + 4, cy - 6)
+	sub_lbl.add_theme_color_override('font_color', Color(0.20, 0.60, 0.50))
+	sub_lbl.add_theme_font_size_override('font_size', 6)
+	_parent.add_child(sub_lbl)
+	_floor_nodes.append(sub_lbl)
+
+	# 4x3 grid of monitor screens (12 floors)
+	var screen_w := (cw - 20) / 4.0
+	var screen_h := (ch - 24) / 3.5
+	var floors := ['G','1','2','3','4','5','6','7','8','9','10','11']
+	var screen_colors := [
+		Color(0.30, 0.50, 0.35),  # G - lobby green
+		Color(0.55, 0.40, 0.35),  # 1 - shoes brown
+		Color(0.50, 0.35, 0.55),  # 2 - fashion purple
+		Color(0.35, 0.50, 0.60),  # 3 - sport blue
+		Color(0.38, 0.60, 0.42),  # 4 - outdoor green
+		Color(0.45, 0.58, 0.42),  # 5 - stationery green
+		Color(0.35, 0.35, 0.40),  # 6 - staff grey
+		Color(0.38, 0.40, 0.45),  # 7 - back office blue-grey
+		Color(0.32, 0.32, 0.40),  # 8 - exec dark
+		Color(0.65, 0.60, 0.48),  # 9 - rooftop warm
+		Color(0.40, 0.70, 0.55),  # 10 - pet green
+		Color(0.55, 0.45, 0.38),  # 11 - warehouse brown
+	]
+
+	for i in range(12):
+		var col := i % 4
+		var row := i / 4
+		var sx := cx + 8 + col * screen_w
+		var sy := cy + 16 + row * screen_h
+
+		# Screen bezel (dark frame)
+		var bezel := ColorRect.new()
+		bezel.position = Vector2(sx - 2, sy - 2)
+		bezel.size = Vector2(screen_w + 4, screen_h + 4)
+		bezel.color = Color(0.08, 0.08, 0.10)
+		_parent.add_child(bezel)
+		_floor_nodes.append(bezel)
+
+		# Screen display
+		var scr := ColorRect.new()
+		scr.position = Vector2(sx, sy)
+		scr.size = Vector2(screen_w, screen_h)
+		scr.color = screen_colors[i].darkened(0.4)
+		_parent.add_child(scr)
+		_floor_nodes.append(scr)
+
+		# Scanline effect (horizontal lines on screen)
+		for sl in range(0, screen_h as int, 3):
+			var scan := ColorRect.new()
+			scan.position = Vector2(sx, sy + sl)
+			scan.size = Vector2(screen_w, 1)
+			scan.color = Color(0, 0, 0, 0.15)
+			_parent.add_child(scan)
+			_floor_nodes.append(scan)
+
+		# Floor label
+		var fl := Label.new()
+		fl.text = 'FL %s' % floors[i]
+		fl.position = Vector2(sx + 2, sy + 2)
+		fl.add_theme_color_override('font_color', Color(0.90, 0.95, 1.0))
+		fl.add_theme_font_size_override('font_size', 6)
+		_parent.add_child(fl)
+		_floor_nodes.append(fl)
+
+		# Status dot (green = active)
+		var dot := ColorRect.new()
+		dot.position = Vector2(sx + screen_w - 8, sy + 3)
+		dot.size = Vector2(4, 4)
+		dot.color = Color(0.20, 0.90, 0.40)  # green active dot
+		_parent.add_child(dot)
+		_floor_nodes.append(dot)
+
+		# Mini map hints (simple colored blocks representing sections)
+		for bx in range(3):
+			for by in range(2):
+				var dot2 := ColorRect.new()
+				dot2.position = Vector2(sx + 4 + bx * (screen_w * 0.28), sy + screen_h * 0.5 + by * (screen_h * 0.22))
+				dot2.size = Vector2(screen_w * 0.22, screen_h * 0.18)
+				dot2.color = screen_colors[i].lightened(0.2)
+				_parent.add_child(dot2)
+				_floor_nodes.append(dot2)
+
+		# Customer count (simulated)
+		var cust_lbl := Label.new()
+		cust_lbl.text = '%d customers' % [12, 8, 15, 6, 9, 11, 0, 0, 0, 7, 4, 2][i]
+		cust_lbl.position = Vector2(sx + 2, sy + screen_h - 10)
+		cust_lbl.add_theme_color_override('font_color', Color(0.70, 0.85, 0.70))
+		cust_lbl.add_theme_font_size_override('font_size', 5)
+		_parent.add_child(cust_lbl)
+		_floor_nodes.append(cust_lbl)
+
+	# Console desk at bottom
+	var desk := ColorRect.new()
+	desk.position = Vector2(cx + 4, cy + ch - 14)
+	desk.size = Vector2(cw - 8, 10)
+	desk.color = Color(0.15, 0.15, 0.20)
+	_parent.add_child(desk)
+	_floor_nodes.append(desk)
+
+	# Console lights
+	var light_colors := [Color(0.20, 0.90, 0.40), Color(0.90, 0.80, 0.20), Color(0.90, 0.40, 0.20)]
+	for li in range(3):
+		var light := ColorRect.new()
+		light.position = Vector2(cx + 8 + li * 10, cy + ch - 12)
+		light.size = Vector2(6, 6)
+		light.color = light_colors[li]
+		_parent.add_child(light)
+		_floor_nodes.append(light)
+
+	# Interaction hint
+	var hint := Label.new()
+	hint.text = '[E] Open Monitor Panel'
+	hint.position = Vector2(cx + cw - 60, cy + ch - 12)
+	hint.add_theme_color_override('font_color', Color(0.40, 0.70, 1.0))
+	hint.add_theme_font_size_override('font_size', 6)
+	_parent.add_child(hint)
+	_floor_nodes.append(hint)
 
 # ─── Public Accessors ───────────────────────────────────────────
 
