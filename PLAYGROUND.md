@@ -9,8 +9,11 @@ Welcome! Here's everything you can do on each floor.
 | Key | Action |
 |-----|--------|
 | `W A S D` / Arrow Keys | Move the player |
-| `E` | Interact / Confirm |
+| `E` | Interact / Confirm / Fix issue |
 | `Tab` | Open shopping cart |
+| `C` | Chat with nearby NPC |
+| `M` | Open Maintenance Panel |
+| `P` | Open Stats Dashboard |
 | `ESC` | Close any open panel |
 
 ---

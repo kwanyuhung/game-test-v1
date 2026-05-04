@@ -14,6 +14,13 @@ const ClawMachine = preload("res://scripts/claw_machine.gd")
 const ActorData = preload("res://scripts/actor_data.gd")
 const ChatManagerScript = preload("res://scripts/chat_manager.gd")
 const ChatPanelScript = preload("res://scripts/chat_panel.gd")
+const GameClockScript = preload("res://scripts/game_clock.gd")
+const MaintenanceSystemScript = preload("res://scripts/maintenance_system.gd")
+const MaintenanceVisualScript = preload("res://scripts/maintenance_visual.gd")
+const MaintenancePanelScript = preload("res://scripts/maintenance_panel.gd")
+const PlayerStatsScript = preload("res://scripts/player_stats.gd")
+const StatsPanelScript = preload("res://scripts/stats_panel.gd")
+const AchievementPopupScript = preload("res://scripts/achievement_popup.gd")
 
 const CELL_SIZE := FloorConfig.CELL_SIZE
 const WORLD_W  := FloorConfig.WORLD_W
@@ -32,6 +39,14 @@ var _nearby_npc_for_chat: NPCController = null
 var _npcs: Array = []
 var _chat_panel: ChatPanel = null
 var _chat_manager: ChatManager = null
+var _game_clock: GameClock = null
+var _maintenance_system: MaintenanceSystem = null
+var _maintenance_visual: MaintenanceVisual = null
+var _maintenance_panel: MaintenancePanel = null
+var _nearby_issue: bool = false
+var _target_issue: Object = null  # Issue the player is heading to resolve
+var _player_stats: PlayerStats = null
+var _stats_panel: StatsPanel = null
 var _nearby_elevator: bool = false
 var _nearby_parking: bool = false
 var _nearby_stairs: bool = false
@@ -84,6 +99,29 @@ func _ready() -> void:
 	_build_npcs()
 	_update_floor_hud()
 
+	# ── Game Clock & Maintenance System ──
+	_game_clock = GameClockScript.new()
+	add_child(_game_clock)
+	_game_clock.hour_changed.connect(_on_hour_changed)
+	_game_clock.day_changed.connect(_on_day_changed)
+	_game_clock.shift_report.connect(_on_shift_report)
+
+	_maintenance_system = MaintenanceSystemScript.new()
+	add_child(_maintenance_system)
+	_maintenance_system.configure(_game_clock)
+	_maintenance_system.issue_created.connect(_on_issue_created)
+	_maintenance_system.issue_resolved.connect(_on_issue_resolved)
+
+	_maintenance_visual = MaintenanceVisualScript.new()
+	add_child(_maintenance_visual)
+	_maintenance_visual.configure(self)
+
+	# ── Player Stats & Progression ──
+	_player_stats = PlayerStatsScript.new()
+	add_child(_player_stats)
+	_player_stats.achievement_unlocked.connect(_on_achievement_unlocked)
+	_player_stats.level_up.connect(_on_player_level_up)
+
 	# Start chat manager
 	_chat_manager = ChatManagerScript.new()
 	add_child(_chat_manager)
@@ -97,6 +135,8 @@ func _ready() -> void:
 func _build_floor(idx: int) -> void:
 	_clear_floor_nodes()
 	_current_floor_idx = idx
+	if _player_stats != null:
+		_player_stats.on_floor_visited(idx)
 	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(idx)
 
 	# Use FloorBuilder to render this floor
@@ -497,6 +537,7 @@ func _process(_delta: float) -> void:
 	_update_stall_proximity()
 	_update_claw_machine_proximity()
 	_update_npc_chat_proximity()
+	_update_issue_proximity()
 
 func _update_elevator_proximity() -> void:
 	if _player == null or _elevator == null:
@@ -616,6 +657,148 @@ func _update_npc_chat_proximity() -> void:
 		# Only hide chat hint if no other prompt is showing
 		pass  # don't override other prompts
 
+# ─── Issue / Maintenance Proximity ───────────────────────────────
+func _update_issue_proximity() -> void:
+	_nearby_issue = false
+	if _player == null or _maintenance_system == null:
+		return
+	var issue := _maintenance_system.get_issue_at_pos(_player.position, CELL_SIZE * 7.0)
+	_nearby_issue = (issue != null)
+	var prompt_lbl = get_node_or_null("PromptLbl")
+	var prompt_bg = get_node_or_null("PromptBg")
+	if issue != null and not _nearby_elevator and not _nearby_stairs:
+		if prompt_lbl != null:
+			prompt_lbl.text = "[E] Fix: %s [%s]" % [issue.label, issue.assigned_to]
+			prompt_lbl.visible = true
+		if prompt_bg != null:
+			prompt_bg.visible = true
+	# If player has a target issue, show direction prompt
+	if _target_issue != null and _target_issue.status < 2:
+		if prompt_lbl != null and not _nearby_issue:
+			prompt_lbl.text = "[E] Fix: %s (Floor %d)" % [_target_issue.label, _target_issue.floor]
+			prompt_lbl.visible = true
+		if prompt_bg != null:
+			prompt_bg.visible = true
+
+func _toggle_maintenance_panel() -> void:
+	if _maintenance_panel != null and _maintenance_panel.visible:
+		_maintenance_panel.close()
+		return
+	if _maintenance_system == null:
+		return
+	_maintenance_panel = MaintenancePanelScript.new()
+	add_child(_maintenance_panel)
+	_maintenance_panel.open(_maintenance_system)
+	_maintenance_panel.closed.connect(_on_maintenance_panel_closed)
+	_maintenance_panel.issue_selected.connect(_on_maintenance_issue_selected)
+
+func _on_maintenance_panel_closed() -> void:
+	_maintenance_panel = null
+
+func _on_maintenance_issue_selected(issue) -> void:
+	_target_issue = issue
+	# Walk player to the issue's floor first if not there
+	if _player != null and issue.floor != _current_floor_idx:
+		_navigate_to_floor(issue.floor)
+
+func _on_issue_created(issue) -> void:
+	if is_instance_valid(_maintenance_visual):
+		_maintenance_visual.build_issue_sprite(issue)
+
+func _on_issue_resolved(issue, by_player: bool) -> void:
+	if is_instance_valid(_maintenance_visual):
+		_maintenance_visual.remove_issue_sprite(issue.id)
+	if by_player and _player != null:
+		var prompt_lbl = get_node_or_null("PromptLbl")
+		if prompt_lbl != null:
+			prompt_lbl.text = "Issue resolved! +10 XP"
+		# Notify telegram
+		notify_telegram("? Maintenance issue fixed on Floor %d!
+Type: %s" % [issue.floor, issue.label])
+	if issue == _target_issue:
+		_target_issue = null
+	if by_player and _player_stats != null:
+		_player_stats.on_issue_resolved(issue.label)
+
+func _on_achievement_unlocked(ach_id: String) -> void:
+	if _player_stats == null:
+		return
+	var info: Dictionary = _player_stats.get_achievement_info(ach_id)
+	_show_achievement_popup(ach_id, info.get("name", ""), info.get("icon", "?"), info.get("xp", 20))
+
+func _show_achievement_popup(ach_id: String, name: String, icon: String, xp: int) -> void:
+	var popup := AchievementPopupScript.new()
+	add_child(popup)
+	popup.show_achievement(ach_id, name, icon, xp)
+
+func _on_player_level_up(new_level: int) -> void:
+	notify_telegram("LEVEL UP! You are now Level %d!" % new_level)
+	var prompt_lbl = get_node_or_null("PromptLbl")
+	if prompt_lbl != null:
+		prompt_lbl.text = "LEVEL UP! You are now Level %d!" % new_level
+		prompt_lbl.visible = true
+
+func _toggle_stats_panel() -> void:
+	if _stats_panel != null and _stats_panel.visible:
+		_stats_panel.close()
+		return
+	if _player_stats == null:
+		return
+	_stats_panel = StatsPanelScript.new()
+	add_child(_stats_panel)
+	_stats_panel.open(_player_stats)
+	_stats_panel.closed.connect(_on_stats_panel_closed)
+
+func _on_stats_panel_closed() -> void:
+	_stats_panel = null
+
+func _on_hour_changed(hour: int) -> void:
+	# Update clock display in HUD if available
+	if _game_clock != null:
+		var t := _game_clock.game_time_string()
+		var period := _game_clock.period_name()
+		# Update any clock-related prompts
+		if hour == 22:  # 10pm — store getting quiet
+			notify_telegram("? Evening hours — store traffic slowing down")
+		if hour == 23:  # 11pm
+			notify_telegram("? Store closing soon — last call!")
+
+func _on_day_changed(day_idx: int) -> void:
+	notify_telegram("? Day %d begins!
+Good morning at the supermarket!" % day_idx)
+
+func _on_shift_report(report: Dictionary) -> void:
+	var msg := "? Shift Report — Day %d
+
+Resolved: %d issues
+Created: %d issues" % [
+		report["day"], report["issues_resolved"], report["issues_created"]]
+	notify_telegram(msg)
+
+func _navigate_to_floor(target_floor: int) -> void:
+	# Use elevator to go to target floor
+	if _elevator != null:
+		_elevator.request_floor(target_floor)
+
+# ─── Issue Fix via E key ─────────────────────────────────────────
+func _try_fix_nearby_issue() -> bool:
+	if _maintenance_system == null or _player == null:
+		return false
+	# Try to fix the target issue if close enough, OR any nearby issue
+	var issue_to_fix = _target_issue if _target_issue != null and _target_issue.status < 2 else null
+	if issue_to_fix == null:
+		issue_to_fix = _maintenance_system.get_issue_at_pos(_player.position, CELL_SIZE * 7.0)
+	if issue_to_fix == null:
+		return false
+	if issue_to_fix.floor != _current_floor_idx:
+		# Wrong floor — navigate there first
+		_navigate_to_floor(issue_to_fix.floor)
+		_target_issue = issue_to_fix
+		return true
+	# Resolve it (takes a moment)
+	_maintenance_system.resolve_issue(issue_to_fix, true)
+	return true
+
 func _update_stairs_proximity() -> void:
 	if _player == null:
 		return
@@ -711,6 +894,10 @@ func _on_player_interact() -> void:
 		if cart.get_item_count() > 0:
 			_show_checkout_receipt()
 		return
+	# Maintenance — fix nearby or targeted issue
+	if _nearby_issue or (_target_issue != null and _target_issue.status < 2):
+		if _try_fix_nearby_issue():
+			return
 	# Section browse
 	if _nearby_section != null:
 		var def = _nearby_section.get_def()
@@ -786,14 +973,25 @@ func _on_claw_round_ended(prize_name: String, won: bool) -> void:
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
+		# M — open maintenance panel
+		if event.keycode == KEY_M:
+			_toggle_maintenance_panel()
+			return
+		# P — open stats panel
+		if event.keycode == KEY_P:
+			_toggle_stats_panel()
+			return
 		# Chat toggle — press C near an NPC
 		if event.keycode == KEY_C:
 			_open_npc_chat()
 			return
-		# ESC closes chat panel
+		# ESC closes chat panel or maintenance panel
 		if event.keycode == KEY_ESCAPE:
-			if _chat_panel != null and _chat_panel._is_open:
+			if _maintenance_panel != null and _maintenance_panel.visible:
+				_maintenance_panel.close()
+			elif _chat_panel != null and _chat_panel._is_open:
 				_chat_panel.close()
+			return
 			return
 		# Claw machine controls only when playing
 		if not _claw_active or _active_claw_machine == null:
@@ -918,6 +1116,18 @@ func _refresh_cart_panel() -> void:
 func _show_checkout_receipt() -> void:
 	_checkout_receipt_visible = true
 	_hide_cart_panel()
+
+	# Track checkout stats
+	var cart = _player.get_cart()
+	var items = cart.get_items()
+	var item_count := 0
+	for entry in items:
+		item_count += entry["qty"]
+		var prod = entry["product"]
+		if _player_stats != null:
+			_player_stats.on_item_bought(prod.id, prod.price * entry["qty"])
+	if _player_stats != null:
+		_player_stats.on_checkout(cart.subtotal(), item_count)
 
 	var ov := ColorRect.new()
 	ov.name = "CROverlay"
