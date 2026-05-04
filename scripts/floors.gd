@@ -51,68 +51,63 @@ static var CURRENT: int = 0
 static func _static_init() -> void:
 	ALL = [
 		# Ground Floor G (index 0)
-		# Parking lot outside (bottom-left), Lobby, Elevator/Stairs, WC, Info desk
+		# Compact front-of-store: entrance, lobby, small market area, staff entrance
 		FloorDef.new(0, "G", "lobby",
-			Color(0.40, 0.42, 0.38),  # overcast outdoor ambient
+			Color(0.42, 0.44, 0.40),
 			false, false, true, true),
 
-		# Floor 1 — Fresh Market
-		FloorDef.new(1, "1", "fresh",
-			Color(0.50, 0.55, 0.45),
+		# Floor 1 — Shoes
+		FloorDef.new(1, "1", "shoes",
+			Color(0.52, 0.45, 0.40),
 			true, true, true, true),
 
-		# Floor 2 — Pantry & Dry Goods
-		FloorDef.new(2, "2", "pantry",
-			Color(0.48, 0.45, 0.40),
+		# Floor 2 — Dresses / Fashion
+		FloorDef.new(2, "2", "fashion",
+			Color(0.55, 0.42, 0.52),
 			true, true, true, true),
 
-		# Floor 3 — Beverages
-		FloorDef.new(3, "3", "beverages",
-			Color(0.42, 0.50, 0.60),
+		# Floor 3 — Sport & Active
+		FloorDef.new(3, "3", "sport",
+			Color(0.40, 0.50, 0.55),
 			true, true, true, true),
 
-		# Floor 4 — Snacks & Candy
-		FloorDef.new(4, "4", "snacks",
-			Color(0.55, 0.48, 0.38),
+		# Floor 4 — Outdoor (Fishing, Hiking, Running)
+		FloorDef.new(4, "4", "outdoor",
+			Color(0.42, 0.55, 0.45),
 			true, true, true, true),
 
-		# Floor 5 — Frozen Foods
-		FloorDef.new(5, "5", "frozen",
-			Color(0.38, 0.48, 0.65),
+		# Floor 5 — Stationery & Plants
+		FloorDef.new(5, "5", "stationery",
+			Color(0.48, 0.55, 0.45),
 			true, true, true, true),
 
-		# Floor 6 — Household
-		FloorDef.new(6, "6", "household",
-			Color(0.45, 0.42, 0.40),
-			true, true, true, true),
-
-		# Floor 7 — Health & Beauty
-		FloorDef.new(7, "7", "health",
-			Color(0.52, 0.48, 0.50),
-			true, true, true, true),
-
-		# Floor 8 — Toys & Play
-		FloorDef.new(8, "8", "toys",
-			Color(0.60, 0.55, 0.40),
-			true, true, true, true),
-
-		# Floor 9 — Staff Room (staff only)
-		FloorDef.new(9, "9", "staff",
-			Color(0.38, 0.38, 0.35),
+		# Floor 6 — Staff Areas (locker room, break room, training)
+		FloorDef.new(6, "6", "staff_area",
+			Color(0.38, 0.38, 0.40),
 			false, false, true, true, true),
 
-		# Floor 10 — Rooftop Café
-		FloorDef.new(10, "10", "rooftop",
+		# Floor 7 — Back Office
+		FloorDef.new(7, "7", "back_office",
+			Color(0.40, 0.42, 0.45),
+			false, false, true, true, true),
+
+		# Floor 8 — Executive Office
+		FloorDef.new(8, "8", "exec_office",
+			Color(0.35, 0.35, 0.40),
+			false, false, true, true, true),
+
+		# Floor 9 — Rooftop Café
+		FloorDef.new(9, "9", "rooftop",
 			Color(0.65, 0.60, 0.50),
 			true, false, true, false, false, true),
 
-		# Floor 11 — Pet Paradise
-		FloorDef.new(11, "11", "pet_paradise",
+		# Floor 10 — Pet Paradise
+		FloorDef.new(10, "10", "pet_paradise",
 			Color(0.42, 0.70, 0.55),
 			true, false, true, true),
 
-		# Floor 12 — Warehouse & Receiving Dock
-		FloorDef.new(12, "12", "warehouse",
+		# Floor 11 — Warehouse & Receiving Dock
+		FloorDef.new(11, "11", "warehouse",
 			Color(0.55, 0.45, 0.38),
 			false, false, true, false),
 	]

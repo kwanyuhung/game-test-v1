@@ -1,7 +1,21 @@
 # 🏪 Supermarket — Phases Roadmap
 
 ## Phase 1 ✅ Core World
-Basic supermarket with 8 sections, player movement, section browsing.
+**Store Layout — 12 Floors:**
+- **Ground (G)**: Compact lobby, staff entrance, ATM
+- **Floor 1 — Shoes**: Ladies Shoes, Mens Shoes, Kids Shoes, Sport Shoes, Sandals
+- **Floor 2 — Fashion / Dresses**: Ladies Wear, Mens Wear, Kids Wear, Activewear, Formal Wear
+- **Floor 3 — Sport & Active**: Gym Equipment, Sports Gear, Team Sports, Activewear, Fitness
+- **Floor 4 — Outdoor**: Fishing, Hiking, Running, Camping, Cycling
+- **Floor 5 — Stationery & Plants**: Office Supplies, School Stationery, Indoor Plants, Garden Plants
+- **Floor 6 — Staff Areas**: Locker Room, Staff Lounge, Training Room
+- **Floor 7 — Back Office**: Admin Office, HR Department, Open Office
+- **Floor 8 — Executive Office**: Exec Suite, Board Room, Secretaries
+- **Floor 9 — Rooftop Café**: Food stalls, outdoor dining
+- **Floor 10 — Pet Paradise**: Adoption corner, pet supplies
+- **Floor 11 — Warehouse**: Receiving dock, stock shelves
+
+Player movement across all floors, section browsing.
 
 ## Phase 2 ✅ Commerce
 Food stalls (12 cuisines), shopping cart, checkout receipts, Telegram bot.
