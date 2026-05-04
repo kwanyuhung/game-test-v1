@@ -14,9 +14,10 @@ class SectionDef:
 	var style: int
 	var light_color: Color
 	var label: String
+	var floor: int  # Which floor this section appears on. -1 = all floors.
 
-	func _init(p_id: String, p_name: String, p_wx: int, p_wy: int, p_ww: int, p_wh: int, p_style: int, p_light: Color, p_label: String):
-		id=p_id; name=p_name; wx=p_wx; wy=p_wy; ww=p_ww; wh=p_wh; style=p_style; light_color=p_light; label=p_label
+	func _init(p_id: String, p_name: String, p_wx: int, p_wy: int, p_ww: int, p_wh: int, p_style: int, p_light: Color, p_label: String, p_floor: int = -1):
+		id=p_id; name=p_name; wx=p_wx; wy=p_wy; ww=p_ww; wh=p_wh; style=p_style; light_color=p_light; label=p_label; floor=p_floor
 
 class MarketProduct:
 	var id: String
@@ -38,14 +39,32 @@ static var CHECKOUT_LANES: Array = []
 
 static func _static_init() -> void:
 	SECTIONS = [
-		SectionDef.new("dairy",   "DAIRY",      2,  3, 16, 14, SectionStyle.FRIDGE,   Color(0.70, 0.88, 1.00),  "D"),
-		SectionDef.new("produce", "PRODUCE",   20,  3, 20, 14, SectionStyle.PRODUCE,  Color(0.72, 0.92, 0.56),  "P"),
-		SectionDef.new("bakery",  "BAKERY",    42,  3, 16, 14, SectionStyle.BAKERY,   Color(0.98, 0.82, 0.52),  "B"),
-		SectionDef.new("drinks",  "DRINKS",    60,  3, 18, 14, SectionStyle.FRIDGE,   Color(0.60, 0.82, 1.00),  "R"),
-		SectionDef.new("snacks",  "SNACKS",     2, 19, 16, 14, SectionStyle.SHELF,    Color(0.95, 0.90, 0.80),  "S"),
-		SectionDef.new("meat",    "MEAT/DELI", 20, 19, 20, 14, SectionStyle.DELI,     Color(0.95, 0.72, 0.68),  "M"),
-		SectionDef.new("pantry", "PANTRY",    42, 19, 16, 14, SectionStyle.SHELF,    Color(0.90, 0.85, 0.75),  "T"),
-		SectionDef.new("frozen",  "FROZEN",    60, 19, 18, 14, SectionStyle.FREEZER,  Color(0.78, 0.92, 1.00),  "F"),
+		# Floor 1 — Fresh Market
+		SectionDef.new("dairy",   "DAIRY",      2,  3, 16, 14, SectionStyle.FRIDGE,   Color(0.70, 0.88, 1.00),  "D",  1),
+		SectionDef.new("produce", "PRODUCE",   20,  3, 20, 14, SectionStyle.PRODUCE,  Color(0.72, 0.92, 0.56),  "P",  1),
+		SectionDef.new("bakery",  "BAKERY",    42,  3, 16, 14, SectionStyle.BAKERY,   Color(0.98, 0.82, 0.52),  "B",  1),
+		SectionDef.new("meat",    "MEAT/DELI", 20, 19, 20, 14, SectionStyle.DELI,     Color(0.95, 0.72, 0.68),  "M",  1),
+		# Floor 2 — Pantry
+		SectionDef.new("pantry", "PANTRY",    42, 19, 16, 14, SectionStyle.SHELF,    Color(0.90, 0.85, 0.75),  "T",  2),
+		SectionDef.new("spices",  "SPICES",     2, 19, 16, 14, SectionStyle.SHELF,    Color(0.88, 0.72, 0.55),  "S",  2),
+		# Floor 3 — Beverages
+		SectionDef.new("drinks",  "DRINKS",    60,  3, 18, 14, SectionStyle.FRIDGE,   Color(0.60, 0.82, 1.00),  "R",  3),
+		SectionDef.new("coffee",  "COFFEE",    42,  3, 16, 14, SectionStyle.FRIDGE,   Color(0.55, 0.42, 0.32),  "C",  3),
+		# Floor 4 — Snacks & Candy
+		SectionDef.new("snacks",  "SNACKS",     2, 19, 16, 14, SectionStyle.SHELF,    Color(0.95, 0.90, 0.80),  "S",  4),
+		SectionDef.new("candy",   "CANDY",     20, 19, 16, 14, SectionStyle.SHELF,    Color(0.88, 0.60, 0.80),  "A",  4),
+		# Floor 5 — Frozen
+		SectionDef.new("frozen",  "FROZEN",    60, 19, 18, 14, SectionStyle.FREEZER,  Color(0.78, 0.92, 1.00),  "F",  5),
+		# Floor 6 — Household
+		SectionDef.new("clean",   "CLEANING",  42, 19, 16, 14, SectionStyle.SHELF,    Color(0.55, 0.70, 0.65),  "L",  6),
+		SectionDef.new("paper",   "PAPER",     60, 19, 18, 14, SectionStyle.SHELF,    Color(0.88, 0.85, 0.78),  "P",  6),
+		# Floor 7 — Health & Beauty
+		SectionDef.new("pharm",   "PHARMACY",   2,  3, 16, 14, SectionStyle.FRIDGE,   Color(0.85, 0.65, 0.65),  "H",  7),
+		SectionDef.new("beauty",  "BEAUTY",    20,  3, 20, 14, SectionStyle.SHELF,    Color(0.88, 0.72, 0.80),  "B",  7),
+		# Floor 8 — Toys
+		SectionDef.new("toys",    "TOYS",      20,  3, 30, 20, SectionStyle.SHELF,    Color(0.70, 0.60, 0.90),  "T",  8),
+		# Floor 10 — Rooftop Café
+		SectionDef.new("cafe",    "CAFE",      42,  3, 18, 14, SectionStyle.SHELF,    Color(0.72, 0.55, 0.42),  "F", 10),
 	]
 	CHECKOUT_LANES = [
 		{"x": 18, "name": "LANE 1"},
