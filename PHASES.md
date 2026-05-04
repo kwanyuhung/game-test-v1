@@ -73,6 +73,37 @@ No more numbered phases! The core game loop is complete:
 | Pet Paradise (Floor 11) | ✅ |
 | Arcade claw machines | ✅ |
 
+## Phase C — Store Expansion & Renovation
+Unlock and build new areas of the store.
+- Expand the parking lot (more vehicle slots, drive-through window)
+- Renovate floors to unlock premium sections (organic aisle, deluxe bakery)
+- Store layout editor — choose where sections go
+- Unlock new building wings as revenue milestones
+
+## Phase D — Staff Management & HR
+Hire, train, and manage your workforce.
+- Staff hiring panel — open positions, interview candidates
+- Assign staff to specific floors/sections
+- Staff morale system — happy staff work faster, unhappy staff call in sick
+- Shift scheduling — morning/afternoon/night crews
+- Staff training — improve speed/quality per skill type
+
+## Phase E — Marketing & Promotions
+Attract more customers with deals and campaigns.
+- Weekly sale events — discounted products bring crowds
+- Loyalty card — repeat customers earn points toward rewards
+- Store flyer/circular — promote today's deals (in-game notification)
+- Advertising budget — spend to increase customer spawn rate
+- VIP customer program — special shoppers with bigger carts
+
+## Phase F — Finance & Supplier Contracts
+Manage the business side of the supermarket.
+- Dynamic pricing — raise/lower prices per section
+- Supplier contracts — negotiate bulk deals, faster delivery tiers
+- Daily/weekly profit & loss statement
+- Tax season — file reports, reinvest in store
+- Store reputation score — affects customer volume and staff satisfaction
+
 ## Ideas for Future Expansion
 
 - **Multiple floors open simultaneously** — elevator ride animation between floors
