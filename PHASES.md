@@ -19,69 +19,70 @@ Full NPC characters — 7 staff roles, 9 customer group types, customizable appe
 ## Phase 5 ✅ Parking Lot & Vehicles
 Ground floor parking zone, parked NPC cars, parking attendant, player can see slot numbers.
 
-## Phase 6 🔧 24-Hour Ops & Maintenance (DONE)
-**Theme: Realistic store operations with issues and repairs**
-
-### Features:
-- **24/7 Operation**: Store never fully closes — but floors can be taken offline for maintenance
-- **Maintenance System**: Issues spawn randomly (spills, broken equipment, power flickers, stock depletion, angry customers)
-- **Issue Types**: Spill, Broken Light, Out-of-Stock, Machine Malfunction, Security Alert, Lost Child, Cleanup Needed, Power Flicker
-- **Maintenance Tasks**: Staff or player can pick up and resolve tasks
-- **Floor Maintenance Mode**: A floor can be flagged "under maintenance" — visually shows caution tape, NPCs avoid it
-- **Shift Reports**: End-of-shift summary of resolved issues
-- **Controls**:
-  - `M` — Open Maintenance Panel (see all open issues, select one to go fix)
-  - `E` (near issue) — Resolve the issue and earn XP
-  - Issues appear as distinct sprites in the world (puddles, warning cones, etc.)
-  - High-urgency issues pulse with animation
-
-### Issue Types:
-| Type | Urgency | Fix Time | XP |
-|------|---------|----------|-----|
-| Wet Floor Spill | Medium | 8s | 10 |
-| Broken Light | Low | 15s | 10 |
-| Stock Runout | Low | 20s | 10 |
-| Machine Malfunction | Medium | 30s | 10 |
-| Security Alert | High | 12s | 15 |
-| Lost Child | High | 25s | 25 |
-| Cleanup Required | Low | 18s | 10 |
-| Power Flicker | Medium | 22s | 10 |
+## Phase 6 ✅ 24-Hour Ops & Maintenance
+Issues spawn randomly on floors (spills, broken lights, out-of-stock, lost children, etc.)
+- `M` — Open Maintenance Panel
+- `E` near issue — Fix it and earn XP
+- 8 issue types with urgency levels and distinct world sprites
 
 ## Phase 7 ⏭️ Skipped
 
-## Phase 8 🏆 Player Progression & Stats (DONE)
-**Theme: Track your supermarket career**
+## Phase 8 ✅ Player Progression & Stats
+- XP from shopping, fixing issues, winning claw machines
+- 12 achievements with icons and XP rewards
+- `P` — Stats dashboard
 
-### Features:
-- **Player Level & XP**: Earn XP from shopping, resolving issues, helping staff, winning claw machines
-- **XP Sources**:
-  - Buy item: +2 XP
-  - Resolve issue: +10 XP
-  - Browse section: +5 XP
-  - Full cart checkout (10+ items): +20 XP
-  - Win claw machine: +15 XP
-  - Adopt a pet: +50 XP
-  - Help lost child: +25 XP
-- **12 Achievements** with icons and XP rewards:
-  - First Purchase, Full Cart, Issue Fixer (5 issues), Hero of the Floor (25 issues)
-  - Collector (20 unique products), Big Spender ($500 total spent)
-  - Claw Champion (5 wins), Animal Friend (adopt pet)
-  - Social Butterfly (10 NPC chats), World Explorer (all 12 floors)
-  - Regular Customer (20 checkouts), Chatty Patty (50 chats)
-  - Supermarket Master (reach Level 10)
-- **Achievement Popup**: Shows top-center when unlocked with icon and XP
-- **Stats Dashboard**: Press `P` to view all lifetime stats
-- **Level-Up Notification**: On-screen notification + Telegram when you level up
+## Phase 9 ✅ Customer Cart Shopping
+- Customers auto-pick up carts at entrance
+- Walk section-by-section checking off their shopping list
+- Cart sprite attached behind customer
+- Proceed to checkout lane and leave store
 
-### Controls:
-| Key | Action |
-|-----|--------|
-| `P` | Open Stats Dashboard |
-| `M` | Open Maintenance Panel |
-| `C` | Chat with nearby NPC |
-| `E` | Interact / Fix issue |
-| `ESC` | Close any panel |
+## Phase 10 ✅ ATMs
+- 2 ATMs on Ground Floor (lobby + food court)
+- Press `E` near ATM → PIN entry panel (PIN: 1234)
+- Quick-withdraw buttons ($20/$50/$100) + keypad
+- Locked after 3 wrong attempts
+
+## Phase 11 ✅ Warehouse & Stock System
+- **Floor 12 — Warehouse/Receiving Dock**: shelving units, delivery dock, stock crates
+- **WarehouseSystem**: tracks stock per section, sections consume on purchase
+- Low stock warnings when sections run below threshold
+- Player can trigger restock delivery
 
 ---
 
-_Current: Phase 6 + Phase 8 Complete_
+## What's Left?
+
+No more numbered phases! The core game loop is complete:
+
+| Feature | Status |
+|---------|--------|
+| 12-floor world with unique themes | ✅ |
+| Section browsing (190+ products) | ✅ |
+| Food stalls (12 cuisines) | ✅ |
+| Shopping cart + checkout | ✅ |
+| NPCs (staff + customers) with AI | ✅ |
+| NPC chat + AI-to-AI chat | ✅ |
+| 24-hour clock | ✅ |
+| Maintenance/issues system | ✅ |
+| Player stats + achievements | ✅ |
+| Customer cart shopping AI | ✅ |
+| ATMs | ✅ |
+| Warehouse stock system | ✅ |
+| Pet Paradise (Floor 11) | ✅ |
+| Arcade claw machines | ✅ |
+
+## Ideas for Future Expansion
+
+- **Multiple floors open simultaneously** — elevator ride animation between floors
+- **Shopping list UI** — player can see what they came to buy
+- **Pet adoption interaction** — press E at adoption corner to "adopt"
+- **Multiple floors open at once** — seamless vertical traversal
+- **Sound effects** — ambient store noise, checkout beeps, NPC chatter
+- **Weather system** — affects customer spawn rates
+- **Store reputation score** — visible to player
+- **Staff scheduling** — staff go on breaks, shifts change
+- **Customer impatience** — customers leave if wait too long at checkout
+
+_Current: Fully featured supermarket game with 12 floors, NPCs, commerce, maintenance, progression, and warehouse operations._
