@@ -1,4 +1,4 @@
-# npc_controller.gd
+﻿# npc_controller.gd
 # ═══════════════════════════════════════════════════════════════════════
 # AI Actor — handles both customers and staff with full behavior systems.
 #
@@ -104,6 +104,7 @@ var _group_members: Array = []            # for group leaders
 
 # Shopping cart (customers)
 var _has_cart: bool = false
+var _did_checkout: bool = false
 var _cart_sprite: Sprite2D = null
 var _cart_pos: Vector2 = Vector2.ZERO  # offset behind the NPC
 var _shopping_list_idx: int = 0         # which section to shop next
@@ -429,6 +430,7 @@ func _start_patrol() -> void:
 	_state_timer = randf_range(3.0, 7.0)
 
 func _go_to_checkout_lane() -> void:
+	_did_checkout = true  # mark as having paid
 	var lanes := [Vector2(160.0, 34.0 * CELL_SIZE), Vector2(320.0, 34.0 * CELL_SIZE), Vector2(480.0, 34.0 * CELL_SIZE)]
 	_target_pos = lanes[randi() % lanes.size()]
 	_state = BehaviorState.WALKING_TO_TARGET
@@ -555,6 +557,12 @@ func _do_leave_store(delta: float) -> void:
 	var dist := to_exit.length()
 
 	if dist < 10.0:
+		# Cart theft check: customer left with unpaid cart
+		if _has_cart and not _did_checkout:
+			_trigger_theft_alarm()
+		_actor.is_active = false
+		queue_free()
+		return
 		_actor.is_active = false
 		queue_free()
 		return
@@ -562,6 +570,13 @@ func _do_leave_store(delta: float) -> void:
 	var dir := to_exit / dist
 	move_and_collide(dir * _get_speed() * delta)
 	_flip_sprite(dir.x)
+
+func _trigger_theft_alarm() -> void:
+	# Alert the main node to trigger audio + telegram
+	var main_node = get_tree().get_first_node_in_group("main")
+	if main_node != null:
+		main_node.on_npc_theft(self)
+		print("ALARM: Cart theft detected! NPC: ", _actor.display_name)
 
 func _leave_store() -> void:
 	_state = BehaviorState.LEAVING_STORE

@@ -1,4 +1,4 @@
-# player_stats.gd
+﻿# player_stats.gd
 # Tracks all player statistics, XP, level, and achievements.
 # ═══════════════════════════════════════════════════════════════════════
 # XP Sources:
@@ -258,3 +258,41 @@ func get_summary() -> Dictionary:
 		"ach_unlocked": _achievements_unlocked.size(),
 		"ach_total": _ACHIEVEMENTS.size(),
 	}
+
+# ─── Save / Load ───────────────────────────────────────────────────
+
+func get_serializable_dict() -> Dictionary:
+	return {
+		"_total_xp": _total_xp,
+		"_level": _level,
+		"_total_spent": _total_spent,
+		"_items_bought": _items_bought,
+		"_unique_items_bought": _unique_items_bought,
+		"_issues_resolved": _issues_resolved,
+		"_sections_browsed": _sections_browsed,
+		"_checkout_count": _checkout_count,
+		"_claw_wins": _claw_wins,
+		"_pets_adopted": _pets_adopted,
+		"_floors_visited": _floors_visited,
+		"_time_played_seconds": _time_played_seconds,
+		"_chats_with_npcs": _chats_with_npcs,
+		"_achievements_unlocked": _achievements_unlocked,
+		"_unique_products_bought": _unique_products_bought,
+	}
+
+func apply_dict(data: Dictionary) -> void:
+	if "_total_xp" in data: _total_xp = data["_total_xp"]
+	if "_level" in data: _level = data["_level"]
+	if "_total_spent" in data: _total_spent = data["_total_spent"]
+	if "_items_bought" in data: _items_bought = data["_items_bought"]
+	if "_unique_items_bought" in data: _unique_items_bought = data["_unique_items_bought"]
+	if "_issues_resolved" in data: _issues_resolved = data["_issues_resolved"]
+	if "_sections_browsed" in data: _sections_browsed = data["_sections_browsed"]
+	if "_checkout_count" in data: _checkout_count = data["_checkout_count"]
+	if "_claw_wins" in data: _claw_wins = data["_claw_wins"]
+	if "_pets_adopted" in data: _pets_adopted = data["_pets_adopted"]
+	if "_floors_visited" in data: _floors_visited = data["_floors_visited"]
+	if "_time_played_seconds" in data: _time_played_seconds = data["_time_played_seconds"]
+	if "_chats_with_npcs" in data: _chats_with_npcs = data["_chats_with_npcs"]
+	if "_achievements_unlocked" in data: _achievements_unlocked = data["_achievements_unlocked"]
+	if "_unique_products_bought" in data: _unique_products_bought = data["_unique_products_bought"]

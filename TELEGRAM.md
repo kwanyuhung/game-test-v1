@@ -10,25 +10,34 @@
 
 ```
 main.gd
-  └─ TelegramBot (Node, child of Main in main.tscn)
-       └─ _report_queue[]   ← queue, flushed every 30s or on important events
-            └─ _flush_reports()
-                 └─ send_message()  ← HTTP POST to Telegram API
+  +- TelegramBot (Node, child of Main in main.tscn)
+  |   +- _report_queue[]   <- queue, flushed every 30s or on important events
+  |       +- _flush_reports()
+  |           +- send_message()  <- HTTP POST to Telegram API
+  +- AudioManager (procedural sounds)
+  +- MiniMap
+  +- ToastManager (sliding in-game toasts)
+  +- FloatingText
+  +- FadeTransition
 ```
 
-### Node placement
-`main.tscn` owns a `TelegramBot` node as a direct child:
+### Node placement (main.tscn)
 ```
-[Main] ← main.gd
-  └─ [TelegramBot] ← telegram_bot.gd
+[Main] <- main.gd
+  +- [TelegramBot]
+  +- [AudioManager]
+  +- [MiniMap]
+  +- [ToastManager]
+  +- [FloatingText]
+  +- [FadeTransition]
 ```
 
-`main.gd` grabs it in `_ready()`:
+`main.gd` grabs the TelegramBot in `_ready()`:
 ```gdscript
 _telegram_bot = get_node_or_null("/root/Main/TelegramBot")
 ```
 
-All game events call through thin wrapper methods on `main.gd` that guard against null:
+All game events call through thin wrapper methods that guard against null:
 ```gdscript
 func notify_telegram(msg: String) -> void:
     if _telegram_bot != null:
@@ -41,23 +50,23 @@ func notify_telegram(msg: String) -> void:
 
 ```
 Event in game code
-  → main.gd notify wrapper
-    → TelegramBot.queue_report(msg)
-        → _report_queue.append(msg)      (deduped)
-        → if starts with 🟢/🔴 → _flush_reports() immediately
-          else → waits until timer hits 30s
+  -> main.gd notify wrapper
+      -> TelegramBot.queue_report(msg)
+          -> _report_queue.append(msg)      (deduped)
+          -> if starts with important emoji -> _flush_reports() immediately
+             else -> waits until timer hits 30s
 
 _flush_reports()
-  → slices first 5 items, joins with \n\n
-  → _send_deferred()  (call_deferred to avoid tree access during frame)
-    → send_message()  → HTTP POST → Telegram
+  -> slices first 5 items, joins with \n\n
+  -> _send_deferred()  (call_deferred)
+      -> send_message()  -> HTTP POST -> Telegram
 ```
 
 **Deduplication:** identical messages within the same queue are dropped.
 
-**Immediate flush triggers:** any message starting with `🟢` or `🔴` (game start, errors).
+**Immediate flush triggers:** any message starting with `🟢` or `🔴`.
 
-**Batched flush:** every 30 seconds of game time, or when `_report_queue` exceeds 5 items.
+**Batched flush:** every 30 seconds of game time, or when queue exceeds 5 items.
 
 ---
 
@@ -66,14 +75,20 @@ _flush_reports()
 | Emoji | Event | Trigger |
 |-------|-------|---------|
 | 🟢 | Game loaded | `main.gd` `_ready()` completes |
+| 📁 | Save loaded | Auto-load on startup finds a save |
+| 📋 | New game | No save found on startup |
+| 💾 | Game saved | F5 quick-save or auto-save |
+| 📂 | Game loaded | F9 quick-load triggered |
 | 📋 | Browsing section | Player presses `E` at a section |
-| 🛒 | Cart updated | Player adds item; only when ≥3 items |
+| 🛒 | Cart updated | Player adds item; only when >= 3 items |
 | 💳 | Checkout complete | Player finishes checkout |
 | 👥 | NPCs spawned | `_build_npcs()` finishes |
 | 📦 | Delivery arrived | Warehouse delivers stock to sections |
 | 🔧 | Maintenance fixed | Player resolves a maintenance issue |
 | ⬆️ | Level up | Player XP crosses threshold |
+| 🏆 | Achievement unlocked | New achievement earned |
 | 🌆 | Evening hours | Game clock reaches evening |
+| 🚨 | Cart theft | NPC customer left store with unpaid cart |
 | ❌ | Game error | Runtime script error caught |
 
 ---
@@ -84,10 +99,10 @@ _flush_reports()
 
 ```gdscript
 TelegramBot.send_message("text")                    # raw send
-TelegramBot.notify_test_failed("error details")     # dev/test
-TelegramBot.notify_test_pass()                     # dev/test
-TelegramBot.notify_commit("commit message")        # dev pipeline
-TelegramBot.notify_game_error("err msg")           # runtime error
+TelegramBot.notify_test_failed("error details")    # dev/test
+TelegramBot.notify_test_pass()                      # dev/test
+TelegramBot.notify_commit("commit message")          # dev pipeline
+TelegramBot.notify_game_error("err msg")             # runtime error
 ```
 
 Static methods bypass the queue and send immediately — use these for **external pipeline events** (commit, test results) rather than in-game events.
@@ -96,32 +111,24 @@ Static methods bypass the queue and send immediately — use these for **externa
 
 ## Adding a New Event
 
-**1. Add the trigger in `main.gd`** (or whichever script fires the event):
+**1. Add the trigger in `main.gd`**:
 
 ```gdscript
-# At the top of main.gd, the preload already exists:
 const TelegramBot = preload("res://scripts/telegram_bot.gd")
 
 # Call via the wrapper (guards null):
 notify_telegram("📦 *Delivery arrived!* %d items restocked." % count)
 ```
 
-Or use the instance method directly if you have a reference:
-```gdscript
-_telegram_bot.notify_section_browse("Bakery", 24)
-```
-
 **2. Pick an emoji + format:**
 
 ```gdscript
-# Simple text
 notify_telegram("🟡 *Something happened!* Details here")
-
-# With formatting
 notify_telegram("🛒 *Cart Updated*\n%d items · $%.2f" % [count, total])
 ```
 
 **3. For static-only scripts** (e.g. a dedicated test runner):
+
 ```gdscript
 TelegramBot.notify_test_failed("SCRIPT ERROR: Null pointer")
 ```
@@ -136,7 +143,7 @@ TelegramBot.notify_test_failed("SCRIPT ERROR: Null pointer")
 
 Flow:
 1. Run Godot headless test (8s, --quit-after)
-2. If fail → send ❌ *Test Failed* to Telegram, exit 1
+2. If fail -> send ❌ *Test Failed* to Telegram, exit 1
 3. Git add + commit + push
 4. Send 📦 *Committed* with file list to Telegram
 
@@ -153,9 +160,9 @@ Tokens are hardcoded in the script (`$BOT_TOKEN`, `$CHAT_ID`).
 
 Watches `.gd`, `.tscn`, `.godot` files. On every change:
 1. Run Godot headless test
-2. If pass → `$failCount = 0`
-3. If fail → increment `$failCount`, send ❌ *AutoTest Failed* to Telegram
-4. After 3 consecutive failures → pause 10s before resuming
+2. If pass -> `$failCount = 0`
+3. If fail -> increment `$failCount`, send ❌ *AutoTest Failed* to Telegram
+4. After 3 consecutive failures -> pause 10s before resuming
 
 ---
 

@@ -1,4 +1,4 @@
-# 🏪 Pixel Supermarket — Floor Guide & Interactive Playbook
+﻿# 🏪 Pixel Supermarket — Floor Guide & Interactive Playbook
 
 Welcome! Here's everything you can do on each floor.
 
@@ -14,6 +14,9 @@ Welcome! Here's everything you can do on each floor.
 | `C` | Chat with nearby NPC |
 | `M` | Open Maintenance Panel |
 | `P` | Open Stats Dashboard |
+| `F5` | Quick save game |
+| `F9` | Quick load game |
+| `N` | Toggle mini-map |
 | `ESC` | Close any open panel |
 
 ---
@@ -345,12 +348,78 @@ Stalls are in `scripts/floor_config.gd` in the `FoodStallDef.ALL` array.
 
 ## Telegram Bot Integration
 
-The game sends Telegram notifications for:
-- ✅ Section browse
-- 💳 Checkout completion
-- 🛒 Cart updates
-- ❌ Game errors
+The game sends real-time status updates to **[@kwanyuhungbot](https://t.me/kwanyuhungbot)** on Telegram.
+
+See **[TELEGRAM.md](TELEGRAM.md)** for full architecture, event reference, and extension guide.
+
+**Events reported:** Game load, save/load, section browse, cart updates (≥3 items), checkout completion, NPC spawn, delivery arrival, maintenance fixes, level ups, evening hours, cart theft alarm, runtime errors.
+
+**Dev pipeline:** `dev.ps1` commits → pushes → sends Telegram summary. `autotest.ps1` watches files, fails → sends Telegram alert after 3 consecutive failures.
 
 ---
 
-_Current as of Phase 3 — Full NPC System with Staff Roles, Customer Groups, and Arcade Claw Machines_
+## Audio System
+
+All sounds are **procedurally generated** — no external audio files needed.
+
+| Sound | Trigger |
+|-------|---------|
+| Ambient chord loop | Plays continuously on loop (Am — F — C — G progression) |
+| Item add tick | Adding an item to cart |
+| Checkout beep ×2 | Finishing checkout |
+| Purchase chime | Completing a purchase |
+| Elevator ding ×2 | Arriving at a floor |
+| Cart grab click | Picking up a shopping cart |
+| Floor change tone | Switching floors via elevator |
+| Level-up fanfare | Gaining a level |
+| Error buzz | Invalid action |
+| Alarm ×8 | Cart theft detected |
+
+---
+
+## Mini-Map
+
+Press **`N`** to toggle the mini-map overlay (top-right corner).
+
+- Shows floor layout with section zones
+- Yellow dot = your player position
+- Sections shown as colored rectangles matching their theme
+
+---
+
+## Floor Transitions & Visual Feedback
+
+- **Elevator fade:** Screen fades to black between floors (0.2s out, 0.3s in)
+- **Floating text:** "+1 [Item]" pops up at your position when you add to cart
+- **Toast notifications:** Sliding alerts for floor changes, achievements, saves
+- **Achievement popup:** Full popup for new achievements with icon + XP
+
+---
+
+## Save / Load System
+
+**Auto-save:** Triggers after every checkout and level-up.
+
+**Quick save:** `F5` — saves position, floor, XP, level, cash, stats, achievements, clock time.
+**Quick load:** `F9` — restores everything from last save.
+
+**Save location:** `user://savegame.json` (Godot user directory).
+
+**Receipt export:** Every checkout saves a receipt to `user://receipts/receipt_<timestamp>.txt`.
+
+**New game:** On first launch (no save file), a **Controls Tutorial** overlay appears. Dismiss with any key — this auto-saves your progress as "played".
+
+---
+
+## Cart Theft Detection
+
+NPC customers with carts who attempt to leave the store **without going through checkout** trigger:
+- 🔴 Red screen flash
+- 🔔 8-note alarm sound
+- 📱 Telegram alert: `🚨 Cart Theft! NPC <name> left without paying!`
+
+---
+
+---
+
+_Current: Procedural Audio, Save/Load, MiniMap, Toast Notifications, Floating Text, Floor Fade Transitions, Cart Theft Detection, Achievement/Telegram Integration_

@@ -1,4 +1,4 @@
-# main.gd
+﻿# main.gd
 # 10-floor supermarket ??data-driven world builder.
 # Uses floor_config.gd for all floor/zone data.
 # Uses floor_builder.gd for rendering.
@@ -6,6 +6,7 @@ extends Node2D
 
 const FloorConfig = preload("res://scripts/floor_config.gd")
 const FloorBuilderScript = preload("res://scripts/floor_builder.gd")
+const SectionBrowseScript = preload("res://scripts/section_browse.gd")
 const StoreData = preload("res://scripts/store_data.gd")
 const TelegramBot = preload("res://scripts/telegram_bot.gd")
 const ElevatorScript = preload("res://scripts/elevator.gd")
@@ -24,7 +25,15 @@ const AchievementPopupScript = preload("res://scripts/achievement_popup.gd")
 const WarehouseSystemScript = preload("res://scripts/warehouse_system.gd")
 const ATMPanelScript = preload("res://scripts/atm_panel.gd")
 const DevToolsScript = preload("res://scripts/dev_tools.gd")
+const AudioManagerScript = preload("res://scripts/audio_manager.gd")
 const MonitorPanelScript = preload("res://scripts/monitor_panel.gd")
+const SaveSystem = preload("res://scripts/save_system.gd")
+const TutorialOverlayScript = preload("res://scripts/tutorial_overlay.gd")
+const MiniMapScript = preload("res://scripts/mini_map.gd")
+const ToastManagerScript = preload("res://scripts/toast_manager.gd")
+const FloatingTextScript = preload("res://scripts/floating_text.gd")
+const FadeTransitionScript = preload("res://scripts/fade_transition.gd")
+const AudioManagerScript = preload("res://scripts/audio_manager.gd")
 
 const DEV_MODE := true  # Set to false to disable dev tools
 
@@ -56,6 +65,18 @@ var _stats_panel: StatsPanel = null
 var _warehouse: WarehouseSystem = null
 var _nearby_atm: bool = false
 var _atm_panel: ATMPanel = null
+var _audio: AudioManager = null
+var _save_hint_label: Label = null
+var _tutorial_overlay: TutorialOverlay = null
+var _minimap: MiniMap = null
+var _toasts: ToastManager = null
+var _minimap_visible: bool = false
+var _time_label: Label = null
+var _xp_bar_bg: ColorRect = null
+var _xp_bar_fill: ColorRect = null
+var _floating_text: FloatingText = null
+var _fade: FadeTransition = null
+var _audio: AudioManager = null
 
 var _nearby_monitor: bool = false
 var _monitor_panel: MonitorPanel = null
@@ -99,6 +120,7 @@ const AISLE_NAMES := {
 }
 
 func _ready() -> void:
+	add_to_group("main")  # allow NPCs to find main node
 	_telegram_bot = get_node_or_null("/root/Main/TelegramBot")
 
 	# Build ground floor (G) first
@@ -148,6 +170,52 @@ func _ready() -> void:
 		_chat_manager.register_npc(npc)
 
 	notify_telegram("🟢 *Game Loaded*\n10-floor supermarket — Ground (G) ready\nUse [E] near elevator to change floors")
+
+	# ── Audio Manager ──
+	_audio = get_node_or_null("/root/Main/AudioManager")
+
+	# ── Save Hint Label ──
+	_save_hint_label = Label.new()
+	_save_hint_label.text = ""
+	_save_hint_label.position = Vector2(120.0, 80.0)
+	_save_hint_label.add_theme_color_override("font_color", Color(0.72, 0.90, 0.72))
+	_save_hint_label.add_theme_font_size_override("font_size", 9)
+	_save_hint_label.z_index = 200
+	add_child(_save_hint_label)
+
+	# ── Try Load Save ──
+	if SaveSystem.load_game(self):
+		_show_save_hint("Save loaded!")
+		notify_telegram("📁 *Save loaded* — resuming game")
+	else:
+		notify_telegram("📋 *New game* — no save found")
+		_tutorial_overlay = TutorialOverlayScript.new()
+		add_child(_tutorial_overlay)
+	_tutorial_overlay.dismissed.connect(_on_tutorial_dismissed)
+	# ── MiniMap ──
+	_minimap = MiniMapScript.new()
+	add_child(_minimap)
+	_minimap.set_player(_player)
+	_minimap.set_floor(_current_floor_idx)
+	_minimap.visible = false
+	# ── Toast Manager ──
+	_toasts = ToastManagerScript.new()
+	add_child(_toasts)
+	# ── Floating Text ──
+	_floating_text = FloatingTextScript.new()
+	add_child(_floating_text)
+	# ── Screen Fade ──
+	_fade = FadeTransitionScript.new()
+	add_child(_fade)
+	# ── Section Browse Panel ──
+	_section_browse = SectionBrowseScript.new()
+	add_child(_section_browse)
+	_section_browse.item_added.connect(_on_item_added_to_cart)
+	_section_browse.closed.connect(_on_browse_closed)
+	# Welcome toast
+	_toasts.show_toast("Welcome to Pixel Supermarket!", Color(0.08, 0.14, 0.22, 0.90))
+		_tutorial_overlay.show_tutorial()
+		_tutorial_overlay.dismissed.connect(_on_tutorial_dismissed)
 	# ── Dev Tools (dev mode only) ──
 	if DEV_MODE:
 		_dev_tools = DevToolsScript.new()
@@ -164,6 +232,35 @@ func _build_floor(idx: int) -> void:
 	_current_floor_idx = idx
 	if _player_stats != null:
 		_player_stats.on_floor_visited(idx)
+	if _time_label == null:
+		_time_label = Label.new()
+		_time_label.name = "TimeLabelHUD"
+		_time_label.position = Vector2(268.0, 4.0)
+		_time_label.add_theme_color_override("font_color", Color(0.60, 0.70, 0.90))
+		_time_label.add_theme_font_size_override("font_size", 8)
+		_time_label.z_index = 10
+		add_child(_time_label)
+	if _game_clock != null:
+		var h = _game_clock.game_hour
+		var m = _game_clock.game_minute
+		_time_label.text = "%02d:%02d" % [h, m]
+	# XP progress bar (below cart count)
+	if _xp_bar_bg == null:
+		_xp_bar_bg = ColorRect.new()
+		_xp_bar_bg.position = Vector2(4.0, 20.0)
+		_xp_bar_bg.size = Vector2(70.0, 4.0)
+		_xp_bar_bg.color = Color(0.15, 0.15, 0.20, 0.80)
+		_xp_bar_bg.z_index = 10
+		add_child(_xp_bar_bg)
+		_xp_bar_fill = ColorRect.new()
+		_xp_bar_fill.position = Vector2(4.0, 20.0)
+		_xp_bar_fill.size = Vector2(0.0, 4.0)
+		_xp_bar_fill.color = Color(0.40, 0.85, 0.50)
+		_xp_bar_fill.z_index = 11
+		add_child(_xp_bar_fill)
+	if _player_stats != null:
+		var progress = _player_stats.xp_progress()
+		_xp_bar_fill.size.x = max(0.0, 70.0 * progress)
 	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(idx)
 
 	# Use FloorBuilder to render this floor
@@ -265,12 +362,21 @@ func _on_elevator_floor_reached(floor_idx: int) -> void:
 
 func _on_elevator_travel_finished() -> void:
 	_in_elevator = false
-	# Player exits at destination floor
+	if _fade != null:
+		_fade.fade_out(0.2)
+		await get_tree().create_timer(0.25).timeout
 	_rebuild_floor(_current_floor_idx)
-	# Reattach player
 	if _player != null:
 		_player.position = Vector2(80 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
-
+	if _fade != null:
+		_fade.fade_in(0.3)
+	if _minimap != null:
+		_minimap.set_floor(_current_floor_idx)
+	if _toasts != null:
+		var fname := "Ground" if _current_floor_idx == 0 else ("Floor " + str(_current_floor_idx))
+		_toasts.toast_info("Entered: " + fname)
+	if _audio != null:
+		_audio.play_floor_change()
 func _rebuild_floor(idx: int) -> void:
 	_clear_floor_nodes()
 	_world_bg = null
@@ -1096,6 +1202,8 @@ func _on_player_interact() -> void:
 		_current_section_browse = _section_browse
 		_section_browse.open(def.id, prods, _player.get_cart())
 		notify_telegram_section_browse(def.name, prods.size())
+	if _audio != null:
+		_audio.play_item_add()
 
 func _on_stall_interact_requested(stall_id: String) -> void:
 	if _floor_builder != null:
@@ -1179,6 +1287,14 @@ func _input(event: InputEvent) -> void:
 		# F3 ── Dev tools (dev mode only)
 		if event.keycode == KEY_F3 and DEV_MODE:
 			_toggle_dev_tools()
+		# F5 ── Quick Save
+		if event.keycode == KEY_F5:
+			_quick_save()
+			return
+		# F9 ── Quick Load
+		if event.keycode == KEY_F9:
+			_quick_load()
+			return
 			return
 		# ESC closes chat panel or maintenance panel
 		if event.keycode == KEY_ESCAPE:
@@ -1493,13 +1609,18 @@ func _on_receipt_input(event: InputEvent) -> void:
 func _finish_checkout() -> void:
 	var cart = _player.get_cart()
 	var items = cart.get_items()
+	var subtotal = cart.get_subtotal()
+	var tax = cart.get_tax()
 	var total_count = cart.get_item_count()
 	var total_amount = cart.get_total()
 	_hide_checkout_receipt()
+	SaveSystem.export_receipt(items, subtotal, tax, total_amount)
 	cart.clear()
 	_refresh_cart_panel()
 	notify_telegram_checkout(total_amount, total_count)
-
+	if _audio != null:
+		_audio.play_checkout_beep()
+	SaveSystem.save_game(self)  # auto-save after checkout
 # ???????????????????????????????????????????????????????????????????????????????????????????????# TELEGRAM
 # ???????????????????????????????????????????????????????????????????????????????????????????????
 func notify_telegram(msg: String) -> void:
@@ -1517,8 +1638,67 @@ func notify_telegram_section_browse(section_name: String, product_count: int) ->
 func notify_telegram_npc(count: int) -> void:
 	if _telegram_bot != null:
 		_telegram_bot.notify_npc_spawn(count)
+	if _audio != null:
+		_audio.play_cart_grab()
 
 func notify_telegram_error(err: String) -> void:
 	if _telegram_bot != null:
 		_telegram_bot.notify_game_error(err)
 
+# ════════════════════════════════════════════════════════════════════════════════════════════════# SAVE / LOAD SYSTEM
+
+func _quick_save() -> void:
+	if SaveSystem.save_game(self):
+		_show_save_hint("F5: Game saved!")
+		notify_telegram("💾 *Game saved*")
+	else:
+		_show_save_hint("Save failed!")
+
+func _quick_load() -> void:
+	if SaveSystem.load_game(self):
+		_show_save_hint("F9: Game loaded!")
+		notify_telegram("📂 *Game loaded* from save")
+	else:
+		_show_save_hint("No save found!")
+
+func _show_save_hint(msg: String) -> void:
+
+func _show_theft_alert() -> void:
+	var flash := ColorRect.new()
+	flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	flash.color = Color(0.8, 0.0, 0.0, 0.25)
+	flash.z_index = 300
+	add_child(flash)
+	await get_tree().create_timer(0.8).timeout
+	flash.queue_free()
+	if _save_hint_label == null:
+		return
+	_save_hint_label.text = msg
+	_save_hint_label.visible = true
+	# Auto-hide after 2.5 seconds
+	await get_tree().create_timer(2.5).timeout
+	if _save_hint_label != null:
+		_save_hint_label.visible = false
+
+func notify_telegram_error(err: String) -> void:
+	if _telegram_bot != null:
+		_telegram_bot.notify_game_error(err)
+
+func _toggle_minimap() -> void:
+	_minimap_visible = not _minimap_visible
+	if _minimap != null:
+		if _minimap_visible:
+			_minimap.show_map()
+			_toasts.toast_info("Mini-map ON")
+		else:
+			_minimap.hide_map()
+			_toasts.toast_info("Mini-map OFF")
+
+func _show_toast(text: String, kind: String = "info") -> void:
+	if _toasts == null: return
+	match kind:
+		"success": _toasts.toast_success(text)
+		"warn": _toasts.toast_warn(text)
+		"error": _toasts.toast_error(text)
+		"xp": _toasts.toast_xp(text)
+		_: _toasts.toast_info(text)
