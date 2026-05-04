@@ -10,6 +10,7 @@ const StoreData = preload("res://scripts/store_data.gd")
 const TelegramBot = preload("res://scripts/telegram_bot.gd")
 const ElevatorScript = preload("res://scripts/elevator.gd")
 const FoodStallBrowseScript = preload("res://scripts/food_stall_browse.gd")
+const ClawMachine = preload("res://scripts/claw_machine.gd")
 
 const CELL_SIZE := FloorConfig.CELL_SIZE
 const WORLD_W  := FloorConfig.WORLD_W
@@ -23,6 +24,7 @@ var _checkout_counters: Array = []
 var _nearby_section: Node = null
 var _nearby_checkout: Node = null
 var _nearby_stall: Node = null
+var _nearby_claw_machine: ClawMachine = null
 var _nearby_elevator: bool = false
 var _nearby_parking: bool = false
 var _nearby_stairs: bool = false
@@ -109,6 +111,10 @@ func _build_floor(idx: int) -> void:
 	for stall in _floor_builder.get_food_stalls():
 		if stall.has_signal("interact_requested"):
 			stall.interact_requested.connect(_on_stall_interact_requested)
+	# Wire claw machine signals
+	for machine in _floor_builder.get_claw_machines():
+		if machine.has_signal("interact_requested"):
+			machine.interact_requested.connect(_on_claw_interact_requested)
 
 func _clear_floor_nodes() -> void:
 	for node in _floor_nodes:
@@ -313,6 +319,7 @@ func _process(_delta: float) -> void:
 	_update_elevator_proximity()
 	_update_stairs_proximity()
 	_update_stall_proximity()
+	_update_claw_machine_proximity()
 
 func _update_elevator_proximity() -> void:
 	if _player == null or _elevator == null:
@@ -356,6 +363,33 @@ func _update_stall_proximity() -> void:
 		if prompt_lbl != null:
 			var fd = _nearby_stall.get_stall_def()
 			prompt_lbl.text = "[E] Order at %s" % fd.name
+			prompt_lbl.visible = true
+		if prompt_bg != null:
+			prompt_bg.visible = true
+
+func _update_claw_machine_proximity() -> void:
+	_nearby_claw_machine = null
+	if _floor_builder == null or _player == null:
+		return
+	var ppos = _player.position
+	var nearest_dist := 99999.0
+	for machine in _floor_builder.get_claw_machines():
+		var zone = machine.get_zone()
+		var mc_center := Vector2(
+			(zone.x + zone.w * 0.5) * CELL_SIZE,
+			(zone.y + zone.h * 0.5) * CELL_SIZE
+		)
+		var dist := ppos.distance_to(mc_center)
+		if dist < nearest_dist and dist < CELL_SIZE * 10.0:
+			nearest_dist = dist
+			_nearby_claw_machine = machine
+
+	var prompt_lbl = get_node_or_null("PromptLbl")
+	var prompt_bg = get_node_or_null("PromptBg")
+	if _nearby_claw_machine != null and not _nearby_elevator and not _nearby_stairs:
+		if prompt_lbl != null:
+			var mid = _nearby_claw_machine.get_machine_id()
+			prompt_lbl.text = "[E] Play Claw #%s" % mid.replace("claw_", "")
 			prompt_lbl.visible = true
 		if prompt_bg != null:
 			prompt_bg.visible = true
@@ -445,6 +479,10 @@ func _on_player_interact() -> void:
 	if _nearby_stall != null:
 		_show_stall_menu(_nearby_stall)
 		return
+	# Claw machine play
+	if _nearby_claw_machine != null:
+		_start_claw_machine(_nearby_claw_machine)
+		return
 	# Checkout with items
 	if _nearby_checkout != null:
 		var cart = _player.get_cart()
@@ -466,6 +504,13 @@ func _on_stall_interact_requested(stall_id: String) -> void:
 				_show_stall_menu(stall)
 				break
 
+func _on_claw_interact_requested(machine_id: String) -> void:
+	if _floor_builder != null:
+		for machine in _floor_builder.get_claw_machines():
+			if machine.get_machine_id() == machine_id:
+				_start_claw_machine(machine)
+				break
+
 func _show_stall_menu(stall: Node) -> void:
 	if _food_stall_browse == null:
 		_food_stall_browse = FoodStallBrowseScript.new()
@@ -480,6 +525,54 @@ func _on_food_stall_closed() -> void:
 
 func _on_food_stall_item_added(item_name: String, qty: int, price: float) -> void:
 	pass
+
+# ─── Claw Machine ──────────────────────────────────────────────
+
+var _claw_active: bool = false
+var _active_claw_machine: ClawMachine = null
+
+func _start_claw_machine(machine: ClawMachine) -> void:
+	if machine == null:
+		return
+	# Set cart reference on the machine
+	machine.set_cart(_player.get_cart())
+	var ok = machine.start_round()
+	if ok:
+		_claw_active = true
+		_active_claw_machine = machine
+		machine.played.connect(_on_claw_round_ended)
+		# Show instructions in prompt
+		var prompt_lbl = get_node_or_null("PromptLbl")
+		if prompt_lbl != null:
+			prompt_lbl.text = "A/D: Move  S: Drop"
+
+	else:
+		# Could not start (no cart / already playing)
+		var prompt_lbl = get_node_or_null("PromptLbl")
+		if prompt_lbl != null:
+			prompt_lbl.text = "Already playing..."
+
+func _on_claw_round_ended(prize_name: String, won: bool) -> void:
+	_claw_active = false
+	_active_claw_machine = null
+	var prompt_lbl = get_node_or_null("PromptLbl")
+	if prompt_lbl != null:
+		if won:
+			prompt_lbl.text = "You won: %s!" % prize_name
+		else:
+			prompt_lbl.text = "No prize this time..."
+
+func _input(event: InputEvent) -> void:
+	if not _claw_active or _active_claw_machine == null:
+		return
+	if event is InputEventKey and event.pressed:
+		match event.keycode:
+			KEY_A, KEY_LEFT:
+				_active_claw_machine.move_claw(-1)
+			KEY_D, KEY_RIGHT:
+				_active_claw_machine.move_claw(1)
+			KEY_S, KEY_DOWN:
+				_active_claw_machine.drop_claw()
 
 func _on_section_entered(section_id: String) -> void:
 	pass

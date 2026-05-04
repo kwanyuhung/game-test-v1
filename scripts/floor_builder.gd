@@ -10,6 +10,7 @@ extends Node2D
 const FloorConfig = preload("res://scripts/floor_config.gd")
 const StoreData = preload("res://scripts/store_data.gd")
 const FoodStallScript = preload("res://scripts/food_stall.gd")
+const ClawMachineScript = preload("res://scripts/claw_machine.gd")
 
 const CELL_SIZE := FloorConfig.CELL_SIZE
 const WORLD_W  := FloorConfig.WORLD_W
@@ -20,6 +21,7 @@ var _parent: Node
 var _floor_nodes: Array = []
 var _sections: Array = []
 var _food_stalls: Array = []
+var _claw_machines: Array = []
 var _checkout_counters: Array = []
 var _aisle_labels: Array = []
 
@@ -36,6 +38,7 @@ func build(floor_def: FloorConfig.FloorDef, parent: Node) -> void:
 	_floor_nodes.clear()
 	_sections.clear()
 	_food_stalls.clear()
+	_claw_machines.clear()
 	_checkout_counters.clear()
 	_aisle_labels.clear()
 
@@ -77,6 +80,7 @@ func _build_zone(zone: FloorConfig.Zone) -> void:
 		FloorConfig.ZONE_ELEVATOR:     _build_zone_shaft(zone)
 		FloorConfig.ZONE_STAIRS:       _build_zone_stairs(zone)
 		FloorConfig.ZONE_DECOR:         _build_zone_decor(zone)
+		FloorConfig.ZONE_CLAW_MACHINE:  _build_zone_claw_machine(zone)
 		# Unknown types are silently skipped (extensible)
 
 # ─── Individual Zone Builders ───────────────────────────────────
@@ -306,7 +310,7 @@ func _build_zone_info_desk(zone: FloorConfig.Zone) -> void:
 	_parent.add_child(dir); _floor_nodes.append(dir)
 
 func _get_floor_directory() -> String:
-	return "F1:Fresh  F2:Pantry\nF3:Drinks  F4:Snacks\nF5:Frozen  F6:Home\nF7:Health  F8:Toys\nF9:Staff  F10:Cafe"
+	return "F1:Fresh  F2:Pantry\nF3:Drinks  F4:Snacks\nF5:Frozen  F6:Home\nF7:Health  F8:Arcade\nF9:Staff  F10:Cafe"
 
 func _build_zone_food_stall(zone: FloorConfig.Zone) -> void:
 	var stall_id: String = zone.meta.get("stall_id", "jp_ramen")
@@ -601,6 +605,8 @@ func _build_zone_decor(zone: FloorConfig.Zone) -> void:
 			_build_dining_table(zone.x, zone.y)
 		"planter":
 			_build_planter(zone.x, zone.y, zone.w, zone.h)
+		"shelf":
+			_build_prize_shelf(zone.x, zone.y, zone.w, zone.h)
 		_:
 			# Generic floor patch
 			var r := ColorRect.new()
@@ -622,6 +628,79 @@ func _build_planter(px: int, py: int, pw: int, ph: int) -> void:
 	top.size = Vector2(pw * CELL_SIZE, 2)
 	top.color = Color(0.30, 0.52, 0.22)
 	_parent.add_child(top); _floor_nodes.append(top)
+
+func _build_prize_shelf(px: int, py: int, pw: int, ph: int) -> void:
+	# Arcade prize display shelf — back panel + 3 rows of shelves
+	# Back panel
+	var back := ColorRect.new()
+	back.position = Vector2(px * CELL_SIZE, py * CELL_SIZE)
+	back.size = Vector2(pw * CELL_SIZE, ph * CELL_SIZE)
+	back.color = Color(0.08, 0.08, 0.14)
+	_parent.add_child(back); _floor_nodes.append(back)
+
+	# Neon trim
+	var trim_col := Color(0.50, 0.30, 0.80)  # purple neon
+	var trim_top := ColorRect.new()
+	trim_top.position = Vector2(px * CELL_SIZE, py * CELL_SIZE)
+	trim_top.size = Vector2(pw * CELL_SIZE, 2)
+	trim_top.color = trim_col
+	_parent.add_child(trim_top); _floor_nodes.append(trim_top)
+
+	# Shelf rows
+	var row_colors := [
+		Color(0.90, 0.30, 0.30),
+		Color(0.30, 0.75, 0.90),
+		Color(0.90, 0.70, 0.20),
+	]
+	for row in range(3):
+		var shelf_y := (py + 1 + row * ((ph - 1) / 3)) * CELL_SIZE
+		# Shelf plank
+		var shelf := ColorRect.new()
+		shelf.position = Vector2(px * CELL_SIZE, shelf_y)
+		shelf.size = Vector2(pw * CELL_SIZE, 2)
+		shelf.color = Color(0.40, 0.35, 0.30)
+		_parent.add_child(shelf); _floor_nodes.append(shelf)
+
+		# Plush prizes on shelf
+		for col in range(3):
+			var prize_x := (px + 1 + col * ((pw - 2) / 3)) * CELL_SIZE
+			var prize_y := shelf_y - CELL_SIZE * 2
+			var spr := Sprite2D.new()
+			spr.position = Vector2(prize_x + CELL_SIZE, prize_y + CELL_SIZE)
+			spr.texture = _make_plush_texture(row_colors[row])
+			spr.z_index = 3
+			_parent.add_child(spr); _floor_nodes.append(spr)
+
+	# "PRIZES" neon sign
+	var prize_lbl := Label.new()
+	prize_lbl.text = "PRIZES"
+	prize_lbl.position = Vector2((px + pw * 0.5 - 2) * CELL_SIZE, (py - 2) * CELL_SIZE)
+	prize_lbl.add_theme_color_override("font_color", Color(0.80, 0.40, 1.0))
+	prize_lbl.add_theme_font_size_override("font_size", 9)
+	_parent.add_child(prize_lbl); _floor_nodes.append(prize_lbl)
+
+# ─── Claw Machine Zone ───────────────────────────────────────────────
+# Builds a complete claw machine cabinet with prizes, claw, rail, and
+# interaction zone. meta: {machine_id: String, prize_pool: int (0-3)}.
+func _build_zone_claw_machine(zone: FloorConfig.Zone) -> void:
+	var machine_id: String = zone.meta.get("machine_id", "claw_1")
+	var prize_pool_idx: int = zone.meta.get("prize_pool", 0)
+
+	# Define prize pools (each machine has different coloured plushies)
+	var prize_pools := [
+		[Color(0.90, 0.30, 0.30), Color(0.90, 0.30, 0.30), Color(0.90, 0.50, 0.50)],  # red
+		[Color(0.30, 0.75, 0.90), Color(0.30, 0.75, 0.90), Color(0.50, 0.85, 0.95)],  # blue
+		[Color(0.90, 0.70, 0.20), Color(0.90, 0.70, 0.20), Color(0.90, 0.80, 0.40)],  # yellow
+		[Color(0.55, 0.90, 0.40), Color(0.88, 0.45, 0.85), Color(0.90, 0.55, 0.30)],  # mixed
+	]
+	var pool: Array = prize_pools[prize_pool_idx % prize_pools.size()]
+
+	var machine := ClawMachineScript.new()
+	machine.configure(zone, machine_id)
+	machine.build(pool)
+	machine.name = "Claw_%s" % machine_id
+	_parent.add_child(machine)
+	_claw_machines.append(machine)
 
 # ─── Section Zones ─────────────────────────────────────────────
 
@@ -822,6 +901,25 @@ func _fill_sign_rect(img: Image, x: int, y: int, w: int, h: int, col: Color) -> 
 		for py in range(y, y + h):
 			img.set_pixel(px, py, col)
 
+func _make_plush_texture(col: Color) -> Texture2D:
+	# Small plush toy sprite for prize shelves
+	var sz := 12
+	var img := Image.create(sz, sz, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	for y in range(sz):
+		for x in range(sz):
+			var cx := float(x) - sz * 0.5
+			var cy := float(y) - sz * 0.5
+			var r := sz * 0.44
+			if cx * cx + cy * cy < r * r:
+				img.set_pixel(x, y, col)
+	# Eyes
+	for ey in [sz >> 2, sz >> 2 + 2]:
+		for ex in [sz >> 2 - 1, sz - (sz >> 2) + 1]:
+			if ex >= 0 and ex < sz and ey >= 0 and ey < sz:
+				img.set_pixel(ex, ey, Color(0.05, 0.05, 0.05))
+	return ImageTexture.create_from_image(img)
+
 func _make_lantern() -> Texture2D:
 	# Red paper lantern texture
 	var sz := 20
@@ -845,6 +943,9 @@ func get_sections() -> Array:
 
 func get_food_stalls() -> Array:
 	return _food_stalls
+
+func get_claw_machines() -> Array:
+	return _claw_machines
 
 func get_checkout_counters() -> Array:
 	return _checkout_counters
