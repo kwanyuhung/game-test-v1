@@ -112,6 +112,16 @@ static func _static_init() -> void:
 			false, false, true, false),
 	]
 
+		# Floor 12 — Juice Bar & Fresh (Phase J)
+		FloorDef.new(12, '12', 'juice_bar',
+			Color(0.55, 0.72, 0.58),
+			true, false, true, true),
+
+		# Floor 13 — Kids Kingdom (Phase K)
+		FloorDef.new(13, '13', 'kids_kingdom',
+			Color(0.72, 0.58, 0.80),
+			true, false, true, true),
+
 # Floor index → FloorDef
 static func floor_at(idx: int) -> FloorDef:
 	if idx < 0 or idx >= ALL.size():

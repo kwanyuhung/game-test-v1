@@ -147,7 +147,7 @@ func _ready() -> void:
 	for npc in _npcs:
 		_chat_manager.register_npc(npc)
 
-	notify_telegram("?貕?*Game Loaded*\n10-floor supermarket ??Ground (G) ready\nUse [E] near elevator to change floors")
+	notify_telegram("🟢 *Game Loaded*\n10-floor supermarket — Ground (G) ready\nUse [E] near elevator to change floors")
 	# ── Dev Tools (dev mode only) ──
 	if DEV_MODE:
 		_dev_tools = DevToolsScript.new()

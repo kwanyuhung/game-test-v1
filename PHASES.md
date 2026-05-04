@@ -69,57 +69,110 @@ Issues spawn randomly on floors (spills, broken lights, out-of-stock, lost child
 
 ---
 
-## What's Left?
+## Phase G ✅ Garden & Home Living
+**New Floor — Home & Garden (between Fashion and Sport)**
 
-No more numbered phases! The core game loop is complete:
+A warm, nature-inspired floor with home decor, indoor plants, outdoor furniture, and home organization.
 
-| Feature | Status |
-|---------|--------|
-| 12-floor world with unique themes | ✅ |
-| Section browsing (190+ products) | ✅ |
-| Food stalls (12 cuisines) | ✅ |
-| Shopping cart + checkout | ✅ |
-| NPCs (staff + customers) with AI | ✅ |
-| NPC chat + AI-to-AI chat | ✅ |
-| 24-hour clock | ✅ |
-| Maintenance/issues system | ✅ |
-| Player stats + achievements | ✅ |
-| Customer cart shopping AI | ✅ |
-| ATMs | ✅ |
-| Warehouse stock system | ✅ |
-| Pet Paradise (Floor 11) | ✅ |
-| Arcade claw machines | ✅ |
+**Zones & Features:**
+- **Home Decor Section**: Rugs, candles, vases, wall art, photo frames
+- **Furniture Display**: Sofas, tables, shelving units, chairs on display
+- **Indoor Plants Corner**: Potted plants, succulents, hanging planters, plant care products
+- **Outdoor Furniture Zone**: Patio sets, garden chairs, BBQ equipment display
+- **Home Organization**: Storage boxes, closet organizers, kitchen organizers
+- **Lighting Section**: Lamps, fairy lights, ceiling fixtures
 
-## Phase C — Store Expansion & Renovation
-Unlock and build new areas of the store.
-- Expand the parking lot (more vehicle slots, drive-through window)
-- Renovate floors to unlock premium sections (organic aisle, deluxe bakery)
-- Store layout editor — choose where sections go
-- Unlock new building wings as revenue milestones
+**Player Interactions:**
+- Browse and add home items to cart
+- Seasonal decor rotates (e.g., Christmas ornaments in December)
+- Staff home consultant NPC
 
-## Phase D — Staff Management & HR
-Hire, train, and manage your workforce.
-- Staff hiring panel — open positions, interview candidates
-- Assign staff to specific floors/sections
-- Staff morale system — happy staff work faster, unhappy staff call in sick
-- Shift scheduling — morning/afternoon/night crews
-- Staff training — improve speed/quality per skill type
+---
 
-## Phase E — Marketing & Promotions
-Attract more customers with deals and campaigns.
-- Weekly sale events — discounted products bring crowds
-- Loyalty card — repeat customers earn points toward rewards
-- Store flyer/circular — promote today's deals (in-game notification)
-- Advertising budget — spend to increase customer spawn rate
-- VIP customer program — special shoppers with bigger carts
+## Phase I ✅ Information Hub & Services
+**New Service Area — Customer Service & Loyalty Center**
 
-## Phase F — Finance & Supplier Contracts
-Manage the business side of the supermarket.
-- Dynamic pricing — raise/lower prices per section
-- Supplier contracts — negotiate bulk deals, faster delivery tiers
-- Daily/weekly profit & loss statement
-- Tax season — file reports, reinvest in store
-- Store reputation score — affects customer volume and staff satisfaction
+A dedicated service hub for customer support, loyalty programs, and digital services.
+
+**Zones & Features:**
+- **Customer Service Desk**: Returns, exchanges, complaints, price matching
+- **Loyalty Sign-Up Kiosk**: Register for store membership card, earn points
+- **Gift Wrapping Station**: Pay for premium gift wrapping (costs extra, gives XP bonus)
+- **Digital Kiosk Zone**: Interactive store directory map, product lookup, current deals
+- **Self-Checkout Express Lane**: 10-items-or-less self-scan counter
+- **Information Board**: Today's deals, store events, upcoming promotions
+
+**Player Interactions:**
+- Press E at loyalty kiosk to sign up → earn loyalty points on purchases
+- Press E at gift wrapping → option to wrap items for +XP bonus tip
+- Press E at digital kiosk → browse deals and store map
+- Loyalty points accumulate and can be redeemed at checkout for discounts
+
+**Loyalty System:**
+- Earn 1 loyalty point per $1 spent
+- Every 100 points = $5 store credit at checkout
+- VIP tier unlocked at 1000 lifetime points (faster point earning)
+- Birthday bonus: double points on birthday
+
+---
+
+## Phase J ✅ Juice Bar & Fresh Foods
+**New Floor — Juice Bar, Smoothies & Health Foods**
+
+A vibrant health-focused floor with freshly made drinks and nutritious snack options.
+
+**Zones & Features:**
+- **Juice Bar Counter**: Freshly squeezed orange, apple, carrot, watermelon juices
+- **Smoothie Station**: Mixed fruit smoothies, protein shakes, green detox smoothies
+- **Açaí Bowl Corner**: Açaí bowls with toppings (granola, honey, fresh fruit)
+- **Salad Bar**: Fresh pre-made salads, grain bowls, wrap selections
+- **Health Food Shelf**: Organic snacks, trail mix, protein bars, dried fruits
+- **Vitamin & Supplements Corner**: Vitamins, minerals, health supplements
+
+**Menu Items (Price List):**
+| Item | Price | XP |
+|------|-------|-----|
+| Fresh Orange Juice | $4.50 | +15 XP |
+| Green Detox Smoothie | $6.00 | +20 XP |
+| Açaí Bowl | $8.50 | +25 XP |
+| Garden Salad | $5.50 | +18 XP |
+| Protein Shake | $5.00 | +15 XP |
+| Health Snack Box | $3.50 | +10 XP |
+| Vitamin Pack | $12.00 | +30 XP |
+
+**Player Interactions:**
+- Press E at juice bar → browse drink menu → add to cart
+- Press E at salad bar → browse salad menu → add to cart
+- Staff: Juice barista NPC behind counter
+
+---
+
+## Phase K ✅ Kids Kingdom & Family Zone
+**New Floor — Kids Play Area & Family Facilities**
+
+A dedicated family floor with supervised kids play area, nursing room, and family amenities.
+
+**Zones & Features:**
+- **Supervised Play Zone**: Colorful soft-play area, slides, ball pit (visible through window from corridor)
+- **Kids Club Reception**: Sign kids in/out of supervised play (costs $5/30min)
+- **Nursing / Baby Room**: Private room for breastfeeding, nappy changing station
+- **Family Changing Room**: Accessible toilet + changing facility for families
+- **Kids Clothing Rack**: Small clothing section for children (shoes, socks, accessories)
+- **Toy Display Corner**: Sample toys from Floor 10 on display with "ask staff" ordering
+- **Stroller Parking**: Dedicated stroller storage area near entrance
+
+**Player Interactions:**
+- Parents can drop kids at supervised play → kids disappear for 30min game time → XP bonus when picked up
+- Press E at nursing room → private area (other NPCs don't enter)
+- Press E at kids clothing → browse small section
+- Family WC has family-friendlier access than standard WC
+- Stroller can be "parked" here for convenience
+
+**Family Bonus:**
+- When parent and child NPCs are together on this floor, both get +10% XP bonus
+- Triggers "Family Day" achievement
+
+---
 
 ## DEV MODE — Testing Tools
 Press **F3** to open the Dev Tools panel (dev mode only).
@@ -152,12 +205,8 @@ Colorful promotional billboards placed throughout the store:
 
 - **Multiple floors open simultaneously** — elevator ride animation between floors
 - **Shopping list UI** — player can see what they came to buy
-- **Pet adoption interaction** — press E at adoption corner to "adopt"
-- **Multiple floors open at once** — seamless vertical traversal
 - **Sound effects** — ambient store noise, checkout beeps, NPC chatter
 - **Weather system** — affects customer spawn rates
-- **Store reputation score** — visible to player
-- **Staff scheduling** — staff go on breaks, shifts change
 - **Customer impatience** — customers leave if wait too long at checkout
 
 _Current: Fully featured supermarket game with 12 floors, NPCs, commerce, maintenance, progression, and warehouse operations._
