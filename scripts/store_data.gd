@@ -65,6 +65,8 @@ static func _static_init() -> void:
 		SectionDef.new("toys",    "TOYS",      20,  3, 30, 20, SectionStyle.SHELF,    Color(0.70, 0.60, 0.90),  "T",  8),
 		# Floor 10 — Rooftop Café
 		SectionDef.new("cafe",    "CAFE",      42,  3, 18, 14, SectionStyle.SHELF,    Color(0.72, 0.55, 0.42),  "F", 10),
+		# Floor 11 — Pet Paradise
+		SectionDef.new("pet",     "PET PARADISE", 2,  3, 22, 20, SectionStyle.SHELF,    Color(0.55, 0.80, 0.65),  "E", 11),
 	]
 	CHECKOUT_LANES = [
 		{"x": 18, "name": "LANE 1"},
@@ -297,6 +299,45 @@ static func _static_init() -> void:
 		MarketProduct.new("frozen_dumpling","Dumplings 20pk",       6.00, Color(0.92, 0.88, 0.72), 0, "frozen", "Meals",      "Steamed or pan-fried dumplings. Quick meal."),
 		MarketProduct.new("frozen_rice",  "Frozen Fried Rice 600g", 4.00, Color(0.95, 0.88, 0.55), 3, "frozen", "Meals",      "Fully cooked fried rice. Microwave in 4 mins."),
 		MarketProduct.new("frozen_bread", "Frozen Garlic Bread 300g",2.80, Color(0.88, 0.72, 0.45), 3, "frozen", "Meals",      "Slice and bake garlic bread. Pizza combo."),
+
+		# ═══════════════════ PET SUPPLIES ═══════════════════
+		# Dog Food
+		MarketProduct.new("dog_food_adult",  "Dog Food Adult 3kg",    18.00, Color(0.72, 0.42, 0.22), 3, "pet", "Dog Food",    "Complete nutrition for adult dogs. All breeds."),
+		MarketProduct.new("dog_food_puppy",  "Dog Food Puppy 2kg",    16.50, Color(0.55, 0.35, 0.20), 3, "pet", "Dog Food",    "Growth formula for puppies up to 12 months."),
+		MarketProduct.new("dog_food_senior", "Dog Food Senior 3kg",   19.00, Color(0.65, 0.45, 0.30), 3, "pet", "Dog Food",    "Light formula for senior dogs 7+ years."),
+		MarketProduct.new("dog_treats",      "Training Treats 200g",   5.50, Color(0.88, 0.62, 0.32), 0, "pet", "Dog Food",    "Small bite-sized rewards. No artificial colours."),
+		MarketProduct.new("dog_chews",       "Dental Chews 12pk",       7.00, Color(0.92, 0.80, 0.55), 0, "pet", "Dog Food",    "Helps reduce tartar. Veterinarian approved."),
+		MarketProduct.new("dog_wet_food",    "Wet Dog Food 12x400g",   14.00, Color(0.62, 0.38, 0.25), 3, "pet", "Dog Food",    "Grain-free wet food. Cuts in jelly."),
+		# Cat Food
+		MarketProduct.new("cat_food_adult",  "Cat Food Adult 2kg",    14.00, Color(0.55, 0.55, 0.70), 3, "pet", "Cat Food",    "Complete dry food for adult cats. Hairball control."),
+		MarketProduct.new("cat_food_kitten", "Cat Food Kitten 1.5kg", 13.00, Color(0.48, 0.48, 0.62), 3, "pet", "Cat Food",    "High-protein formula for growing kittens."),
+		MarketProduct.new("cat_wet_food",   "Wet Cat Food 24x85g",    12.00, Color(0.50, 0.48, 0.60), 3, "pet", "Cat Food",    "Mixed flavours — tuna, chicken, salmon."),
+		MarketProduct.new("cat_treats",      "Cat Treats 60g",         4.50, Color(0.72, 0.55, 0.72), 0, "pet", "Cat Food",    "Crunchy seaweed and chicken flavoured treats."),
+		MarketProduct.new("cat_litter",      "Clumping Cat Litter 5L",  8.50, Color(0.80, 0.78, 0.72), 0, "pet", "Cat Food",    "Easy-scoop clumping litter. Odour control."),
+		# Bird & Small Animal
+		MarketProduct.new("bird_seed",       "Bird Seed Mix 1kg",       6.00, Color(0.92, 0.82, 0.45), 0, "pet", "Bird Food",   "Sunflower, millet, and cracked corn mix."),
+		MarketProduct.new("bird_toy",        "Swinging Perch Toy",       5.00, Color(0.55, 0.80, 0.45), 0, "pet", "Bird Food",   "Natural wood perch with bell. For parakeets."),
+		MarketProduct.new("hamster_food",   "Hamster Mix 500g",        4.00, Color(0.85, 0.68, 0.42), 0, "pet", "Small Pet",   "Complete hamster food with seeds and grains."),
+		MarketProduct.new("guinea_pig_food","Guinea Pig Food 1kg",     6.50, Color(0.58, 0.78, 0.48), 0, "pet", "Small Pet",   "With added Vitamin C. Timothy hay based."),
+		MarketProduct.new("rabbit_food",    "Rabbit Food 1kg",         6.00, Color(0.62, 0.68, 0.55), 0, "pet", "Small Pet",   "High-fiber complete food for adult rabbits."),
+		MarketProduct.new("fish_food_flake","Fish Flakes 250ml",       5.50, Color(0.88, 0.55, 0.30), 0, "pet", "Fish Food",   "Complete flakes for tropical freshwater fish."),
+		MarketProduct.new("fish_food_pellet","Fish Pellets 500ml",     7.00, Color(0.30, 0.58, 0.80), 0, "pet", "Fish Food",   "Sinking pellets for goldfish and cichlids."),
+		# Pet Toys & Accessories
+		MarketProduct.new("dog_ball",         "Tennis Ball 2pk",         4.00, Color(0.88, 0.88, 0.20), 0, "pet", "Pet Toys",     "Bright yellow tennis balls. Bounce-friendly."),
+		MarketProduct.new("dog_rope_toy",   "Rope Tug Toy",            6.50, Color(0.45, 0.68, 0.85), 0, "pet", "Pet Toys",     "Cotton rope. Great for tug-of-war."),
+		MarketProduct.new("dog_leash",       "Nylon Dog Leash 1.5m",    9.00, Color(0.22, 0.22, 0.45), 0, "pet", "Pet Toys",     "Adjustable nylon leash. Reflective stitching."),
+		MarketProduct.new("dog_collar",      "Dog Collar Medium",       7.50, Color(0.60, 0.30, 0.30), 0, "pet", "Pet Toys",     "Padded neoprene collar. Quick-release buckle."),
+		MarketProduct.new("cat_brush",       "Cat Grooming Brush",      8.00, Color(0.80, 0.80, 0.88), 0, "pet", "Pet Toys",     "Self-cleaning slicker brush. Reduces shedding."),
+		MarketProduct.new("cat_tree",        "Cat Tree Tower",          45.00, Color(0.65, 0.48, 0.32), 3, "pet", "Pet Toys",     "Multi-level cat tree with scratching posts."),
+		MarketProduct.new("pet_bed_small",  "Pet Bed Small 50cm",     22.00, Color(0.52, 0.52, 0.62), 3, "pet", "Pet Toys",     "Machine-washable fleece bed. Non-slip base."),
+		MarketProduct.new("pet_bed_large",  "Pet Bed Large 80cm",     35.00, Color(0.48, 0.48, 0.58), 3, "pet", "Pet Toys",     "Orthopedic memory foam bed for large dogs."),
+		MarketProduct.new("pet_carrier",    "Pet Carrier Medium",      28.00, Color(0.40, 0.48, 0.62), 3, "pet", "Pet Toys",     "Airline-approved. Ventilated sides."),
+		MarketProduct.new("aquarium_small", "Desktop Aquarium 10L",   38.00, Color(0.20, 0.65, 0.80), 3, "pet", "Pet Toys",     "Complete starter kit with LED light and filter."),
+		MarketProduct.new("fish_tank_20g",  "Fish Tank 20 Gallon",    55.00, Color(0.18, 0.58, 0.72), 3, "pet", "Pet Toys",     "Rectangular glass tank. Filter not included."),
+		MarketProduct.new("water_bottle_pet","Water Bottle 500ml",     6.00, Color(0.40, 0.75, 0.90), 0, "pet", "Pet Toys",     "Portable water bottle with attached bowl. For dogs."),
+		MarketProduct.new("pet_food_bin",   "Pet Food Storage Bin",   12.00, Color(0.55, 0.48, 0.38), 3, "pet", "Pet Toys",     "Airtight container. Keeps food fresh. 10kg cap."),
+		MarketProduct.new("pet_wipes",      "Pet Grooming Wipes 100ct", 7.50, Color(0.72, 0.82, 0.90), 0, "pet", "Pet Toys",     "Fragrance-free grooming wipes. Safe for paws."),
+		MarketProduct.new("poop_bags",      "Poop Bags 120ct",          5.00, Color(0.60, 0.52, 0.48), 0, "pet", "Pet Toys",     "Biodegradable waste bags with dispenser."),
 	]
 
 static func get_section_def(sid: String) -> SectionDef:

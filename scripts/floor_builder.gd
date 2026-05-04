@@ -81,6 +81,7 @@ func _build_zone(zone: FloorConfig.Zone) -> void:
 		FloorConfig.ZONE_STAIRS:       _build_zone_stairs(zone)
 		FloorConfig.ZONE_DECOR:         _build_zone_decor(zone)
 		FloorConfig.ZONE_CLAW_MACHINE:  _build_zone_claw_machine(zone)
+		FloorConfig.ZONE_PET_ADOPTION:  _build_zone_pet_adoption(zone)
 		# Unknown types are silently skipped (extensible)
 
 # ─── Individual Zone Builders ───────────────────────────────────
@@ -679,6 +680,192 @@ func _build_prize_shelf(px: int, py: int, pw: int, ph: int) -> void:
 	prize_lbl.add_theme_font_size_override("font_size", 9)
 	_parent.add_child(prize_lbl); _floor_nodes.append(prize_lbl)
 
+# ─── Pet Adoption Zone ───────────────────────────────────────────────
+# A cozy corner with kennels/cages for adoptable pets.
+# meta: {name: String, color: Color}
+func _build_zone_pet_adoption(zone: FloorConfig.Zone) -> void:
+	var adopt_name: String = zone.meta.get("name", "ADOPTION")
+	var adopt_color: Color = zone.meta.get("color", Color(0.60, 0.88, 0.70))
+	var cx := zone.x * CELL_SIZE
+	var cy := zone.y * CELL_SIZE
+	var cw := zone.w * CELL_SIZE
+	var ch := zone.h * CELL_SIZE
+
+	# Back wall
+	var bg := ColorRect.new()
+	bg.position = Vector2(cx, cy)
+	bg.size = Vector2(cw, ch)
+	bg.color = Color(0.18, 0.28, 0.20)
+	_parent.add_child(bg); _floor_nodes.append(bg)
+
+	# Warm green trim strips
+	var trim := ColorRect.new()
+	trim.position = Vector2(cx, cy)
+	trim.size = Vector2(cw, 3)
+	trim.color = adopt_color
+	_parent.add_child(trim); _floor_nodes.append(trim)
+
+	var trim_bot := ColorRect.new()
+	trim_bot.position = Vector2(cx, cy + ch - 3)
+	trim_bot.size = Vector2(cw, 3)
+	trim_bot.color = adopt_color
+	_parent.add_child(trim_bot); _floor_nodes.append(trim_bot)
+
+	# Adoption kennels — 3 cages (dog, cat, rabbit)
+	var kennel_colors := [Color(0.70, 0.60, 0.45), Color(0.55, 0.50, 0.48), Color(0.65, 0.58, 0.52)]
+	var cage_w := cw / 3.5
+	for i in range(3):
+		var kx := cx + 8 + i * (cage_w + 8)
+		var ky := cy + 12
+		var cage_h := ch - 24
+
+		# Cage frame
+		var frame := ColorRect.new()
+		frame.position = Vector2(kx, ky)
+		frame.size = Vector2(cage_w, cage_h)
+		frame.color = kennel_colors[i]
+		_parent.add_child(frame); _floor_nodes.append(frame)
+
+		# Cage bars (vertical)
+		for b in range(4):
+			var bx := kx + (b + 1) * cage_w / 5.0
+			var bar := ColorRect.new()
+			bar.position = Vector2(bx, ky)
+			bar.size = Vector2(2, cage_h)
+			bar.color = Color(0.35, 0.30, 0.25)
+			_parent.add_child(bar); _floor_nodes.append(bar)
+
+		# Pet sprite inside cage
+		var pet_tex := _make_pet_sprite(i)
+		var pet_spr := Sprite2D.new()
+		pet_spr.texture = pet_tex
+		pet_spr.position = Vector2(kx + cage_w * 0.5, ky + cage_h * 0.5)
+		pet_spr.z_index = 3
+		_parent.add_child(pet_spr); _floor_nodes.append(pet_spr)
+
+	# ADOPTION sign
+	var sign_lbl := Label.new()
+	sign_lbl.text = adopt_name
+	sign_lbl.position = Vector2(cx + 4, cy - 14)
+	sign_lbl.add_theme_color_override("font_color", adopt_color.lightened(0.2))
+	sign_lbl.add_theme_font_size_override("font_size", 10)
+	_parent.add_child(sign_lbl); _floor_nodes.append(sign_lbl)
+
+	var sub_lbl := Label.new()
+	sub_lbl.text = "Meet your new best friend!"
+	sub_lbl.position = Vector2(cx + 4, cy - 6)
+	sub_lbl.add_theme_color_override("font_color", Color(0.75, 0.90, 0.78))
+	sub_lbl.add_theme_font_size_override("font_size", 6)
+	_parent.add_child(sub_lbl); _floor_nodes.append(sub_lbl)
+
+	# Pet food shelves on right side
+	var shelf_x := cx + cw * 0.55
+	for row in range(3):
+		var shelf_y := cy + 8 + row * (ch * 0.28)
+		# Shelf back
+		var shelf_bg := ColorRect.new()
+		shelf_bg.position = Vector2(shelf_x, shelf_y)
+		shelf_bg.size = Vector2(cw * 0.40, ch * 0.25)
+		shelf_bg.color = Color(0.12, 0.10, 0.08)
+		_parent.add_child(shelf_bg); _floor_nodes.append(shelf_bg)
+		# Shelf plank
+		var plank := ColorRect.new()
+		plank.position = Vector2(shelf_x, shelf_y + ch * 0.22)
+		plank.size = Vector2(cw * 0.40, 2)
+		plank.color = Color(0.40, 0.32, 0.22)
+		_parent.add_child(plank); _floor_nodes.append(plank)
+		# Pet food bags
+		for col in range(4):
+			var item_x := shelf_x + 4 + col * (cw * 0.095)
+			var item_y := shelf_y + ch * 0.05
+			var bag_spr := Sprite2D.new()
+			bag_spr.texture = _make_pet_food_bag_texture(row, col)
+			bag_spr.position = Vector2(item_x + CELL_SIZE, item_y + CELL_SIZE * 0.5)
+			bag_spr.z_index = 3
+			_parent.add_child(bag_spr); _floor_nodes.append(bag_spr)
+
+# ─── Pet sprite (procedural: dog, cat, rabbit) ───────────────────────
+func _make_pet_sprite(pet_type: int) -> Texture2D:
+	var W := 20; var H := 20
+	var img := Image.create(W, H, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+
+	match pet_type:
+		0:  # Dog — brown, floppy ears
+			for y in range(6, 15):
+				for x in range(4, 16):
+					img.set_pixel(x, y, Color(0.62, 0.42, 0.22))
+			for y in range(2, 10):
+				for x in range(8, 16):
+					img.set_pixel(x, y, Color(0.68, 0.48, 0.25))
+			for y in range(2, 8):
+				img.set_pixel(8, y, Color(0.52, 0.32, 0.18))
+				img.set_pixel(7, y, Color(0.52, 0.32, 0.18))
+			img.set_pixel(13, 5, Color(0.08, 0.06, 0.06))
+			img.set_pixel(15, 7, Color(0.12, 0.08, 0.08))
+			for y in range(4, 8):
+				img.set_pixel(4 - (y - 4), y, Color(0.62, 0.42, 0.22))
+		1:  # Cat — grey, pointed ears, whiskers
+			for y in range(8, 15):
+				for x in range(5, 15):
+					img.set_pixel(x, y, Color(0.52, 0.52, 0.58))
+			for y in range(2, 10):
+				for x in range(6, 14):
+					img.set_pixel(x, y, Color(0.55, 0.55, 0.60))
+			img.set_pixel(7, 2, Color(0.55, 0.55, 0.60)); img.set_pixel(8, 1, Color(0.55, 0.55, 0.60)); img.set_pixel(9, 2, Color(0.55, 0.55, 0.60))
+			img.set_pixel(11, 2, Color(0.55, 0.55, 0.60)); img.set_pixel(12, 1, Color(0.55, 0.55, 0.60)); img.set_pixel(13, 2, Color(0.55, 0.55, 0.60))
+			img.set_pixel(9, 5, Color(0.10, 0.70, 0.10)); img.set_pixel(12, 5, Color(0.10, 0.70, 0.10))
+			img.set_pixel(10, 7, Color(0.80, 0.55, 0.60))
+			for wx in range(2, 6): img.set_pixel(wx, 7, Color(0.80, 0.80, 0.85))
+			for wx in range(14, 18): img.set_pixel(wx, 7, Color(0.80, 0.80, 0.85))
+		2:  # Rabbit — white, long ears, pink nose
+			for y in range(10, 17):
+				for x in range(6, 14):
+					img.set_pixel(x, y, Color(0.95, 0.95, 0.92))
+			for y in range(4, 12):
+				for x in range(7, 13):
+					img.set_pixel(x, y, Color(0.97, 0.97, 0.94))
+			for y in range(0, 7):
+				img.set_pixel(7, y, Color(0.97, 0.97, 0.94)); img.set_pixel(8, y, Color(0.97, 0.97, 0.94))
+				img.set_pixel(11, y, Color(0.97, 0.97, 0.94)); img.set_pixel(12, y, Color(0.97, 0.97, 0.94))
+			img.set_pixel(8, 2, Color(0.90, 0.65, 0.72)); img.set_pixel(11, 2, Color(0.90, 0.65, 0.72))
+			img.set_pixel(9, 6, Color(0.90, 0.10, 0.15)); img.set_pixel(11, 6, Color(0.90, 0.10, 0.15))
+			img.set_pixel(10, 9, Color(0.90, 0.58, 0.65))
+
+	return ImageTexture.create_from_image(img)
+
+# ─── Pet food bag texture ─────────────────────────────────────────────
+func _make_pet_food_bag_texture(pet_idx: int, bag_idx: int) -> Texture2D:
+	var W := 10; var H := 14
+	var img := Image.create(W, H, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+
+	var bag_colors := [
+		[Color(0.72, 0.42, 0.22), Color(0.55, 0.35, 0.20)],
+		[Color(0.55, 0.55, 0.70), Color(0.45, 0.45, 0.60)],
+		[Color(0.90, 0.82, 0.55), Color(0.78, 0.70, 0.40)],
+	]
+	var colors: Array = bag_colors[pet_idx % 3]
+	var top_col: Color = colors[0]; var bot_col: Color = colors[1]
+
+	for y in range(2, H):
+		var t := float(y - 2) / float(H - 2)
+		var c := top_col.lerp(bot_col, t)
+		for x in range(2, W - 2):
+			img.set_pixel(x, y, c)
+
+	for y in range(0, 3):
+		for x in range(1, W - 1):
+			img.set_pixel(x, y, top_col.darkened(0.1))
+
+	for x in range(3, W - 3):
+		img.set_pixel(x, 5, Color(0.95, 0.92, 0.80))
+		img.set_pixel(x, 7, Color(0.95, 0.92, 0.80))
+		img.set_pixel(x, 9, Color(0.95, 0.92, 0.80))
+
+	return ImageTexture.create_from_image(img)
+
+
 # ─── Claw Machine Zone ───────────────────────────────────────────────
 # Builds a complete claw machine cabinet with prizes, claw, rail, and
 # interaction zone. meta: {machine_id: String, prize_pool: int (0-3)}.
@@ -952,3 +1139,5 @@ func get_checkout_counters() -> Array:
 
 func get_floor_nodes() -> Array:
 	return _floor_nodes
+
+

@@ -12,6 +12,8 @@ const ElevatorScript = preload("res://scripts/elevator.gd")
 const FoodStallBrowseScript = preload("res://scripts/food_stall_browse.gd")
 const ClawMachine = preload("res://scripts/claw_machine.gd")
 const ActorData = preload("res://scripts/actor_data.gd")
+const ChatManagerScript = preload("res://scripts/chat_manager.gd")
+const ChatPanelScript = preload("res://scripts/chat_panel.gd")
 
 const CELL_SIZE := FloorConfig.CELL_SIZE
 const WORLD_W  := FloorConfig.WORLD_W
@@ -26,7 +28,10 @@ var _nearby_section: Node = null
 var _nearby_checkout: Node = null
 var _nearby_stall: Node = null
 var _nearby_claw_machine: ClawMachine = null
+var _nearby_npc_for_chat: NPCController = null
 var _npcs: Array = []
+var _chat_panel: ChatPanel = null
+var _chat_manager: ChatManager = null
 var _nearby_elevator: bool = false
 var _nearby_parking: bool = false
 var _nearby_stairs: bool = false
@@ -78,6 +83,12 @@ func _ready() -> void:
 	_spawn_player()
 	_build_npcs()
 	_update_floor_hud()
+
+	# Start chat manager
+	_chat_manager = ChatManagerScript.new()
+	add_child(_chat_manager)
+	for npc in _npcs:
+		_chat_manager.register_npc(npc)
 
 	notify_telegram("? *Game Loaded*\n10-floor supermarket ??Ground (G) ready\nUse [E] near elevator to change floors")
 
@@ -383,6 +394,8 @@ func _spawn_npc_staff(role: int, floor_idx: int, pos: Vector2) -> void:
 	npc.name = "Staff_%s_%d" % [actor.display_name.replace(" ", "_"), _npc_count]
 	add_child(npc)
 	_npcs.append(npc)
+	if _chat_manager != null:
+		_chat_manager.register_npc(npc)
 	_npc_count += 1
 
 func _spawn_customer(group_type: int, floor_idx: int, pos: Vector2) -> void:
@@ -395,6 +408,8 @@ func _spawn_customer(group_type: int, floor_idx: int, pos: Vector2) -> void:
 	npc.name = "Customer_%d" % _npc_count
 	add_child(npc)
 	_npcs.append(npc)
+	if _chat_manager != null:
+		_chat_manager.register_npc(npc)
 	_npc_count += 1
 
 func _spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void:
@@ -481,6 +496,7 @@ func _process(_delta: float) -> void:
 	_update_stairs_proximity()
 	_update_stall_proximity()
 	_update_claw_machine_proximity()
+	_update_npc_chat_proximity()
 
 func _update_elevator_proximity() -> void:
 	if _player == null or _elevator == null:
@@ -554,6 +570,51 @@ func _update_claw_machine_proximity() -> void:
 			prompt_lbl.visible = true
 		if prompt_bg != null:
 			prompt_bg.visible = true
+
+func _update_npc_chat_proximity() -> void:
+	_nearby_npc_for_chat = null
+	if _player == null or _npcs.is_empty():
+		return
+	var ppos = _player.position
+	var nearest_dist := 99999.0
+	for npc in _npcs:
+		if not is_instance_valid(npc):
+			continue
+		var actor: ActorData.Actor = npc.get_actor()
+		if actor == null or not actor.is_active:
+			continue
+		var dist := ppos.distance_to(npc.global_position)
+		if dist < nearest_dist and dist < CELL_SIZE * 8.0:
+			nearest_dist = dist
+			_nearby_npc_for_chat = npc
+
+	var prompt_lbl = get_node_or_null("PromptLbl")
+	var prompt_bg = get_node_or_null("PromptBg")
+	if _nearby_npc_for_chat != null and not _nearby_elevator and not _nearby_stairs:
+		if _chat_panel == null or not _chat_panel._is_open:
+			if prompt_lbl != null:
+				var actor: ActorData.Actor = _nearby_npc_for_chat.get_actor()
+				var role_str := ""
+				if actor.role == ActorData.Role.STAFF:
+					var role_names := {
+						ActorData.StaffRole.CASHIER: "Cashier",
+						ActorData.StaffRole.SHELF_STOCKER: "Stocker",
+						ActorData.StaffRole.CLEANER: "Cleaner",
+						ActorData.StaffRole.SECURITY: "Security",
+						ActorData.StaffRole.GREETER: "Greeter",
+						ActorData.StaffRole.MANAGER: "Manager",
+						ActorData.StaffRole.FLOOR_STAFF: "Staff",
+					}
+					role_str = role_names.get(actor.staff_role, "Staff")
+					prompt_lbl.text = "[C] Chat with %s (%s)" % [actor.display_name, role_str]
+				else:
+					prompt_lbl.text = "[C] Chat with %s" % actor.display_name
+				prompt_lbl.visible = true
+			if prompt_bg != null:
+				prompt_bg.visible = true
+	else:
+		# Only hide chat hint if no other prompt is showing
+		pass  # don't override other prompts
 
 func _update_stairs_proximity() -> void:
 	if _player == null:
@@ -724,9 +785,19 @@ func _on_claw_round_ended(prize_name: String, won: bool) -> void:
 			prompt_lbl.text = "No prize this time..."
 
 func _input(event: InputEvent) -> void:
-	if not _claw_active or _active_claw_machine == null:
-		return
 	if event is InputEventKey and event.pressed:
+		# Chat toggle — press C near an NPC
+		if event.keycode == KEY_C:
+			_open_npc_chat()
+			return
+		# ESC closes chat panel
+		if event.keycode == KEY_ESCAPE:
+			if _chat_panel != null and _chat_panel._is_open:
+				_chat_panel.close()
+			return
+		# Claw machine controls only when playing
+		if not _claw_active or _active_claw_machine == null:
+			return
 		match event.keycode:
 			KEY_A, KEY_LEFT:
 				_active_claw_machine.move_claw(-1)
@@ -734,6 +805,24 @@ func _input(event: InputEvent) -> void:
 				_active_claw_machine.move_claw(1)
 			KEY_S, KEY_DOWN:
 				_active_claw_machine.drop_claw()
+
+func _open_npc_chat() -> void:
+	if _chat_panel != null and _chat_panel.visible:
+		return
+	if _nearby_npc_for_chat == null:
+		return
+	var npc: NPCController = _nearby_npc_for_chat
+	var actor: ActorData.Actor = npc.get_actor()
+	var brain = npc.get("chat_brain")
+	if brain == null:
+		return
+	_chat_panel = ChatPanelScript.new()
+	add_child(_chat_panel)
+	_chat_panel.open(npc, actor, brain)
+	_chat_panel.closed.connect(_on_chat_closed)
+
+func _on_chat_closed() -> void:
+	_chat_panel = null
 
 func _on_section_entered(section_id: String) -> void:
 	pass

@@ -13,6 +13,7 @@ class_name NPCController
 extends CharacterBody2D
 
 const ActorData = preload("res://scripts/actor_data.gd")
+const AIChatBrain = preload("res://scripts/ai_chat_brain.gd")
 const NPCSprite = preload("res://scripts/npc_sprite.gd")
 
 # ─── Speed Constants ────────────────────────────────────────
@@ -83,6 +84,7 @@ const STAFF_TASK_TEMPLATES = {
 
 # ─── Instance Data ─────────────────────────────────────────
 var _actor: ActorData.Actor
+var _chat_brain: AIChatBrain
 var _state: BehaviorState = BehaviorState.IDLE
 var _target_pos: Vector2 = Vector2.ZERO
 var _elevator_target: int = -1
@@ -105,6 +107,10 @@ var _shadow_sprite: Sprite2D
 
 func configure(actor: ActorData.Actor) -> void:
 	_actor = actor
+
+	# Chat brain
+	_chat_brain = AIChatBrain.new()
+	_chat_brain.configure(actor)
 
 	# Build sprite from appearance
 	_body_sprite = Sprite2D.new()
@@ -154,6 +160,8 @@ func configure(actor: ActorData.Actor) -> void:
 func _physics_process(delta: float) -> void:
 	_state_timer -= delta
 	_update_behavior(delta)
+	if _chat_brain != null:
+		_chat_brain.process(delta)
 	_apply_movement(delta)
 
 	# Update stroller position
