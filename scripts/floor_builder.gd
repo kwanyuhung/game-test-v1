@@ -688,9 +688,9 @@ func _build_zone_claw_machine(zone: FloorConfig.Zone) -> void:
 
 	# Define prize pools (each machine has different coloured plushies)
 	var prize_pools := [
-		[Color(0.90, 0.30, 0.30), Color(0.90, 0.30, 0.30), Color(0.90, 0.50, 0.50)],  # red
-		[Color(0.30, 0.75, 0.90), Color(0.30, 0.75, 0.90), Color(0.50, 0.85, 0.95)],  # blue
-		[Color(0.90, 0.70, 0.20), Color(0.90, 0.70, 0.20), Color(0.90, 0.80, 0.40)],  # yellow
+		[Color(0.90, 0.30, 0.30), Color(0.90, 0.45, 0.45), Color(0.85, 0.25, 0.25)],  # red plush
+		[Color(0.30, 0.75, 0.90), Color(0.40, 0.80, 0.95), Color(0.25, 0.65, 0.85)],  # blue plush
+		[Color(0.90, 0.70, 0.20), Color(0.85, 0.75, 0.25), Color(0.80, 0.60, 0.15)],  # yellow plush
 		[Color(0.55, 0.90, 0.40), Color(0.88, 0.45, 0.85), Color(0.90, 0.55, 0.30)],  # mixed
 	]
 	var pool: Array = prize_pools[prize_pool_idx % prize_pools.size()]
