@@ -7,140 +7,6 @@ extends Node2D
 const FloorConfig = preload("res://scripts/floor_config.gd")
 const FloorBuilderScript = preload("res://scripts/floor_builder.gd")
 const StoreData = preload("res://scripts/store_data.gd")
-const TelegramBot = preload("res://scripts/telegram_bot.gd")
-const ElevatorScript = preload("res://scripts/elevator.gd")
-const FoodStallBrowseScript = preload("res://scripts/food_stall_browse.gd")
-const ClawMachine = preload("res://scripts/claw_machine.gd")
-const ActorData = preload("res://scripts/actor_data.gd")
-const ChatManagerScript = preload("res://scripts/chat_manager.gd")
-const ChatPanelScript = preload("res://scripts/chat_panel.gd")
-const GameClockScript = preload("res://scripts/game_clock.gd")
-const MaintenanceSystemScript = preload("res://scripts/maintenance_system.gd")
-const MaintenanceVisualScript = preload("res://scripts/maintenance_visual.gd")
-const MaintenancePanelScript = preload("res://scripts/maintenance_panel.gd")
-const PlayerStatsScript = preload("res://scripts/player_stats.gd")
-const StatsPanelScript = preload("res://scripts/stats_panel.gd")
-const AchievementPopupScript = preload("res://scripts/achievement_popup.gd")
-const WarehouseSystemScript = preload("res://scripts/warehouse_system.gd")
-const ATMPanelScript = preload("res://scripts/atm_panel.gd")
-
-const CELL_SIZE := FloorConfig.CELL_SIZE
-const WORLD_W  := FloorConfig.WORLD_W
-const WORLD_H  := FloorConfig.WORLD_H
-
-var _player: Player
-var _sections: Array = []
-var _section_browse: SectionBrowse
-var _current_section_browse = null
-var _checkout_counters: Array = []
-var _nearby_section: Node = null
-var _nearby_checkout: Node = null
-var _nearby_stall: Node = null
-var _nearby_claw_machine: ClawMachine = null
-var _nearby_npc_for_chat: NPCController = null
-var _npcs: Array = []
-var _chat_panel: ChatPanel = null
-var _chat_manager: ChatManager = null
-var _game_clock: GameClock = null
-var _maintenance_system: MaintenanceSystem = null
-var _maintenance_visual: MaintenanceVisual = null
-var _maintenance_panel: MaintenancePanel = null
-var _nearby_issue: bool = false
-var _target_issue: Object = null  # Issue the player is heading to resolve
-var _player_stats: PlayerStats = null
-var _stats_panel: StatsPanel = null
-var _warehouse: WarehouseSystem = null
-var _nearby_atm: bool = false
-var _atm_panel: ATMPanel = null
-var _nearby_warehouse: bool = false
-var _nearby_elevator: bool = false
-var _nearby_parking: bool = false
-var _nearby_stairs: bool = false
-var _in_checkout: bool = false
-var _cart_panel: CanvasLayer
-var _cart_items_lbl: Label
-var _cart_total_lbl: Label
-var _cart_count_lbl: Label
-var _checkout_receipt: Control
-var _checkout_counter_label: Label
-var _checkout_items_lbl: Label
-var _checkout_total_lbl: Label
-var _checkout_receipt_visible: bool = false
-var _cart_panel_visible: bool = false
-
-var _world_bg: ColorRect = null
-var _aisle_labels: Array = []
-var _telegram_bot: Node = null
-var _elevator: ElevatorScript
-var _current_floor_idx: int = 0
-var _floor_nodes: Array = []
-var _floor_ambient: Color = Color(0.18, 0.18, 0.16)
-var _floor_label: Label = null
-var _floor_builder: FloorBuilder
-var _food_stall_browse: FoodStallBrowse
-var _in_elevator: bool = false
-
-const AISLE_NAMES := {
-	"dairy":   "DAIRY",
-	"produce": "PRODUCE",
-	"bakery":  "BAKERY",
-	"drinks":  "DRINKS",
-	"snacks":  "SNACKS",
-	"meat":    "MEAT / DELI",
-	"pantry":  "PANTRY",
-	"frozen":  "FROZEN",
-}
-
-func _ready() -> void:
-	_telegram_bot = get_node_or_null("/root/Main/TelegramBot")
-
-	# Build ground floor (G) first
-	_current_floor_idx = 0
-	_build_floor(_current_floor_idx)
-	_setup_camera()
-	_build_hud()
-	_build_elevator()
-	_build_stairs()
-	_spawn_player()
-	_build_npcs()
-	_update_floor_hud()
-
-	# ── Game Clock & Maintenance System ──
-	_game_clock = GameClockScript.new()
-	add_child(_game_clock)
-	_game_clock.hour_changed.connect(_on_hour_changed)
-	_game_clock.day_changed.connect(_on_day_changed)
-	_game_clock.shift_report.connect(_on_shift_report)
-
-	_maintenance_system = MaintenanceSystemScript.new()
-	add_child(_maintenance_system)
-	_maintenance_system.configure(_game_clock)
-	_maintenance_system.issue_created.connect(_on_issue_created)
-	_maintenance_system.issue_resolved.connect(_on_issue_resolved)
-
-	_maintenance_visual = MaintenanceVisualScript.new()
-	add_child(_maintenance_visual)
-	_maintenance_visual.configure(self)
-
-	# ── Warehouse System ──
-	_warehouse = WarehouseSystemScript.new()
-	add_child(_warehouse)
-	_warehouse.delivery_arrived.connect(_on_warehouse_delivery_arrived)
-	_warehouse.low_stock_warning.connect(_on_warehouse_low_stock)
-
-	# ── Player Stats & Progression ──
-	_player_stats = PlayerStatsScript.new()
-	add_child(_player_stats)
-	_player_stats.achievement_unlocked.connect(_on_achievement_unlocked)
-	_player_stats.level_up.connect(_on_player_level_up)
-
-	# Start chat manager
-	_chat_manager = ChatManagerScript.new()
-	add_child(_chat_manager)
-	for npc in _npcs:
-		_chat_manager.register_npc(npc)
-
-	notify_telegram("? *Game Loaded*\n10-floor supermarket ??Ground (G) ready\nUse [E] near elevator to change floors")
 
 # ????????????????????????????????????????????????????????????????# FLOOR BUILDING ??data-driven via FloorBuilder
 # ????????????????????????????????????????????????????????????????
@@ -771,6 +637,49 @@ func _on_atm_withdraw_success(amount: float) -> void:
 		prompt_lbl.text = "Withdrew $%.2f" % amount
 		prompt_lbl.visible = true
 
+func _toggle_dev_tools() -> void:
+	if _dev_tools == null:
+		return
+	if _dev_tools.visible:
+		_dev_tools.close()
+	else:
+		_dev_tools.open()
+
+func _on_dev_command(cmd: String, args: Dictionary) -> void:
+	match cmd:
+		"spawn_customers":
+			var count: int = args.get("count", 5)
+			_spawn_test_customers(count)
+		"spawn_staff":
+			var count: int = args.get("count", 3)
+			_spawn_test_staff(count)
+		"kill_npcs":
+			_kill_all_test_npcs()
+
+func _spawn_test_customers(count: int) -> void:
+	for i in range(count):
+		var npc: Node = preload("res://scripts/npc_controller.gd").new()
+		npc.position = Vector2(300.0 + randf_range(-50, 50), 500.0 + randf_range(-30, 30))
+		add_child(npc)
+		npc.configure(ActorData.new_test_customer())
+		_npcs.append(npc)
+		_chat_manager.register_npc(npc)
+
+func _spawn_test_staff(count: int) -> void:
+	for i in range(count):
+		var npc: Node = preload("res://scripts/npc_controller.gd").new()
+		npc.position = Vector2(350.0 + randf_range(-50, 50), 300.0 + randf_range(-30, 30))
+		add_child(npc)
+		npc.configure(ActorData.new_test_staff())
+		_npcs.append(npc)
+		_chat_manager.register_npc(npc)
+
+func _kill_all_test_npcs() -> void:
+	for npc in _npcs:
+		if npc != null and is_instance_valid(npc):
+			npc.queue_free()
+	_npcs.clear()
+
 func _toggle_maintenance_panel() -> void:
 	if _maintenance_panel != null and _maintenance_panel.visible:
 		_maintenance_panel.close()
@@ -1079,6 +988,10 @@ func _input(event: InputEvent) -> void:
 		# Chat toggle — press C near an NPC
 		if event.keycode == KEY_C:
 			_open_npc_chat()
+			return
+		# F3 — Dev tools (dev mode only)
+		if event.keycode == KEY_F3 and DEV_MODE:
+			_toggle_dev_tools()
 			return
 		# ESC closes chat panel or maintenance panel
 		if event.keycode == KEY_ESCAPE:
@@ -1421,3 +1334,152 @@ func notify_telegram_npc(count: int) -> void:
 func notify_telegram_error(err: String) -> void:
 	if _telegram_bot != null:
 		_telegram_bot.notify_game_error(err)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

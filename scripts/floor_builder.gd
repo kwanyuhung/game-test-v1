@@ -95,6 +95,7 @@ func _build_zone(zone: FloorConfig.Zone) -> void:
 		FloorConfig.ZONE_TRAINING:      _build_zone_training(zone)
 		FloorConfig.ZONE_OFFICE_DESK:   _build_zone_office_desk(zone)
 		FloorConfig.ZONE_EXEC_OFFICE:   _build_zone_exec_office(zone)
+		FloorConfig.ZONE_AD:           _build_zone_ad(zone)
 		# Unknown types are silently skipped (extensible)
 
 # ─── Individual Zone Builders ───────────────────────────────────
@@ -1865,6 +1866,97 @@ func _build_zone_exec_office(zone: FloorConfig.Zone) -> void:
 	plant_leaves.size = Vector2(cw * 0.10, ch * 0.25)
 	plant_leaves.color = Color(0.38, 0.65, 0.35)
 	_parent.add_child(plant_leaves); _floor_nodes.append(plant_leaves)
+
+# ??? Ad Billboard Zone ?????????????????????????????????????????????????????????
+# Wall advertisement poster ??colorful promotional display
+# meta: {ad_id: String, ad_text: String, ad_color: Color}
+func _build_zone_ad(zone: FloorConfig.Zone) -> void:
+	var ad_id: String = zone.meta.get("ad_id", "generic_ad")
+	var ad_text: String = zone.meta.get("ad_text", "SALE!")
+	var ad_color: Color = zone.meta.get("ad_color", Color(1.0, 0.40, 0.20))
+	var cx := zone.x * CELL_SIZE
+	var cy := zone.y * CELL_SIZE
+	var cw := zone.w * CELL_SIZE
+	var ch := zone.h * CELL_SIZE
+
+	# Backlit billboard frame
+	var frame := ColorRect.new()
+	frame.position = Vector2(cx, cy)
+	frame.size = Vector2(cw, ch)
+	frame.color = Color(0.08, 0.08, 0.10)
+	_parent.add_child(frame); _floor_nodes.append(frame)
+
+	# Inner glow background
+	var glow_bg := ColorRect.new()
+	glow_bg.position = Vector2(cx + 3, cy + 3)
+	glow_bg.size = Vector2(cw - 6, ch - 6)
+	glow_bg.color = ad_color.darkened(0.35)
+	_parent.add_child(glow_bg); _floor_nodes.append(glow_bg)
+
+	# Ad banner ??main color block
+	var banner := ColorRect.new()
+	banner.position = Vector2(cx + 4, cy + 4)
+	banner.size = Vector2(cw - 8, ch * 0.60)
+	banner.color = ad_color
+	_parent.add_child(banner); _floor_nodes.append(banner)
+
+	# Ad text line 1 (big)
+	var ad_lbl := Label.new()
+	ad_lbl.text = ad_text
+	ad_lbl.position = Vector2(cx + 4, cy + 4)
+	ad_lbl.size = Vector2(cw - 8, ch * 0.55)
+	ad_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 0.40))
+	ad_lbl.add_theme_font_size_override("font_size", clampi(cw / 10, 8, 16))
+	ad_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ad_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_parent.add_child(ad_lbl); _floor_nodes.append(ad_lbl)
+
+	# Sub-text (promo details)
+	var sub_texts := {
+		"summer_sale": "UP TO 50% OFF",
+		"fresh_market": "FRESH DAILY",
+		"new_arrivals": "JUST LANDED",
+		"members_only": "JOIN TODAY",
+		"weekend_deal": "BUY 1 GET 1 FREE",
+		"organic": "100% ORGANIC",
+		"locally_made": "LOCAL PRODUCERS",
+		"pet_special": "PET OF THE WEEK",
+		"sport_promo": "GEAR UP!",
+		"outdoor_sale": "ADVENTURE AWAITS",
+		"fashion_week": "NEW COLLECTION",
+		"staff_hiring": "NOW HIRING!",
+		"express_checkout": "10 ITEMS OR LESS",
+		"self_checkout": "SELF-SCAN & GO",
+		"parking_info": "FIRST 2 HOURS FREE",
+	}
+	var sub := sub_texts.get(ad_id, "LIMITED TIME")
+	var sub_lbl := Label.new()
+	sub_lbl.text = sub
+	sub_lbl.position = Vector2(cx + 4, cy + ch * 0.62)
+	sub_lbl.size = Vector2(cw - 8, ch * 0.30)
+	sub_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
+	sub_lbl.add_theme_font_size_override("font_size", clampi(cw / 14, 6, 10))
+	sub_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_parent.add_child(sub_lbl); _floor_nodes.append(sub_lbl)
+
+	# Corner decorations (flashing light effect simulated with bright corners)
+	var corner_color := ad_color.lightened(0.4)
+	for c_x in [cx + 2, cx + cw - 6]:
+		for c_y in [cy + 2, cy + ch - 6]:
+			var dot := ColorRect.new()
+			dot.position = Vector2(c_x, c_y)
+			dot.size = Vector2(4, 4)
+			dot.color = corner_color
+			_parent.add_child(dot); _floor_nodes.append(dot)
+
+	# Ad ID label (small, bottom corner)
+	var id_lbl := Label.new()
+	id_lbl.text = "#%s" % ad_id
+	id_lbl.position = Vector2(cx + 2, cy + ch - 12)
+	id_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6))
+	id_lbl.add_theme_font_size_override("font_size", 5)
+	_parent.add_child(id_lbl); _floor_nodes.append(id_lbl)
+
 # ─── Public Accessors ───────────────────────────────────────────
 
 func get_sections() -> Array:
@@ -1881,6 +1973,7 @@ func get_checkout_counters() -> Array:
 
 func get_floor_nodes() -> Array:
 	return _floor_nodes
+
 
 
 
