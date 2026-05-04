@@ -8,3 +8,8 @@ bin/
 # OS
 .DS_Store
 Thumbs.db
+
+# temp scripts
+add_dining.ps1
+patch_main.ps1
+
