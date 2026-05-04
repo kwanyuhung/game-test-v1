@@ -17,6 +17,7 @@ Welcome! Here's everything you can do on each floor.
 | `F5` | Quick save game |
 | `F9` | Quick load game |
 | `N` | Toggle mini-map |
+| `?` | Re-show controls tutorial |
 | `ESC` | Close any open panel |
 
 ---

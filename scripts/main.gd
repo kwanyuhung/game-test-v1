@@ -29,6 +29,7 @@ const AudioManagerScript = preload("res://scripts/audio_manager.gd")
 const MonitorPanelScript = preload("res://scripts/monitor_panel.gd")
 const SaveSystem = preload("res://scripts/save_system.gd")
 const TutorialOverlayScript = preload("res://scripts/tutorial_overlay.gd")
+const DailyBonusScript = preload("res://scripts/daily_bonus.gd")
 const MiniMapScript = preload("res://scripts/mini_map.gd")
 const ToastManagerScript = preload("res://scripts/toast_manager.gd")
 const FloatingTextScript = preload("res://scripts/floating_text.gd")
@@ -72,10 +73,12 @@ var _minimap: MiniMap = null
 var _toasts: ToastManager = null
 var _minimap_visible: bool = false
 var _time_label: Label = null
+var _store_status_label: Label = null
 var _xp_bar_bg: ColorRect = null
 var _xp_bar_fill: ColorRect = null
 var _floating_text: FloatingText = null
 var _fade: FadeTransition = null
+var _daily_bonus: DailyBonus = null
 var _audio: AudioManager = null
 
 var _nearby_monitor: bool = false
@@ -207,6 +210,10 @@ func _ready() -> void:
 	# ── Screen Fade ──
 	_fade = FadeTransitionScript.new()
 	add_child(_fade)
+	_daily_bonus = DailyBonusScript.new()
+	add_child(_daily_bonus)
+	_daily_bonus.streak_reward.connect(_on_streak_reward)
+	_daily_bonus.check_and_award(self)
 	# ── Section Browse Panel ──
 	_section_browse = SectionBrowseScript.new()
 	add_child(_section_browse)
@@ -244,6 +251,21 @@ func _build_floor(idx: int) -> void:
 		var h = _game_clock.game_hour
 		var m = _game_clock.game_minute
 		_time_label.text = "%02d:%02d" % [h, m]
+	# Store status label
+	if _store_status_label == null:
+		_store_status_label = Label.new()
+		_store_status_label.position = Vector2(268.0, 14.0)
+		_store_status_label.add_theme_color_override("font_color", Color(0.60, 0.90, 0.60))
+		_store_status_label.add_theme_font_size_override("font_size", 8)
+		_store_status_label.z_index = 10
+		add_child(_store_status_label)
+	if _game_clock != null:
+		var is_open = _game_clock.is_store_open()
+		_store_status_label.text = "OPEN" if is_open else "CLOSED"
+		if is_open:
+			_store_status_label.add_theme_color_override("font_color", Color(0.50, 0.90, 0.50))
+		else:
+			_store_status_label.add_theme_color_override("font_color", Color(0.90, 0.50, 0.50))
 	# XP progress bar (below cart count)
 	if _xp_bar_bg == null:
 		_xp_bar_bg = ColorRect.new()
@@ -1042,663 +1064,22 @@ func _on_stats_panel_closed() -> void:
 	_stats_panel = null
 
 func _on_hour_changed(hour: int) -> void:
-	# Update clock display in HUD if available
 	if _game_clock != null:
 		var t := _game_clock.game_time_string()
 		var period := _game_clock.period_name()
-		# Update any clock-related prompts
-		if hour == 22:  # 10pm ??store getting quiet
-			notify_telegram("? Evening hours ??store traffic slowing down")
-		if hour == 23:  # 11pm
-			notify_telegram("? Store closing soon ??last call!")
-
-func _on_day_changed(day_idx: int) -> void:
-	notify_telegram("? Day %d begins!
-Good morning at the supermarket!" % day_idx)
-
-func _on_shift_report(report: Dictionary) -> void:
-	var msg := "? Shift Report ??Day %d
-
-Resolved: %d issues
-Created: %d issues" % [
-		report["day"], report["issues_resolved"], report["issues_created"]]
-	notify_telegram(msg)
-
-func _navigate_to_floor(target_floor: int) -> void:
-	# Use elevator to go to target floor
-	if _elevator != null:
-		_elevator.request_floor(target_floor)
-
-# ??? Issue Fix via E key ?????????????????????????????????????????
-func _try_fix_nearby_issue() -> bool:
-	if _maintenance_system == null or _player == null:
-		return false
-	# Try to fix the target issue if close enough, OR any nearby issue
-	var issue_to_fix = _target_issue if _target_issue != null and _target_issue.status < 2 else null
-	if issue_to_fix == null:
-		issue_to_fix = _maintenance_system.get_issue_at_pos(_player.position, CELL_SIZE * 7.0)
-	if issue_to_fix == null:
-		return false
-	if issue_to_fix.floor != _current_floor_idx:
-		# Wrong floor ??navigate there first
-		_navigate_to_floor(issue_to_fix.floor)
-		_target_issue = issue_to_fix
-		return true
-	# Resolve it (takes a moment)
-	_maintenance_system.resolve_issue(issue_to_fix, true)
-	return true
-
-func _update_stairs_proximity() -> void:
-	if _player == null:
-		return
-	var stairs_pos := Vector2(85 * CELL_SIZE, 15 * CELL_SIZE)
-	var dist := _player.position.distance_to(stairs_pos)
-	_nearby_stairs = (dist < CELL_SIZE * 4.0)
-	if _nearby_stairs and not _nearby_elevator:
-		var prompt_lbl = get_node_or_null("PromptLbl")
-		if prompt_lbl != null:
-			prompt_lbl.text = "[E] Take Stairs"
-			prompt_lbl.visible = true
-		var prompt_bg = get_node_or_null("PromptBg")
-		if prompt_bg != null:
-			prompt_bg.visible = true
-
-func _update_player_section_proximity() -> void:
-	if _player == null:
-		return
-	var ppos = _player.position
-	var nearest = null
-	var nearest_dist := 99999.0
-
-	for sec in _sections:
-		var def = sec.get_def()
-		var sx: float = (def.wx + def.ww * 0.5) * CELL_SIZE
-		var sy: float = (def.wy + def.wh * 0.5) * CELL_SIZE
-		var dist := ppos.distance_to(Vector2(sx, sy))
-		if dist < nearest_dist and dist < CELL_SIZE * 9.0:
-			nearest_dist = dist
-			nearest = sec
-
-	_nearby_section = nearest
-	var prompt_bg = get_node_or_null("PromptBg")
-	var prompt_lbl = get_node_or_null("PromptLbl")
-
-	if nearest != null and not _nearby_elevator:
-		_player.set_nearby_section(nearest)
-		var def = nearest.get_def()
-		if prompt_lbl != null:
-			prompt_lbl.text = "[E] Browse %s" % def.name
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
-		_checkout_counter_label.visible = false
-	elif not _nearby_elevator and not _nearby_stairs and not _nearby_parking:
-		_player.set_nearby_section(null)
-		if prompt_lbl != null:
-			prompt_lbl.visible = false
-		if prompt_bg != null:
-			prompt_bg.visible = false
-
-func _update_checkout_proximity() -> void:
-	if _player == null:
-		return
-	var ppos = _player.position
-	var near_checkout = null
-	for counter in _checkout_counters:
-		var dist := ppos.distance_to(counter.position + Vector2(CELL_SIZE * 4, CELL_SIZE * 1.5))
-		if dist < CELL_SIZE * 5.0:
-			near_checkout = counter
-			break
-
-	_nearby_checkout = near_checkout
-	if near_checkout != null and not _nearby_elevator:
-		_checkout_counter_label.text = "[E] Checkout at %s" % near_checkout.name.replace("Counter_", "")
-		_checkout_counter_label.visible = true
-	elif not _nearby_elevator:
-		_checkout_counter_label.visible = false
-
-# ?????? Interact ????????????????????????????????????????????????????????????????????????????????????????????????????
-
-func _on_player_interact() -> void:
-	if _checkout_receipt_visible:
-		_hide_checkout_receipt()
-		return
-	if _current_section_browse != null and _current_section_browse.visible:
-		return
-	# Elevator first
-	if _nearby_elevator:
-		_elevator.open_panel(_player.position, _player)
-		return
-	# ATM
-	if _nearby_atm:
-		_open_atm_panel()
-	# Monitor Room
-	if _nearby_monitor:
-		_open_monitor_panel()
-		return
-		return
-	# Food stall order
-	if _nearby_stall != null:
-		_show_stall_menu(_nearby_stall)
-		return
-	# Claw machine play
-	if _nearby_claw_machine != null:
-		_start_claw_machine(_nearby_claw_machine)
-		return
-	# Checkout with items
-	if _nearby_checkout != null:
-		var cart = _player.get_cart()
-		if cart.get_item_count() > 0:
-			_show_checkout_receipt()
-		return
-	# Maintenance ??fix nearby or targeted issue
-	if _nearby_issue or (_target_issue != null and _target_issue.status < 2):
-		if _try_fix_nearby_issue():
-			return
-	# Section browse
-	if _nearby_section != null:
-		var def = _nearby_section.get_def()
-		var prods = _nearby_section.get_all_products()
-		_current_section_browse = _section_browse
-		_section_browse.open(def.id, prods, _player.get_cart())
-		notify_telegram_section_browse(def.name, prods.size())
-	if _audio != null:
-		_audio.play_item_add()
-
-func _on_stall_interact_requested(stall_id: String) -> void:
-	if _floor_builder != null:
-		for stall in _floor_builder.get_food_stalls():
-			if stall.get_stall_id() == stall_id:
-				_show_stall_menu(stall)
-				break
-
-func _on_claw_interact_requested(machine_id: String) -> void:
-	if _floor_builder != null:
-		for machine in _floor_builder.get_claw_machines():
-			if machine.get_machine_id() == machine_id:
-				_start_claw_machine(machine)
-				break
-
-func _show_stall_menu(stall: Node) -> void:
-	if _food_stall_browse == null:
-		_food_stall_browse = FoodStallBrowseScript.new()
-		add_child(_food_stall_browse)
-		_food_stall_browse.closed.connect(_on_food_stall_closed)
-		_food_stall_browse.item_added.connect(_on_food_stall_item_added)
-	var fd: FloorConfig.FoodStallDef = stall.get_stall_def()
-	_food_stall_browse.open(fd, _player.get_cart())
-
-func _on_food_stall_closed() -> void:
-	pass
-
-func _on_food_stall_item_added(item_name: String, qty: int, price: float) -> void:
-	pass
-
-# ??? Claw Machine ??????????????????????????????????????????????
-
-var _claw_active: bool = false
-var _active_claw_machine: ClawMachine = null
-
-func _start_claw_machine(machine: ClawMachine) -> void:
-	if machine == null:
-		return
-	# Set cart reference on the machine
-	machine.set_cart(_player.get_cart())
-	var ok = machine.start_round()
-	if ok:
-		_claw_active = true
-		_active_claw_machine = machine
-		machine.played.connect(_on_claw_round_ended)
-		# Show instructions in prompt
-		var prompt_lbl = get_node_or_null("PromptLbl")
-		if prompt_lbl != null:
-			prompt_lbl.text = "A/D: Move  S: Drop"
-
-	else:
-		# Could not start (no cart / already playing)
-		var prompt_lbl = get_node_or_null("PromptLbl")
-		if prompt_lbl != null:
-			prompt_lbl.text = "Already playing..."
-
-func _on_claw_round_ended(prize_name: String, won: bool) -> void:
-	_claw_active = false
-	_active_claw_machine = null
-	var prompt_lbl = get_node_or_null("PromptLbl")
-	if prompt_lbl != null:
-		if won:
-			prompt_lbl.text = "You won: %s!" % prize_name
-		else:
-			prompt_lbl.text = "No prize this time..."
-
-func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed:
-		# M ??open maintenance panel
-		if event.keycode == KEY_M:
-			_toggle_maintenance_panel()
-			return
-		# P ??open stats panel
-		if event.keycode == KEY_P:
-			_toggle_stats_panel()
-			return
-		# Chat toggle ??press C near an NPC
-		if event.keycode == KEY_C:
-			_open_npc_chat()
-			return
-		# F3 ── Dev tools (dev mode only)
-		if event.keycode == KEY_F3 and DEV_MODE:
-			_toggle_dev_tools()
-		# F5 ── Quick Save
-		if event.keycode == KEY_F5:
-			_quick_save()
-			return
-		# F9 ── Quick Load
-		if event.keycode == KEY_F9:
-			_quick_load()
-			return
-			return
-		# ESC closes chat panel or maintenance panel
-		if event.keycode == KEY_ESCAPE:
-			if _maintenance_panel != null and _maintenance_panel.visible:
-				_maintenance_panel.close()
-			elif _chat_panel != null and _chat_panel._is_open:
-				_chat_panel.close()
-			return
-			return
-		# Claw machine controls only when playing
-		if not _claw_active or _active_claw_machine == null:
-			return
-		match event.keycode:
-			KEY_A, KEY_LEFT:
-				_active_claw_machine.move_claw(-1)
-			KEY_D, KEY_RIGHT:
-				_active_claw_machine.move_claw(1)
-			KEY_S, KEY_DOWN:
-				_active_claw_machine.drop_claw()
-
-func _open_npc_chat() -> void:
-	if _chat_panel != null and _chat_panel.visible:
-		return
-	if _nearby_npc_for_chat == null:
-		return
-	var npc: NPCController = _nearby_npc_for_chat
-	var actor: ActorData.Actor = npc.get_actor()
-	var brain = npc.get("chat_brain")
-	if brain == null:
-		return
-	_chat_panel = ChatPanelScript.new()
-	add_child(_chat_panel)
-	_chat_panel.open(npc, actor, brain)
-	_chat_panel.closed.connect(_on_chat_closed)
-
-func _on_chat_closed() -> void:
-	_chat_panel = null
-
-func _on_section_entered(section_id: String) -> void:
-	pass
-
-func _on_section_exited(section_id: String) -> void:
-	pass
-
-func _on_browse_closed() -> void:
-	_current_section_browse = null
-
-func _on_item_added_to_cart(product, qty: int) -> void:
-	pass
-
-func _on_cart_updated(total_count: int, unique_count: int) -> void:
-	if _cart_count_lbl != null:
-		var cart = _player.get_cart()
-		var sub = cart.get_subtotal() if cart != null else 0.0
-		_cart_count_lbl.text = "%d items  $%.2f" % [total_count, sub]
-	if _cart_panel_visible:
-		_refresh_cart_panel()
-
-func _on_tab_pressed() -> void:
-	if _current_section_browse != null and _current_section_browse.visible:
-		return
-	if _checkout_receipt_visible:
-		return
-	if _cart_panel_visible:
-		_hide_cart_panel()
-	else:
-		_show_cart_panel()
-
-# ???????????????????????????????????????????????????????????????????????????????????????????????# CART PANEL
-# ???????????????????????????????????????????????????????????????????????????????????????????????
-func _build_cart_panel() -> void:
-	_cart_panel = CanvasLayer.new()
-	_cart_panel.name = "CartPanel"
-	_cart_panel.visible = false
-	add_child(_cart_panel)
-
-	_cart_items_lbl = Label.new()
-	_cart_items_lbl.name = "CartItems"
-	_cart_items_lbl.position = Vector2(4.0, 4.0)
-	_cart_items_lbl.size = Vector2(152.0, 110.0)
-	_cart_items_lbl.add_theme_color_override("font_color", Color(0.88, 0.88, 0.82))
-	_cart_items_lbl.add_theme_font_size_override("font_size", 8)
-	_cart_items_lbl.add_theme_constant_override("line_spacing", 2)
-	_cart_panel.add_child(_cart_items_lbl)
-
-	_cart_total_lbl = Label.new()
-	_cart_total_lbl.name = "CartTotal"
-	_cart_total_lbl.position = Vector2(4.0, 116.0)
-	_cart_total_lbl.add_theme_color_override("font_color", Color(0.90, 0.78, 0.42))
-	_cart_total_lbl.add_theme_font_size_override("font_size", 8)
-	_cart_panel.add_child(_cart_total_lbl)
-
-func _show_cart_panel() -> void:
-	_refresh_cart_panel()
-	_cart_panel.visible = true
-	_cart_panel_visible = true
-
-func _hide_cart_panel() -> void:
-	_cart_panel.visible = false
-	_cart_panel_visible = false
-
-func _refresh_cart_panel() -> void:
-	if _cart_panel == null or _player == null:
-		return
-	var cart = _player.get_cart()
-	var items = cart.get_items()
-	var lines: Array = []
-	lines.append("???? SHOPPING CART ????")
-	if items.size() == 0:
-		lines.append("(empty)")
-	else:
-		for entry in items:
-			var prod = entry["product"]
-			var qty = entry["qty"]
-			var line = "%dx %s" % [qty, prod.name]
-			if line.length() > 18:
-				line = line.substr(0, 18)
-			lines.append(line)
-		var sub = cart.get_subtotal()
-		lines.append("")
-		lines.append("Subtotal: $%.2f" % sub)
-	_cart_items_lbl.text = "\n".join(lines)
-	var sub = cart.get_subtotal()
-	var tax = cart.get_tax()
-	var total = cart.get_total()
-	_cart_total_lbl.text = "Sub: $%.2f  Tax: $%.2f\nTOTAL: $%.2f" % [sub, tax, total]
-
-# ???????????????????????????????????????????????????????????????????????????????????????????????# CHECKOUT RECEIPT
-# ???????????????????????????????????????????????????????????????????????????????????????????????
-func _show_checkout_receipt() -> void:
-	_checkout_receipt_visible = true
-	_hide_cart_panel()
-
-	# Track checkout stats
-	var cart = _player.get_cart()
-	var items = cart.get_items()
-	var item_count := 0
-	for entry in items:
-		item_count += entry["qty"]
-		var prod = entry["product"]
-		if _player_stats != null:
-			_player_stats.on_item_bought(prod.id, prod.price * entry["qty"])
-		# Consume stock from warehouse for this section
-		if _warehouse != null and prod.section != "":
-			_warehouse.consume_stock(prod.section, entry["qty"])
-	if _player_stats != null:
-		_player_stats.on_checkout(cart.subtotal(), item_count)
-
-	var ov := ColorRect.new()
-	ov.name = "CROverlay"
-	ov.set_anchors_preset(Control.PRESET_FULL_RECT)
-	ov.color = Color(0.03, 0.03, 0.06, 0.90)
-	ov.gui_input.connect(_on_receipt_input)
-	add_child(ov)
-
-	var pan_x: float = (320.0 - 220.0) * 0.5
-	var pan_y: float = (180.0 - 165.0) * 0.5
-
-	var pan := ColorRect.new()
-	pan.name = "CRPanel"
-	pan.position = Vector2(pan_x, pan_y)
-	pan.size = Vector2(220.0, 165.0)
-	pan.color = Color(0.09, 0.09, 0.13, 1.0)
-	pan.gui_input.connect(_on_receipt_input)
-	add_child(pan)
-
-	var hdr := ColorRect.new()
-	hdr.position = Vector2(pan_x, pan_y)
-	hdr.size = Vector2(220.0, 16.0)
-	hdr.color = Color(0.22, 0.18, 0.30, 1.0)
-	hdr.gui_input.connect(_on_receipt_input)
-	add_child(hdr)
-
-	var hdr_lbl := Label.new()
-	hdr_lbl.text = "?????CHECKOUT ?????
-	hdr_lbl.position = Vector2(pan_x + 60.0, pan_y + 3.0)
-	hdr_lbl.add_theme_color_override("font_color", Color(0.90, 0.85, 0.95))
-	hdr_lbl.add_theme_font_size_override("font_size", 9)
-	hdr_lbl.gui_input.connect(_on_receipt_input)
-	add_child(hdr_lbl)
-
-	var cart = _player.get_cart()
-	var items = cart.get_items()
-	var y_pos: float = pan_y + 20.0
-	var line_h: float = 10.0
-
-	for entry in items:
-		var prod = entry["product"]
-		var qty = entry["qty"]
-		var line_lbl := Label.new()
-		line_lbl.position = Vector2(pan_x + 6.0, y_pos)
-		line_lbl.size = Vector2(210.0, line_h)
-		line_lbl.text = "%dx %s" % [qty, prod.name]
-		line_lbl.add_theme_color_override("font_color", Color(0.82, 0.82, 0.78))
-		line_lbl.add_theme_font_size_override("font_size", 8)
-		line_lbl.gui_input.connect(_on_receipt_input)
-		add_child(line_lbl)
-
-		var price_lbl := Label.new()
-		price_lbl.position = Vector2(pan_x + 160.0, y_pos)
-		price_lbl.text = "$%.2f" % (prod.price * qty)
-		price_lbl.add_theme_color_override("font_color", Color(0.82, 0.82, 0.78))
-		price_lbl.add_theme_font_size_override("font_size", 8)
-		price_lbl.gui_input.connect(_on_receipt_input)
-		add_child(price_lbl)
-		y_pos += line_h
-
-	var div := ColorRect.new()
-	div.position = Vector2(pan_x + 6.0, y_pos + 1.0)
-	div.size = Vector2(208.0, 1.0)
-	div.color = Color(0.30, 0.30, 0.35, 1.0)
-	add_child(div)
-	y_pos += 6.0
-
-	var sub = cart.get_subtotal()
-	var tax_amt = cart.get_tax()
-	var total = cart.get_total()
-
-	var sub_lbl := Label.new()
-	sub_lbl.position = Vector2(pan_x + 110.0, y_pos)
-	sub_lbl.text = "Subtotal:"
-	sub_lbl.add_theme_color_override("font_color", Color(0.60, 0.60, 0.60))
-	sub_lbl.add_theme_font_size_override("font_size", 8)
-	sub_lbl.gui_input.connect(_on_receipt_input)
-	add_child(sub_lbl)
-	var sub_val := Label.new()
-	sub_val.position = Vector2(pan_x + 160.0, y_pos)
-	sub_val.text = "$%.2f" % sub
-	sub_val.add_theme_color_override("font_color", Color(0.75, 0.75, 0.72))
-	sub_val.add_theme_font_size_override("font_size", 8)
-	sub_val.gui_input.connect(_on_receipt_input)
-	add_child(sub_val)
-	y_pos += line_h
-
-	var tax_lbl := Label.new()
-	tax_lbl.position = Vector2(pan_x + 110.0, y_pos)
-	tax_lbl.text = "Tax (6%):"
-	tax_lbl.add_theme_color_override("font_color", Color(0.60, 0.60, 0.60))
-	tax_lbl.add_theme_font_size_override("font_size", 8)
-	tax_lbl.gui_input.connect(_on_receipt_input)
-	add_child(tax_lbl)
-	var tax_val := Label.new()
-	tax_val.position = Vector2(pan_x + 160.0, y_pos)
-	tax_val.text = "$%.2f" % tax_amt
-	tax_val.add_theme_color_override("font_color", Color(0.75, 0.75, 0.72))
-	tax_val.add_theme_font_size_override("font_size", 8)
-	tax_val.gui_input.connect(_on_receipt_input)
-	add_child(tax_val)
-	y_pos += line_h + 2.0
-
-	var tot_lbl := Label.new()
-	tot_lbl.position = Vector2(pan_x + 110.0, y_pos)
-	tot_lbl.text = "TOTAL:"
-	tot_lbl.add_theme_color_override("font_color", Color(0.92, 0.78, 0.42))
-	tot_lbl.add_theme_font_size_override("font_size", 9)
-	tot_lbl.gui_input.connect(_on_receipt_input)
-	add_child(tot_lbl)
-	var tot_val := Label.new()
-	tot_val.position = Vector2(pan_x + 160.0, y_pos)
-	tot_val.text = "$%.2f" % total
-	tot_val.add_theme_color_override("font_color", Color(0.95, 0.85, 0.42))
-	tot_val.add_theme_font_size_override("font_size", 9)
-	tot_val.gui_input.connect(_on_receipt_input)
-	add_child(tot_val)
-	y_pos += line_h + 8.0
-
-	var thanks := Label.new()
-	thanks.position = Vector2(pan_x + 40.0, y_pos)
-	thanks.text = "THANK YOU FOR SHOPPING!"
-	thanks.add_theme_color_override("font_color", Color(0.72, 0.88, 0.72))
-	thanks.add_theme_font_size_override("font_size", 8)
-	thanks.gui_input.connect(_on_receipt_input)
-	add_child(thanks)
-	y_pos += line_h + 4.0
-
-	var done_lbl := Label.new()
-	done_lbl.position = Vector2(pan_x + 60.0, y_pos)
-	done_lbl.text = "[E] Done"
-	done_lbl.add_theme_color_override("font_color", Color(0.45, 0.45, 0.48))
-	done_lbl.add_theme_font_size_override("font_size", 8)
-	done_lbl.gui_input.connect(_on_receipt_input)
-	add_child(done_lbl)
-
-func _hide_checkout_receipt() -> void:
-	_checkout_receipt_visible = false
-	for name in ["CROverlay", "CRPanel"]:
-		var node = get_node_or_null("/root/Main/" + name)
-		if node == null:
-			node = get_node_or_null(name)
-		if node != null:
-			node.queue_free()
-	var to_remove: Array = []
-	for c in get_children():
-		if c is Label or c is ColorRect:
-			var nm = c.name if c is Label or c is ColorRect else ""
-			if nm in ["CROverlay", "CRPanel"]:
-				continue
-			if c.get_parent() == self and c.position.y >= 0:
-				if c is Label and c.position.x >= 40.0 and c.position.x <= 280.0:
-					to_remove.append(c)
-				elif c is ColorRect and c.position.x >= 40.0 and c.position.x <= 280.0:
-					to_remove.append(c)
-	for c in to_remove:
-		c.queue_free()
-
-func _on_receipt_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed:
-		var k = event as InputEventKey
-		if k.keycode == KEY_E or k.keycode == KEY_ESCAPE or k.keycode == KEY_TAB:
-			_finish_checkout()
-
-func _finish_checkout() -> void:
-	var cart = _player.get_cart()
-	var items = cart.get_items()
-	var subtotal = cart.get_subtotal()
-	var tax = cart.get_tax()
-	var total_count = cart.get_item_count()
-	var total_amount = cart.get_total()
-	_hide_checkout_receipt()
-	SaveSystem.export_receipt(items, subtotal, tax, total_amount)
-	cart.clear()
-	_refresh_cart_panel()
-	notify_telegram_checkout(total_amount, total_count)
-	if _audio != null:
-		_audio.play_checkout_beep()
-	SaveSystem.save_game(self)  # auto-save after checkout
-# ???????????????????????????????????????????????????????????????????????????????????????????????# TELEGRAM
-# ???????????????????????????????????????????????????????????????????????????????????????????????
-func notify_telegram(msg: String) -> void:
-	if _telegram_bot != null:
-		_telegram_bot.queue_report(msg)
-
-func notify_telegram_checkout(total: float, item_count: int) -> void:
-	if _telegram_bot != null:
-		_telegram_bot.notify_player_checkout(total, item_count)
-
-func notify_telegram_section_browse(section_name: String, product_count: int) -> void:
-	if _telegram_bot != null:
-		_telegram_bot.notify_section_browse(section_name, product_count)
-
-func notify_telegram_npc(count: int) -> void:
-	if _telegram_bot != null:
-		_telegram_bot.notify_npc_spawn(count)
-	if _audio != null:
-		_audio.play_cart_grab()
-
-func notify_telegram_error(err: String) -> void:
-	if _telegram_bot != null:
-		_telegram_bot.notify_game_error(err)
-
-# ════════════════════════════════════════════════════════════════════════════════════════════════# SAVE / LOAD SYSTEM
-
-func _quick_save() -> void:
-	if SaveSystem.save_game(self):
-		_show_save_hint("F5: Game saved!")
-		notify_telegram("💾 *Game saved*")
-	else:
-		_show_save_hint("Save failed!")
-
-func _quick_load() -> void:
-	if SaveSystem.load_game(self):
-		_show_save_hint("F9: Game loaded!")
-		notify_telegram("📂 *Game loaded* from save")
-	else:
-		_show_save_hint("No save found!")
-
-func _show_save_hint(msg: String) -> void:
-
-func _show_theft_alert() -> void:
-	var flash := ColorRect.new()
-	flash.set_anchors_preset(Control.PRESET_FULL_RECT)
-	flash.color = Color(0.8, 0.0, 0.0, 0.25)
-	flash.z_index = 300
-	add_child(flash)
-	await get_tree().create_timer(0.8).timeout
-	flash.queue_free()
-	if _save_hint_label == null:
-		return
-	_save_hint_label.text = msg
-	_save_hint_label.visible = true
-	# Auto-hide after 2.5 seconds
-	await get_tree().create_timer(2.5).timeout
-	if _save_hint_label != null:
-		_save_hint_label.visible = false
-
-func notify_telegram_error(err: String) -> void:
-	if _telegram_bot != null:
-		_telegram_bot.notify_game_error(err)
-
-func _toggle_minimap() -> void:
-	_minimap_visible = not _minimap_visible
-	if _minimap != null:
-		if _minimap_visible:
-			_minimap.show_map()
-			_toasts.toast_info("Mini-map ON")
-		else:
-			_minimap.hide_map()
-			_toasts.toast_info("Mini-map OFF")
-
-func _show_toast(text: String, kind: String = "info") -> void:
-	if _toasts == null: return
-	match kind:
-		"success": _toasts.toast_success(text)
-		"warn": _toasts.toast_warn(text)
-		"error": _toasts.toast_error(text)
-		"xp": _toasts.toast_xp(text)
-		_: _toasts.toast_info(text)
+		if hour == 6:  # Store opens
+			notify_telegram("Store Open - 6AM!")
+			if _toasts != null: _toasts.toast_success("Store Open! 6:00 AM")
+		if hour == 22:  # 10pm getting quiet
+			notify_telegram("Evening hours")
+		if hour == 23:  # 11pm closing soon
+			notify_telegram("Store closing soon - last call!")
+			if _toasts != null: _toasts.toast_warn("Store Closing - 11:00 PM")
+
+func _show_tutorial_overlay() -> void:
+	if _tutorial_overlay != null:
+		_tutorial_overlay.queue_free()
+	_tutorial_overlay = TutorialOverlayScript.new()
+	add_child(_tutorial_overlay)
+	_tutorial_overlay.show_tutorial()
+	_tutorial_overlay.dismissed.connect(_on_tutorial_dismissed)
