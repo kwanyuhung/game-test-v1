@@ -647,7 +647,10 @@ func _refresh_bottom_bar() -> void:
 	pass
 
 func _get_section_stock_ratio(section_id: String) -> float:
-	var main = get_tree().root.get_node_or_null("Main")
+	# Walk up from section_browse (CanvasLayer) -> main
+	var main = get_parent()  # section_browse is added to main, parent is main
+	if main == null or not main.has_method("get_warehouse"):
+		main = get_tree().root.get_node_or_null("Main")
 	if main == null:
 		return 1.0
 	var wh = main.get_node_or_null("WarehouseSystem")

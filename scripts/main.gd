@@ -631,6 +631,9 @@ func _build_checkout_receipt_panel() -> void:
 	_checkout_total_lbl.add_theme_font_size_override("font_size", 8)
 	panel.add_child(_checkout_total_lbl)
 
+func get_warehouse() -> Node:
+	return _warehouse
+
 func _update_floor_hud() -> void:
 	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(_current_floor_idx)
 	if _floor_label != null and is_instance_valid(_floor_label):
