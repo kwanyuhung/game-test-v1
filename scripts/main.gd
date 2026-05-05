@@ -34,6 +34,8 @@ const BrandManagerScript = preload("res://scripts/brand_manager.gd")
 const BrandPortalScript = preload("res://scripts/brand_portal.gd")
 const SaveSystem = preload("res://scripts/save_system.gd")
 const TutorialOverlayScript = preload("res://scripts/tutorial_overlay.gd")
+const RobotControllerScript = preload("res://scripts/robot_controller.gd")
+const WarehouseFloorScript = preload("res://scripts/warehouse_floor.gd")
 const DailyBonusScript = preload("res://scripts/daily_bonus.gd")
 const ShoppingListScript = preload("res://scripts/shopping_list.gd")
 const QuestSystemScript = preload("res://scripts/quest_system.gd")
@@ -102,6 +104,8 @@ var _audio: AudioManager = null
 var _nearby_monitor: bool = false
 var _monitor_panel: MonitorPanel = null
 var _nearby_warehouse: bool = false
+var _warehouse_mode: bool = false   # player is controlling warehouse equipment
+var _warehouse_floor: Node2D = null
 var _nearby_elevator: bool = false
 var _nearby_parking: bool = false
 var _nearby_stairs: bool = false
@@ -127,6 +131,8 @@ var _price_terminal: PriceTerminal = null
 var _staff_blocked_floor: int = -1
 var _brand_manager: BrandManager = null
 var _brand_portal: BrandPortal = null
+var _robots: Array = []           # active AI robot staff NPCs
+var _robot_panel: Control = null   # robot management UI
 var _temp_order_mode: String = ""  # "cafe" or "vending"
 var _temp_order_items: Array = []
 
@@ -394,6 +400,14 @@ func _build_floor(idx: int) -> void:
 			machine.interact_requested.connect(_on_claw_interact_requested)
 		if machine.has_signal("played"):
 			machine.played.connect(_on_claw_played.bind(machine))
+
+	# Initialize warehouse floor controller (Floor 11)
+	_warehouse_floor = WarehouseFloorScript.new()
+	add_child(_warehouse_floor)
+	_warehouse_floor.set_staff_mode(false)
+
+	# Spawn AI robot staff across the store
+	_spawn_robots()
 	# Wire checkout signals
 	for counter in _checkout_counters:
 		if counter.has_signal("checkout_interacted"):
@@ -830,6 +844,9 @@ func _input(event: InputEvent) -> void:
 			# J ── Quest Journal
 			KEY_J:
 				_toggle_quest_journal()
+		# R ── Robot Panel (staff only)
+			KEY_R:
+				_toggle_robot_panel()
 			# O ── Settings
 			KEY_O:
 				_toggle_settings_panel()
@@ -852,6 +869,29 @@ func _input(event: InputEvent) -> void:
 						_handle_loyalty_key(idx, item)
 					else:
 						_add_order_item(idx, item)
+				return
+
+		# Warehouse equipment controls (active when in warehouse mode)
+		if _warehouse_mode and _warehouse_floor != null:
+			var dir := Vector2.ZERO
+			if event.keycode == KEY_W: dir = Vector2(0, -1)
+			elif event.keycode == KEY_S: dir = Vector2(0, 1)
+			elif event.keycode == KEY_A: dir = Vector2(-1, 0)
+			elif event.keycode == KEY_D: dir = Vector2(1, 0)
+			if dir != Vector2.ZERO:
+				_warehouse_floor.drive_truck(dir)
+				return
+			if event.keycode == KEY_Q:
+				_warehouse_floor.use_forklift("lower")
+				return
+			if event.keycode == KEY_E:
+				_warehouse_floor.use_forklift("raise")
+				return
+			if event.keycode == KEY_F:
+				_warehouse_floor.toggle_conveyor()
+				return
+			if event.keycode == KEY_SPACE:
+				_warehouse_floor.stop_truck()
 				return
 
 func _process(_delta: float) -> void:
@@ -1045,17 +1085,20 @@ func _update_atm_proximity() -> void:
 # ??? Warehouse Proximity ????????????????????????????????????????
 func _update_warehouse_proximity() -> void:
 	_nearby_warehouse = false
-	if _player == null or _current_floor_idx != 12:
+	if _player == null or _current_floor_idx != 11:
 		return
-	# On Floor 12 (warehouse), always show the proximity if in range
-	var wh_pos := Vector2(50 * CELL_SIZE, 20 * CELL_SIZE)
-	if _player.position.distance_to(wh_pos) < CELL_SIZE * 10.0:
+	# On Floor 11 (warehouse), show interaction prompt if in range
+	var wh_pos := Vector2(40 * CELL_SIZE, 20 * CELL_SIZE)
+	if _player.position.distance_to(wh_pos) < CELL_SIZE * 12.0:
 		_nearby_warehouse = true
 	var prompt_lbl = get_node_or_null("PromptLbl")
 	var prompt_bg = get_node_or_null("PromptBg")
 	if _nearby_warehouse and not _nearby_elevator and not _nearby_stairs:
 		if prompt_lbl != null:
-			prompt_lbl.text = "[E] Check Warehouse Stock"
+			if _warehouse_mode:
+				prompt_lbl.text = "[WASD] Drive Truck  [Q/E] Forklift  [F] Conveyor  [Space] Stop  [E] Exit"
+			else:
+				prompt_lbl.text = "[E] Warehouse  [R] Robot Panel"
 			prompt_lbl.visible = true
 		if prompt_bg != null:
 			prompt_bg.visible = true
@@ -1407,6 +1450,24 @@ func _on_player_interact() -> void:
 		_nearby_claw_machine.start_game()
 		return
 
+	# Warehouse (Floor 11)
+	if _nearby_warehouse:
+		if _warehouse_mode:
+			# Exit warehouse control mode
+			_warehouse_mode = false
+			_warehouse_floor.set_staff_mode(false) if _warehouse_floor else null
+			if _toasts: _toasts.toast_info("Exited warehouse control.")
+		else:
+			# Enter warehouse control mode (staff only)
+			if _player != null and _player.is_in_staff_mode():
+				_warehouse_mode = true
+				if _warehouse_floor:
+					_warehouse_floor.set_staff_mode(true)
+				if _toasts: _toasts.toast_success("Warehouse Control Mode — use WASD/Q/E/F to operate equipment!")
+			else:
+				if _toasts: _toasts.toast_warning("Staff mode required for warehouse control. Press [K] to enter staff mode.")
+		return
+
 	# Phase 3: Interactive facilities
 	if _nearby_loyalty:
 		# Enter loyalty/coin mode
@@ -1735,6 +1796,115 @@ func _toggle_brand_portal() -> void:
 		_brand_portal.close()
 	else:
 		_brand_portal.open("ferrero")
+
+func _toggle_robot_panel() -> void:
+	if _robot_panel == null:
+		_build_robot_panel()
+	if _robot_panel.visible:
+		_robot_panel.visible = false
+	else:
+		if _player != null and not _player.is_in_staff_mode():
+			if _toasts: _toasts.toast_warning("Staff mode required for robot management. Press [K].")
+			return
+		_robot_panel.visible = true
+		_update_robot_panel()
+
+func _build_robot_panel() -> void:
+	_robot_panel = Control.new()
+	_robot_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_robot_panel.size = Vector2(280, 320)
+	_robot_panel.color = Color(0.10, 0.10, 0.15, 0.95)
+	_robot_panel.visible = false
+	add_child(_robot_panel)
+
+	var title := Label.new()
+	title.text = "ROBOT STAFF PANEL"
+	title.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	title.add_theme_color_override("font_color", Color(0.30, 0.90, 1.0))
+	title.add_theme_font_size_override("font_size", 10)
+	title.position = Vector2(0, 8)
+	_robot_panel.add_child(title)
+
+	var subtitle := Label.new()
+	subtitle.text = "Staff mode only"
+	subtitle.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	subtitle.add_theme_color_override("font_color", Color(0.60, 0.60, 0.70))
+	subtitle.add_theme_font_size_override("font_size", 7)
+	subtitle.position = Vector2(0, 22)
+	_robot_panel.add_child(subtitle)
+
+	# Robot list container
+	var list := VBoxContainer.new()
+	list.set_anchors_preset(Control.PRESET_FULL_RECT)
+	list.position = Vector2(0, 36)
+	_robot_panel.add_child(list)
+
+	# Add robot type buttons
+	var robot_types := [
+		{"role": ActorData.StaffRole.COUNTER_ROBOT, "name": "Counter Robot", "desc": "Auto-scans at self-checkout", "cost": 500},
+		{"role": ActorData.StaffRole.SHELF_ROBOT, "name": "Shelf Robot", "desc": "Auto-restock shelves", "cost": 400},
+		{"role": ActorData.StaffRole.CLEANING_ROBOT, "name": "Cleaning Robot", "desc": "Auto-cleans floors", "cost": 300},
+		{"role": ActorData.StaffRole.SECURITY_ROBOT, "name": "Security Robot", "desc": "Patrols & monitors", "cost": 600},
+		{"role": ActorData.StaffRole.DELIVERY_ROBOT, "name": "Delivery Robot", "desc": "Transports stock", "cost": 450},
+	]
+	for rt in robot_types:
+		var btn := Button.new()
+		btn.text = "[%s] %s — %d XP" % [rt["role"], rt["name"], rt["cost"]]
+		btn.add_theme_color_override("font_color", Color(0.80, 0.85, 0.90))
+		btn.add_theme_color_override("bg_color", Color(0.20, 0.22, 0.28))
+		btn.connect("pressed", _on_robot_spawn_pressed.bind(rt["role"], rt["cost"]))
+		list.add_child(btn)
+
+	var close_btn := Button.new()
+	close_btn.text = "[ESC] Close"
+	close_btn.position = Vector2(0, 290)
+	close_btn.connect("pressed", _toggle_robot_panel)
+	_robot_panel.add_child(close_btn)
+
+func _update_robot_panel() -> void:
+	var active_count = _robots.size()
+	# Find the subtitle label and update it
+	if _robot_panel:
+		for child in _robot_panel.get_children():
+			if child is Label and child.text == "Staff mode only":
+				child.text = "Active robots: %d" % active_count
+				break
+
+func _on_robot_spawn_pressed(role: ActorData.StaffRole, cost: int) -> void:
+	if _player_stats == null:
+		return
+	if _player_stats.get_xp() < cost:
+		if _toasts: _toasts.toast_warning("Not enough XP! Need %d XP to deploy %s" % [cost, role])
+		return
+	_player_stats.spend_xp(cost)
+	_spawn_robot(role)
+	if _toasts: _toasts.toast_success("Deployed %s! -%d XP" % [role, cost])
+	_update_robot_panel()
+
+func _spawn_robot(role: ActorData.StaffRole) -> void:
+	# Determine spawn position based on role
+	var spawn_pos := Vector2.ZERO
+	match role:
+		ActorData.StaffRole.COUNTER_ROBOT:
+			spawn_pos = Vector2(580, 320)  # near self-checkout
+		ActorData.StaffRole.SHELF_ROBOT:
+			spawn_pos = Vector2(200, 300)  # near produce section
+		ActorData.StaffRole.CLEANING_ROBOT:
+			spawn_pos = Vector2(400, 400)  # central aisle
+		ActorData.StaffRole.SECURITY_ROBOT:
+			spawn_pos = Vector2(100, 200)  # entrance area
+		ActorData.StaffRole.DELIVERY_ROBOT:
+			spawn_pos = Vector2(40 * CELL_SIZE, 20 * CELL_SIZE)  # warehouse
+	var robot := RobotControllerScript.new()
+	robot.configure(role, spawn_pos)
+	add_child(robot)
+	_robots.append(robot)
+
+func _spawn_robots() -> void:
+	# Spawn one of each robot type at game start (staff mode gives bonus XP to afford them)
+	_spawn_robot(ActorData.StaffRole.COUNTER_ROBOT)
+	_spawn_robot(ActorData.StaffRole.SHELF_ROBOT)
+	_spawn_robot(ActorData.StaffRole.CLEANING_ROBOT)
 
 func _on_brand_portal_closed() -> void:
 	# Refresh any brand data that may have changed

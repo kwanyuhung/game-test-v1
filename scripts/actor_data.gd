@@ -10,6 +10,7 @@
 enum Role {
 	CUSTOMER       # Shopping at the supermarket
 	STAFF          # Working in the store
+	ROBOT          # AI robot staff member
 }
 
 # ─── Staff Roles (when Role == STAFF) ─────────────────────────
@@ -23,6 +24,12 @@ enum StaffRole {
 	MANAGER        # Walks the floor supervising
 	FLOOR_STAFF    # General floor assistance
 	SCAN_GO        # Scan & Go staff — walks alongside player, auto-scans items
+	# Robot Staff Roles
+	COUNTER_ROBOT   # Self-checkout robot — faster, never makes errors
+	SHELF_ROBOT     # Auto-restocks shelves continuously
+	CLEANING_ROBOT  # Auto-cleans floors, never takes breaks
+	SECURITY_ROBOT  # Patrols with sensors, detects issues
+	DELIVERY_ROBOT  # Brings stock from warehouse to shelves
 }
 
 # ─── Customer Group Type ────────────────────────────────────────
@@ -331,6 +338,21 @@ class Actor:
 			StaffRole.SCAN_GO:
 				a.appearance.top_color = Color(0.20, 0.62, 0.82)
 				a.appearance.bottom_color = Color(0.22, 0.28, 0.48)
+			StaffRole.COUNTER_ROBOT:
+				a.appearance.top_color = Color(0.55, 0.55, 0.60)
+				a.appearance.bottom_color = Color(0.40, 0.40, 0.45)
+			StaffRole.SHELF_ROBOT:
+				a.appearance.top_color = Color(0.50, 0.55, 0.65)
+				a.appearance.bottom_color = Color(0.38, 0.42, 0.50)
+			StaffRole.CLEANING_ROBOT:
+				a.appearance.top_color = Color(0.70, 0.72, 0.75)
+				a.appearance.bottom_color = Color(0.60, 0.62, 0.65)
+			StaffRole.SECURITY_ROBOT:
+				a.appearance.top_color = Color(0.30, 0.30, 0.35)
+				a.appearance.bottom_color = Color(0.20, 0.20, 0.25)
+			StaffRole.DELIVERY_ROBOT:
+				a.appearance.top_color = Color(0.60, 0.50, 0.30)
+				a.appearance.bottom_color = Color(0.48, 0.38, 0.22)
 
 		return a
 
@@ -345,11 +367,25 @@ class Actor:
 				StaffRole.MANAGER: "Manager",
 				StaffRole.FLOOR_STAFF: "Floor Staff",
 				StaffRole.SCAN_GO: "Scan & Go",
+				StaffRole.COUNTER_ROBOT: "Counter Robot",
+				StaffRole.SHELF_ROBOT: "Shelf Robot",
+				StaffRole.CLEANING_ROBOT: "Cleaning Robot",
+				StaffRole.SECURITY_ROBOT: "Security Robot",
+				StaffRole.DELIVERY_ROBOT: "Delivery Robot",
 			}
 			return "STAFF | %s | Energy: %d%%" % [
 				role_names.get(staff_role, "Worker"),
 				int(energy * 100)
 			]
+		elif role == Role.ROBOT:
+			var robot_names := {
+				StaffRole.COUNTER_ROBOT: "Counter Robot",
+				StaffRole.SHELF_ROBOT: "Shelf Robot",
+				StaffRole.CLEANING_ROBOT: "Cleaning Robot",
+				StaffRole.SECURITY_ROBOT: "Security Robot",
+				StaffRole.DELIVERY_ROBOT: "Delivery Robot",
+			}
+			return "ROBOT | %s" % robot_names.get(staff_role, "Robot")
 		else:
 			var stage_names := {
 				LifeStage.ADULT: "Adult",

@@ -42,7 +42,11 @@ const ZONE_ENTRY_GATE    := "entry_gate"
 const ZONE_CLAW_MACHINE  := "claw_machine"
 const ZONE_DECOR         := "decor"
 const ZONE_PET_ADOPTION  := "pet_adoption"
-const ZONE_WAREHOUSE     := "warehouse"
+const ZONE_WAREHOUSE       := "warehouse"
+const ZONE_TRUCK_DOCK     := "truck_dock"
+const ZONE_FORKLIFT       := "forklift"
+const ZONE_CONVEYOR       := "conveyor"
+const ZONE_PACKING_STATION := "packing_station"
 const ZONE_ATM           := "atm"
 const ZONE_AD            := "ad"
 const ZONE_SHOES_RACK    := "shoes_rack"
@@ -1905,8 +1909,13 @@ e
 	FLOOR_DEFS.append(FloorDef.new(
 		11, "11", "warehouse", Color(0.55, 0.45, 0.38),
 		[
-			Z(ZONE_WAREHOUSE,     2,  3, 78, 38),
-			Z(ZONE_ELEVATOR,    80,  2,  4, 40),
+			Z(ZONE_WAREHOUSE,       2,  3, 78, 38),
+			Z(ZONE_TRUCK_DOCK,     2,  3, 20, 14, {"name": "TRUCK DOCK", "color": Color(0.50, 0.40, 0.30)}),
+			Z(ZONE_FORKLIFT,       2, 19, 20, 12, {"name": "FORKLIFT", "color": Color(0.80, 0.60, 0.20)}),
+			Z(ZONE_CONVEYOR,      24,  3, 30, 12, {"name": "CONVEYOR BELT", "color": Color(0.60, 0.60, 0.65)}),
+			Z(ZONE_PACKING_STATION, 24, 19, 30, 12, {"name": "PACKING STATION", "color": Color(0.40, 0.70, 0.50)}),
+			Z(ZONE_AD,            60,  4,  4,  6, {"ad_id": "warehouse_sale", "ad_text": "STOCK UP!", "ad_color": Color(0.90, 0.70, 0.20)}),
+			Z(ZONE_ELEVATOR,      80,  2,  4, 40),
 		],
 		[],
 		false, false, true, false

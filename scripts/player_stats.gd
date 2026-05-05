@@ -98,6 +98,15 @@ func _check_level_up() -> void:
 		_level = lvl
 		level_up.emit(_level)
 
+func spend_xp(amount: int) -> bool:
+	if _total_xp < amount:
+		return false
+	_total_xp -= amount
+	return true
+
+func get_xp() -> int:
+	return _total_xp
+
 # ─── Event Hooks ───────────────────────────────────────────────────
 
 func on_item_bought(product_id: String, price: float) -> void:
