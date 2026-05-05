@@ -33,7 +33,7 @@ const XP_FULL_CART := 20
 
 # ─── Persistent Stats ──────────────────────────────────────────────
 
-var _total_xp: int = 0
+var _total_xp: int = 300  # player starts with 300 XP to afford first robot
 var _level: int = 1
 var _total_spent: float = 0.0
 var _items_bought: int = 0
@@ -106,6 +106,99 @@ func spend_xp(amount: int) -> bool:
 
 func get_xp() -> int:
 	return _total_xp
+
+# ─── Staff Rank Progression ───────────────────────────────────────
+# Staff rank determines which features robots and abilities unlock.
+# Rank is earned through XP spent on staff activities.
+enum StaffRank {
+	TRAINEE      # Rank 1 - basic checkout, browse
+	WORKER       # Rank 2 - single-function robots unlocked
+	SENIOR       # Rank 3 - humanoid robots unlocked
+	SUPERVISOR   # Rank 4 - all robots + business lite
+	MANAGER      # Rank 5 - full Business Mode
+}
+
+var _staff_rank: StaffRank = StaffRank.TRAINEE
+var _staff_xp: int = 50          # starting staff XP — do tasks to rank up!
+var _staff_shifts_completed: int = 0
+var _staff_tasks_done: int = 0
+var _staff_rank_xp_thresholds := [0, 200, 500, 1000, 2000]  # XP needed per rank
+
+signal staff_rank_up(new_rank: StaffRank)
+signal staff_ability_unlocked(ability_id: String)
+
+func add_staff_xp(amount: int, reason: String) -> void:
+	_staff_xp += amount
+	_check_staff_rank()
+	xp_gained.emit(amount, reason)
+
+func _check_staff_rank() -> void:
+	var new_rank := StaffRank.TRAINEE
+	for i in range(_staff_rank_xp_thresholds.size() - 1, -1, -1):
+		if _staff_xp >= _staff_rank_xp_thresholds[i]:
+			new_rank = i as StaffRank
+			break
+	if new_rank > _staff_rank:
+		var old := _staff_rank
+		_staff_rank = new_rank
+		staff_rank_up.emit(new_rank)
+		_unlock_staff_abilities_for_rank(new_rank, old)
+
+func _unlock_staff_abilities_for_rank(new_rank: StaffRank, old_rank: StaffRank) -> void:
+	# Emit abilities that are newly unlocked
+	if new_rank >= StaffRank.WORKER and old_rank < StaffRank.WORKER:
+		staff_ability_unlocked.emit("robots_single")
+	if new_rank >= StaffRank.SENIOR and old_rank < StaffRank.SENIOR:
+		staff_ability_unlocked.emit("robots_humanoid")
+	if new_rank >= StaffRank.SUPERVISOR and old_rank < StaffRank.SUPERVISOR:
+		staff_ability_unlocked.emit("business_lite")
+	if new_rank >= StaffRank.MANAGER and old_rank < StaffRank.MANAGER:
+		staff_ability_unlocked.emit("business_full")
+
+func get_staff_rank() -> StaffRank:
+	return _staff_rank
+
+func get_staff_rank_name() -> String:
+	match _staff_rank:
+		StaffRank.TRAINEE: return "Trainee"
+		StaffRank.WORKER: return "Worker"
+		StaffRank.SENIOR: return "Senior"
+		StaffRank.SUPERVISOR: return "Supervisor"
+		StaffRank.MANAGER: return "Manager"
+	return "???"
+
+func get_staff_xp_for_next_rank() -> int:
+	var idx := (_staff_rank + 1) as int
+	if idx >= _staff_rank_xp_thresholds.size():
+		return -1  # max rank
+	return _staff_rank_xp_thresholds[idx]
+
+func get_staff_xp_progress() -> float:
+	var current_threshold := _staff_rank_xp_thresholds[_staff_rank as int]
+	var next_threshold := -1
+	var idx := (_staff_rank + 1) as int
+	if idx < _staff_rank_xp_thresholds.size():
+		next_threshold = _staff_rank_xp_thresholds[idx]
+	if next_threshold < 0:
+		return 1.0  # max rank
+	return float(_staff_xp - current_threshold) / float(next_threshold - current_threshold)
+
+func can_use_single_function_robots() -> bool:
+	return _staff_rank >= StaffRank.WORKER
+
+func can_use_humanoid_robots() -> bool:
+	return _staff_rank >= StaffRank.SENIOR
+
+func can_open_business_mode() -> bool:
+	return _staff_rank >= StaffRank.SUPERVISOR
+
+func complete_staff_shift() -> void:
+	_staff_shifts_completed += 1
+	add_staff_xp(30, "Staff shift completed")
+
+func complete_staff_task() -> void:
+	_staff_tasks_done += 1
+	add_staff_xp(5, "Staff task done")
 
 # ─── Event Hooks ───────────────────────────────────────────────────
 

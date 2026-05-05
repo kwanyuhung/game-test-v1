@@ -32,6 +32,7 @@ const PriceTerminalScript = preload("res://scripts/price_terminal.gd")
 const PriceOverrideScript = preload("res://scripts/price_override.gd")
 const BrandManagerScript = preload("res://scripts/brand_manager.gd")
 const BrandPortalScript = preload("res://scripts/brand_portal.gd")
+const BusinessModeScript = preload("res://scripts/business_mode.gd")
 const SaveSystem = preload("res://scripts/save_system.gd")
 const TutorialOverlayScript = preload("res://scripts/tutorial_overlay.gd")
 const RobotControllerScript = preload("res://scripts/robot_controller.gd")
@@ -131,6 +132,7 @@ var _price_terminal: PriceTerminal = null
 var _staff_blocked_floor: int = -1
 var _brand_manager: BrandManager = null
 var _brand_portal: BrandPortal = null
+var _business_mode: BusinessMode = null
 var _robots: Array = []           # active AI robot staff NPCs
 var _robot_panel: Control = null   # robot management UI
 var _temp_order_mode: String = ""  # "cafe" or "vending"
@@ -214,6 +216,7 @@ func _ready() -> void:
 	add_child(_player_stats)
 	_player_stats.achievement_unlocked.connect(_on_achievement_unlocked)
 	_player_stats.level_up.connect(_on_player_level_up)
+	_player_stats.staff_rank_up.connect(_on_staff_rank_up)
 
 	# Start chat manager
 	_chat_manager = ChatManagerScript.new()
@@ -631,6 +634,7 @@ func _update_floor_hud() -> void:
 		_floor_label = get_node_or_null("FloorLabelHUD")
 		if _floor_label != null:
 			_floor_label.text = "Floor %s ??%s" % [fd.label, fd.theme.replace("_", " ").capitalize()]
+	_update_staff_rank_hud()
 
 # ???????????????????????????????????????????????????????????????????????????????????????????????# PLAYER & NPCS
 # ???????????????????????????????????????????????????????????????????????????????????????????????
@@ -841,6 +845,9 @@ func _input(event: InputEvent) -> void:
 			# B ── Brand Portal
 			KEY_B:
 				_toggle_brand_portal()
+			# Shift+B ── Business Mode (Manager)
+			if event.shift:
+				_toggle_business_mode()
 			# J ── Quest Journal
 			KEY_J:
 				_toggle_quest_journal()
@@ -1268,6 +1275,28 @@ func _show_achievement_popup(ach_id: String, name: String, icon: String, xp: int
 	var popup := AchievementPopupScript.new()
 	add_child(popup)
 	popup.show_achievement(ach_id, name, icon, xp)
+
+func _on_staff_rank_up(new_rank: PlayerStats.StaffRank) -> void:
+	var rank_name := "???"
+	match new_rank:
+		PlayerStats.StaffRank.TRAINEE: rank_name = "Trainee"
+		PlayerStats.StaffRank.WORKER: rank_name = "Worker"
+		PlayerStats.StaffRank.SENIOR: rank_name = "Senior"
+		PlayerStats.StaffRank.SUPERVISOR: rank_name = "Supervisor"
+		PlayerStats.StaffRank.MANAGER: rank_name = "Manager"
+	if _toasts:
+		_toasts.toast_success("STAFF RANK UP to %s!" % rank_name)
+	_update_staff_rank_hud()
+	notify_telegram("Staff rank up! Now: %s" % rank_name)
+
+func _update_staff_rank_hud() -> void:
+	if _player_stats == null:
+		return
+	var rank_lbl = get_node_or_null("StaffRankLbl")
+	if rank_lbl != null:
+		rank_lbl.text = "[%s]" % _player_stats.get_staff_rank_name()
+		var progress := _player_stats.get_staff_xp_progress()
+		rank_lbl.tooltip_text = "Staff XP: %d/100 progress to next rank" % int(progress * 100)
 
 func _on_player_level_up(new_level: int) -> void:
 	notify_telegram("LEVEL UP! You are now Level %d!" % new_level)
@@ -1797,6 +1826,34 @@ func _toggle_brand_portal() -> void:
 	else:
 		_brand_portal.open("ferrero")
 
+func _toggle_business_mode() -> void:
+	if _player_stats == null:
+		return
+	if not _player_stats.can_open_business_mode():
+		var rank_name := _player_stats.get_staff_rank_name()
+		var next_xp := _player_stats.get_staff_xp_for_next_rank()
+		if _toasts:
+			if next_xp > 0:
+				_toasts.toast_warning("Business Mode unlocks at Supervisor rank. %d more Staff XP needed!" % next_xp)
+			else:
+				_toasts.toast_warning("Business Mode unlocks at Supervisor rank. Keep earning Staff XP!")
+		return
+	if _business_mode == null:
+		_build_business_mode()
+	if _business_mode.visible:
+		_business_mode.close()
+	else:
+		_business_mode.open(self, _player_stats)
+
+func _build_business_mode() -> void:
+	_business_mode = BusinessModeScript.new()
+	_business_mode.visible = false
+	add_child(_business_mode)
+
+func close_business_mode() -> void:
+	if _business_mode:
+		_business_mode.close()
+
 func _toggle_robot_panel() -> void:
 	if _robot_panel == null:
 		_build_robot_panel()
@@ -1907,10 +1964,15 @@ func _update_robot_panel() -> void:
 func _on_robot_humanoid_pressed(staff_role: ActorData.StaffRole, cost: int) -> void:
 	if _player_stats == null:
 		return
+	if not _player_stats.can_use_humanoid_robots():
+		var next_xp := _player_stats.get_staff_xp_for_next_rank()
+		if _toasts: _toasts.toast_warning("Humanoid robots unlock at Senior rank! %d more Staff XP needed." % max(0, next_xp))
+		return
 	if _player_stats.get_xp() < cost:
 		if _toasts: _toasts.toast_warning("Not enough XP! Need %d XP to deploy %s" % [cost, staff_role])
 		return
 	_player_stats.spend_xp(cost)
+	_player_stats.complete_staff_task()
 	_spawn_robot_humanoid(staff_role)
 	if _toasts: _toasts.toast_success("Deployed HUMANOID %s! -%d XP" % [staff_role, cost])
 	_update_robot_panel()
@@ -1918,10 +1980,15 @@ func _on_robot_humanoid_pressed(staff_role: ActorData.StaffRole, cost: int) -> v
 func _on_robot_single_pressed(rrole: ActorData.RobotRole, cost: int) -> void:
 	if _player_stats == null:
 		return
+	if not _player_stats.can_use_single_function_robots():
+		var next_xp := _player_stats.get_staff_xp_for_next_rank()
+		if _toasts: _toasts.toast_warning("Single-function robots unlock at Worker rank! %d more Staff XP needed." % max(0, next_xp))
+		return
 	if _player_stats.get_xp() < cost:
 		if _toasts: _toasts.toast_warning("Not enough XP! Need %d XP to deploy %s" % [cost, rrole])
 		return
 	_player_stats.spend_xp(cost)
+	_player_stats.complete_staff_task()
 	_spawn_robot_single(rrole)
 	if _toasts: _toasts.toast_success("Deployed %s! -%d XP" % [rrole, cost])
 	_update_robot_panel()
