@@ -1,22 +1,25 @@
 # 🏪 Supermarket — Phases Roadmap
 
 ## Phase 1 ✅ Core World
-**Store Layout — 14 Floors:**
-- **Ground (G)**: Compact lobby, ATM, **Phase I** Info Hub, **Phase H** Electronics
-- **Floor 1 — Shoes**: Ladies Shoes, Mens Shoes, Kids Shoes, Sport Shoes, Sandals
-- **Floor 2 — Fashion / Dresses**: Ladies Wear, Mens Wear, Kids Wear, Activewear, Formal Wear
-- **Floor 3 — Sport & Active**: Gym Equipment, Sports Gear, Team Sports, Activewear, Fitness
+**Store Layout — 18 Floors:**
+- **Ground (G)**: Lobby + Food Street (12 stalls) + **Warehouse Receiving Dock** (128 tiles wide!)
+- **Floor 1 — Shoes**: Ladies/Mens/Kids/Sport Shoes, Sandals
+- **Floor 2 — Fashion / Dresses**: Ladies/Mens/Kids Wear, Activewear, Formal
+- **Floor 3 — Sport & Active**: Gym Equipment, Sports Gear, Team Sports
 - **Floor 4 — Outdoor**: Fishing, Hiking, Running, Camping, Cycling
-- **Floor 5 — Garden & Home**: Home Decor, Furniture, Outdoor Living, Organization, Lighting, Plants
+- **Floor 5 — Garden & Home**: Home Decor, Furniture, Outdoor Living, Plants
 - **Floor 6 — Staff Areas**: Locker Room, Staff Lounge, Training Room
-- **Floor 7 — Back Office**: Admin, HR, Open Office, **Monitor Room (CCTV)**
-- **Floor 8 — Executive Office**: Exec Suite, Board Room, Secretaries, **Monitor Room (CCTV)**
+- **Floor 7 — Back Office**: Admin, HR, Open Office
+- **Floor 8 — Executive Office**: Exec Suite, Board Room
 - **Floor 9 — Rooftop Café**: Food stalls, outdoor dining
 - **Floor 10 — Pet Paradise**: Adoption corner, pet supplies
-- **Floor 11 — Warehouse**: Receiving dock, stock shelves
+- **Floor 11 — Warehouse Storage**: Full floor warehouse with stock shelves
 - **Floor 12 — Juice Bar & Fresh**: Juices, Smoothies, Salads, Health Foods
 - **Floor 13 — Kids Kingdom**: Play Zone, Nursing Room, Family WC, Kids Club
-- **Floor 14 — Electronics**: Phones, Smart Home, TVs, Repair Counter
+- **Floor 14 — Electronics Megastore**: Phones, Smart Home, TVs, Repair Counter
+- **Floor 15 — Canteen**: Communal dining with 6 serving stations (rice, noodle, grill, veg, drinks, fruit)
+- **Floor 16 — Food Court**: Fast food stalls (burger, pizza, chicken, hot dog, ice cream) + seating
+- **Floor 17 — Entertainment**: Karaoke rooms, pool table, darts, claw machines, lounge seating
 
 Player movement across all floors, section browsing.
 

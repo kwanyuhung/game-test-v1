@@ -89,6 +89,10 @@ Press `E` near the elevator shaft (right edge of every floor) to open the **Floo
 | 6 | Floor 6 | Household |
 | 7 | Floor 7 | Health & Beauty |
 | 8 | Floor 8 | **Arcade & Claw Machines** |
+| 10 | Floor 10 | **Rooftop Café** |
+| 15 | Floor 15 | **Canteen** |
+| 16 | Floor 16 | **Food Court** |
+| 17 | Floor 17 | **Entertainment (Karaoke, Pool, Darts)** |
 | 9 | Floor 9 | Staff Room |
 | 10 | Floor 10 | Rooftop Café |
 
@@ -211,6 +215,41 @@ Press `E` near the elevator shaft (right edge of every floor) to open the **Floo
 | **Trattoria** | 🇮🇹 Italian (Margherita Pizza, Tiramisu) |
 | **El Taco Loco** | 🇲🇽 Mexican (Tacos, Quesadilla) |
 | **Bubble Tea Bar** | 🧋 Drinks (Milk Tea, Smoothies) |
+
+---
+
+## Floor 15 — Canteen 🍚
+**Theme:** Large communal dining hall with serving counters
+
+- Walk up to any **serving counter** and press `E` to order
+- **6 stations**: Rice & Congee, Noodle Bar, Grill Station, Veggie Corner, Drinks Bar, Fruit Station
+- Seating area with long communal tables
+- Workers' canteen vibe — big portions, affordable!
+
+## Floor 16 — Food Court 🍔🍕
+**Theme:** Fast food court with table seating
+
+- **5 fast food stalls**: Burger Bar, Pizza Corner, Fried Chicken, Hot Dog Stand, Ice Cream Parlor
+- Open dining area with tables and trash bins
+- Walk close to any stall and press `E` to order
+
+## Floor 17 — Entertainment 🎤🎱
+**Theme:** Karaoke, pool, darts, and arcade games
+
+### Karaoke Rooms
+- **5 private karaoke rooms** with neon lighting
+- Walk close and press `E` to sing (karaoke mini-game coming)
+
+### Pool Table
+- Walk near the **green felt table** to play
+- Colored balls already racked!
+
+### Darts Board
+- Walk close to the **dartboard** for a darts challenge
+
+### Arcade
+- **3 claw machines** + arcade cabinet decorations
+- Insert coin to play! (1 coin per play)
 
 ---
 
