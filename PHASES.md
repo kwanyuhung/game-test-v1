@@ -360,6 +360,44 @@ Business Mode (Shift+B) → Staff tab shows real roster from player_stats.
 
 ---
 
+---
+
+## Phase S ✅ Supplier Relations
+**Manage supplier contracts, negotiate prices, order stock deliveries**
+
+**6 Suppliers:**
+- FreshFarm Co. (produce/dairy) — base cost ×1.0, 95% reliability
+- GoldenGrain Baker (bakery) — ×1.1, 90%
+- Polar Beverages (drinks) — ×0.9, 98%
+- SnackNation (snacks) — ×0.95, 85%
+- MeatKing Direct (meat) — ×1.15, 92%
+- FrostLogistics (frozen) — ×1.2, 88%
+
+**Contract System:**
+- Sign contract: $500 (level 1) → upgrade $1000 (lvl 2) → $2000 (lvl 3)
+- Favor: starts at 60%, increases with successful deliveries
+- Cost multiplier: base × (1 - contract_level×0.05) × (1 - favor×0.10)
+- Min multiplier: 0.6× (60% of base price at best)
+
+**Ordering:**
+- `order_stock(supplier_id, section_id, qty, cost_per_unit)`
+- Delivery: 2 days (≥95% reliability) or 3 days
+- Reliability roll — late deliveries possible!
+- Favor increases +2% on successful delivery
+
+---
+
+## Ground Floor Redesign ✅
+**Warehouse at street level, 128 tiles wide**
+
+- `WORLD_W`: 96 → **128 tiles** (32 extra tiles)
+- Ground floor now: Lobby (y=2-15) | Food Street (y=17-33) | **Warehouse Dock (y=35-49)**
+- Warehouse Dock zones: Truck Dock (x=0-22), Forklift Zone (x=0-22, y=42+), Conveyor Belt (x=22-72), Storage Shelves (x=75-120)
+- Trucks unload at street level — realistic logistics!
+- Floor 11 (upper) still has warehouse storage (above dock)
+
+---
+
 ## Phase L ✅ Inventory & Stock Management
 **Stock depletion, restocking, and section-level inventory tracking**
 
