@@ -43,6 +43,7 @@ const QuestSystemScript = preload("res://scripts/quest_system.gd")
 const QuestJournalScript = preload("res://scripts/quest_journal.gd")
 const SettingsPanelScript = preload("res://scripts/settings_panel.gd")
 const PauseMenuScript = preload("res://scripts/pause_menu.gd")
+const StatsDashboardScript = preload("res://scripts/stats_dashboard.gd")
 const MiniMapScript = preload("res://scripts/mini_map.gd")
 const ToastManagerScript = preload("res://scripts/toast_manager.gd")
 const FloatingTextScript = preload("res://scripts/floating_text.gd")
@@ -99,6 +100,7 @@ var _quest_system: QuestSystem = null
 var _quest_journal: QuestJournal = null
 var _settings_panel: SettingsPanel = null
 var _pause_menu: PauseMenu = null
+var _stats_dashboard: StatsDashboard = null
 var _shopping_list_visible: bool = false
 var _audio: AudioManager = null
 
@@ -278,6 +280,9 @@ func _ready() -> void:
 	add_child(_pause_menu)
 	_pause_menu.visible = false
 	_pause_menu.paused.connect(_on_game_paused)
+	_stats_dashboard = StatsDashboardScript.new()
+	add_child(_stats_dashboard)
+	_stats_dashboard.visible = false
 	_pause_menu.resumed.connect(_on_game_resumed)
 	_settings_panel.visible = false
 	_settings_panel.setting_changed.connect(_on_setting_changed)
@@ -866,6 +871,9 @@ func _input(event: InputEvent) -> void:
 				_toggle_pause()
 			KEY_SPACE:
 				_toggle_pause()
+			# K ── Stats Dashboard
+			KEY_K:
+				_toggle_stats_dashboard()
 		# 1-8 ── Quick order / loyalty
 		if _temp_order_mode != "":
 			var key_map := {
@@ -2222,3 +2230,9 @@ func _update_phase3_proximity() -> void:
 			prompt_lbl.visible = true
 		if prompt_bg != null:
 			prompt_bg.visible = true
+
+func _toggle_stats_dashboard() -> void:
+	if _stats_dashboard == null: return
+	_stats_dashboard.toggle()
+	if _stats_dashboard.visible:
+		_stats_dashboard.refresh_from_stats(_player_stats)

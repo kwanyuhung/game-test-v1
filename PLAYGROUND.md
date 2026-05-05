@@ -22,6 +22,7 @@ Welcome! Here's everything you can do on each floor.
 | `J` | Toggle quest journal |
 | `P` / `Space` | Pause / Resume |
 | `O` | Settings (volume, speed, notifications) |
+| `K` | Stats dashboard (level, XP, spending) |
 | `ESC` | Close any open panel |
 
 ---
@@ -379,6 +380,11 @@ All sounds are **procedurally generated** — no external audio files needed.
 | Level-up fanfare | Gaining a level |
 | Error buzz | Invalid action |
 | Alarm ×8 | Cart theft detected |
+
+---
+
+## Stats Dashboard
+Press **`K`** to see your Level, XP progress, total spent, checkout count, and items bought.
 
 ---
 

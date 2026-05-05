@@ -19,6 +19,7 @@ const CONTROLS := [
 	["J", "Quest journal"],
 	["O", "Settings panel"],
 	["P / Space", "Pause / Resume"],
+	["K", "Stats dashboard"],
 	["ESC", "Close any open panel"],
 func _ready() -> void:
 	visible = false
