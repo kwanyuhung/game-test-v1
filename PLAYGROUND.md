@@ -80,15 +80,24 @@ Press `E` near the elevator shaft (right edge of every floor) to open the **Floo
 **Floor Selector:**
 | Button | Floor | Theme |
 |--------|-------|-------|
-| G | Ground | Lobby + Food Street + Parking |
-| 1 | Floor 1 | Fresh Market |
-| 2 | Floor 2 | Pantry |
-| 3 | Floor 3 | Beverages |
-| 4 | Floor 4 | Snacks |
-| 5 | Floor 5 | Frozen Foods |
-| 6 | Floor 6 | Household |
-| 7 | Floor 7 | Health & Beauty |
+| G | Ground | Lobby + Food Street + Warehouse Dock |
+| 1 | Floor 1 | Shoes |
+| 2 | Floor 2 | Fashion / Dresses |
+| 3 | Floor 3 | Sport & Active |
+| 4 | Floor 4 | Outdoor |
+| 5 | Floor 5 | Stationery + Plants |
+| 6 | Floor 6 | Staff Areas |
+| 7 | Floor 7 | Back Office |
 | 8 | Floor 8 | **Arcade & Claw Machines** |
+| 9 | Floor 9 | Staff Room |
+| 10 | Floor 10 | Rooftop Cafe |
+| 11 | Floor 11 | Warehouse |
+| 12 | Floor 12 | Juice Bar & Fresh |
+| 13 | Floor 13 | Kids Kingdom |
+| 14 | Floor 14 | Electronics |
+| 15 | Floor 15 | Canteen |
+| 16 | Floor 16 | Food Court |
+| 17 | Floor 17 | Entertainment |
 | 10 | Floor 10 | **Rooftop Café** |
 | 15 | Floor 15 | **Canteen** |
 | 16 | Floor 16 | **Food Court** |

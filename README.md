@@ -1,6 +1,6 @@
 # 🏪 Pixel Supermarket
 
-A cozy pixel-art supermarket simulation built in **Godot 4.6**. Walk the aisles, browse 190+ products across 8 sections, chat with AI shoppers, play claw machines, and more.
+A cozy pixel-art supermarket simulation built in **Godot 4.6**. Walk the aisles, browse 190+ products across 18 floors, chat with AI shoppers, play mini-games, and more.
 
 **GitHub:** https://github.com/kwanyuhung/game-test-v1
 
@@ -10,15 +10,16 @@ A cozy pixel-art supermarket simulation built in **Godot 4.6**. Walk the aisles,
 
 - **Browse sections** — Walk close to any section and press `E` to open the full product browser
 - **Shop with quantity** — Add multiple of the same item, see details before buying
-- **Checkout** — 3 lanes on the ground floor, printed receipt with tax breakdown
-- **Ride the elevator** — Access 10 floors of shopping, parking, food court, arcade, and rooftop café
+- **Checkout** — 3 lanes on the ground floor, printed receipt with tax breakdown + loyalty savings
+- **Ride the elevator** — Access 18 floors of shopping, dining, and entertainment
 - **Chat with NPCs** — Press `C` near any AI shopper or staff member
-- **Play claw machines** — Floor 8, 4 machines with different plush prize themes
-- **Withdraw cash** — ATMS on the ground floor (PIN: 1234)
-- **Fix maintenance issues** — Press `M` to open the maintenance panel, earn XP
+- **Play claw machines** — Floor 8 and Floor 17, multiple machines with different prize themes
+- **Play mini-games** — Karaoke (Floor 17), Pool Table, Darts — each gives XP rewards!
+- **Withdraw cash** — ATMs on the ground floor (PIN: 1234)
+- **Gift wrapping** — Wrap your cart before checkout for bonus XP + tip
 - **Daily quests** — 3 quests per day with XP rewards, press `J` to check
 - **Save/Load** — `F5` quick save, `F9` quick load, auto-saves on checkout/level-up
-- **Telegram alerts** — Get notified on checkout, level-up, cart theft, and more
+- **Telegram alerts** — Get notified on checkout, level-up, cart theft, delivery arrivals, and more
 
 ---
 
@@ -27,52 +28,65 @@ A cozy pixel-art supermarket simulation built in **Godot 4.6**. Walk the aisles,
 | Key | Action |
 |-----|--------|
 | `W A S D` / Arrows | Move |
-| `E` | Interact (browse section / checkout / use ATM / fix) |
+| `E` | Interact (browse section / checkout / use ATM / play mini-game) |
 | `ESC` | Close any panel |
 | `Tab` | Toggle shopping cart panel |
 | `C` | Chat with nearby NPC |
-| `M` | Open Maintenance Panel |
-| `P` | Open Stats Dashboard |
+| `H` | Hire staff (staff mode) |
+| `F` | Catch thief / Fire staff (staff mode) |
+| `K` | Toggle staff/business mode |
+| `L` | Toggle shopping list |
+| `J` | Open quest journal |
+| `M` | Loyalty panel (coins, sign-up) |
+| `P` | Pause menu |
+| `O` | Settings (volume, speed, notifications) |
+| `X` | Renovation panel (staff mode) |
+| `R` | Restock nearby section (staff mode) |
+| `B` | Business mode overview |
 | `F5` | Quick save |
 | `F9` | Quick load |
 | `N` | Toggle mini-map |
-| `L` | Toggle shopping list |
-| `J` | Open quest journal |
-| `O` | Settings (volume, speed, notifications) |
 | `?` | Show controls tutorial |
 | `1–9` | Quick-add product by number (in section view) |
 
 ---
 
-## 🗺️ 10-Floor Building
+## 🗺️ 18-Floor Building
 
 | Floor | Theme | Highlights |
 |-------|-------|------------|
-| **G** Ground | Lobby + Food Street + Parking | 12 international food stalls, 3 checkout lanes, ATMs, 10 parking slots |
-| **1** | Fresh Market | Dairy, Produce, Bakery, Meat/Deli — all browsable sections |
-| **2** | Pantry | Rice, pasta, canned goods, spices |
-| **3** | Beverages | Soft drinks, juice, coffee, tea |
-| **4** | Snacks | Chips, crackers, candy, chocolate |
-| **5** | Frozen Foods | Ice cream, frozen meals, frozen vegetables |
-| **6** | Household | Cleaning supplies, paper goods |
-| **7** | Health & Beauty | Pharmacy, cosmetics |
-| **8** | **Arcade & Claw Machines** | 4 claw machines, neon-themed floor |
+| **G** | Ground Floor | Lobby + Food Street (12 stalls) + Warehouse Receiving Dock |
+| **1** | Shoes | Ladies / Mens / Kids / Sport Shoes |
+| **2** | Fashion | Ladies / Mens / Kids Wear |
+| **3** | Sport & Active | Gym Equipment / Sports Gear / Activewear |
+| **4** | Outdoor | Fishing / Hiking / Running |
+| **5** | Stationery + Plants | Office supplies + Indoor plants |
+| **6** | Staff Areas | Locker Room / Staff Lounge / Training |
+| **7** | Back Office | Admin / HR / Open Office |
+| **8** | Arcade & Claw Machines | 4 claw machines + games |
 | **9** | Staff Room | Restricted lore area |
-| **10** | Rooftop Café | Outdoor seating, café counter |
+| **10** | Rooftop Café | Italian / Mexican / Bubble Tea |
+| **11** | Warehouse Storage | Full warehouse with stock shelves |
+| **12** | Juice Bar & Fresh | Smoothies / Salads / Health Foods |
+| **13** | Kids Kingdom | Play Zone / Kids Club / Nursery / Family WC |
+| **14** | Electronics Megastore | Phones / Smart Home / TVs / Repair |
+| **15** | Canteen | 6 serving stations (rice, noodle, grill, veg, drinks, fruit) |
+| **16** | Food Court | Fast food stalls (burger, pizza, chicken, hot dog, ice cream) |
+| **17** | Entertainment | Karaoke / Pool Table / Darts / 3 Claw Machines |
 
 ---
 
 ## 🛠️ Dev Setup
 
 ### Prerequisites
-- **Godot 4.6** (with .NET support for GDScript 2)
+- **Godot 4.6** (Forward+ renderer, 2D pixel art)
 - **PowerShell 5+**
 - Telegram bot token (optional, for notifications)
 
 ### Running the Game
 ```powershell
 .\run.ps1
-# or open the project.godot file directly in Godot
+# or open project.godot directly in Godot
 ```
 
 ### Dev Workflow Scripts
@@ -80,87 +94,43 @@ A cozy pixel-art supermarket simulation built in **Godot 4.6**. Walk the aisles,
 | Script | What It Does |
 |--------|-------------|
 | `dev.ps1` | Full pipeline: test → commit → push → Telegram summary |
-| `autotest.ps1` | File watcher — auto-runs tests on `.gd` changes, alerts on 3 consecutive failures |
+| `autotest.ps1` | File watcher — auto-runs tests on `.gd` changes |
 | `quick_commit.ps1` | Fast test + commit with a message |
 | `notify.ps1` | Standalone Telegram notifier |
-
-### Telegram Setup
-1. Create a bot via **@BotFather** on Telegram
-2. Add your token to `scripts/telegram_bot.gd` or set it as an environment variable
-3. Start the bot and open the game — events will post automatically
+| `test.ps1` | Godot headless run — checks for script errors |
 
 ---
 
-## 🧪 Testing & Progress Viewing
+## 🧪 Testing
 
-### Best Tools for This Project
-
-**In-Editor (Godot):**
-- **Debugger** panel — Inspect variables, step through code, watch signals
-- **Profiler** — Find performance bottlenecks in GDScript
-- **Remote** scene tree — Inspect live nodes while the game runs
-- **Animation playback** — Test claw machine animations, elevator transitions
-
-**Automated Testing:**
-```
+```powershell
 .\test.ps1          # Run Godot in headless mode, check for script errors
 .\autotest.ps1      # Continuous file watcher with crash detection
 ```
 
-**Version Control & Progress:**
-- **GitHub Issues** — Track features, bugs, milestones
-- **GitHub Projects** — Kanban board for the 10-floor roadmap
-- **GitHub Actions** — CI pipeline that runs `test.ps1` on every push
+---
 
-**Milestone Tracking:**
-| Milestone | Contents |
-|-----------|----------|
-| Phase 1 ✅ | Multi-floor infrastructure — elevator, stairs, 10 floors |
-| Phase 2 ✅ | Commerce — cart, checkout receipts, Telegram bot |
-| Phase 3 ✅ | NPC system — 7 staff roles, 9 customer types, procedural appearances |
-| Phase 4 ✅ | 24-hour clock, time-based lighting |
-| Phase 5 ✅ | Parking lot, vehicles |
-| Phase 6 ✅ | Maintenance system (M panel), XP rewards |
-| Phase 8 ✅ | XP/level system, 12 achievements, stats dashboard |
-| Phase 9 ✅ | AI customers auto-shop with carts |
-| Phase 10 ✅ | ATMs with PIN entry |
+## 📊 Game Systems (Phases)
 
-See **[MILESTONES.md](MILESTONES.md)** for the full 10-floor expansion roadmap.
+- **Phase L** — Inventory & Stock (color-coded stock bars, OOS blocking, restock with R)
+- **Phase M** — Staff Management (hire/fire, wages, morale, performance bonus)
+- **Phase N** — Customer Experience (satisfaction stars, 1.0-1.5× XP multiplier)
+- **Phase O** — Promotions & Loyalty (Bronze→Platinum tiers, tier discounts at checkout)
+- **Phase P** — Store Expansion (renovate with X, reputation system, store levels)
+- **Phase Q** — Anti-Theft (suspicious customers, catch with F for XP + fine)
+- **Phase R** — Dynamic Pricing (stock level → 0.8× to 1.3× price modifier)
+- **Phase S** — Supplier Relations (6 suppliers, contracts, favor system)
+- **Phase T** — Technology & Upgrades (digital shelf labels, self-checkout)
 
-**Feature Changelog:**
-See **[PHASES.md](PHASES.md)** for the phase-by-phase build history.
+See **[PHASES.md](PHASES.md)** for the full roadmap.
 
 ---
 
-## 📁 Key Scripts
+## 🎯 Tips
 
-| Script | Purpose |
-|--------|---------|
-| `main.gd` | World builder, spawns floors/sections/player/NPCs |
-| `section_browse.gd` | Section browser UI — category tabs, detail panel, qty selector |
-| `store_data.gd` | 190+ products, SectionDef/MarketProduct classes |
-| `shopping_cart.gd` | Quantity-aware cart, subtotal, tax |
-| `player.gd` | WASD movement, cart, section detection |
-| `floor_builder.gd` | Procedural tile rendering per floor |
-| `floor_config.gd` | Floor/section definitions, food stall roster |
-| `npc_controller.gd` | AI shoppers — pathfinding, task system, group behavior |
-| `claw_machine.gd` | Claw machine game logic |
-| `elevator.gd` | Elevator car, floor selector UI, transition animations |
-| `telegram_bot.gd` | Telegram notification helper |
-| `save_system.gd` | Save/load, receipt export |
-| `audio_manager.gd` | Procedural audio (no external files) |
-
----
-
-## 📊 Architecture
-
-- **Engine:** Godot 4.6 (Forward+, 2D pixel art)
-- **Resolution:** 320×180 game pixels, integer scaling to fullscreen
-- **Sprites:** 100% procedural via `pixel_art_generator.gd` — zero external assets
-- **Audio:** 100% procedural via `audio_manager.gd` — zero external audio files
-- **AI:** GDScript 2 coroutines for NPC behavior, no external AI needed
-- **Persistence:** JSON save files in Godot `user://` directory
-
----
-
-_Current features: 10 floors, 190+ products, 8 sections, 6 AI shoppers, procedural sprites/audio, save/load, claw machines, ATMs, chat system, maintenance, quests, achievements, Telegram integration._
+- **Restock sections** (press `R` in staff mode) before they go empty — OOS items hurt customer satisfaction
+- **Gift wrap your cart** before checkout for +15 XP + $2 tip
+- **Unload trucks** at the warehouse dock when delivery arrives — bonus XP!
+- **Loyalty sign-up** is free and gives permanent discounts at checkout
+- **Catch thieves** with `F` when you see "ACTIVE THEFT" — big XP + fine reward
+- **Play mini-games** on Floor 17 for easy XP between shopping runs

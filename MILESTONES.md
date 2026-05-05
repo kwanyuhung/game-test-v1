@@ -1,8 +1,8 @@
-# Pixel Supermarket — 10-Floor Expansion Milestones
+# Pixel Supermarket — Milestones
 
 ## Context
-Current game: 1 floor, 96×50 tiles, 8 sections, 190+ products, 6 AI shoppers, 3 checkout lanes.
-Goal: 10-floor building with diverse categories, facilities, age-diverse AI, multiple checkout modes, and staff role.
+Current game: 18 floors, 128×50 tiles (ground), 190+ products, 6 AI shoppers, 3 checkout lanes.
+Achieved: Multi-floor traversal, NPC system, commerce, mini-games, dynamic pricing, loyalty tiers, anti-theft, supplier system, and more.
 
 ---
 
@@ -21,7 +21,7 @@ Goal: 10-floor building with diverse categories, facilities, age-diverse AI, mul
 
 ---
 
-## 🛒 Phase 2 — Floor Layouts (10 Floors)
+## 🛒 Phase 2 — Floor Layouts (18 Floors)
 **Goal:** Each floor has a distinct theme and product mix
 
 | Floor | Theme | Sections / Facilities |
