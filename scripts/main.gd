@@ -1628,7 +1628,7 @@ func _on_player_interact() -> void:
 		if _truck_arrived:
 			_do_truck_unload()
 		else:
-			if _warehouse_system != null and not _warehouse.is_delivery_pending():
+			if _warehouse != null and not _warehouse.is_delivery_pending():
 				_warehouse.trigger_delivery()
 				if _toasts: _toasts.toast_info("Truck ordered! Will arrive shortly...")
 			else:
@@ -1671,8 +1671,7 @@ func _on_player_interact() -> void:
 			if _toasts != null: _toasts.toast_info("Cart already gift wrapped!")
 		else:
 			_cart_gift_wrapped = true
-			if _toasts != null: _toasts.toast_success("Cart gift wrapped! +15 XP + $2 tip at checkout!")
-			if _player_stats != null: _player_stats.add_xp(15)
+			if _toasts != null: _toasts.toast_success("Cart gift wrapped! +$2 tip at checkout!")
 		return
 	if _nearby_digital_kiosk:
 		if _toasts != null: _toasts.toast_info("Floor Directory: G=Lobby+Food, 1=Fresh, 2=Pantry, 3=Drinks, 4=Snacks, 5=Frozen, 6=Household, 7=H+B, 8=Arcade, 9=Staff, 10=Cafe")
@@ -2426,7 +2425,7 @@ func _spawn_truck_at_dock() -> void:
 
 func _do_truck_unload() -> void:
 	# Called when player presses E at the truck dock with truck present
-	if _warehouse_system == null:
+	if _warehouse == null:
 		return
 	if not _truck_arrived:
 		return

@@ -66,7 +66,7 @@ static func _static_init() -> void:
 		# Floor 10 — Rooftop Café
 		SectionDef.new("cafe",    "CAFE",      42,  3, 18, 14, SectionStyle.SHELF,    Color(0.72, 0.55, 0.42),  "F", 10),
 		# Floor 11 — Pet Paradise
-		SectionDef.new("pet",     "PET PARADISE", 2,  3, 22, 20, SectionStyle.SHELF,    Color(0.55, 0.80, 0.65),  "E", 11),
+		SectionDef.new("pet",     "PET PARADISE", 2,  3, 22, 20, SectionStyle.SHELF,    Color(0.55, 0.80, 0.65),  "E", 13),
 	]
 	# Checkout lane definitions by floor.
 	# type: "staffed" | "self" | "express"
