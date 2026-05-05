@@ -1872,6 +1872,22 @@ func _finish_checkout() -> void:
 				stats.add_xp(15)
 				stats.add_cash(2.0)
 			if _toasts: _toasts.toast_success("Gift wrap bonus! +15 XP + $2 tip!")
+# Phase R: Checkout savings display
+	var savings := 0.0
+	var mn = get_node_or_null("/root/Main")
+	if mn != null and cart != null:
+		var dp = mn.get_node_or_null("DynamicPricing")
+		var wh = mn.get_warehouse() if mn.has_method("get_warehouse") else null
+		for entry in cart.get_items():
+			var prod = entry["product"]
+			var qty = entry["qty"]
+			var adj = prod.price
+			if dp != null and wh != null and dp.has_method("get_price_multiplier_for_section"):
+				adj = prod.price * dp.get_price_multiplier_for_section(prod.section, wh)
+			savings += (prod.price - adj) * qty
+	if savings > 0.01 and _toasts != null:
+		_toasts.toast_success("You saved $%.2f on this shop!" % savings)
+
 # Award staff XP for completing checkout task
 		stats.add_staff_xp(items.size(), "Checkout: %d items" % items.size())
 
