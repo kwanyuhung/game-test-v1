@@ -218,6 +218,44 @@ Press `E` near the elevator shaft (right edge of every floor) to open the **Floo
 
 ---
 
+## Floor 11 — Warehouse & Receiving Dock 📦
+**Theme:** Full-floor warehouse with stock shelves and forklift zones
+
+- Press `[E]` at the **Truck Dock** (Ground Floor, y=35+) to unload deliveries
+- Warehouse controls: `[WASD]` drive truck, `[Q/E]` forklift, `[F]` conveyor
+- Stock levels auto-replenish via supplier orders
+
+---
+
+## Floor 12 — Juice Bar & Fresh 🥗
+**Theme:** Health foods, fresh juices, and smoothie bar
+
+- Walk close to any counter and press `E` to order
+- Smoothie Station, Salad Bar, Fresh Juice counter
+- Health Food section with supplements and snacks
+
+---
+
+## Floor 13 — Kids Kingdom 👶🎨
+**Theme:** Kids play area, nursery, and family facilities
+
+- **Play Zone**: Indoor play area with colorful toys
+- **Kids Club**: Activity zone with craft tables
+- **Nursery**: Baby room with changing facilities
+- **Family WC**: Restroom for families
+
+---
+
+## Floor 14 — Electronics Megastore 📱💻
+**Theme:** Phones, smart home, TVs, and repair services
+
+- Walk close and press `E` to browse the electronics catalog
+- **Phones & Gadgets**: Latest smartphones and accessories
+- **Smart Home**: Home automation and IoT devices
+- Repair counter for fixing devices
+
+---
+
 ## Floor 15 — Canteen 🍚
 **Theme:** Large communal dining hall with serving counters
 
