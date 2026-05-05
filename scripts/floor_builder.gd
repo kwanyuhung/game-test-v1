@@ -2713,6 +2713,24 @@ func get_office_desk_zone_center() -> Vector2:
 			return Vector2(cx, cy)
 	return Vector2(-1, -1)
 
+# Returns the zone center of a specific zone type (for E-key interaction proximity)
+func get_zone_center_by_type(ztype: String) -> Vector2:
+	if _floor_def == null:
+		return Vector2(-1, -1)
+	for zone in _floor_def.zones:
+		if zone.type == ztype:
+			var cx := (zone.x + zone.w * 0.5) * CELL_SIZE
+			var cy := (zone.y + zone.h * 0.5) * CELL_SIZE
+			return Vector2(cx, cy)
+	return Vector2(-1, -1)
+
+# Returns true if player is within interaction range of a zone type
+func is_near_zone_type(ztype: String, player_pos: Vector2, threshold: float = 12.0) -> bool:
+	var center = get_zone_center_by_type(ztype)
+	if center.x < 0:
+		return false
+	return player_pos.distance_to(center) < CELL_SIZE * threshold
+
 
 
 

@@ -104,6 +104,10 @@ var _nearby_elevator: bool = false
 var _nearby_parking: bool = false
 var _nearby_stairs: bool = false
 var _nearby_terminal: bool = false
+var _nearby_loyalty: bool = false
+var _nearby_gift_wrap: bool = false
+var _nearby_digital_kiosk: bool = false
+var _nearby_info_desk: bool = false
 var _in_checkout: bool = false
 var _cart_panel: CanvasLayer
 var _cart_items_lbl: Label
@@ -833,6 +837,7 @@ func _process(_delta: float) -> void:
 	_update_warehouse_proximity()
 	_update_monitor_proximity()
 	_update_terminal_proximity()
+	_update_phase3_proximity()
 
 func _update_elevator_proximity() -> void:
 	if _player == null or _elevator == null:
@@ -1357,6 +1362,21 @@ func _on_player_interact() -> void:
 		_nearby_claw_machine.start_game()
 		return
 
+	# Phase 3: Interactive facilities
+	if _nearby_loyalty:
+		if _toasts != null: _toasts.toast_info("Loyalty Program: Earn 1 pt/$1 spent. 100 pts = $5 credit!")
+		return
+	if _nearby_gift_wrap:
+		if _toasts != null: _toasts.toast_success("Gift wrapped! +10 XP bonus earned!")
+		if _player_stats != null: _player_stats.add_xp(10)
+		return
+	if _nearby_digital_kiosk:
+		if _toasts != null: _toasts.toast_info("Floor Directory: G=Lobby+Food, 1=Fresh, 2=Pantry, 3=Drinks, 4=Snacks, 5=Frozen, 6=Household, 7=H&B, 8=Arcade, 9=Staff, 10=Pet")
+		return
+	if _nearby_info_desk:
+		if _toasts != null: _toasts.toast_info("Welcome to Pixel Supermarket! Use elevator or stairs to navigate.")
+		return
+
 # ── Food stall interaction ──────────────────────────────────────
 func _on_stall_interact_requested(stall_id: String) -> void:
 	if _floor_builder == null:
@@ -1561,3 +1581,38 @@ func _open_price_terminal() -> void:
 		_price_terminal = PriceTerminalScript.new()
 		add_child(_price_terminal)
 	_price_terminal.open()
+
+# ── Phase 3: Interactive Facilities Proximity ───────────────────
+func _update_phase3_proximity() -> void:
+	_nearby_loyalty = false
+	_nearby_gift_wrap = false
+	_nearby_digital_kiosk = false
+	_nearby_info_desk = false
+	if _floor_builder == null or _player == null:
+		return
+	var ppos = _player.position
+	var prompt_lbl = get_node_or_null("PromptLbl")
+	var prompt_bg = get_node_or_null("PromptBg")
+
+	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_LOYALTY_KIOSK, ppos):
+		_nearby_loyalty = true
+	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_GIFT_WRAP, ppos):
+		_nearby_gift_wrap = true
+	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_DIGITAL_KIOSK, ppos):
+		_nearby_digital_kiosk = true
+	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_INFO_DESK, ppos):
+		_nearby_info_desk = true
+
+	# Update prompt if no higher-priority prompt is showing
+	var show_phase3 = _nearby_loyalty or _nearby_gift_wrap or _nearby_digital_kiosk or _nearby_info_desk
+	if show_phase3 and not _nearby_elevator and not _nearby_stairs and _nearby_section == null and _nearby_checkout == null:
+		var txt := "[E] "
+		if _nearby_loyalty: txt += "Loyalty Sign-Up"
+		elif _nearby_gift_wrap: txt += "Gift Wrap (+XP)"
+		elif _nearby_digital_kiosk: txt += "Info Directory"
+		elif _nearby_info_desk: txt += "Info Desk"
+		if prompt_lbl != null:
+			prompt_lbl.text = txt
+			prompt_lbl.visible = true
+		if prompt_bg != null:
+			prompt_bg.visible = true

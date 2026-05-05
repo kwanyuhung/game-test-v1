@@ -883,15 +883,17 @@ r
 		false, false, true, true, true
 	))
 
-	# ── FLOOR 8 — Executive Office ───────────────────────────────────────────────
+	# ── FLOOR 8 — Arcade & Claw Machines ────────────────────────────────────────
 	FLOOR_DEFS.append(FloorDef.new(
-		8, "8", "exec_office", Color(0.35, 0.35, 0.40),
+		8, "8", "arcade", Color(0.22, 0.18, 0.38),
 		[
 			Z(ZONE_COMMON,         2,  3, 78, 38),
-			Z(ZONE_EXEC_OFFICE,    2,  3, 38, 20, {"name": "EXEC OFFICE", "color": Color(0.42, 0.42, 0.48)}),
-			Z(ZONE_EXEC_OFFICE,   42,  3, 36, 20, {"name": "BOARD ROOM", "color": Color(0.50, 0.48, 0.55)}),
-			Z(ZONE_EXEC_OFFICE,    2, 25, 78, 12, {"name": "SECRETARIES", "color": Color(0.45, 0.45, 0.52)}),
-			Z(ZONE_MONITOR_ROOM, 66,  3, 12, 35, {"name": "MONITORING ROOM", "color": Color(0.20, 0.22, 0.28)}),
+			Z(ZONE_KIDS_PLAY,     10,  3, 30, 20, {"name": "PLAY ZONE", "color": Color(0.40, 0.55, 0.80)}),
+			# Claw machines — 4 arcade cabinets
+			Z(ZONE_CLAW_MACHINE,   2,  3, 10, 14, {"machine_id": "claw_1", "prize_pool": 0}),
+			Z(ZONE_CLAW_MACHINE,  14,  3, 10, 14, {"machine_id": "claw_2", "prize_pool": 1}),
+			Z(ZONE_CLAW_MACHINE,   2, 20, 10, 14, {"machine_id": "claw_3", "prize_pool": 2}),
+			Z(ZONE_CLAW_MACHINE,  14, 20, 10, 14, {"machine_id": "claw_4", "prize_pool": 3}),
 			Z(ZONE_ELEVATOR,    80,  2,  4, 40),
 			Z(ZONE_STAIRS,      84,  2,  6, 40),
 		],
