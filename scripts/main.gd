@@ -1432,8 +1432,20 @@ func _on_section_entered(section_id: String) -> void:
 			_nearby_section = sec
 			var prompt_lbl = get_node_or_null("PromptLbl")
 			var prompt_bg = get_node_or_null("PromptBg")
+			# ── Phase L: Show stock level in prompt ─────────────────
+			var stock_info := ""
+			if _warehouse != null:
+				var ratio := _warehouse.get_stock_ratio(section_id)
+				var pct := int(ratio * 100)
+				var stock_color := "OK"
+				if pct < 30: stock_color = "LOW"
+				elif pct == 0: stock_color = "OUT"
+				stock_info = " | Stock: %s (%d%%)" % [stock_color, pct]
+			var staff_r := ""
+			if _player != null and _player.is_in_staff_mode():
+				staff_r = " | [R] Restock"
 			if prompt_lbl != null:
-				prompt_lbl.text = "[E] Browse %s" % sec.get_def().name
+				prompt_lbl.text = "[E] Browse %s%s%s" % [sec.get_def().name, stock_info, staff_r]
 				prompt_lbl.visible = true
 			if prompt_bg != null:
 				prompt_bg.visible = true

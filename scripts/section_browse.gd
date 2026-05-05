@@ -632,6 +632,10 @@ func _add_selected_to_cart() -> void:
 	if _filtered_products.size() == 0:
 		return
 	var prod = _filtered_products[_selected]
+	# ── Phase L: Block out-of-stock items ──────────────────────────
+	var ratio := _get_section_stock_ratio(_section_id)
+	if ratio <= 0.0:
+		return  # Silent block — stock bar already shows OUT! label
 	item_added.emit(prod, _qty)
 	if _cart_ref != null and _cart_ref.has_method("add_item"):
 		_cart_ref.add_item(prod, _qty)
@@ -647,13 +651,12 @@ func _refresh_bottom_bar() -> void:
 	pass
 
 func _get_section_stock_ratio(section_id: String) -> float:
-	# Walk up from section_browse (CanvasLayer) -> main
-	var main = get_parent()  # section_browse is added to main, parent is main
+	var main = get_parent()
 	if main == null or not main.has_method("get_warehouse"):
 		main = get_tree().root.get_node_or_null("Main")
 	if main == null:
 		return 1.0
-	var wh = main.get_node_or_null("WarehouseSystem")
+	var wh = main.get_warehouse()
 	if wh != null and wh.has_method("get_stock_ratio"):
 		return wh.get_stock_ratio(section_id)
 	return 1.0
