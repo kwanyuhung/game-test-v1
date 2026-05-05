@@ -24,12 +24,23 @@ enum StaffRole {
 	MANAGER        # Walks the floor supervising
 	FLOOR_STAFF    # General floor assistance
 	SCAN_GO        # Scan & Go staff — walks alongside player, auto-scans items
-	# Robot Staff Roles
-	COUNTER_ROBOT   # Self-checkout robot — faster, never makes errors
-	SHELF_ROBOT     # Auto-restocks shelves continuously
-	CLEANING_ROBOT  # Auto-cleans floors, never takes breaks
-	SECURITY_ROBOT  # Patrols with sensors, detects issues
-	DELIVERY_ROBOT  # Brings stock from warehouse to shelves
+}
+
+# ─── Robot Type ────────────────────────────────────────────────
+# Robots can be HUMANOID (look like humans, use tools, communicate)
+# or SINGLE_FUNCTION (specialized machine for one task)
+enum RobotType {
+	HUMANOID        # Looks like a person, uses tools, talks, does any job
+	SINGLE_FUNCTION # Automated machine — cleaning, guiding, delivery, etc.
+}
+
+# ─── Robot Role (for SINGLE_FUNCTION robots) ────────────────────
+enum RobotRole {
+	CLEANING_ROBOT  # Auto-cleans floors, battery-powered
+	GUIDANCE_ROBOT  # Directs customers, answers questions
+	DELIVERY_ROBOT  # Transports stock between zones
+	SECURITY_ROBOT  # Patrols and monitors
+	SHELF_ROBOT     # Auto-restock scanning
 }
 
 # ─── Customer Group Type ────────────────────────────────────────
@@ -215,6 +226,8 @@ class Actor:
 	var id: String
 	var role: Role
 	var staff_role: StaffRole
+	var robot_type: RobotType       # HUMANOID or SINGLE_FUNCTION (only when role==ROBOT)
+	var robot_role: RobotRole        # specific role for SINGLE_FUNCTION robots
 	var life_stage: LifeStage
 	var appearance: Appearance
 	var group_type: CustomerGroupType
@@ -338,21 +351,67 @@ class Actor:
 			StaffRole.SCAN_GO:
 				a.appearance.top_color = Color(0.20, 0.62, 0.82)
 				a.appearance.bottom_color = Color(0.22, 0.28, 0.48)
-			StaffRole.COUNTER_ROBOT:
-				a.appearance.top_color = Color(0.55, 0.55, 0.60)
-				a.appearance.bottom_color = Color(0.40, 0.40, 0.45)
-			StaffRole.SHELF_ROBOT:
-				a.appearance.top_color = Color(0.50, 0.55, 0.65)
-				a.appearance.bottom_color = Color(0.38, 0.42, 0.50)
-			StaffRole.CLEANING_ROBOT:
-				a.appearance.top_color = Color(0.70, 0.72, 0.75)
-				a.appearance.bottom_color = Color(0.60, 0.62, 0.65)
-			StaffRole.SECURITY_ROBOT:
-				a.appearance.top_color = Color(0.30, 0.30, 0.35)
-				a.appearance.bottom_color = Color(0.20, 0.20, 0.25)
-			StaffRole.DELIVERY_ROBOT:
-				a.appearance.top_color = Color(0.60, 0.50, 0.30)
-				a.appearance.bottom_color = Color(0.48, 0.38, 0.22)
+
+		return a
+
+	static func random_robot(rtype: RobotType, rrole: RobotRole = RobotRole.CLEANING_ROBOT) -> Actor:
+		var a := Actor.new()
+		a.role = Role.ROBOT
+		a.robot_type = rtype
+		a.robot_role = rrole
+		a.energy = 1.0
+		a.happiness = 1.0
+		a.current_floor = 0
+
+		# Humanoid robots look like humans with subtle robot features
+		if rtype == RobotType.HUMANOID:
+			a.appearance = Appearance.random()
+			# Give humanoid robot a synthetic skin tone and robot uniform
+			a.appearance.skin_tone = Color(0.82, 0.84, 0.88)  # slightly metallic skin
+			match rrole:
+				RobotRole.CLEANING_ROBOT:
+					a.appearance.top_color = Color(0.22, 0.52, 0.38)
+					a.appearance.bottom_color = Color(0.32, 0.32, 0.42)
+					a.display_name = "Robo-Cleaner"
+				RobotRole.GUIDANCE_ROBOT:
+					a.appearance.top_color = Color(0.20, 0.62, 0.82)
+					a.appearance.bottom_color = Color(0.22, 0.28, 0.48)
+					a.display_name = "Robo-Guide"
+				RobotRole.DELIVERY_ROBOT:
+					a.appearance.top_color = Color(0.60, 0.50, 0.30)
+					a.appearance.bottom_color = Color(0.48, 0.38, 0.22)
+					a.display_name = "Robo-Delivery"
+				RobotRole.SECURITY_ROBOT:
+					a.appearance.top_color = Color(0.12, 0.12, 0.16)
+					a.appearance.bottom_color = Color(0.18, 0.18, 0.24)
+					a.display_name = "Robo-Security"
+				RobotRole.SHELF_ROBOT:
+					a.appearance.top_color = Color(0.50, 0.55, 0.65)
+					a.appearance.bottom_color = Color(0.38, 0.42, 0.50)
+					a.display_name = "Robo-Stocker"
+		else:
+			# Single-function robots are distinct machines
+			match rrole:
+				RobotRole.CLEANING_ROBOT:
+					a.appearance.top_color = Color(0.72, 0.74, 0.78)
+					a.appearance.bottom_color = Color(0.60, 0.62, 0.65)
+					a.display_name = "CleanerBot"
+				RobotRole.GUIDANCE_ROBOT:
+					a.appearance.top_color = Color(0.70, 0.72, 0.60)
+					a.appearance.bottom_color = Color(0.55, 0.58, 0.45)
+					a.display_name = "GuideBot"
+				RobotRole.DELIVERY_ROBOT:
+					a.appearance.top_color = Color(0.60, 0.50, 0.30)
+					a.appearance.bottom_color = Color(0.48, 0.38, 0.22)
+					a.display_name = "DeliveryBot"
+				RobotRole.SECURITY_ROBOT:
+					a.appearance.top_color = Color(0.30, 0.30, 0.35)
+					a.appearance.bottom_color = Color(0.20, 0.20, 0.25)
+					a.display_name = "SecurityBot"
+				RobotRole.SHELF_ROBOT:
+					a.appearance.top_color = Color(0.50, 0.55, 0.65)
+					a.appearance.bottom_color = Color(0.38, 0.42, 0.50)
+					a.display_name = "ShelfBot"
 
 		return a
 
@@ -367,25 +426,21 @@ class Actor:
 				StaffRole.MANAGER: "Manager",
 				StaffRole.FLOOR_STAFF: "Floor Staff",
 				StaffRole.SCAN_GO: "Scan & Go",
-				StaffRole.COUNTER_ROBOT: "Counter Robot",
-				StaffRole.SHELF_ROBOT: "Shelf Robot",
-				StaffRole.CLEANING_ROBOT: "Cleaning Robot",
-				StaffRole.SECURITY_ROBOT: "Security Robot",
-				StaffRole.DELIVERY_ROBOT: "Delivery Robot",
 			}
 			return "STAFF | %s | Energy: %d%%" % [
 				role_names.get(staff_role, "Worker"),
 				int(energy * 100)
 			]
 		elif role == Role.ROBOT:
-			var robot_names := {
-				StaffRole.COUNTER_ROBOT: "Counter Robot",
-				StaffRole.SHELF_ROBOT: "Shelf Robot",
-				StaffRole.CLEANING_ROBOT: "Cleaning Robot",
-				StaffRole.SECURITY_ROBOT: "Security Robot",
-				StaffRole.DELIVERY_ROBOT: "Delivery Robot",
-			}
-			return "ROBOT | %s" % robot_names.get(staff_role, "Robot")
+			var type_str := "SINGLE-FN" if robot_type == RobotType.SINGLE_FUNCTION else "HUMANOID"
+			var role_str := ""
+			match robot_role:
+				RobotRole.CLEANING_ROBOT: role_str = "Cleaner"
+				RobotRole.GUIDANCE_ROBOT: role_str = "Guide"
+				RobotRole.DELIVERY_ROBOT: role_str = "Delivery"
+				RobotRole.SECURITY_ROBOT: role_str = "Security"
+				RobotRole.SHELF_ROBOT: role_str = "Stocker"
+			return "ROBOT [%s] | %s" % [type_str, role_str]
 		else:
 			var stage_names := {
 				LifeStage.ADULT: "Adult",

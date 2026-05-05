@@ -1812,7 +1812,7 @@ func _toggle_robot_panel() -> void:
 func _build_robot_panel() -> void:
 	_robot_panel = Control.new()
 	_robot_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_robot_panel.size = Vector2(280, 320)
+	_robot_panel.size = Vector2(300, 400)
 	_robot_panel.color = Color(0.10, 0.10, 0.15, 0.95)
 	_robot_panel.visible = false
 	add_child(_robot_panel)
@@ -1822,42 +1822,76 @@ func _build_robot_panel() -> void:
 	title.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	title.add_theme_color_override("font_color", Color(0.30, 0.90, 1.0))
 	title.add_theme_font_size_override("font_size", 10)
-	title.position = Vector2(0, 8)
+	title.position = Vector2(0, 6)
 	_robot_panel.add_child(title)
 
 	var subtitle := Label.new()
-	subtitle.text = "Staff mode only"
+	subtitle.text = "Staff mode only  |  [R] close"
 	subtitle.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	subtitle.add_theme_color_override("font_color", Color(0.60, 0.60, 0.70))
 	subtitle.add_theme_font_size_override("font_size", 7)
-	subtitle.position = Vector2(0, 22)
+	subtitle.position = Vector2(0, 18)
 	_robot_panel.add_child(subtitle)
 
-	# Robot list container
-	var list := VBoxContainer.new()
-	list.set_anchors_preset(Control.PRESET_FULL_RECT)
-	list.position = Vector2(0, 36)
-	_robot_panel.add_child(list)
+	# Scroll container for robot list
+	var scroll := ScrollContainer.new()
+	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
+	scroll.position = Vector2(0, 30)
+	scroll.size = Vector2(300, 340)
+	_robot_panel.add_child(scroll)
 
-	# Add robot type buttons
-	var robot_types := [
-		{"role": ActorData.StaffRole.COUNTER_ROBOT, "name": "Counter Robot", "desc": "Auto-scans at self-checkout", "cost": 500},
-		{"role": ActorData.StaffRole.SHELF_ROBOT, "name": "Shelf Robot", "desc": "Auto-restock shelves", "cost": 400},
-		{"role": ActorData.StaffRole.CLEANING_ROBOT, "name": "Cleaning Robot", "desc": "Auto-cleans floors", "cost": 300},
-		{"role": ActorData.StaffRole.SECURITY_ROBOT, "name": "Security Robot", "desc": "Patrols & monitors", "cost": 600},
-		{"role": ActorData.StaffRole.DELIVERY_ROBOT, "name": "Delivery Robot", "desc": "Transports stock", "cost": 450},
+	var list := VBoxContainer.new()
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(list)
+
+	# ── HUMANOID ROBOTS ──
+	var h_label := Label.new()
+	h_label.text = "━━ HUMANOID (like human, uses tools) ━━"
+	h_label.add_theme_color_override("font_color", Color(0.30, 0.90, 1.0))
+	h_label.add_theme_font_size_override("font_size", 7)
+	list.add_child(h_label)
+
+	var humanoid_types := [
+		{"staff_role": ActorData.StaffRole.GREETER, "name": "Greeter", "desc": "Welcomes & directs customers", "cost": 400},
+		{"staff_role": ActorData.StaffRole.CASHIER, "name": "Cashier", "desc": "Operates checkout lane", "cost": 500},
+		{"staff_role": ActorData.StaffRole.CLEANER, "name": "Cleaner", "desc": "Mops & tidies the store", "cost": 350},
+		{"staff_role": ActorData.StaffRole.SHELF_STOCKER, "name": "Stocker", "desc": "Restocks shelves", "cost": 400},
+		{"staff_role": ActorData.StaffRole.SECURITY, "name": "Security", "desc": "Patrols & monitors", "cost": 450},
+		{"staff_role": ActorData.StaffRole.SCAN_GO, "name": "Scan & Go", "desc": "Assists player with scanning", "cost": 450},
 	]
-	for rt in robot_types:
+	for rt in humanoid_types:
 		var btn := Button.new()
-		btn.text = "[%s] %s — %d XP" % [rt["role"], rt["name"], rt["cost"]]
-		btn.add_theme_color_override("font_color", Color(0.80, 0.85, 0.90))
-		btn.add_theme_color_override("bg_color", Color(0.20, 0.22, 0.28))
-		btn.connect("pressed", _on_robot_spawn_pressed.bind(rt["role"], rt["cost"]))
+		btn.text = "[%s] %dXP  %s" % [rt["name"], rt["cost"], rt["desc"]]
+		btn.add_theme_color_override("font_color", Color(0.80, 0.88, 0.90))
+		btn.add_theme_color_override("bg_color", Color(0.18, 0.35, 0.45))
+		btn.connect("pressed", _on_robot_humanoid_pressed.bind(rt["staff_role"], rt["cost"]))
+		list.add_child(btn)
+
+	# ── SINGLE-FUNCTION ROBOTS ──
+	var s_label := Label.new()
+	s_label.text = "━━ SINGLE-FUNCTION (automated machine) ━━"
+	s_label.add_theme_color_override("font_color", Color(0.30, 0.90, 1.0))
+	s_label.add_theme_font_size_override("font_size", 7)
+	list.add_child(s_label)
+
+	var single_types := [
+		{"rrole": ActorData.RobotRole.CLEANING_ROBOT, "name": "CleanerBot", "desc": "Auto-cleans floors (battery)", "cost": 250},
+		{"rrole": ActorData.RobotRole.GUIDANCE_ROBOT, "name": "GuideBot", "desc": "Answers questions", "cost": 200},
+		{"rrole": ActorData.RobotRole.SHELF_ROBOT, "name": "ShelfBot", "desc": "Auto-scans shelf stock", "cost": 300},
+		{"rrole": ActorData.RobotRole.SECURITY_ROBOT, "name": "SecurityBot", "desc": "Patrol robot (red eye)", "cost": 350},
+		{"rrole": ActorData.RobotRole.DELIVERY_ROBOT, "name": "DeliveryBot", "desc": "Transports cargo", "cost": 400},
+	]
+	for rt in single_types:
+		var btn := Button.new()
+		btn.text = "[%s] %dXP  %s" % [rt["name"], rt["cost"], rt["desc"]]
+		btn.add_theme_color_override("font_color", Color(0.80, 0.85, 0.75))
+		btn.add_theme_color_override("bg_color", Color(0.25, 0.28, 0.22))
+		btn.connect("pressed", _on_robot_single_pressed.bind(rt["rrole"], rt["cost"]))
 		list.add_child(btn)
 
 	var close_btn := Button.new()
-	close_btn.text = "[ESC] Close"
-	close_btn.position = Vector2(0, 290)
+	close_btn.text = "[R] Close"
+	close_btn.position = Vector2(0, 375)
 	close_btn.connect("pressed", _toggle_robot_panel)
 	_robot_panel.add_child(close_btn)
 
@@ -1870,41 +1904,77 @@ func _update_robot_panel() -> void:
 				child.text = "Active robots: %d" % active_count
 				break
 
-func _on_robot_spawn_pressed(role: ActorData.StaffRole, cost: int) -> void:
+func _on_robot_humanoid_pressed(staff_role: ActorData.StaffRole, cost: int) -> void:
 	if _player_stats == null:
 		return
 	if _player_stats.get_xp() < cost:
-		if _toasts: _toasts.toast_warning("Not enough XP! Need %d XP to deploy %s" % [cost, role])
+		if _toasts: _toasts.toast_warning("Not enough XP! Need %d XP to deploy %s" % [cost, staff_role])
 		return
 	_player_stats.spend_xp(cost)
-	_spawn_robot(role)
-	if _toasts: _toasts.toast_success("Deployed %s! -%d XP" % [role, cost])
+	_spawn_robot_humanoid(staff_role)
+	if _toasts: _toasts.toast_success("Deployed HUMANOID %s! -%d XP" % [staff_role, cost])
 	_update_robot_panel()
 
-func _spawn_robot(role: ActorData.StaffRole) -> void:
-	# Determine spawn position based on role
+func _on_robot_single_pressed(rrole: ActorData.RobotRole, cost: int) -> void:
+	if _player_stats == null:
+		return
+	if _player_stats.get_xp() < cost:
+		if _toasts: _toasts.toast_warning("Not enough XP! Need %d XP to deploy %s" % [cost, rrole])
+		return
+	_player_stats.spend_xp(cost)
+	_spawn_robot_single(rrole)
+	if _toasts: _toasts.toast_success("Deployed %s! -%d XP" % [rrole, cost])
+	_update_robot_panel()
+
+func _spawn_robot_humanoid(staff_role: ActorData.StaffRole) -> void:
 	var spawn_pos := Vector2.ZERO
-	match role:
-		ActorData.StaffRole.COUNTER_ROBOT:
-			spawn_pos = Vector2(580, 320)  # near self-checkout
-		ActorData.StaffRole.SHELF_ROBOT:
-			spawn_pos = Vector2(200, 300)  # near produce section
-		ActorData.StaffRole.CLEANING_ROBOT:
-			spawn_pos = Vector2(400, 400)  # central aisle
-		ActorData.StaffRole.SECURITY_ROBOT:
-			spawn_pos = Vector2(100, 200)  # entrance area
-		ActorData.StaffRole.DELIVERY_ROBOT:
-			spawn_pos = Vector2(40 * CELL_SIZE, 20 * CELL_SIZE)  # warehouse
+	match staff_role:
+		ActorData.StaffRole.CASHIER:
+			spawn_pos = Vector2(580, 320)
+		ActorData.StaffRole.GREETER:
+			spawn_pos = Vector2(250, 120)
+		ActorData.StaffRole.CLEANER:
+			spawn_pos = Vector2(400, 400)
+		ActorData.StaffRole.SHELF_STOCKER:
+			spawn_pos = Vector2(200, 300)
+		ActorData.StaffRole.SECURITY:
+			spawn_pos = Vector2(100, 200)
+		ActorData.StaffRole.FLOOR_STAFF:
+			spawn_pos = Vector2(400, 250)
+		ActorData.StaffRole.SCAN_GO:
+			spawn_pos = Vector2(350, 200)
+		ActorData.StaffRole.MANAGER:
+			spawn_pos = Vector2(500, 300)
 	var robot := RobotControllerScript.new()
-	robot.configure(role, spawn_pos)
+	robot.configure_humanoid(staff_role, spawn_pos)
+	add_child(robot)
+	_robots.append(robot)
+
+func _spawn_robot_single(rrole: ActorData.RobotRole) -> void:
+	var spawn_pos := Vector2.ZERO
+	match rrole:
+		ActorData.RobotRole.CLEANING_ROBOT:
+			spawn_pos = Vector2(400, 400)
+		ActorData.RobotRole.GUIDANCE_ROBOT:
+			spawn_pos = Vector2(300, 100)
+		ActorData.RobotRole.SECURITY_ROBOT:
+			spawn_pos = Vector2(100, 200)
+		ActorData.RobotRole.DELIVERY_ROBOT:
+			spawn_pos = Vector2(40 * CELL_SIZE, 20 * CELL_SIZE)
+		ActorData.RobotRole.SHELF_ROBOT:
+			spawn_pos = Vector2(200, 300)
+	var robot := RobotControllerScript.new()
+	robot.configure_single_function(rrole, spawn_pos)
 	add_child(robot)
 	_robots.append(robot)
 
 func _spawn_robots() -> void:
-	# Spawn one of each robot type at game start (staff mode gives bonus XP to afford them)
-	_spawn_robot(ActorData.StaffRole.COUNTER_ROBOT)
-	_spawn_robot(ActorData.StaffRole.SHELF_ROBOT)
-	_spawn_robot(ActorData.StaffRole.CLEANING_ROBOT)
+	# Humanoid robots (look like humans, can do any job)
+	_spawn_robot_humanoid(ActorData.StaffRole.GREETER)
+	_spawn_robot_humanoid(ActorData.StaffRole.CLEANER)
+	# Single-function robots
+	_spawn_robot_single(ActorData.RobotRole.CLEANING_ROBOT)
+	_spawn_robot_single(ActorData.RobotRole.GUIDANCE_ROBOT)
 
 func _on_brand_portal_closed() -> void:
 	# Refresh any brand data that may have changed
