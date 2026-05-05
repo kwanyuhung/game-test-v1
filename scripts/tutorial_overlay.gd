@@ -12,9 +12,12 @@ const CONTROLS := [
 	["M", "Open Maintenance Panel"],
 	["P", "Open Stats Dashboard"],
 	["F5", "Quick save"],
-	["F5", "Quick save"],
+	["F5", "Quick save (updated)"],
 	["F9", "Quick load"],
 	["N", "Toggle mini-map"],
+	["L", "Shopping list"],
+	["J", "Quest journal"],
+	["O", "Settings panel"],
 	["ESC", "Close any open panel"],
 func _ready() -> void:
 	visible = false

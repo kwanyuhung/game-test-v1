@@ -33,6 +33,7 @@ const DailyBonusScript = preload("res://scripts/daily_bonus.gd")
 const ShoppingListScript = preload("res://scripts/shopping_list.gd")
 const QuestSystemScript = preload("res://scripts/quest_system.gd")
 const QuestJournalScript = preload("res://scripts/quest_journal.gd")
+const SettingsPanelScript = preload("res://scripts/settings_panel.gd")
 const MiniMapScript = preload("res://scripts/mini_map.gd")
 const ToastManagerScript = preload("res://scripts/toast_manager.gd")
 const FloatingTextScript = preload("res://scripts/floating_text.gd")
@@ -87,6 +88,7 @@ var _shopping_list: ShoppingList = null
 var _shopping_list_visible: bool = false
 var _quest_system: QuestSystem = null
 var _quest_journal: QuestJournal = null
+var _settings_panel: SettingsPanel = null
 var _shopping_list_visible: bool = false
 var _audio: AudioManager = null
 
@@ -229,6 +231,13 @@ func _ready() -> void:
 	add_child(_quest_system)
 	_quest_journal = QuestJournalScript.new()
 	add_child(_quest_journal)
+	_settings_panel = SettingsPanelScript.new()
+	add_child(_settings_panel)
+	_settings_panel.visible = false
+	_settings_panel.setting_changed.connect(_on_setting_changed)
+	add_child(_settings_panel)
+	_settings_panel.visible = false
+	_settings_panel.setting_changed.connect(_on_setting_changed)
 	_quest_journal.set_quest_system(_quest_system)
 	_quest_journal.visible = false
 	_quest_system.quest_completed.connect(_on_quest_completed)
@@ -709,6 +718,33 @@ func _spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> voi
 
 # ???????????????????????????????????????????????????????????????????????????????????????????????# GAME LOOP ??Proximity & Input
 # ???????????????????????????????????????????????????????????????????????????????????????????????
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed:
+		match event.keycode:
+			# F5 ── Quick Save
+			KEY_F5:
+				SaveSystem.save_game(self)
+				if _toasts != null: _toasts.toast_success("Game Saved!")
+			# F9 ── Quick Load
+			KEY_F9:
+				SaveSystem.load_game(self)
+				if _toasts != null: _toasts.toast_info("Game Loaded!")
+			# N ── Mini-map
+			KEY_N:
+				_toggle_minimap()
+			# ? ── Tutorial
+			KEY_QUESTION:
+				_show_tutorial()
+			# L ── Shopping List
+			KEY_L:
+				_toggle_shopping_list()
+			# J ── Quest Journal
+			KEY_J:
+				_toggle_quest_journal()
+			# O ── Settings
+			KEY_O:
+				_toggle_settings_panel()
+
 func _process(_delta: float) -> void:
 	if _current_section_browse != null and _current_section_browse.visible:
 		return
@@ -1148,3 +1184,18 @@ func _toggle_quest_journal() -> void:
 	if _quest_journal == null: return
 	_quest_journal.toggle()
 	if _quest_journal.visible: _quest_journal.refresh_from_quest_system(_quest_system)
+
+func _toggle_settings_panel() -> void:
+	if _settings_panel == null: return
+	_settings_panel.toggle()
+
+func _on_setting_changed(key: String, value) -> void:
+	match key:
+		"bgm":
+			if _audio != null: _audio.set_music_volume(value)
+		"sfx":
+			if _audio != null: _audio.set_sfx_volume(value)
+		"notif_toasts":
+			# Toasts are always on, just a flag
+		"notif_telegram":
+			# Telegram handled by flag in telegram_bot

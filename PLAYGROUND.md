@@ -20,6 +20,7 @@ Welcome! Here's everything you can do on each floor.
 | `?` | Re-show controls tutorial |
 | `L` | Toggle shopping list |
 | `J` | Toggle quest journal |
+| `O` | Settings (volume, speed, notifications) |
 | `ESC` | Close any open panel |
 
 ---
