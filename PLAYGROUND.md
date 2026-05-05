@@ -18,6 +18,7 @@ Welcome! Here's everything you can do on each floor.
 | `F9` | Quick load game |
 | `N` | Toggle mini-map |
 | `?` | Re-show controls tutorial |
+| `L` | Toggle shopping list |
 | `ESC` | Close any open panel |
 
 ---
@@ -378,6 +379,13 @@ All sounds are **procedurally generated** — no external audio files needed.
 
 ---
 
+## Shopping List
+Press **`L`** to open your shopping list. Keep track of items you want to find as you browse sections. The list shows up to 10 items with a quick-access panel.
+
+**HUD:** Shows "List: N" when items are tracked.
+
+---
+
 ## Mini-Map
 
 Press **`N`** to toggle the mini-map overlay (top-right corner).
@@ -385,6 +393,17 @@ Press **`N`** to toggle the mini-map overlay (top-right corner).
 - Shows floor layout with section zones
 - Yellow dot = your player position
 - Sections shown as colored rectangles matching their theme
+
+---
+
+## Daily Quests
+3 daily objectives appear each day (tracked in `user://quests.json`). Completing them grants bonus XP. Examples:
+- "Buy 3 Dairy items" — +15 XP
+- "Checkout spending $50+" — +20 XP
+- "Fix 1 maintenance issue" — +15 XP
+- "Visit 3 different floors" — +20 XP
+
+Completing all 3 daily quests grants a **+50 XP epic bonus**.
 
 ---
 

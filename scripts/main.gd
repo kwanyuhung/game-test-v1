@@ -30,6 +30,8 @@ const MonitorPanelScript = preload("res://scripts/monitor_panel.gd")
 const SaveSystem = preload("res://scripts/save_system.gd")
 const TutorialOverlayScript = preload("res://scripts/tutorial_overlay.gd")
 const DailyBonusScript = preload("res://scripts/daily_bonus.gd")
+const ShoppingListScript = preload("res://scripts/shopping_list.gd")
+const QuestSystemScript = preload("res://scripts/quest_system.gd")
 const MiniMapScript = preload("res://scripts/mini_map.gd")
 const ToastManagerScript = preload("res://scripts/toast_manager.gd")
 const FloatingTextScript = preload("res://scripts/floating_text.gd")
@@ -74,11 +76,16 @@ var _toasts: ToastManager = null
 var _minimap_visible: bool = false
 var _time_label: Label = null
 var _store_status_label: Label = null
+var _shopping_list_count_lbl: Label = null
 var _xp_bar_bg: ColorRect = null
 var _xp_bar_fill: ColorRect = null
 var _floating_text: FloatingText = null
 var _fade: FadeTransition = null
 var _daily_bonus: DailyBonus = null
+var _shopping_list: ShoppingList = null
+var _shopping_list_visible: bool = false
+var _quest_system: QuestSystem = null
+var _shopping_list_visible: bool = false
 var _audio: AudioManager = null
 
 var _nearby_monitor: bool = false
@@ -214,6 +221,13 @@ func _ready() -> void:
 	add_child(_daily_bonus)
 	_daily_bonus.streak_reward.connect(_on_streak_reward)
 	_daily_bonus.check_and_award(self)
+	_shopping_list = ShoppingListScript.new()
+	add_child(_shopping_list)
+	_quest_system = QuestSystemScript.new()
+	add_child(_quest_system)
+	_quest_system.quest_completed.connect(_on_quest_completed)
+	_quest_system.all_daily_complete.connect(_on_all_quests_complete)
+	_shopping_list.visible = false
 	# ── Section Browse Panel ──
 	_section_browse = SectionBrowseScript.new()
 	add_child(_section_browse)
@@ -265,6 +279,17 @@ func _build_floor(idx: int) -> void:
 		if is_open:
 			_store_status_label.add_theme_color_override("font_color", Color(0.50, 0.90, 0.50))
 		else:
+	# Shopping list count label
+	if _shopping_list_count_lbl == null:
+		_shopping_list_count_lbl = Label.new()
+		_shopping_list_count_lbl.position = Vector2(268.0, 24.0)
+		_shopping_list_count_lbl.add_theme_color_override("font_color", Color(0.55, 0.70, 0.90))
+		_shopping_list_count_lbl.add_theme_font_size_override("font_size", 7)
+		_shopping_list_count_lbl.z_index = 10
+		add_child(_shopping_list_count_lbl)
+	if _shopping_list != null:
+		var count = _shopping_list.get_items().size()
+		_shopping_list_count_lbl.text = "List: %d" % count if count > 0 else ""
 			_store_status_label.add_theme_color_override("font_color", Color(0.90, 0.50, 0.50))
 	# XP progress bar (below cart count)
 	if _xp_bar_bg == null:
@@ -1083,3 +1108,32 @@ func _show_tutorial_overlay() -> void:
 	add_child(_tutorial_overlay)
 	_tutorial_overlay.show_tutorial()
 	_tutorial_overlay.dismissed.connect(_on_tutorial_dismissed)
+
+func _toggle_shopping_list() -> void:
+	if _shopping_list == null: return
+	_shopping_list_visible = not _shopping_list_visible
+	if _shopping_list_visible:
+		_shopping_list.open()
+		_toasts.toast_info("Shopping List")
+	else:
+		_shopping_list.close()
+
+func add_to_shopping_list(product_name: String) -> bool:
+	if _shopping_list != null:
+		return _shopping_list.add_item(product_name)
+	return false
+
+func _on_quest_completed(quest_id: String, desc: String, xp: int) -> void:
+	if _toasts != null:
+		_toasts.toast_success("Quest Done! +%d XP" % xp)
+	if _player_stats != null:
+		_player_stats.add_xp(xp, "Daily Quest: %s" % desc)
+	notify_telegram("🎯 *Daily Quest Complete!* %s +%d XP" % [desc, xp])
+	SaveSystem.save_game(self)
+
+func _on_all_quests_complete() -> void:
+	if _toasts != null:
+		_toasts.toast_xp("All Daily Quests Done! Epic Bonus!")
+	notify_telegram("🏅 *All Daily Quests Done!* Epic bonus incoming!")
+	if _player_stats != null:
+		_player_stats.add_xp(50, "All Quests Bonus")

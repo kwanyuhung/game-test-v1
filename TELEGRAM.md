@@ -1,4 +1,4 @@
-# Telegram Bot Integration
+﻿# Telegram Bot Integration
 
 **Bot:** [@kwanyuhungbot](https://t.me/kwanyuhungbot)  
 **Chat ID:** `1718058079`  
@@ -86,6 +86,9 @@ _flush_reports()
 | 📦 | Delivery arrived | Warehouse delivers stock to sections |
 | 🔧 | Maintenance fixed | Player resolves a maintenance issue |
 | ⬆️ | Level up | Player XP crosses threshold |
+| 🔥 | Daily streak bonus | Player logged in on consecutive day |
+| 🎯 | Daily quest complete | Finished a daily objective (+XP) |
+| 🏅 | All quests done | All 3 daily quests completed (+50 XP bonus) |
 | 🏆 | Achievement unlocked | New achievement earned |
 | 🌆 | Evening hours | Game clock reaches evening |
 | 🚨 | Cart theft | NPC customer left store with unpaid cart |
