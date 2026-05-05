@@ -290,6 +290,33 @@ Business Mode (Shift+B) → Staff tab shows real roster from player_stats.
 
 ---
 
+---
+
+## Phase P ✅ Store Expansion
+**Renovation system, section upgrades, store reputation**
+
+**Renovation System:**
+- Press **[X]** near a section in staff mode to renovate it
+- Cost: $200 base, +$50 per already-renovated section
+- Renovated sections show **Renovated x1/x2/x3** in prompt
+- Renovation gives **+1 reputation** per section
+
+**Store Reputation (0–10):**
+- Increases from renovations and store performance
+- Title progression: Basic → Corner Store → Supermarket → Hypermarket → Superstore → Mega Mart
+- Affects customer attraction and brand partnerships
+
+**Section Upgrade Levels:**
+- Each renovation increases section upgrade level (0→3)
+- Upgrade level provides **+15% stock capacity** per level
+- Store expansion node (`_store_expansion`) manages all state
+
+**Renovation Hint in Prompt:**
+- When standing near un-renovated section in staff mode: **[X] Renovate ($200)**
+- After renovating: **Renovated x1/x2/x3**
+
+---
+
 ## Phase L ✅ Inventory & Stock Management
 **Stock depletion, restocking, and section-level inventory tracking**
 

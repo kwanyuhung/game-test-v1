@@ -154,6 +154,7 @@ var _food_stall_browse: FoodStallBrowse
 var _in_elevator: bool = false
 
 const AISLE_NAMES := {
+const StoreExpansionScript = preload("res://scripts/store_expansion.gd")
 	"dairy":   "DAIRY",
 	"produce": "PRODUCE",
 	"bakery":  "BAKERY",
@@ -199,6 +200,10 @@ func _ready() -> void:
 	_promo_manager = PromotionManagerScript.new()
 	_promo_manager.name = "PromotionManager"
 	add_child(_promo_manager)
+	# ── Phase P: Store Expansion ──
+	_store_expansion = StoreExpansionScript.new()
+	_store_expansion.name = "StoreExpansion"
+	add_child(_store_expansion)
 	_brand_portal = BrandPortalScript.new()
 	add_child(_brand_portal)
 	_brand_portal.closed.connect(_on_brand_portal_closed)
@@ -863,6 +868,9 @@ func _input(event: InputEvent) -> void:
 			# M ── Loyalty Panel
 			KEY_M:
 				_toggle_loyalty_panel()
+			# X ── Renovate nearby section (staff mode)
+			KEY_X:
+				_renovate_nearby_section()
 			# B ── Brand Portal
 			KEY_B:
 				_toggle_brand_portal()
@@ -1508,11 +1516,19 @@ func _on_section_entered(section_id: String) -> void:
 				if pct < 30: stock_color = "LOW"
 				elif pct == 0: stock_color = "OUT"
 				stock_info = " | Stock: %s (%d%%)" % [stock_color, pct]
+			var reno_info := ""
+			if _store_expansion != null and sec != null:
+				var sec_id = sec.get_def().id
+				if not _store_expansion.is_section_renovated(sec_id):
+					var cost = _store_expansion.get_renovation_cost(sec_id)
+					reno_info = " | [X] Renovate ($%d)" % cost
+				else:
+					reno_info = " | Renovated x%d" % _store_expansion.get_section_upgrade_level(sec_id)
 			var staff_r := ""
 			if _player != null and _player.is_in_staff_mode():
 				staff_r = " | [R] Restock"
 			if prompt_lbl != null:
-				prompt_lbl.text = "[E] Browse %s%s%s" % [sec.get_def().name, stock_info, staff_r]
+				prompt_lbl.text = "[E] Browse %s%s%s%s" % [sec.get_def().name, stock_info, reno_info, staff_r]
 				prompt_lbl.visible = true
 			if prompt_bg != null:
 				prompt_bg.visible = true
@@ -1863,6 +1879,27 @@ func _on_self_checkout_cleared() -> void:
 	_do_checkout_interaction()
 
 # ── Section browse ──────────────────────────────────────────────
+func _renovate_nearby_section() -> void:
+	if _nearby_section == null or _store_expansion == null:
+		return
+	if not (_player != null and _player.is_in_staff_mode()):
+		return
+	var sec_id = _nearby_section.get_def().id
+	if _store_expansion.is_section_renovated(sec_id):
+		if _toasts:
+			_toasts.toast_info("Section already renovated!")
+		return
+	var cost = _store_expansion.get_renovation_cost(sec_id)
+	if _player_stats == null or _player_stats.get_cash() < cost:
+		if _toasts:
+			_toasts.toast_error("Need $%d to renovate!" % cost)
+		return
+	_player_stats.add_cash(-cost)
+	_store_expansion.renovate_section(sec_id)
+	if _toasts:
+		_toasts.toast_success("Section renovated! +1 Rep")
+	notify_telegram("Section renovated: %s for $%d" % (_nearby_section.get_def().name, cost))
+
 func _restock_nearby_section() -> void:
 	if _nearby_section == null or _warehouse == null:
 		return
