@@ -200,6 +200,66 @@ func complete_staff_task() -> void:
 	_staff_tasks_done += 1
 	add_staff_xp(5, "Staff task done")
 
+# ── Staff Wage & Morale (Phase M) ──────────────────────────────────
+# Tracks hired staff members, their wages, and morale
+var _hired_staff: Array = []  # [{name, role, wage, morale, shifts_worked}]
+var _store_wage_bill: float = 0.0  # accumulated daily wages
+
+func hire_staff(name: String, role: String, daily_wage: float) -> void:
+	_hired_staff.append({"name": name, "role": role, "wage": daily_wage, "morale": 0.8, "shifts_worked": 0})
+	_staff_shifts_completed += 1
+
+func fire_staff(name: String) -> bool:
+	for i in range(_hired_staff.size()):
+		if _hired_staff[i]["name"] == name:
+			_hired_staff.remove_at(i)
+			return true
+	return false
+
+func get_staff_count() -> int:
+	return _hired_staff.size()
+
+func get_total_daily_wages() -> float:
+	var total := 0.0
+	for s in _hired_staff:
+		total += s.get("wage", 0.0)
+	return total
+
+func pay_staff_wages(from_cash: float) -> float:
+	# Deduct wages from cash. Returns remaining cash.
+	var wages := get_total_daily_wages()
+	if wages <= 0.0:
+		return from_cash
+	var deducted := mini(from_cash, wages)
+	return from_cash - deducted
+
+func adjust_staff_morale(staff_name: String, delta: float) -> void:
+	for s in _hired_staff:
+		if s["name"] == staff_name:
+			s["morale"] = clampf(s["morale"] + delta, 0.0, 1.0)
+			break
+
+func get_staff_roster() -> Array:
+	return _hired_staff
+
+func on_shift_completed() -> void:
+	_staff_shifts_completed += 1
+	# All staff morale increases slightly on successful shift
+	for s in _hired_staff:
+		s["shifts_worked"] += 1
+		s["morale"] = clampf(s["morale"] + 0.05, 0.0, 1.0)
+	add_staff_xp(30, "Staff shift completed")
+
+func get_staff_performance_bonus() -> float:
+	# Higher morale = bonus to store performance (up to +20%)
+	if _hired_staff.is_empty():
+		return 1.0
+	var avg_morale := 0.0
+	for s in _hired_staff:
+		avg_morale += s["morale"]
+	avg_morale /= float(_hired_staff.size())
+	return 1.0 + avg_morale * 0.2  # 1.0 to 1.2
+
 # ─── Event Hooks ───────────────────────────────────────────────────
 
 func on_item_bought(product_id: String, price: float) -> void:

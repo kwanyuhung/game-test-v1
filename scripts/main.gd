@@ -1347,6 +1347,30 @@ func _on_hour_changed(hour: int) -> void:
 			notify_telegram("Store closing soon - last call!")
 			if _toasts != null: _toasts.toast_warn("Store Closing - 11:00 PM")
 
+# ── Phase M: Staff Management — Day/Shift handlers ─────────────
+func _on_day_changed() -> void:
+	# Pay staff wages at end of each day
+	if _player_stats != null:
+		var wages := _player_stats.get_total_daily_wages()
+		if wages > 0 and _player_stats.get_cash() >= wages:
+			var remaining := _player_stats.pay_staff_wages(_player_stats.get_cash())
+			if _toasts:
+				_toasts.toast_info("Daily wages paid: $%.2f" % wages)
+			notify_telegram("Wages paid: $%.2f for %d staff" % (wages, _player_stats.get_staff_count()))
+	else:
+		if _toasts:
+			_toasts.toast_warn("Could not pay staff wages!")
+
+func _on_shift_report() -> void:
+	# Called every in-game shift (morning/afternoon/night)
+	if _player_stats != null:
+		_player_stats.on_shift_completed()
+		var roster := _player_stats.get_staff_roster()
+		var active := roster.size()
+		if _toasts:
+			_toasts.toast_success("Shift complete! %d staff on duty. +30 Staff XP" % active)
+		notify_telegram("Shift report: %d staff active" % active)
+
 func _show_tutorial_overlay() -> void:
 	if _tutorial_overlay != null:
 		_tutorial_overlay.queue_free()

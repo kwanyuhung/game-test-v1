@@ -241,52 +241,76 @@ func _draw_shifts(vbox: VBoxContainer) -> void:
 \tvbox.add_child(shift_report)
 
 func _draw_staff(vbox: VBoxContainer) -> void:
-\t_add_section_header(vbox, "STAFF & ROBOT ROSTER")
+	_add_section_header(vbox, "STAFF & ROBOT ROSTER")
 
-\t# Human staff
-\tvar human_header := Label.new()
-\thuman_header.text = "Human Staff"
-\thuman_header.add_theme_color_override("font_color", Color(0.70, 0.75, 0.80))
-\thuman_header.add_theme_font_size_override("font_size", 8)
-\tvbox.add_child(human_header)
+	# Human staff (from player_stats)
+	var human_header := Label.new()
+	human_header.text = "Human Staff  (robots cost XP, humans cost wages)"
+	human_header.add_theme_color_override("font_color", Color(0.70, 0.75, 0.80))
+	human_header.add_theme_font_size_override("font_size", 8)
+	vbox.add_child(human_header)
 
-\tvar human_staff := [
-\t\t{\"name\": \"Alex K.\", \"role\": \"Cashier\", \"status\": \"On Duty\", \"perf\": 85},
-\t\t{\"name\": \"Sam L.\", \"role\": \"Stocker\", \"status\": \"On Duty\", \"perf\": 72},
-\t\t{\"name\": \"Jordan M.\", \"role\": \"Cashier\", \"status\": \"Off Duty\", \"perf\": 91},
-\t\t{\"name\": \"Taylor R.\", \"role\": \"Security\", \"status\": \"On Duty\", \"perf\": 78},
-\t]
-\tfor s in human_staff:
-\t\tvar row := _make_staff_row(s["name"], s["role"], s["status"], s["perf"])
-\t\tvbox.add_child(row)
+	var roster := []
+	var total_wages := 0.0
+	if _player_stats != null:
+		roster = _player_stats.get_staff_roster()
+		total_wages = _player_stats.get_total_daily_wages()
 
-\t_add_spacer(vbox, 10)
+	if roster.is_empty():
+		var empty_lbl := Label.new()
+		empty_lbl.text = "  No staff hired yet. Use Hire Staff below."
+		empty_lbl.add_theme_color_override("font_color", Color(0.45, 0.45, 0.50))
+		vbox.add_child(empty_lbl)
+	else:
+		for s in roster:
+			var morale_pct := int(s.get("morale", 0.8) * 100.0)
+			var morale_str := "OK" if morale_pct >= 70 else "LOW" if morale_pct >= 40 else "CRIT"
+			var status_str := "On Duty"
+			var perf := int(s.get("morale", 0.8) * 100.0)
+			var row := _make_staff_row(s.get("name", "??"), s.get("role", "??"), status_str, perf, morale_str)
+			vbox.add_child(row)
 
-\t# Robots
-\tvar robot_header := Label.new()
-\trobot_header.text = "Robot Staff"
-\trobot_header.add_theme_color_override("font_color", Color(0.30, 0.90, 1.0))
-\trobot_header.add_theme_font_size_override("font_size", 8)
-\tvbox.add_child(robot_header)
+	_add_spacer(vbox, 8)
 
-\tvar robot_staff := [
-\t\t{\"name\": \"Robo-Greeter\", \"role\": \"HUMANOID Greeter\", \"status\": \"Active\", \"perf\": 99},
-\t\t{\"name\": \"CleanerBot\", \"role\": \"SINGLE-FN Cleaner\", \"status\": \"Active\", \"perf\": 100},
-\t\t{\"name\": \"GuideBot\", \"role\": \"SINGLE-FN Guide\", \"status\": \"Active\", \"perf\": 95},
-\t]
-\tfor s in robot_staff:
-\t\tvar row := _make_staff_row(s["name"], s["role"], s["status"], s["perf"])
-\t\tvbox.add_child(row)
+	var payroll_header := Label.new()
+	payroll_header.text = "DAILY PAYROLL: $%.2f/day  |  %d staff" % [total_wages, roster.size()]
+	payroll_header.add_theme_color_override("font_color", Color(0.90, 0.75, 0.30))
+	payroll_header.add_theme_font_size_override("font_size", 9)
+	vbox.add_child(payroll_header)
 
-\t_add_spacer(vbox, 12)
+	var perf_bonus := 1.0
+	if _player_stats != null:
+		perf_bonus = _player_stats.get_staff_performance_bonus()
+	var perf_lbl := Label.new()
+	perf_lbl.text = "Staff morale bonus: +%.0f%% store performance" % [((perf_bonus - 1.0) * 100.0)]
+	perf_lbl.add_theme_color_override("font_color", Color(0.50, 0.80, 0.50))
+	perf_lbl.add_theme_font_size_override("font_size", 7)
+	vbox.add_child(perf_lbl)
 
-\tvar payroll_header := Label.new()
-\tpayroll_header.text = "DAILY PAYROLL ESTIMATE: $%.2f" % (human_staff.size() * 85.0)
-\tpayroll_header.add_theme_color_override("font_color", Color(0.90, 0.75, 0.30))
-\tpayroll_header.add_theme_font_size_override("font_size", 9)
-\tvbox.add_child(payroll_header)
+	_add_spacer(vbox, 10)
 
-func _make_staff_row(name: String, role: String, status: String, perf: int) -> HBoxContainer:
+	var hire_btn := Button.new()
+	hire_btn.text = "[H] Hire Staff"
+	hire_btn.add_theme_color_override("font_color", Color(0.80, 0.90, 0.80))
+	hire_btn.add_theme_color_override("bg_color", Color(0.15, 0.35, 0.20))
+	hire_btn.pressed.connect(_on_hire_staff)
+	vbox.add_child(hire_btn)
+
+	var fire_btn := Button.new()
+	fire_btn.text = "[F] Fire Staff"
+	fire_btn.add_theme_color_override("font_color", Color(0.90, 0.70, 0.70))
+	fire_btn.add_theme_color_override("bg_color", Color(0.35, 0.15, 0.15))
+	fire_btn.pressed.connect(_on_fire_staff)
+	vbox.add_child(fire_btn)
+
+	_add_spacer(vbox, 8)
+	var tip := Label.new()
+	tip.text = "Tip: Happy staff = +20%% performance bonus. Pay wages daily!"
+	tip.add_theme_color_override("font_color", Color(0.45, 0.60, 0.45))
+	tip.add_theme_font_size_override("font_size", 7)
+	vbox.add_child(tip)
+
+func _make_staff_row(name: String, role: String, status: String, perf: int, morale: String = "OK") -> HBoxContainer:
 \tvar row := HBoxContainer.new()
 \tvar name_lbl := Label.new()
 \tname_lbl.text = "  %-18s" % name
@@ -307,6 +331,11 @@ func _make_staff_row(name: String, role: String, status: String, perf: int) -> H
 \tvar pc := Color(0.40, 0.85, 0.50) if perf >= 80 else Color(0.90, 0.70, 0.30) if perf >= 60 else Color(0.90, 0.40, 0.30)
 \tperf_lbl.add_theme_color_override("font_color", pc)
 \trow.add_child(perf_lbl)
+	var morale_lbl := Label.new()
+	morale_lbl.text = morale
+	var mc := Color(0.40, 0.85, 0.50) if morale == "OK" else Color(0.90, 0.70, 0.30) if morale == "LOW" else Color(0.90, 0.40, 0.30)
+	morale_lbl.add_theme_color_override("font_color", mc)
+	row.add_child(morale_lbl)
 \treturn row
 
 func _draw_analytics(vbox: VBoxContainer) -> void:
@@ -404,6 +433,42 @@ func _on_quick_action(action: String) -> void:
 \t\t\"staff_perf\":\n\t\t\t_active_tab = 2\n\t\t\t_on_tab_pressed(2)
 \t\t\"assign_shift\":
 \t\t\tif _main and _main._toasts:\n\t\t\t\t_main._toasts.toast_info(\"Open Shifts panel to assign staff to shifts\")
+
+func _on_hire_staff() -> void:
+	if _player_stats == null:
+		return
+	var names := ["Alex K.", "Sam L.", "Jordan M.", "Taylor R.", "Morgan P.", "Casey Q.", "Riley S.", "Drew W."]
+	var roles := ["Cashier", "Stocker", "Cleaner", "Floor Staff", "Greeter"]
+	var wages := [85.0, 75.0, 70.0, 65.0, 70.0]
+	var idx_name := randi() % names.size()
+	var idx_role := randi() % roles.size()
+	var name := names[idx_name]
+	var role := roles[idx_role]
+	var wage := wages[idx_role]
+	_player_stats.hire_staff(name, role, wage)
+	if _toasts:
+		_toasts.toast_success("Hired %s as %s! ($%.2f/day)" % [name, role, wage])
+	if _main:
+		_main.close_business_mode()
+		_main.open_business_mode()
+
+func _on_fire_staff() -> void:
+	if _player_stats == null:
+		return
+	var roster := _player_stats.get_staff_roster()
+	if roster.is_empty():
+		if _toasts:
+			_toasts.toast_warning("No staff to fire!")
+		return
+	# Fire the last staff member
+	var last := roster[roster.size() - 1]
+	var name := last.get("name", "??")
+	if _player_stats.fire_staff(name):
+		if _toasts:
+			_toasts.toast_info("Fired %s" % name)
+		if _main:
+			_main.close_business_mode()
+			_main.open_business_mode()
 
 func _on_close() -> void:
 \tif _main:
