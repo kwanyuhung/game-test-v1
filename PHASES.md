@@ -340,6 +340,26 @@ Business Mode (Shift+B) → Staff tab shows real roster from player_stats.
 
 ---
 
+---
+
+## Phase R ✅ Dynamic Pricing
+**Stock levels automatically adjust product prices in real time**
+
+**How it works:**
+- **Full stock (100%)** → **20% discount** (price × 0.8)
+- **Half stock (50%)** → **5% markup** (price × 1.05)
+- **Empty (0%)** → **30% markup** (price × 1.30)
+- Prices shown in **green** when on sale, **red** when high demand, **gold** when normal
+- Price labels: **SALE!**, **LIMITED**, **HIGH DEMAND**
+
+**Checkout:**
+- Adjusted prices used at checkout (not original prices)
+- Section browse detail panel shows dynamic price with label
+
+**Formula:** `modifier = 1.3 - (stock_ratio × 0.5)`
+
+---
+
 ## Phase L ✅ Inventory & Stock Management
 **Stock depletion, restocking, and section-level inventory tracking**
 

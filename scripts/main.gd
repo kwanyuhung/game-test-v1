@@ -156,6 +156,7 @@ var _in_elevator: bool = false
 const AISLE_NAMES := {
 const StoreExpansionScript = preload("res://scripts/store_expansion.gd")
 const AntiTheftScript = preload("res://scripts/anti_theft.gd")
+const DynamicPricingScript = preload("res://scripts/dynamic_pricing.gd")
 	"dairy":   "DAIRY",
 	"produce": "PRODUCE",
 	"bakery":  "BAKERY",
@@ -209,6 +210,10 @@ func _ready() -> void:
 	_anti_theft = AntiTheftScript.new()
 	_anti_theft.name = "AntiTheft"
 	add_child(_anti_theft)
+	# ── Phase R: Dynamic Pricing ──
+	_dynamic_pricing = DynamicPricingScript.new()
+	_dynamic_pricing.name = "DynamicPricing"
+	add_child(_dynamic_pricing)
 	_brand_portal = BrandPortalScript.new()
 	add_child(_brand_portal)
 	_brand_portal.closed.connect(_on_brand_portal_closed)
@@ -1757,8 +1762,14 @@ func _finish_checkout() -> void:
 		return
 	var subtotal := 0.0
 	for item in items:
-		var item_prod = item.get("product", item)  # support dict {product,qty} or direct product
-		subtotal += item_prod.price * item.get("qty", 1)
+		var item_prod = item.get("product", item)
+		var base_price := item_prod.price
+		# ── Phase R: Apply dynamic pricing ───────────────────────────
+		var sec_id = item_prod.get("section", "")
+		var adj_price := base_price
+		if sec_id != "" and _dynamic_pricing != null:
+			adj_price = _dynamic_pricing.get_adjusted_price(base_price, sec_id, _warehouse)
+		subtotal += adj_price * item.get("qty", 1)
 	# Apply loyalty credit if member (100 pts = $5 off)
 	var loyalty_credit := 0.0
 	if stats != null and stats.is_loyalty_member():

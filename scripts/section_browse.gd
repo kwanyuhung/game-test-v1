@@ -540,10 +540,23 @@ func _update_detail(pan_x: float, def) -> void:
 	
 	var prod = _filtered_products[_selected]
 	_name_lbl.text = prod.name
-	_price_lbl.text = "$%.2f" % prod.price
+	# ── Phase R: Dynamic pricing display ─────────────────────────
+	var adj_price := _get_adjusted_price(prod.price)
+	var dyn_label := _get_dynamic_price_label()
+	var price_str := "$%.2f" % adj_price
+	if dyn_label != "":
+		price_str += " [%s]" % dyn_label
+	_price_lbl.text = price_str
+	# Color code: green for sale, red for high demand
+	if adj_price < prod.price * 0.95:
+		_price_lbl.add_theme_color_override("font_color", Color(0.40, 0.90, 0.50))
+	elif adj_price > prod.price * 1.05:
+		_price_lbl.add_theme_color_override("font_color", Color(0.90, 0.50, 0.40))
+	else:
+		_price_lbl.add_theme_color_override("font_color", Color(0.90, 0.78, 0.42))
 	_desc_lbl.text = prod.desc
 	_qty_lbl.text = "x%d" % _qty
-	var total: float = prod.price * _qty
+	var total: float = adj_price * _qty
 	_total_lbl.text = "$%.2f" % total
 	
 	# Update detail sprite
@@ -649,6 +662,31 @@ func _rebuild_grid(pan_x: float, grid_y: float, grid_w: float, grid_h: float, de
 
 func _refresh_bottom_bar() -> void:
 	pass
+
+func _get_dynamic_price_mult() -> float:
+	var main = get_parent()
+	if main == null or not main.has_method("get_warehouse"):
+		main = get_tree().root.get_node_or_null("Main")
+	if main == null:
+		return 1.0
+	var dp = main.get_node_or_null("DynamicPricing")
+	if dp != null and dp.has_method("get_price_multiplier_for_section"):
+		return dp.get_price_multiplier_for_section(_section_id, main.get_warehouse())
+	return 1.0
+
+func _get_adjusted_price(base_price: float) -> float:
+	var mult := _get_dynamic_price_mult()
+	return base_price * mult
+
+func _get_dynamic_price_label() -> String:
+	var mult := _get_dynamic_price_mult()
+	if mult <= 0.85:
+		return "SALE!"
+	elif mult >= 1.15:
+		return "HIGH DEMAND"
+	elif mult >= 1.05:
+		return "LIMITED"
+	return ""
 
 func _get_section_stock_ratio(section_id: String) -> float:
 	var main = get_parent()
