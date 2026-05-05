@@ -851,9 +851,13 @@ func _input(event: InputEvent) -> void:
 			# J ── Quest Journal
 			KEY_J:
 				_toggle_quest_journal()
-		# R ── Robot Panel (staff only)
+		# R ── Robot Panel (staff only) OR Restock section
 			KEY_R:
-				_toggle_robot_panel()
+				# If near a section and in staff mode, restock it
+				if _nearby_section != null and _player != null and _player.is_in_staff_mode():
+					_restock_nearby_section()
+				else:
+					_toggle_robot_panel()
 			# O ── Settings
 			KEY_O:
 				_toggle_settings_panel()
@@ -1639,7 +1643,8 @@ func _finish_checkout() -> void:
 		return
 	var subtotal := 0.0
 	for item in items:
-		subtotal += item.price * item.get("qty", 1)
+		var item_prod = item.get("product", item)  # support dict {product,qty} or direct product
+		subtotal += item_prod.price * item.get("qty", 1)
 	# Apply loyalty credit if member (100 pts = $5 off)
 	var loyalty_credit := 0.0
 	if stats != null and stats.is_loyalty_member():
@@ -1661,21 +1666,34 @@ func _finish_checkout() -> void:
 	if stats != null:
 		var total_xp := 0
 		for item in items:
-			var item_xp := max(1, int(item.price * item.get("qty", 1) * 0.5))
+			var item_prod = item.get("product", item)  # support both dict and product ref
+			var item_xp := max(1, int(item_prod.price * item.get("qty", 1) * 0.5))
 			var multiplier := 1.0
 			if _brand_manager != null:
-				multiplier = _brand_manager.get_xp_multiplier_for_product(item.get("id", ""))
+				multiplier = _brand_manager.get_xp_multiplier_for_product(item_prod.get("id", ""))
 			total_xp += int(item_xp * multiplier)
 			if multiplier > 1.0:
 				brand_bonus_xp += int(item_xp * (multiplier - 1.0))
+			# ── Phase L: Consume stock from warehouse ──────────────────
+			var sec_id = item_prod.get("section", "")
+			if sec_id != "" and _warehouse != null:
+				var qty := item.get("qty", 1) as int
+				var available := _warehouse.consume_stock(sec_id, qty)
+				if not available:
+					# Section ran out of stock — toast warning
+					if _toasts:
+						_toasts.toast_warning("%s is now out of stock!" % item_prod.get("name", "Item").to_upper())
 		stats.add_xp(max(1, total_xp))
+		# Award staff XP for completing checkout task
+		stats.add_staff_xp(items.size(), "Checkout: %d items" % items.size())
 
 	# Record brand stats
 	if _brand_manager != null:
 		for item in items:
+			var item_prod = item.get("product", item)
 			var qty = item.get("qty", 1)
-			var item_total = item.price * qty
-			_brand_manager.record_purchase(item.get("id", ""), qty, item_total)
+			var item_total = item_prod.price * qty
+			_brand_manager.record_purchase(item_prod.get("id", ""), qty, item_total)
 
 	# Clear cart
 	cart.clear_cart()
@@ -1729,6 +1747,29 @@ func _on_self_checkout_cleared() -> void:
 	_do_checkout_interaction()
 
 # ── Section browse ──────────────────────────────────────────────
+func _restock_nearby_section() -> void:
+	if _nearby_section == null or _warehouse == null:
+		return
+	var sec_def = _nearby_section.get_def()
+	var sec_id = sec_def.id
+	var current := _warehouse.get_stock(sec_id)
+	var capacity := _warehouse.get_capacity(sec_id)
+	if current >= capacity:
+		if _toasts: _toasts.toast_info("%s is already fully stocked!" % sec_def.name.to_upper())
+		return
+	var top_up := int(capacity * 0.8) - current
+	if top_up <= 0:
+		top_up = capacity - current
+	if top_up > 0:
+		var contents := {sec_id: top_up}
+		_warehouse.receive_delivery(contents)
+		if _player_stats:
+			_player_stats.complete_staff_task()
+			_player_stats.add_staff_xp(8, "Restocked %s" % sec_def.name)
+		if _toasts:
+			_toasts.toast_success("Restocked %s with %d units! +8 Staff XP" % [sec_def.name, top_up])
+		notify_telegram("Restocked: %s +%d units" % [sec_def.name, top_up])
+
 func _open_section_browse(section) -> void:
 	if _section_browse == null:
 		return

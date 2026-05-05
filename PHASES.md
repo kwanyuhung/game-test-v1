@@ -211,3 +211,33 @@ scripts/
 | `brand add <brand_id> <json_path>` | Register a new brand from JSON |
 | `brand event <brand_id> <event_id>` | Trigger an event immediately |
 | `brand stats <brand_id>` | Show brand stats |
+
+---
+
+## Phase L ✅ Inventory & Stock Management
+**Stock depletion, restocking, and section-level inventory tracking**
+
+Every product in a section draws from a shared warehouse stock pool. As customers check out, stock depletes — sections can run low or go completely out of stock.
+
+**How it works:**
+- Each checkout call consumes stock from the warehouse: `warehouse.consume_stock(section_id, qty)`
+- Section browse shows a color-coded stock bar per section:
+  - **Green** (>60%): healthy stock
+  - **Orange** (30-60%): running low
+  - **Red** (<30%): critical
+  - **"OUT!"** label when stock hits zero
+- Out-of-stock toast warning when a product sells out
+- Staff XP earned on each checkout: +1 Staff XP per item
+
+**Restocking (Staff action):**
+- Stand near any section in **staff mode**
+- Press **[R]** to restock that section to 80% capacity
+- Costs: **+8 Staff XP** per restock action
+- Telegram notification sent on restock
+
+**Stock Levels:**
+- Warehouse tracks per-section stock (capacity, current qty, reorder threshold)
+- Low stock warnings trigger when section drops below minimum threshold
+- Delivery system tops up sections (triggered manually or auto)
+
+**Section stock is shared** — all products in a section draw from the same pool. If Dairy has 20 units left, every Dairy product shows 20/150 stock ratio.

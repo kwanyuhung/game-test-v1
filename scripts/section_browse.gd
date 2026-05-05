@@ -468,7 +468,43 @@ func _build_grid(pan_x: float, grid_y: float, grid_w: float, grid_h: float, def)
 		price_lbl.add_theme_font_size_override("font_size", 7)
 		add_child(price_lbl)
 		_item_nodes.append(price_lbl)
-		
+
+		# ── Phase L: Stock bar ───────────────────────────────────────
+		var stock_ratio := _get_section_stock_ratio(_section_id)
+		var bar_w := item_w - 32.0
+		var bar_h := 3.0
+		var bar_x := ix + 26.0
+		var bar_y := iy + ITEM_H - 6.0
+		# Background (empty part)
+		var bar_bg := ColorRect.new()
+		bar_bg.size = Vector2(bar_w, bar_h)
+		bar_bg.position = Vector2(bar_x, bar_y)
+		bar_bg.color = Color(0.20, 0.20, 0.22)
+		add_child(bar_bg)
+		_item_nodes.append(bar_bg)
+		# Fill (stock level)
+		var fill_w := bar_w * stock_ratio
+		var stock_color := Color(0.30, 0.80, 0.40)  # green = good
+		if stock_ratio < 0.3:
+			stock_color = Color(0.90, 0.30, 0.30)  # red = critical
+		elif stock_ratio < 0.6:
+			stock_color = Color(0.90, 0.70, 0.30)  # orange = low
+		var bar_fill := ColorRect.new()
+		bar_fill.size = Vector2(fill_w, bar_h)
+		bar_fill.position = Vector2(bar_x, bar_y)
+		bar_fill.color = stock_color
+		add_child(bar_fill)
+		_item_nodes.append(bar_fill)
+		# OUT OF STOCK label
+		if stock_ratio <= 0.0:
+			var oos_lbl := Label.new()
+			oos_lbl.text = "OUT!"
+			oos_lbl.position = Vector2(bar_x + bar_w * 0.5 - 8, bar_y - 6)
+			oos_lbl.add_theme_color_override("font_color", Color(0.90, 0.30, 0.30))
+			oos_lbl.add_theme_font_size_override("font_size", 5)
+			add_child(oos_lbl)
+			_item_nodes.append(oos_lbl)
+
 		var sub_lbl := Label.new()
 		sub_lbl.text = prod.sub
 		sub_lbl.position = Vector2(ix + item_w - 32, iy + 2)
@@ -609,6 +645,15 @@ func _rebuild_grid(pan_x: float, grid_y: float, grid_w: float, grid_h: float, de
 
 func _refresh_bottom_bar() -> void:
 	pass
+
+func _get_section_stock_ratio(section_id: String) -> float:
+	var main = get_tree().root.get_node_or_null("Main")
+	if main == null:
+		return 1.0
+	var wh = main.get_node_or_null("WarehouseSystem")
+	if wh != null and wh.has_method("get_stock_ratio"):
+		return wh.get_stock_ratio(section_id)
+	return 1.0
 
 func _make_prod_tex(prod) -> Texture2D:
 	var img := Image.create(12, 12, false, Image.FORMAT_RGBA8)
