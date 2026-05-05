@@ -128,3 +128,86 @@ Press **F3** to open Dev Tools (dev mode only).
 Ground: SUMMER SALE, MEMBERS ONLY | Floor 1: SPORT SALE | Floor 2: NEW LOOKS! | Floor 3: GEAR UP! | Floor 4: ADVENTURE! | Floor 5: BACK TO SCHOOL! | Floor 12: 100% ORGANIC! | Floor 13: FAMILY DAY! | Floor 14: TECH SALE!
 
 _Current: 14-floor supermarket with Phases G-K implemented. Electronics (H), Juice Bar (J), and Kids Kingdom (K) are the newest additions._
+
+---
+
+## Brand Partnership System (New Feature)
+**Open with: Press [B] in-game**
+
+A portal where external brands (Ferrero, Hershey's, etc.) can manage their presence in the supermarket without touching game code.
+
+### Architecture
+```
+brands/
+  ferrero.json     ← Brand data file (products, events, ads, stats)
+  hershey.json
+  brands.json      ← Index file
+
+scripts/
+  brand_manager.gd  ← Singleton: loads brands, manages products/events/ads
+  brand_portal.gd   ← UI dashboard for brand partners
+```
+
+### Features
+
+**Products**
+- Brands add products via JSON: name, price, section, subcategory, shape, color, description
+- Products auto-appear in the correct section browse alongside regular items
+- `limited_edition: true` flag shows a "LIMITED!" badge in the UI
+
+**Events**
+- Scheduled promotions: start_time / end_time
+- XP multipliers: `xp_multiplier: 2.0` doubles XP on brand products at checkout
+- Branded NPC promoters spawn during events
+- Toast announcement when events go live
+
+**Ads**
+- Brands place billboard ads on specific floors
+- Ad text + color stored in JSON, rendered via floor_builder
+
+**Stats**
+- Tracks: total_views, total_purchases, revenue per brand
+- Visible in the Stats tab of the Brand Portal
+
+**Partner Workflow**
+1. Partner receives `brands/ferrero_example.json` as template
+2. They fill in: products, event schedule, ad placements
+3. File goes into `brands/` folder — no code changes needed
+4. Game reloads → brand appears automatically
+
+**Example: Ferrero adding a new chocolate bar**
+```json
+{
+  "brand_id": "ferrero",
+  "products": [
+    {
+      "product_id": "ferrero_newbar",
+      "name": "Roccha Dark",
+      "price": 5.50,
+      "section": "snacks",
+      "subcategory": "Chocolate",
+      "shape": 0,
+      "color": "#3d1a00",
+      "description": "Dark chocolate with hazelnot"
+    }
+  ],
+  "active_events": [
+    {
+      "event_id": "ferrero_summer",
+      "name": "Ferrero Summer",
+      "xp_multiplier": 2.0,
+      "start_time": "2026-06-01T00:00",
+      "end_time": "2026-06-30T23:59",
+      "ad_text": "FERRERO SUMMER 2X XP!"
+    }
+  ]
+}
+```
+
+### Dev Tools Integration
+| Action | What it does |
+|--------|-------------|
+| `brand list` | Show all registered brands |
+| `brand add <brand_id> <json_path>` | Register a new brand from JSON |
+| `brand event <brand_id> <event_id>` | Trigger an event immediately |
+| `brand stats <brand_id>` | Show brand stats |

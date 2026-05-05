@@ -25,9 +25,9 @@ static func make_actor_texture(appearance: ActorData.Appearance, scale: int = 16
 		_draw_hair(img, appearance.hair_color, appearance.hair_style, sz)
 	elif life_stage == ActorData.LifeStage.TEEN:
 		_draw_shoes(img, appearance.shoes_color, appearance.shoes_style, sz)
-		_draw_lower_body(img, appearance.bottom_color, appearance.bottom_style, sz)
+		_draw_lower_body_teen(img, appearance.bottom_color, appearance.bottom_style, sz)
 		_draw_upper_body_teen(img, appearance.top_color, appearance.top_style, sz)
-		_draw_head(img, appearance.skin_tone, appearance.has_glasses, Color.WHITE, sz)
+		_draw_head_teen(img, appearance.skin_tone, appearance.has_glasses, Color.WHITE, sz)
 		_draw_hair(img, appearance.hair_color, appearance.hair_style, sz)
 		_draw_phone_in_hand(img, appearance.top_color, sz)
 		_draw_makeup(img, appearance.skin_tone, appearance.makeup_intensity, sz)
@@ -365,6 +365,39 @@ static func _draw_phone_in_hand(img: Image, top_col: Color, sz: int) -> void:
 	# Phone held in hand (right side)
 	_fill_img(img, int(13*sc), int(9*sc), int(2*sc), int(3*sc), Color(0.15, 0.15, 0.20), sz)
 	_fill_img(img, int(13*sc), int(9*sc), int(2*sc), int(1*sc), Color(0.25, 0.35, 0.55), sz)  # screen glow
+
+static func _draw_lower_body_teen(img: Image, col: Color, style: int, sz: int) -> void:
+	var sc := float(sz) / 16.0
+	# Slightly taller/lankier than adult — teenage proportions
+	_fill_img(img, int(3*sc), int(9*sc), int(4*sc), int(1*sc), col.darkened(0.1), sz)
+	_fill_img(img, int(9*sc), int(9*sc), int(4*sc), int(1*sc), col.darkened(0.1), sz)
+	_fill_img(img, int(3*sc), int(10*sc), int(4*sc), int(4*sc), col, sz)
+	_fill_img(img, int(9*sc), int(10*sc), int(4*sc), int(4*sc), col, sz)
+	_fill_img(img, int(3*sc), int(12*sc), int(3*sc), int(2*sc), col.darkened(0.15), sz)
+	_fill_img(img, int(10*sc), int(12*sc), int(3*sc), int(2*sc), col.darkened(0.15), sz)
+
+static func _draw_head_teen(img: Image, skin: Color, has_glasses: bool, glasses_col: Color, sz: int) -> void:
+	var sc := float(sz) / 16.0
+	# Slightly slimmer teenage face
+	_fill_img(img, int(5*sc), int(1*sc), int(6*sc), int(1*sc), skin.darkened(0.1), sz)
+	_fill_img(img, int(4*sc), int(2*sc), int(8*sc), int(4*sc), skin, sz)
+	_fill_img(img, int(5*sc), int(6*sc), int(6*sc), int(1*sc), skin.darkened(0.1), sz)
+	# Eyes — slightly larger / expressive
+	_set_img(img, int(6*sc), int(4*sc), Color.WHITE, sz)
+	_set_img(img, int(9*sc), int(4*sc), Color.WHITE, sz)
+	_set_img(img, int(6*sc), int(4*sc), Color(0.12, 0.08, 0.06), sz)
+	_set_img(img, int(9*sc), int(4*sc), Color(0.12, 0.08, 0.06), sz)
+	_set_img(img, int(5*sc), int(3*sc), Color.WHITE.lightened(0.5), sz)
+	_set_img(img, int(8*sc), int(3*sc), Color.WHITE.lightened(0.5), sz)
+	# Mouth
+	_set_img(img, int(7*sc), int(6*sc), skin.darkened(0.25), sz)
+	_set_img(img, int(8*sc), int(6*sc), skin.darkened(0.25), sz)
+	# Glasses
+	if has_glasses:
+		_fill_img(img, int(5*sc), int(3*sc), int(3*sc), int(2*sc), glasses_col.darkened(0.3), sz)
+		_fill_img(img, int(8*sc), int(3*sc), int(3*sc), int(2*sc), glasses_col.darkened(0.3), sz)
+		_set_img(img, int(7*sc), int(4*sc), glasses_col.darkened(0.5), sz)
+		_set_img(img, int(7*sc), int(3*sc), glasses_col.darkened(0.5), sz)
 
 # ─── Senior Sprite (hunched, walking stick) ─────────────────
 

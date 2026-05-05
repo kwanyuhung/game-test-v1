@@ -63,6 +63,7 @@ var _grabbed_prize: int = -1   # index of grabbed prize, -1 if none
 var _target_x: float = 0.0      # where claw is moving to
 var _elapsed: float = 0.0
 var _player_ref = null
+var _coin_count: int = 0  # total coins spent on this machine
 var _is_player_near: bool = false
 var _cart_ref = null
 
@@ -429,13 +430,18 @@ func start_round() -> bool:
 	"""Returns true if round started, false if can't play."""
 	if _state != State.IDLE:
 		return false
-	if _cart_ref == null:
-		return false
-	# Deduct cost from cart
-	var cart = _cart_ref
-	if cart.has_method("get_item_count"):
-		# Just start — cost handled by checkout
-		pass
+	# Deduct coins from player stats
+	var main_node = get_tree().get_first_node_in_group("main")
+	if main_node != null:
+		var ps = main_node.get("_player_stats")
+		if ps != null and ps.has_method("spend_coins"):
+			if not ps.spend_coins(1):
+				# No coins — try to show message via main toast
+				var toasts = main_node.get("_toasts")
+				if toasts != null:
+					toasts.toast_warning("No coins! Visit the kiosk for more.")
+				return false
+	_coin_count += 1
 	_state = State.MOVING
 	_ui_label.text = "A/D: Move  S: Drop"
 	_claw_x = (_zone.w * CELL_SIZE - 12) * 0.5

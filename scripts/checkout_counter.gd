@@ -22,6 +22,10 @@ var _error_panel: ColorRect  # self-checkout error overlay
 var _error_label: Label
 var _has_error: bool = false
 var _error_timer: float = 0.0
+var _is_waving: bool = false
+var _wave_timer: float = 0.0
+var _thought_bubble: ColorRect
+var _thought_label: Label
 
 signal checkout_interacted(checkout_id: int, checkout_type: CheckoutType)
 signal express_rejected()        # emitted when too many items for express
@@ -81,6 +85,24 @@ func _ready() -> void:
 	_error_label.add_theme_font_size_override("font_size", 6)
 	_error_label.visible = false
 	add_child(_error_label)
+
+	# Thought bubble for cashier farewell (staffed lanes only)
+	_thought_bubble = ColorRect.new()
+	_thought_bubble.size = Vector2(50, 16)
+	_thought_bubble.position = Vector2(26.0, -36)
+	_thought_bubble.color = Color(1.0, 1.0, 0.85, 0.95)
+	_thought_bubble.visible = false
+	_thought_bubble.z_index = 10
+	add_child(_thought_bubble)
+
+	_thought_label = Label.new()
+	_thought_label.text = ""
+	_thought_label.position = Vector2(27.0, -34)
+	_thought_label.add_theme_color_override("font_color", Color(0.2, 0.2, 0.1))
+	_thought_label.add_theme_font_size_override("font_size", 7)
+	_thought_label.visible = false
+	_thought_label.z_index = 11
+	add_child(_thought_label)
 
 func _make_checkout_tex() -> Texture2D:
 	var img := Image.create(48, 24, false, Image.FORMAT_RGBA8)
@@ -236,8 +258,22 @@ func _physics_process(delta: float) -> void:
 		var bob := sin(t * 2.0) * 0.03
 		_cashier_sprite.scale = Vector2(1.0, 1.0 + bob)
 
+	# Wave animation when checkout_interacted fires for staffed lanes
+	if _is_waving:
+		_wave_timer += delta
+		var wave_angle := sin(_wave_timer * 6.0) * 0.26  # ±15 degrees in radians
+		_cashier_sprite.rotation = wave_angle
+		if _wave_timer >= 1.0:
+			_is_waving = false
+			_wave_timer = 0.0
+			_cashier_sprite.rotation = 0.0
+
 func _on_body_entered(body: Node2D) -> void:
 	if body is Player:
+		# Trigger wave animation for staffed lanes
+		if _checkout_type == CheckoutType.STAFFED and _cashier_sprite != null:
+			_is_waving = true
+			_wave_timer = 0.0
 		checkout_interacted.emit(_checkout_id, _checkout_type)
 
 # Called by main to check if express lane allows this many items
@@ -274,6 +310,10 @@ func dismiss_error() -> void:
 		_error_label.visible = false
 		self_checkout_cleared.emit()
 
+# Returns true if this lane has a self-checkout error
+func has_error() -> bool:
+	return _has_error
+
 # Returns true if this lane is a staffed lane
 func is_staffed() -> bool:
 	return _checkout_type == CheckoutType.STAFFED
@@ -285,3 +325,17 @@ func is_self_checkout() -> bool:
 # Returns true if this is an express lane
 func is_express() -> bool:
 	return _checkout_type == CheckoutType.EXPRESS
+
+# Shows a farewell thought bubble from the cashier at staffed lanes
+func show_farewell_bubble() -> void:
+	if _checkout_type != CheckoutType.STAFFED:
+		return
+	var farewells := ["Thanks!", "Come again!", "Have a great day!", "Bye!", "See you!"]
+	var msg := farewells[randi() % farewells.size()]
+	_thought_label.text = msg
+	_thought_bubble.visible = true
+	_thought_label.visible = true
+	# Auto-hide after 2 seconds
+	await _thought_bubble.get_tree().create_timer(2.0).timeout
+	_thought_bubble.visible = false
+	_thought_label.visible = false

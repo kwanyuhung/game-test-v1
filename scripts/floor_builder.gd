@@ -119,6 +119,8 @@ func _build_zone(zone: FloorConfig.Zone) -> void:
 		FloorConfig.ZONE_SMART_HOME:       _build_zone_smart_home(zone)
 		FloorConfig.ZONE_ELECTRONICS:       _build_zone_electronics(zone)
 		FloorConfig.ZONE_REPAIR_COUNTER:   _build_zone_repair_counter(zone)
+		FloorConfig.ZONE_CAFE_COUNTER:     _build_zone_cafe_counter(zone)
+		FloorConfig.ZONE_VENDING_MACHINE:  _build_zone_vending_machine(zone)
 		# Unknown types are silently skipped (extensible)
 
 # ─── Individual Zone Builders ───────────────────────────────────
@@ -1914,6 +1916,16 @@ func _build_zone_exec_office(zone: FloorConfig.Zone) -> void:
 # ??? Ad Billboard Zone ?????????????????????????????????????????????????????????
 # Wall advertisement poster ??colorful promotional display
 # meta: {ad_id: String, ad_text: String, ad_color: Color}
+func _get_brand_ad_for_zone(zone: FloorConfig.Zone) -> Array:
+	# Returns brand ad data for this zone's floor, if any
+	var main = get_tree().get_first_node_in_group("main")
+	if main == null:
+		return []
+	var bm = main.get_node_or_null("BrandManager")
+	if bm == null or not bm.has_method("get_ads_for_floor"):
+		return []
+	return bm.get_ads_for_floor(_floor_idx)
+
 func _build_zone_ad(zone: FloorConfig.Zone) -> void:
 	var ad_id: String = zone.meta.get("ad_id", "generic_ad")
 	var ad_text: String = zone.meta.get("ad_text", "SALE!")
@@ -1922,6 +1934,13 @@ func _build_zone_ad(zone: FloorConfig.Zone) -> void:
 	var cy := zone.y * CELL_SIZE
 	var cw := zone.w * CELL_SIZE
 	var ch := zone.h * CELL_SIZE
+
+	# Override from brand manager if an ad is scheduled for this floor
+	var brand_ads = _get_brand_ad_for_zone(zone)
+	if brand_ads.size() > 0:
+		var ba = brand_ads[0]
+		ad_text = ba.get("text", ad_text)
+		ad_color = ba.get("color", ad_color)
 
 	# Backlit billboard frame
 	var frame := ColorRect.new()
@@ -1937,7 +1956,7 @@ func _build_zone_ad(zone: FloorConfig.Zone) -> void:
 	glow_bg.color = ad_color.darkened(0.35)
 	_parent.add_child(glow_bg); _floor_nodes.append(glow_bg)
 
-	# Ad banner ??main color block
+	# Ad banner — main color block
 	var banner := ColorRect.new()
 	banner.position = Vector2(cx + 4, cy + 4)
 	banner.size = Vector2(cw - 8, ch * 0.60)
@@ -2682,6 +2701,142 @@ func _build_zone_repair_counter(zone: FloorConfig.Zone) -> void:
 	var hint := Label.new(); hint.text = "[E] Tech Support"
 	hint.position = Vector2(cx + 4, cy + ch - 18)
 	hint.add_theme_color_override("font_color", Color(0.90, 0.80, 0.80))
+	hint.add_theme_font_size_override("font_size", 7)
+	_parent.add_child(hint); _floor_nodes.append(hint)
+
+func _build_zone_cafe_counter(zone: FloorConfig.Zone) -> void:
+	var name: String = zone.meta.get("name", "CAFE COUNTER")
+	var items: Array = zone.meta.get("items", [])
+	var cx := zone.x * CELL_SIZE; var cy := zone.y * CELL_SIZE
+	var cw := zone.w * CELL_SIZE; var ch := zone.h * CELL_SIZE
+
+	# Warm café floor
+	var bg := ColorRect.new(); bg.position = Vector2(cx, cy); bg.size = Vector2(cw, ch)
+	bg.color = Color(0.60, 0.45, 0.30).darkened(0.4); _parent.add_child(bg); _floor_nodes.append(bg)
+
+	# Zone label above
+	var tl := _make_zone_label(name, Vector2(cx + 4, cy - 14), Color(0.90, 0.75, 0.50)); _parent.add_child(tl); _floor_nodes.append(tl)
+
+	# Counter base (wooden)
+	var counter := ColorRect.new()
+	counter.position = Vector2(cx, cy + ch - 5 * CELL_SIZE)
+	counter.size = Vector2(cw, 5 * CELL_SIZE)
+	counter.color = Color(0.55, 0.38, 0.22); _parent.add_child(counter); _floor_nodes.append(counter)
+
+	# Counter top ledge
+	var counter_top := ColorRect.new()
+	counter_top.position = Vector2(cx, cy + ch - 5 * CELL_SIZE)
+	counter_top.size = Vector2(cw, 2)
+	counter_top.color = Color(0.75, 0.55, 0.35); _parent.add_child(counter_top); _floor_nodes.append(counter_top)
+
+	# Coffee machine (back of counter)
+	var machine := ColorRect.new()
+	machine.position = Vector2(cx + cw * 0.35, cy + ch * 0.20)
+	machine.size = Vector2(cw * 0.30, ch * 0.55)
+	machine.color = Color(0.30, 0.30, 0.35); _parent.add_child(machine); _floor_nodes.append(machine)
+
+	# Coffee machine top detail
+	var machine_top := ColorRect.new()
+	machine_top.position = Vector2(cx + cw * 0.33, cy + ch * 0.18)
+	machine_top.size = Vector2(cw * 0.34, 4)
+	machine_top.color = Color(0.50, 0.50, 0.55); _parent.add_child(machine_top); _floor_nodes.append(machine_top)
+
+	# Cup warming label
+	var cup_lbl := Label.new(); cup_lbl.text = "CUP WARMER"
+	cup_lbl.position = Vector2(cx + cw * 0.36, cy + ch * 0.22)
+	cup_lbl.add_theme_color_override("font_color", Color(0.80, 0.80, 0.90))
+	cup_lbl.add_theme_font_size_override("font_size", 6)
+	_parent.add_child(cup_lbl); _floor_nodes.append(cup_lbl)
+
+	# Espresso machine button area
+	var btn_area := ColorRect.new()
+	btn_area.position = Vector2(cx + cw * 0.40, cy + ch * 0.38)
+	btn_area.size = Vector2(cw * 0.20, ch * 0.12)
+	btn_area.color = Color(0.20, 0.20, 0.25); _parent.add_child(btn_area); _floor_nodes.append(btn_area)
+
+	# Menu board on back wall
+	var board_bg := ColorRect.new()
+	board_bg.position = Vector2(cx + 4, cy + 2)
+	board_bg.size = Vector2(cw * 0.30, ch * 0.40)
+	board_bg.color = Color(0.05, 0.10, 0.05); _parent.add_child(board_bg); _floor_nodes.append(board_bg)
+
+	# Show menu items on board
+	for i in range(mini(items.size(), 4)):
+		var item_lbl := Label.new()
+		item_lbl.text = items[i]
+		item_lbl.position = Vector2(cx + 6, cy + 3 + i * (ch * 0.10))
+		item_lbl.add_theme_color_override("font_color", Color(0.90, 0.90, 0.70))
+		item_lbl.add_theme_font_size_override("font_size", 6)
+		_parent.add_child(item_lbl); _floor_nodes.append(item_lbl)
+
+	# Warm glow above the counter (lamp)
+	var glow := Sprite2D.new()
+	glow.position = Vector2(cx + cw * 0.5, cy - 10 * CELL_SIZE)
+	glow.texture = _make_glow(Color(1.0, 0.75, 0.40))
+	_parent.add_child(glow); _floor_nodes.append(glow)
+
+	# Hint label
+	var hint := Label.new(); hint.text = "[E] Browse Menu"
+	hint.position = Vector2(cx + 4, cy + ch - 4 * CELL_SIZE)
+	hint.add_theme_color_override("font_color", Color(0.90, 0.80, 0.60))
+	hint.add_theme_font_size_override("font_size", 7)
+	_parent.add_child(hint); _floor_nodes.append(hint)
+
+func _build_zone_vending_machine(zone: FloorConfig.Zone) -> void:
+	var name: String = zone.meta.get("name", "VENDING")
+	var items: Array = zone.meta.get("items", ["Water $1.50", "Cola $2.00"])
+	var cx := zone.x * CELL_SIZE; var cy := zone.y * CELL_SIZE
+	var cw := zone.w * CELL_SIZE; var ch := zone.h * CELL_SIZE
+
+	# Vending machine body (glass front)
+	var body := ColorRect.new(); body.position = Vector2(cx, cy); body.size = Vector2(cw, ch)
+	body.color = Color(0.25, 0.28, 0.32); _parent.add_child(body); _floor_nodes.append(body)
+
+	# Glass front panel
+	var glass := ColorRect.new()
+	glass.position = Vector2(cx + 2, cy + 2); glass.size = Vector2(cw - 4, ch * 0.70)
+	glass.color = Color(0.15, 0.18, 0.22).lightened(0.15); _parent.add_child(glass); _floor_nodes.append(glass)
+
+	# Machine frame border
+	var frame_top := ColorRect.new(); frame_top.position = Vector2(cx, cy); frame_top.size = Vector2(cw, 2)
+	frame_top.color = Color(0.50, 0.50, 0.55); _parent.add_child(frame_top); _floor_nodes.append(frame_top)
+	var frame_bot := ColorRect.new(); frame_bot.position = Vector2(cx, cy + ch - 2); frame_bot.size = Vector2(cw, 2)
+	frame_bot.color = Color(0.40, 0.40, 0.45); _parent.add_child(frame_bot); _floor_nodes.append(frame_bot)
+
+	# Product items inside glass (small colored rectangles)
+	var item_colors := [Color(0.40, 0.70, 0.90), Color(0.85, 0.30, 0.30), Color(0.80, 0.75, 0.30),
+			Color(0.90, 0.65, 0.30), Color(0.60, 0.40, 0.25), Color(0.30, 0.80, 0.50)]
+	for row in range(2):
+		for col in range(mini(3, items.size())):
+			var ix := cx + 4 + col * ((cw - 8) / 3.0)
+			var iy := cy + 4 + row * (ch * 0.35)
+			var slot := ColorRect.new()
+			slot.position = Vector2(ix, iy); slot.size = Vector2((cw - 8) / 3.5, ch * 0.30)
+		slot.color = item_colors[(row * 3 + col) % item_colors.size()]
+			_parent.add_child(slot); _floor_nodes.append(slot)
+
+	# Coin slot / control panel at bottom
+	var panel := ColorRect.new()
+	panel.position = Vector2(cx + 2, cy + ch * 0.72); panel.size = Vector2(cw - 4, ch * 0.25)
+	panel.color = Color(0.20, 0.22, 0.26); _parent.add_child(panel); _floor_nodes.append(panel)
+
+	# Slot opening
+	var slot := ColorRect.new()
+	slot.position = Vector2(cx + cw * 0.35, cy + ch * 0.75)
+	slot.size = Vector2(cw * 0.12, ch * 0.08)
+	slot.color = Color(0.10, 0.10, 0.12); _parent.add_child(slot); _floor_nodes.append(slot)
+
+	# Label above machine
+	var tl := Label.new(); tl.text = name
+	tl.position = Vector2(cx + 2, cy - 12)
+	tl.add_theme_color_override("font_color", Color(0.80, 0.85, 0.90))
+	tl.add_theme_font_size_override("font_size", 8)
+	_parent.add_child(tl); _floor_nodes.append(tl)
+
+	# Hint
+	var hint := Label.new(); hint.text = "[E] Buy Snacks"
+	hint.position = Vector2(cx + 2, cy + ch + 2)
+	hint.add_theme_color_override("font_color", Color(0.60, 0.65, 0.70))
 	hint.add_theme_font_size_override("font_size", 7)
 	_parent.add_child(hint); _floor_nodes.append(hint)
 

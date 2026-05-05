@@ -53,7 +53,10 @@ enum BehaviorState {
 	RECEIVING_HELP,
 	ASSISTING_ELDER,
 	SCAN_GO_COMPANION,
+	PLAYING_IN_AREA,
 }
+
+const ZONE_KIDS_PLAY := "kids_play"
 
 # ??? Staff Task Definitions ?????????????????????????????????
 const STAFF_TASK_TEMPLATES = {
@@ -269,12 +272,10 @@ func _update_behavior(delta: float) -> void:
 			_do_patrol(delta)
 
 		BehaviorState.RESTOCKING:
-			if _state_timer <= 0.0:
-				_start_idle(randf_range(2.0, 5.0))
+			_do_restocking(delta)
 
 		BehaviorState.CLEANING:
-			if _state_timer <= 0.0:
-				_start_idle(randf_range(1.0, 3.0))
+			_do_cleaning(delta)
 
 		BehaviorState.WAITING_FOR_GROUP:
 			_do_wait_for_group(delta)
@@ -290,6 +291,18 @@ func _update_behavior(delta: float) -> void:
 
 		BehaviorState.ASSISTING_ELDER:
 			_do_assisting_elder(delta)
+
+		BehaviorState.SCAN_GO_COMPANION:
+			_do_scan_go_companion(delta)
+
+		BehaviorState.PLAYING_IN_AREA:
+			_do_playing_in_area(delta)
+
+		BehaviorState.GOING_TO_CHECKOUT_NPC:
+			_do_going_to_checkout_npc(delta)
+
+		BehaviorState.AT_CHECKOUT_NPC:
+			_do_at_checkout_npc(delta)
 
 	# Update status label
 	_update_status_label()
@@ -343,14 +356,14 @@ func _choose_customer_behavior() -> void:
 		return
 	# CHILD: gravitate toward toys, sweets
 	if _actor.life_stage == ActorData.LifeStage.CHILD:
-		if roll < 0.35:
+		if roll < 0.40:
+			_start_playing_in_area()
+		elif roll < 0.65:
 			_go_to_cart_pickup()
-		elif roll < 0.55:
+		elif roll < 0.80:
 			_start_wander()
-		elif roll < 0.70:
+		elif roll < 0.90:
 			_start_idle(randf_range(1.0, 3.0))
-		elif roll < 0.85:
-			_start_elevator_travel()
 		else:
 			_leave_store()
 		return
@@ -976,3 +989,165 @@ func is_active() -> bool:
 
 func set_position(new_pos: Vector2) -> void:
 	global_position = new_pos
+
+# ─── Kids Play Area Behavior ──────────────────────────────────────────
+
+func _start_playing_in_area() -> void:
+	# Find kids play zone center from floor builder
+	var main_node = get_tree().get_first_node_in_group("main")
+	var zone_center := Vector2(400.0, 200.0)  # fallback
+	if main_node != null:
+		var fb = main_node.get("_floor_builder")
+		if fb != null and fb.has_method("get_zone_center_by_type"):
+			var zc: Vector2 = fb.get_zone_center_by_type(ZONE_KIDS_PLAY, _actor.current_floor)
+			if zc.x >= 0:
+				zone_center = zc
+	_target_pos = zone_center
+	_state = BehaviorState.PLAYING_IN_AREA
+	_state_timer = randf_range(5.0, 10.0)
+
+func _do_playing_in_area(delta: float) -> void:
+	var speed := _get_speed()
+	var to_target := _target_pos - global_position
+	var dist := to_target.length()
+
+	if dist > 6.0:
+		var dir := to_target / dist
+		move_and_collide(dir * speed * delta)
+		_flip_sprite(dir.x)
+		return
+
+	# At play area — bob animation
+	var t := Time.get_ticks_msec() / 1000.0
+	var bob := sin(t * 5.0) * 0.04
+	if _body_sprite != null:
+		_body_sprite.scale = Vector2(1.0 + bob, 1.0 - bob * 0.5)
+
+	# Thought bubbles while playing
+	var bubble_timer := _state_timer as float
+	if bubble_timer > 3.0 and bubble_timer < 3.1:
+		var thoughts := ["So fun!", "Wheee!", "More toys!", "Yay!", "Again! again!"]
+		_show_speech_bubble(thoughts[randi() % thoughts.size()])
+	elif bubble_timer < 1.0:
+		_hide_speech_bubble()
+
+	if _state_timer <= 0.0:
+		_hide_speech_bubble()
+		if _body_sprite != null:
+			_body_sprite.scale = Vector2(1.0, 1.0)
+		# Pick new play target or go back to shopping
+		if randf() < 0.4:
+			_start_playing_in_area()
+		else:
+			_start_idle(randf_range(1.0, 3.0))
+
+# ─── Shelf Stocker Continuous Behavior ────────────────────────────────
+
+func _do_restocking(delta: float) -> void:
+	var speed := _get_speed() * 0.7
+	var to_target := _target_pos - global_position
+	var dist := to_target.length()
+
+	if dist > 6.0:
+		var dir := to_target / dist
+		move_and_collide(dir * speed * delta)
+		_flip_sprite(dir.x)
+		_state_timer = 5.0
+		return
+
+	# At shelf — stocking animation (reach up/down)
+	var t := Time.get_ticks_msec() / 1000.0
+	var stock_bob := sin(t * 3.5) * 0.06
+	if _body_sprite != null:
+		_body_sprite.scale = Vector2(1.0 + stock_bob, 1.0 - stock_bob * 0.5)
+
+	if _state_timer <= 0.0:
+		# Pick next section to restock
+		_hide_speech_bubble()
+		if _body_sprite != null:
+			_body_sprite.scale = Vector2(1.0, 1.0)
+		var shelves := [
+			Vector2(60.0 * CELL_SIZE, 12.0 * CELL_SIZE),
+			Vector2(300.0 * CELL_SIZE, 12.0 * CELL_SIZE),
+			Vector2(500.0 * CELL_SIZE, 12.0 * CELL_SIZE),
+			Vector2(200.0 * CELL_SIZE, 20.0 * CELL_SIZE),
+			Vector2(700.0 * CELL_SIZE, 12.0 * CELL_SIZE),
+		]
+		_target_pos = shelves[randi() % shelves.size()]
+		_state_timer = randf_range(4.0, 8.0)
+
+# ─── Cleaner Continuous Behavior ─────────────────────────────────────
+
+func _do_cleaning(delta: float) -> void:
+	var speed := _get_speed() * 0.6
+	var to_target := _target_pos - global_position
+	var dist := to_target.length()
+
+	if dist > 6.0:
+		var dir := to_target / dist
+		move_and_collide(dir * speed * delta)
+		_flip_sprite(dir.x)
+		_state_timer = 4.0
+		return
+
+	# At cleaning spot — wiping animation (side to side)
+	var t := Time.get_ticks_msec() / 1000.0
+	var wipe := sin(t * 4.0) * 0.04
+	if _body_sprite != null:
+		_body_sprite.position.x = wipe * 3.0
+
+	if _state_timer <= 0.0:
+		if _body_sprite != null:
+			_body_sprite.position.x = 0.0
+		# Pick next cleaning spot
+		var spots := [
+			Vector2(160.0 * CELL_SIZE, 33.0 * CELL_SIZE),
+			Vector2(320.0 * CELL_SIZE, 33.0 * CELL_SIZE),
+			Vector2(480.0 * CELL_SIZE, 33.0 * CELL_SIZE),
+			Vector2(200.0, 100.0),
+			Vector2(600.0, 200.0),
+		]
+		_target_pos = spots[randi() % spots.size()]
+		_state_timer = randf_range(4.0, 7.0)
+
+# ─── Scan & Go Companion ─────────────────────────────────────────────
+
+func _do_scan_go_companion(delta: float) -> void:
+	if _player_reference == null:
+		_start_idle(2.0)
+		return
+
+	var player_pos: Vector2 = _player_reference.position if _player_reference.has_method("position") else Vector2.ZERO
+	var to_player := player_pos - global_position
+	var dist := to_player.length()
+
+	# Stay within 3 tiles (48 pixels) of player
+	if dist > CELL_SIZE * 3.5:
+		var speed := _get_speed() * 1.2
+		var dir := to_player / dist
+		move_and_collide(dir * speed * delta)
+		_flip_sprite(dir.x)
+		return
+
+	# Close to player — scan animation
+	var t := Time.get_ticks_msec() / 1000.0
+	var scan_bob := sin(t * 3.0) * 0.03
+	if _body_sprite != null:
+		_body_sprite.scale = Vector2(1.0 + scan_bob, 1.0 - scan_bob * 0.3)
+
+	# Scanning thought bubble every 4 seconds
+	var secs := fmod(t, 4.0)
+	if secs < 0.05:
+		_show_speech_bubble("Scanning...")
+	elif secs > 0.5:
+		_hide_speech_bubble()
+
+	# Check if player is at checkout — companion leaves
+	var main_node = get_tree().get_first_node_in_group("main")
+	if main_node != null:
+		var nearby_checkout = main_node.get("_nearby_checkout")
+		if nearby_checkout != null:
+			_show_speech_bubble("All scanned! Thanks!")
+			_state_timer = 2.0
+			_state = BehaviorState.IDLE
+			return

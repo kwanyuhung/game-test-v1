@@ -84,6 +84,8 @@ const ZONE_PHONE_GADGETS   := "phone_gadgets"   # phone / gadget accessories
 const ZONE_SMART_HOME     := "smart_home"     # smart home devices
 const ZONE_ELECTRONICS    := "electronics"     # general electronics shelf
 const ZONE_REPAIR_COUNTER := "repair_counter"  # tech repair / service counter
+const ZONE_CAFE_COUNTER    := "cafe_counter"     # rooftop café counter
+const ZONE_VENDING_MACHINE := "vending_machine"  # vending machine
 
 # ── Zone helper ─────────────────────────────────────────────────
 static func Z(ztype: String, x: int, y: int, w: int, h: int, meta: Dictionary = {}) -> Dictionary:
@@ -207,6 +209,9 @@ func _init_floors() -> void:
 			Z(ZONE_DECOR,      34, 11,  4,  4, {"decor_type": "dining_table"}),
 			Z(ZONE_DECOR,      52, 11,  4,  4, {"decor_type": "dining_table"}),
 			Z(ZONE_DECOR,      70, 11,  4,  4, {"decor_type": "dining_table"}),
+			# Vending machines
+			Z(ZONE_VENDING_MACHINE, 70,  3, 10, 10, {"name": "VENDING", "items": ["Water $1.50","Cola $2.00","Juice $2.50","Chips $1.80","Chocolate $2.20","Energy Drink $3.00"]}),
+			Z(ZONE_VENDING_MACHINE, 70, 20, 10, 10, {"name": "VENDING", "items": ["Water $1.50","Cola $2.00","Juice $2.50","Chips $1.80","Chocolate $2.20","Energy Drink $3.00"]}),
 		],
 		[],
 		false, false, true, true
@@ -915,17 +920,17 @@ r
 		false, false, true, true, true  # is_staff_only=true (6th arg)
 	))
 
-	# ── FLOOR 10 — Pet Paradise ──────────────────────────────────────────────────
+	# ── FLOOR 10 — Rooftop Café ──────────────────────────────────────────────────
 	FLOOR_DEFS.append(FloorDef.new(
-		10, "10", "pet_paradise", Color(0.42, 0.70, 0.55),
+		10, "10", "rooftop", Color(0.60, 0.55, 0.45),
 		[
 			Z(ZONE_COMMON,         2,  3, 78, 38),
-			Z(ZONE_PET_ADOPTION,   2,  3, 22, 20, {"name": "ADOPTION", "color": Color(0.60, 0.88, 0.70)}),
-			Z(ZONE_AD,            72,  4,  4,  6, {"ad_id": "pet_special", "ad_text": "ADOPT ME!", "ad_color": Color(0.60, 0.90, 0.60)}),
+			Z(ZONE_CAFE_COUNTER,  10,  3, 20, 14, {"name": "CAFE COUNTER", "items": ["Espresso $3.50","Latte $4.50","Cappuccino $4.80","Americano $3.00","Muffin $2.80","Croissant $3.20","Iced Coffee $4.20","Smoothie $5.50"]}),
+			Z(ZONE_AD,            72,  4,  4,  6, {"ad_id": "cafe_special", "ad_text": "FRESH COFFEE!", "ad_color": Color(0.80, 0.60, 0.30)}),
 			Z(ZONE_ELEVATOR,     80,  2,  4, 40),
 			Z(ZONE_STAIRS,       84,  2,  6, 40),
 		],
-		[SZ("pet", 2,  3, 22, 20)],
+		[],
 		true, false, true
 	))
 

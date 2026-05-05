@@ -30,6 +30,8 @@ const AudioManagerScript = preload("res://scripts/audio_manager.gd")
 const MonitorPanelScript = preload("res://scripts/monitor_panel.gd")
 const PriceTerminalScript = preload("res://scripts/price_terminal.gd")
 const PriceOverrideScript = preload("res://scripts/price_override.gd")
+const BrandManagerScript = preload("res://scripts/brand_manager.gd")
+const BrandPortalScript = preload("res://scripts/brand_portal.gd")
 const SaveSystem = preload("res://scripts/save_system.gd")
 const TutorialOverlayScript = preload("res://scripts/tutorial_overlay.gd")
 const DailyBonusScript = preload("res://scripts/daily_bonus.gd")
@@ -108,6 +110,8 @@ var _nearby_loyalty: bool = false
 var _nearby_gift_wrap: bool = false
 var _nearby_digital_kiosk: bool = false
 var _nearby_info_desk: bool = false
+var _nearby_cafe: bool = false
+var _nearby_vending: bool = false
 var _in_checkout: bool = false
 var _cart_panel: CanvasLayer
 var _cart_items_lbl: Label
@@ -121,6 +125,10 @@ var _checkout_receipt_visible: bool = false
 var _cart_panel_visible: bool = false
 var _price_terminal: PriceTerminal = null
 var _staff_blocked_floor: int = -1
+var _brand_manager: BrandManager = null
+var _brand_portal: BrandPortal = null
+var _temp_order_mode: String = ""  # "cafe" or "vending"
+var _temp_order_items: Array = []
 
 var _world_bg: ColorRect = null
 var _aisle_labels: Array = []
@@ -170,6 +178,14 @@ func _ready() -> void:
 	# ── Price Override Singleton (Phase 6) ──
 	var price_override = PriceOverrideScript.new()
 	add_child(price_override)
+
+	# ── Brand Manager ──
+	_brand_manager = BrandManagerScript.new()
+	_brand_manager.name = "BrandManager"
+	add_child(_brand_manager)
+	_brand_portal = BrandPortalScript.new()
+	add_child(_brand_portal)
+	_brand_portal.closed.connect(_on_brand_portal_closed)
 
 	_maintenance_system = MaintenanceSystemScript.new()
 	add_child(_maintenance_system)
@@ -376,6 +392,8 @@ func _build_floor(idx: int) -> void:
 	for machine in _floor_builder.get_claw_machines():
 		if machine.has_signal("interact_requested"):
 			machine.interact_requested.connect(_on_claw_interact_requested)
+		if machine.has_signal("played"):
+			machine.played.connect(_on_claw_played.bind(machine))
 	# Wire checkout signals
 	for counter in _checkout_counters:
 		if counter.has_signal("checkout_interacted"):
@@ -806,6 +824,9 @@ func _input(event: InputEvent) -> void:
 			# L ── Shopping List
 			KEY_L:
 				_toggle_shopping_list()
+			# B ── Brand Portal
+			KEY_B:
+				_toggle_brand_portal()
 			# J ── Quest Journal
 			KEY_J:
 				_toggle_quest_journal()
@@ -817,6 +838,21 @@ func _input(event: InputEvent) -> void:
 				_toggle_pause()
 			KEY_SPACE:
 				_toggle_pause()
+		# 1-8 ── Quick order / loyalty
+		if _temp_order_mode != "":
+			var key_map := {
+				KEY_1: 0, KEY_2: 1, KEY_3: 2, KEY_4: 3,
+				KEY_5: 4, KEY_6: 5, KEY_7: 6, KEY_8: 7
+			}
+			if event.keycode in key_map:
+				var idx: int = key_map[event.keycode]
+				if idx < _temp_order_items.size():
+					var item: Dictionary = _temp_order_items[idx]
+					if _temp_order_mode == "loyalty":
+						_handle_loyalty_key(idx, item)
+					else:
+						_add_order_item(idx, item)
+				return
 
 func _process(_delta: float) -> void:
 	if _current_section_browse != null and _current_section_browse.visible:
@@ -838,6 +874,12 @@ func _process(_delta: float) -> void:
 	_update_monitor_proximity()
 	_update_terminal_proximity()
 	_update_phase3_proximity()
+
+	# Self-checkout error dismiss on E key
+	if Input.is_action_just_pressed("interact") and _nearby_checkout != null:
+		if _nearby_checkout.is_self_checkout():
+			_nearby_checkout.dismiss_error()
+			_do_checkout_interaction()
 
 func _update_elevator_proximity() -> void:
 	if _player == null or _elevator == null:
@@ -1328,6 +1370,9 @@ func _on_player_interact() -> void:
 
 	# Checkout
 	if _nearby_checkout != null:
+		# Dismiss self-checkout error on E, then retry
+		if _nearby_checkout.has_error():
+			_nearby_checkout.dismiss_error()
 		_do_checkout_interaction()
 		return
 
@@ -1364,17 +1409,36 @@ func _on_player_interact() -> void:
 
 	# Phase 3: Interactive facilities
 	if _nearby_loyalty:
-		if _toasts != null: _toasts.toast_info("Loyalty Program: Earn 1 pt/$1 spent. 100 pts = $5 credit!")
+		# Enter loyalty/coin mode
+		_temp_order_mode = "loyalty"
+		_temp_order_items = [{"name": "5 Coins", "price": 2.0}, {"name": "Sign Up Loyalty", "price": 0.0}]
+		if _player_stats != null and _player_stats.is_loyalty_member():
+			var pts = _player_stats.get_loyalty_points()
+			_toasts.toast_info("Loyalty: %d pts | [1] Buy 5 Coins $2 | [2] Loyalty Status" % pts)
+		else:
+			_toasts.toast_info("Loyalty: [1] Sign Up Free | [2] Buy 5 Coins $2")
+		var hint = get_node_or_null("PromptLbl")
+		if hint != null:
+			hint.text = "[1] Coins  [2] Loyalty  [E] Done"
 		return
 	if _nearby_gift_wrap:
 		if _toasts != null: _toasts.toast_success("Gift wrapped! +10 XP bonus earned!")
 		if _player_stats != null: _player_stats.add_xp(10)
 		return
 	if _nearby_digital_kiosk:
-		if _toasts != null: _toasts.toast_info("Floor Directory: G=Lobby+Food, 1=Fresh, 2=Pantry, 3=Drinks, 4=Snacks, 5=Frozen, 6=Household, 7=H&B, 8=Arcade, 9=Staff, 10=Pet")
+		if _toasts != null: _toasts.toast_info("Floor Directory: G=Lobby+Food, 1=Fresh, 2=Pantry, 3=Drinks, 4=Snacks, 5=Frozen, 6=Household, 7=H+B, 8=Arcade, 9=Staff, 10=Cafe")
 		return
 	if _nearby_info_desk:
 		if _toasts != null: _toasts.toast_info("Welcome to Pixel Supermarket! Use elevator or stairs to navigate.")
+		return
+	if _temp_order_mode != "":
+		_finish_order()
+		return
+	if _nearby_cafe:
+		_open_cafe_browse()
+		return
+	if _nearby_vending:
+		_open_vending_browse()
 		return
 
 # ── Food stall interaction ──────────────────────────────────────
@@ -1395,6 +1459,16 @@ func _open_stall_browse(stall) -> void:
 func _on_claw_interact_requested() -> void:
 	if _nearby_claw_machine != null:
 		_nearby_claw_machine.start_game()
+
+func _on_claw_played(prize_name: String, won: bool, machine) -> void:
+	if won and _player_stats != null:
+		_player_stats.add_xp(15, "Claw machine win: %s" % prize_name)
+		_player_stats.on_claw_win()
+		if _toasts != null:
+			_toasts.toast_success("You won a %s! +15 XP" % prize_name)
+	else:
+		if _toasts != null:
+			_toasts.toast_info("No prize this time. Try again!")
 
 # ── Checkout proximity & interaction ─────────────────────────────
 func _update_checkout_proximity() -> void:
@@ -1476,23 +1550,52 @@ func _finish_checkout() -> void:
 	var subtotal := 0.0
 	for item in items:
 		subtotal += item.price * item.get("qty", 1)
-	var tax = subtotal * 0.08
-	var total = subtotal + tax
+	# Apply loyalty credit if member (100 pts = $5 off)
+	var loyalty_credit := 0.0
+	if stats != null and stats.is_loyalty_member():
+		loyalty_credit = stats.redeem_loyalty_credit()
+	var taxable := subtotal - loyalty_credit
+	if taxable < 0:
+		taxable = 0.0
+	var tax = taxable * 0.08
+	var total = taxable + tax
 
 	# Deduct cash
 	var stats = _player_stats
 	if stats != null:
 		stats.add_cash(-total)
 
-	# Award XP
+	# Award XP (with brand event multipliers)
+	var base_xp := max(1, int(total * 0.5))
+	var brand_bonus_xp := 0
 	if stats != null:
-		stats.add_xp(max(1, int(total * 0.5)))
+		var total_xp := 0
+		for item in items:
+			var item_xp := max(1, int(item.price * item.get("qty", 1) * 0.5))
+			var multiplier := 1.0
+			if _brand_manager != null:
+				multiplier = _brand_manager.get_xp_multiplier_for_product(item.get("id", ""))
+			total_xp += int(item_xp * multiplier)
+			if multiplier > 1.0:
+				brand_bonus_xp += int(item_xp * (multiplier - 1.0))
+		stats.add_xp(max(1, total_xp))
+
+	# Record brand stats
+	if _brand_manager != null:
+		for item in items:
+			var qty = item.get("qty", 1)
+			var item_total = item.price * qty
+			_brand_manager.record_purchase(item.get("id", ""), qty, item_total)
 
 	# Clear cart
 	cart.clear_cart()
 
-	# Show receipt
-	_show_checkout_receipt(items, subtotal, tax, total)
+	# Show farewell bubble at staffed lanes
+	if _nearby_checkout != null and _nearby_checkout.is_staffed():
+		_nearby_checkout.show_farewell_bubble()
+
+	# Show receipt (include loyalty credit line if > 0)
+	_show_checkout_receipt(items, subtotal, tax, total, brand_bonus_xp, loyalty_credit)
 
 	# Notify
 	notify_telegram("Checkout complete! $%.2f spent. Cart cleared." % total)
@@ -1501,7 +1604,7 @@ func _finish_checkout() -> void:
 	# Auto-save
 	SaveSystem.save_game(self)
 
-func _show_checkout_receipt(items: Array, subtotal: float, tax: float, total: float) -> void:
+func _show_checkout_receipt(items: Array, subtotal: float, tax: float, total: float, brand_bonus_xp: int = 0, loyalty_credit: float = 0.0) -> void:
 	# Receipt display (re-use existing receipt panel or create)
 	if _checkout_receipt == null:
 		return
@@ -1510,7 +1613,13 @@ func _show_checkout_receipt(items: Array, subtotal: float, tax: float, total: fl
 	for item in items:
 		var qty = item.get("qty", 1)
 		_checkout_receipt_items_lbl.text += "%dx %s $%.2f\n" % [qty, item.name, item.price * qty]
-	_checkout_total_lbl.text = "Subtotal: $%.2f\nTax: $%.2f\nTOTAL: $%.2f" % [subtotal, tax, total]
+	var receipt_text := ""
+	if loyalty_credit > 0:
+		receipt_text += "Loyalty Credit: -$%.2f\n" % loyalty_credit
+	receipt_text += "Subtotal: $%.2f\nTax: $%.2f\nTOTAL: $%.2f" % [subtotal, tax, total]
+	if brand_bonus_xp > 0:
+		receipt_text += "\n[color=#FFFF00]BRAND BONUS: +%d XP![/color]" % brand_bonus_xp
+	_checkout_total_lbl.text = receipt_text
 	_checkout_receipt_visible = true
 	await get_tree().create_timer(5.0).timeout
 	if _checkout_receipt != null:
@@ -1548,9 +1657,46 @@ func on_staff_mode_toggled(is_staff: bool) -> void:
 	if is_staff:
 		_staff_blocked_floor = -1  # can access all floors when staff
 		if _toasts != null: _toasts.toast_success("[STAFF MODE] Clocked in!")
+		notify_telegram("Henry clocked IN to staff mode — Price Terminal available on Floor 9")
+		# 30% chance to spawn a Scan & Go companion on Floor G
+		if _current_floor_idx == 0 and randf() < 0.30:
+			_spawn_scan_go_companion()
 	else:
 		_staff_blocked_floor = 9  # lock floor 9 again
 		if _toasts != null: _toasts.toast_info("[STAFF MODE] Clocked out.")
+		notify_telegram("Henry clocked OUT of staff mode")
+		# Remove scan & go companion if active
+		_remove_scan_go_companion()
+
+func _spawn_scan_go_companion() -> void:
+	# Spawn a staff NPC that follows the player and "scans" items
+	var spawn_pos := _player.position + Vector2(40, 0)
+	var actor := ActorData.Actor.new()
+	actor.role = ActorData.Role.STAFF
+	actor.staff_role = ActorData.StaffRole.SCAN_GO
+	actor.life_stage = ActorData.LifeStage.ADULT
+	actor.current_floor = _current_floor_idx
+	actor.position = spawn_pos
+	actor.speed = ActorData.SPEED_ADULT
+	# Give a random appearance
+	var app := ActorData.Appearance.new()
+	app.skin_tone = ActorData.SKINS[randi() % ActorData.SKINS.size()]
+	app.top_color = Color(0.20, 0.50, 0.80)
+	app.bottom_color = Color(0.15, 0.15, 0.30)
+	app.hair_color = ActorData.HAIR_COLORS[randi() % ActorData.HAIR_COLORS.size()]
+	actor.appearance = app
+	var npc := NPCControllerScript.new(actor)
+	npc._player_reference = _player  # pass player ref for companion tracking
+	npc.position = spawn_pos
+	npc._state = NPCControllerScript.BehaviorState.SCAN_GO_COMPANION
+	npc.name = "ScanGoCompanion"
+	add_child(npc)
+	if _toasts != null: _toasts.toast_info("Scan & Go assistant has joined you!")
+
+func _remove_scan_go_companion() -> void:
+	var sg = get_node_or_null("ScanGoCompanion")
+	if sg != null:
+		sg.queue_free()
 
 # ── Price terminal proximity (Phase 6) ───────────────────────────
 func _update_terminal_proximity() -> void:
@@ -1582,12 +1728,118 @@ func _open_price_terminal() -> void:
 		add_child(_price_terminal)
 	_price_terminal.open()
 
+func _toggle_brand_portal() -> void:
+	if _brand_portal == null:
+		return
+	if _brand_portal.visible:
+		_brand_portal.close()
+	else:
+		_brand_portal.open("ferrero")
+
+func _on_brand_portal_closed() -> void:
+	# Refresh any brand data that may have changed
+	pass
+
+func get_game_clock() -> Node:
+	return _game_clock
+
+# ── Phase 3: Cafe Counter Browse ────────────────────────────────
+func _open_cafe_browse() -> void:
+	if _toasts == null:
+		return
+	var items := [
+		{"name": "Espresso", "price": 3.50},
+		{"name": "Latte", "price": 4.50},
+		{"name": "Cappuccino", "price": 4.80},
+		{"name": "Americano", "price": 3.00},
+		{"name": "Muffin", "price": 2.80},
+		{"name": "Croissant", "price": 3.20},
+		{"name": "Iced Coffee", "price": 4.20},
+		{"name": "Smoothie", "price": 5.50},
+	]
+	_temp_order_mode = "cafe"
+	_temp_order_items = items
+	_toasts.toast_info("Cafe: [1]Espresso $3.50 [2]Latte $4.50 [3]Capp $4.80 [4]Americano $3.00")
+	_toasts.toast_info("Muffin $2.80 [5]  Croissant $3.20 [6]  Iced $4.20 [7]  Smoothie $5.50 [8]")
+	var hint := get_node_or_null("PromptLbl")
+	if hint != null:
+		hint.text = "[1-8] Add item  [E] finish order"
+
+# ── Phase 3: Vending Machine Browse ─────────────────────────────
+func _open_vending_browse() -> void:
+	if _toasts == null:
+		return
+	var items := [
+		{"name": "Water", "price": 1.50},
+		{"name": "Cola", "price": 2.00},
+		{"name": "Juice", "price": 2.50},
+		{"name": "Chips", "price": 1.80},
+		{"name": "Chocolate", "price": 2.20},
+		{"name": "Energy Drink", "price": 3.00},
+	]
+	_temp_order_mode = "vending"
+	_temp_order_items = items
+	_toasts.toast_info("Vending: [1]Water $1.50 [2]Cola $2.00 [3]Juice $2.50 [4]Chips $1.80 [5]Choco $2.20 [6]Energy $3.00")
+	var hint := get_node_or_null("PromptLbl")
+	if hint != null:
+		hint.text = "[1-6] Add item  [E] done"
+
+func _add_order_item(idx: int, item: Dictionary) -> void:
+	if _player == null:
+		return
+	var cart = _player.get_cart()
+	if cart == null:
+		return
+	# Create a minimal product-like object for the cart
+	var cart_item := {
+		"id": _temp_order_mode + "_" + str(idx),
+		"name": item.name,
+		"price": item.price,
+		"qty": 1
+	}
+	cart.add_item(cart_item)
+	if _toasts != null:
+		_toasts.toast_success("+1 %s $%.2f" % [item.name, item.price])
+	_update_cart_ui()
+
+func _finish_order() -> void:
+	_temp_order_mode = ""
+	_temp_order_items = []
+	var hint := get_node_or_null("PromptLbl")
+	if hint != null:
+		hint.text = ""
+	if _toasts != null:
+		_toasts.toast_success("Done!")
+
+func _handle_loyalty_key(idx: int, item: Dictionary) -> void:
+	if _player_stats == null:
+		return
+	if idx == 0:	# Buy 5 coins for $2
+		var cost: float = item.get("price", 2.0)
+		if _player_stats.spend_cash(cost):
+			_player_stats.add_coins(5)
+			if _toasts != null:
+				_toasts.toast_success("+5 Coins! Now have %d coins" % _player_stats.get_coins())
+		else:
+			if _toasts != null:
+				_toasts.toast_warning("Not enough cash!")
+	elif idx == 1:	# Sign up or check status
+		if _player_stats.is_loyalty_member():
+			var pts = _player_stats.get_loyalty_points()
+			_toasts.toast_info("Loyalty: %d pts" % pts)
+		else:
+			if _player_stats.signup_loyalty():
+				if _toasts != null:
+					_toasts.toast_success("Welcome to Loyalty! 1 pt/$1 -- 100 pts = $5 credit!")
+
 # ── Phase 3: Interactive Facilities Proximity ───────────────────
 func _update_phase3_proximity() -> void:
 	_nearby_loyalty = false
 	_nearby_gift_wrap = false
 	_nearby_digital_kiosk = false
 	_nearby_info_desk = false
+	_nearby_cafe = false
+	_nearby_vending = false
 	if _floor_builder == null or _player == null:
 		return
 	var ppos = _player.position
@@ -1602,15 +1854,21 @@ func _update_phase3_proximity() -> void:
 		_nearby_digital_kiosk = true
 	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_INFO_DESK, ppos):
 		_nearby_info_desk = true
+	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_CAFE_COUNTER, ppos):
+		_nearby_cafe = true
+	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_VENDING_MACHINE, ppos):
+		_nearby_vending = true
 
 	# Update prompt if no higher-priority prompt is showing
-	var show_phase3 = _nearby_loyalty or _nearby_gift_wrap or _nearby_digital_kiosk or _nearby_info_desk
+	var show_phase3 = _nearby_loyalty or _nearby_gift_wrap or _nearby_digital_kiosk or _nearby_info_desk or _nearby_cafe or _nearby_vending
 	if show_phase3 and not _nearby_elevator and not _nearby_stairs and _nearby_section == null and _nearby_checkout == null:
 		var txt := "[E] "
 		if _nearby_loyalty: txt += "Loyalty Sign-Up"
 		elif _nearby_gift_wrap: txt += "Gift Wrap (+XP)"
 		elif _nearby_digital_kiosk: txt += "Info Directory"
 		elif _nearby_info_desk: txt += "Info Desk"
+		elif _nearby_cafe: txt += "Cafe Menu"
+		elif _nearby_vending: txt += "Vending Machine"
 		if prompt_lbl != null:
 			prompt_lbl.text = txt
 			prompt_lbl.visible = true

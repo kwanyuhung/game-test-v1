@@ -43,6 +43,42 @@ var _scroll_knob: ColorRect
 
 func _ready() -> void:
 	visible = false
+	# Listen for price override changes so prices update live
+	var main = get_tree().get_first_node_in_group("main")
+	if main != null:
+		var po = main.get_node_or_null("PriceOverride")
+		if po != null and po.has_signal("price_changed"):
+			po.price_changed.connect(_on_price_changed)
+
+func _on_price_changed(product_id: String, new_price: float) -> void:
+	# Rebuild to show updated price
+	if visible and _section_id != "":
+		_build()
+
+# Opens the browser for a given SupermarketSection node.
+# Merges section products + brand products for the same section id.
+func open_section(section) -> void:
+	var def = section.get_def()
+	var section_id = def.id
+	var products = section.get_all_products()
+
+	# Merge in brand products for this section
+	var main = get_tree().root.get_node_or_null("Main")
+	if main != null:
+		var bm = main.get_node_or_null("BrandManager")
+		if bm != null and bm.has_method("get_all_brand_products"):
+			var brand_prods = bm.get_all_brand_products()
+			for entry in brand_prods:
+				var p: Dictionary = entry.product if entry.has("product") else entry
+				if p.get("section", "") == section_id:
+					products.append(p)
+
+	var cart = null
+	if main != null:
+		var pl = main.get_node_or_null("Player")
+		if pl != null:
+			cart = pl.get_cart()
+	open(section_id, products, cart)
 
 func open(section_id: String, products: Array, cart) -> void:
 	_section_id = section_id

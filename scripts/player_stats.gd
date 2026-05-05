@@ -52,6 +52,24 @@ var _unique_products_bought: Array = []  # product IDs
 
 var _floors_visited_set: Array = []
 var _achievements_unlocked: Array = []
+var _loyalty_points: int = 0
+var _coins: int = 10  # player starts with 10 coins
+var _is_loyalty_member: bool = false
+var _cash: float = 200.0  # player starting cash
+
+func add_cash(amount: float) -> void:
+	_cash += amount
+	if _cash < 0:
+		_cash = 0.0
+
+func spend_cash(amount: float) -> bool:
+	if _cash < amount:
+		return false
+	_cash -= amount
+	return true
+
+func get_cash() -> float:
+	return _cash
 
 var _xp_for_next_level: int:
 	get: return _xp_for_level(_level + 1)
@@ -95,6 +113,52 @@ func on_checkout(subtotal: float, item_count: int) -> void:
 	_checkout_count += 1
 	if item_count >= 10:
 		add_xp(XP_FULL_CART, "Full cart checkout (%d items)" % item_count)
+	# Loyalty: earn 1 pt per $1 spent (only if member)
+	if _is_loyalty_member:
+		_loyalty_points += int(subtotal)
+
+# ─── Loyalty Program ────────────────────────────────────────────────
+
+func signup_loyalty() -> bool:
+	if _is_loyalty_member:
+		return false
+	_is_loyalty_member = true
+	return true
+
+func is_loyalty_member() -> bool:
+	return _is_loyalty_member
+
+func get_loyalty_points() -> int:
+	return _loyalty_points
+
+# Returns credit applied (max $5 per 100 pts)
+func redeem_loyalty_credit() -> float:
+	if _loyalty_points < 100:
+		return 0.0
+	var credits := int(_loyalty_points / 100)
+	_loyalty_points -= credits * 100
+	return credits * 5.0
+
+# ─── Coin System ────────────────────────────────────────────────────
+
+func get_coins() -> int:
+	return _coins
+
+func add_coins(amount: int) -> void:
+	_coins += amount
+
+func spend_coins(amount: int) -> bool:
+	if _coins < amount:
+		return false
+	_coins -= amount
+	return true
+
+func add_loyalty_points(amount: int) -> void:
+	_loyalty_points += amount
+
+func on_claw_win() -> void:
+	_claw_wins += 1
+	_check_achievements()
 
 func on_issue_resolved(issue_label: String) -> void:
 	_issues_resolved += 1
