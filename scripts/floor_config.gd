@@ -1974,6 +1974,20 @@ e
 	# ── Floor 13 — Kids Kingdom (Phase K) ───────────────────────────────────────
 	FLOOR_DEFS.append(FloorDef.new(
 		13, "13", "kids_kingdom", Color(0.72, 0.58, 0.80),
+		[
+			Z(ZONE_COMMON,           2,  3, 78, 38),
+			Z(ZONE_KIDS_PLAY,        2,  3, 28, 20, {"name": "PLAY ZONE", "color": Color(0.60, 0.80, 0.90)}),
+			Z(ZONE_KIDS_CLUB,       32,  3, 24, 20, {"name": "KIDS CLUB", "color": Color(0.90, 0.60, 0.80)}),
+			Z(ZONE_NURSING_ROOM,    58,  3, 20, 12, {"name": "NURSERY", "color": Color(0.85, 0.75, 0.90)}),
+			Z(ZONE_WC,              58, 17, 20, 12, {"name": "FAMILY WC", "color": Color(0.70, 0.65, 0.80)}),
+			Z(ZONE_STAIRS,         78,  2,  4, 40),
+			Z(ZONE_ELEVATOR,       83,  2,  4, 40),
+		],
+		[SZ("toys", 2, 3, 28, 20)],
+		true, true, true, true
+	))
+
+	───────────────────────────────
 	# ?? Floor 14 ??Electronics Megastore (Phase H) ???????????????????????????????
 	FLOOR_DEFS.append(FloorDef.new(
 		14, "14", "electronics", Color(0.35, 0.45, 0.65),
