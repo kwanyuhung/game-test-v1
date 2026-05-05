@@ -20,7 +20,7 @@ extends Node
 
 # ── World geometry ──────────────────────────────────────────────
 const CELL_SIZE := 16
-const WORLD_W   := 96   # tiles
+const WORLD_W   := 128   # tiles
 const WORLD_H   := 800  # total world height (all floors stacked)
 const WORLD_PIXEL_H := WORLD_W * CELL_SIZE   # 1536
 
@@ -45,6 +45,7 @@ const ZONE_PET_ADOPTION  := "pet_adoption"
 const ZONE_WAREHOUSE       := "warehouse"
 const ZONE_TRUCK_DOCK     := "truck_dock"
 const ZONE_FORKLIFT       := "forklift"
+const ZONE_STORAGE_SHELF    := "storage_shelf"
 const ZONE_CONVEYOR       := "conveyor"
 const ZONE_PACKING_STATION := "packing_station"
 const ZONE_ATM           := "atm"
@@ -203,8 +204,12 @@ func _init_floors() -> void:
 			# Food Street Row 3 (y=25..33)
 			Z(ZONE_FOOD_STALL,   2, 25, 14,  8, {"stall_id": "mexican"}),
 			Z(ZONE_FOOD_STALL,  18, 25, 14,  8, {"stall_id": "drinks"}),
-			# Parking (y=35 to y=49)
-			Z(ZONE_PARKING,      2, 35, 78, 14),
+			# Warehouse Receiving Dock at street level (y=35..49)
+			Z(ZONE_WAREHOUSE,     0, 35, 120, 14,{name:"WAREHOUSE FLOOR",color:Color(0.55,0.45,0.38)}),
+			Z(ZONE_TRUCK_DOCK,    0, 35,  22, 14,{name:"TRUCK DOCK",color:Color(0.50,0.40,0.30)}),
+			Z(ZONE_FORKLIFT,      0, 42,  22,  7,{name:"FORKLIFT ZONE",color:Color(0.80,0.60,0.20)}),
+			Z(ZONE_CONVEYOR,     22, 38,  50,  8,{name:"CONVEYOR BELT",color:Color(0.60,0.60,0.65)}),
+			Z(ZONE_STORAGE_SHELF, 75, 35,  45, 14,{name:"STORAGE",color:Color(0.60,0.50,0.40)}),
 			# Vertical shafts
 			Z(ZONE_ELEVATOR,    80,  2,  4, 47),
 			Z(ZONE_STAIRS,      84,  2,  6, 47),

@@ -27,14 +27,18 @@ Welcome! Here's everything you can do on each floor.
 
 ---
 
-## Floor G — Ground Floor 🅿️🍜
+## Floor G — Ground Floor 🏭🍜
 
-**Theme:** Lobby + Food Street + Parking
+**Theme:** Lobby + Food Street + **Warehouse Receiving Dock** (street level)
 
-### Parking (Bottom — y=36..50)
-- Walk near any **white parking slot** and press `E` to see the slot number
-- Slots 1–3 have parked NPC cars (occupied)
-- Slots 4–10 are free
+### Warehouse Receiving Dock (Bottom — y=35..49)
+- **Trucks dock here** at street level — realistic logistics!
+- Press **[E]** near the **Truck Dock** zone to enter warehouse control mode
+- Drive the truck with **[WASD]**, raise/lower forklift with **[Q/E]**, toggle conveyor with **[F]**
+- Storage shelves in the expanded area hold reserve stock
+- Widened to **128 tiles** (was 96) — much more retail space!
+
+### Food Street (Middle — y=17..33)
 
 ### Food Street (Middle — y=17..33)
 - **12 international food stalls** arranged in 3 rows

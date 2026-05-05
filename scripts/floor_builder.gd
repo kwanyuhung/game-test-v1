@@ -83,6 +83,7 @@ func _build_zone(zone: FloorConfig.Zone) -> void:
 		FloorConfig.ZONE_CLAW_MACHINE:  _build_zone_claw_machine(zone)
 		FloorConfig.ZONE_PET_ADOPTION:  _build_zone_pet_adoption(zone)
 		FloorConfig.ZONE_WAREHOUSE:      _build_zone_warehouse(zone)
+		FloorConfig.ZONE_STORAGE_SHELF:   _build_zone_storage_shelf(zone)
 		FloorConfig.ZONE_ATM:           _build_zone_atm(zone)
 		FloorConfig.ZONE_SHOES_RACK:    _build_zone_shoes_rack(zone)
 		FloorConfig.ZONE_DRESS_RACK:    _build_zone_dress_rack(zone)
@@ -912,6 +913,22 @@ func _make_pet_food_bag_texture(pet_idx: int, bag_idx: int) -> Texture2D:
 # ─── Warehouse Zone ─────────────────────────────────────────────────
 # Visual representation of the warehouse receiving dock.
 # Shows shelving units, delivery doors, and stock crates.
+func _build_zone_storage_shelf(zone: FloorConfig.Zone) -> void:
+	# Storage shelf area - industrial metal shelving
+	var shelf_color = zone.get("color", Color(0.60, 0.50, 0.40))
+	var base = ColorRect.new()
+	base.color = shelf_color
+	base.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	base.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	_floor_node.add_child(base)
+	# Draw shelf lines
+	for row in range(zone.h):
+		var line = ColorRect.new()
+		line.color = Color(0.45, 0.38, 0.30)
+		line.size = Vector2(zone.w * CELL_SIZE, 2)
+		line.position = Vector2(zone.x * CELL_SIZE, (zone.y + row * 3) * CELL_SIZE)
+		_floor_node.add_child(line)
+
 func _build_zone_warehouse(zone: FloorConfig.Zone) -> void:
 	var cx := zone.x * CELL_SIZE
 	var cy := zone.y * CELL_SIZE
