@@ -97,6 +97,7 @@ const ZONE_REPAIR_COUNTER := "repair_counter"  # tech repair / service counter
 const ZONE_CAFE_COUNTER    := "cafe_counter"     # rooftop café counter
 const ZONE_PROMO_BOOTH        := "promo_booth"        # promotional daily deals booth
 const ZONE_WAREHOUSE_STOCK_VIEW := "wh_stock_view"    # warehouse stock level display
+const ZONE_STORE_NEWS          := "store_news"
 const ZONE_LOST_FOUND           := "lost_found"        # lost and found / customer service
 const ZONE_VENDING_MACHINE := "vending_machine"  # vending machine
 
@@ -244,6 +245,7 @@ func _init_floors() -> void:
 			Z(ZONE_PROMO_BOOTH,          3,  3, 12,  8, {"name": "DAILY DEALS", "color": Color(0.80, 0.55, 0.20)}),
 			Z(ZONE_WAREHOUSE_STOCK_VIEW, 116, 35, 10, 12, {"name": "STOCK STATUS", "color": Color(0.45, 0.60, 0.45)}),
 			Z(ZONE_LOST_FOUND,           22,  3, 12,  7, {"name": "LOST & FOUND", "color": Color(0.60, 0.50, 0.65)}),
+			Z(ZONE_STORE_NEWS,         36,  3, 12,  7, {"name": "STORE NEWS", "color": Color(0.45, 0.65, 0.80)}),
 		],
 		[],
 		false, false, true, true

@@ -2639,6 +2639,24 @@ func _build_zone_warehouse_stock_view(zone: FloorConfig.Zone) -> void:
 		bar_fill.position = Vector2((zone.x + 1) * CELL_SIZE, (zone.y + 4 + bar_i * 3) * CELL_SIZE)
 		_parent.add_child(bar_fill); _floor_nodes.append(bar_fill)
 
+func _build_zone_store_news(zone: FloorConfig.Zone) -> void:
+	var board := ColorRect.new()
+	board.color = Color(0.30, 0.40, 0.55)
+	board.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	board.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	_parent.add_child(board); _floor_nodes.append(board)
+	var header := ColorRect.new()
+	header.color = Color(0.40, 0.55, 0.75)
+	header.size = Vector2(zone.w * CELL_SIZE, 3 * CELL_SIZE)
+	header.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	_parent.add_child(header); _floor_nodes.append(header)
+	for ni in range(3):
+		var note := ColorRect.new()
+		note.color = Color(0.95, 0.92, 0.80)
+		note.size = Vector2(5 * CELL_SIZE, 4 * CELL_SIZE)
+		note.position = Vector2((zone.x + 1 + ni * 4) * CELL_SIZE, (zone.y + 4) * CELL_SIZE)
+		_parent.add_child(note); _floor_nodes.append(note)
+
 func _build_zone_lost_found(zone: FloorConfig.Zone) -> void:
 	# Lost & found / customer service desk
 	var desk := ColorRect.new()

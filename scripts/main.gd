@@ -125,7 +125,8 @@ var _nearby_digital_kiosk: bool = false
 var _nearby_info_desk: bool = false
 var _nearby_cafe: bool = false
 	var _nearby_promo_booth: bool = false  # Floor G promo booth
-	var _nearby_lost_found: bool = false      # Floor G lost & found
+	var _nearby_lost_found: bool = false
+	var _nearby_store_news: bool = false      # Floor G lost & found
 var _nearby_vending: bool = false
 var _in_checkout: bool = false
 var _cart_panel: CanvasLayer
@@ -1691,6 +1692,9 @@ func _on_player_interact() -> void:
 	if _nearby_lost_found:
 		if _toasts: _toasts.toast_info("Lost & Found: No items reported yet!")
 		return
+	if _nearby_store_news:
+		_read_store_news()
+		return
 
 # ── Food stall interaction ──────────────────────────────────────
 func _on_stall_interact_requested(stall_id: String) -> void:
@@ -2439,6 +2443,11 @@ func _do_truck_unload() -> void:
 		if _toasts: _toasts.toast_warning("No delivery to unload.")
 
 
+
+func _read_store_news() -> void:
+	if _toasts != null:
+		_toasts.toast_info("STORE TIPS: Restock low sections for bonus XP! Loyalty = bigger savings at checkout!")
+		_toasts.toast_info("Press [L] for your shopping list, [J] for quests!")
 func _open_promo_booth() -> void:
 	# Daily Deals promo booth - featured products with bonus XP
 	if _toasts != null:
@@ -2548,6 +2557,8 @@ func _update_phase3_proximity() -> void:
 		_nearby_cafe = true
 	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_PROMO_BOOTH, ppos):
 		_nearby_promo_booth = true
+	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_STORE_NEWS, ppos):
+		_nearby_store_news = true
 	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_LOST_FOUND, ppos):
 		_nearby_lost_found = true
 	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_VENDING_MACHINE, ppos):
@@ -2570,6 +2581,7 @@ func _update_phase3_proximity() -> void:
 		elif _nearby_cafe: txt += "Cafe Menu"
 			elif _nearby_promo_booth: txt += "Daily Deals [E Browse]"
 			elif _nearby_lost_found: txt += "Lost & Found"
+			elif _nearby_store_news: txt += "Store News [E Read]"
 			elif _nearby_promo_booth: txt += "Daily Deals [E Browse]"
 			elif _nearby_lost_found: txt += "Lost & Found"
 			elif _nearby_promo_booth: txt += "Daily Deals [E Browse]"
