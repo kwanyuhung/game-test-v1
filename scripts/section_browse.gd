@@ -462,12 +462,34 @@ func _build_grid(pan_x: float, grid_y: float, grid_w: float, grid_h: float, def)
 		_item_nodes.append(name_lbl)
 		
 		var price_lbl := Label.new()
-		price_lbl.text = "$%.2f" % prod.price
+		price_lbl.text = "$%.2f" % _get_adjusted_price(prod.price)
+		# Color code: green=sale, orange=high demand, gold=normal
+		var pmult := _get_dynamic_price_mult()
+		if pmult <= 0.85:
+			price_lbl.add_theme_color_override("font_color", Color(0.30, 0.90, 0.45))
+		elif pmult >= 1.15:
+			price_lbl.add_theme_color_override("font_color", Color(0.90, 0.55, 0.30))
+		else:
+			price_lbl.add_theme_color_override("font_color", Color(0.82, 0.70, 0.38))
 		price_lbl.position = Vector2(ix + 26, iy + 16)
-		price_lbl.add_theme_color_override("font_color", Color(0.82, 0.70, 0.38))
 		price_lbl.add_theme_font_size_override("font_size", 7)
 		add_child(price_lbl)
 		_item_nodes.append(price_lbl)
+		# Dynamic price badge (SALE!, HIGH DEMAND, LIMITED)
+		var dlabel := _get_dynamic_price_label()
+		if dlabel != "":
+			var badge := Label.new()
+			badge.text = dlabel
+			badge.position = Vector2(ix + item_w - 38, iy + 15)
+			badge.add_theme_font_size_override("font_size", 5)
+			if pmult <= 0.85:
+				badge.add_theme_color_override("font_color", Color(0.30, 0.90, 0.45))
+			elif pmult >= 1.15:
+				badge.add_theme_color_override("font_color", Color(0.90, 0.40, 0.30))
+			else:
+				badge.add_theme_color_override("font_color", Color(0.90, 0.75, 0.30))
+			add_child(badge)
+			_item_nodes.append(badge)
 
 		# ── Phase L: Stock bar ───────────────────────────────────────
 		var stock_ratio := _get_section_stock_ratio(_section_id)
