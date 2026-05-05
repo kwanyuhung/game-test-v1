@@ -2702,6 +2702,17 @@ func get_checkout_counters() -> Array:
 func get_floor_nodes() -> Array:
 	return _floor_nodes
 
+# Returns the world position of the price terminal (office_desk zone center)
+func get_office_desk_zone_center() -> Vector2:
+	if _floor_def == null:
+		return Vector2(-1, -1)
+	for zone in _floor_def.zones:
+		if zone.type == FloorConfig.ZONE_OFFICE_DESK:
+			var cx := (zone.x + zone.w * 0.5) * CELL_SIZE
+			var cy := (zone.y + zone.h * 0.5) * CELL_SIZE
+			return Vector2(cx, cy)
+	return Vector2(-1, -1)
+
 
 
 

@@ -24,10 +24,12 @@ const StatsPanelScript = preload("res://scripts/stats_panel.gd")
 const AchievementPopupScript = preload("res://scripts/achievement_popup.gd")
 const WarehouseSystemScript = preload("res://scripts/warehouse_system.gd")
 const ATMPanelScript = preload("res://scripts/atm_panel.gd")
+const CheckoutCounterScript = preload("res://scripts/checkout_counter.gd")
 const DevToolsScript = preload("res://scripts/dev_tools.gd")
 const AudioManagerScript = preload("res://scripts/audio_manager.gd")
 const MonitorPanelScript = preload("res://scripts/monitor_panel.gd")
 const PriceTerminalScript = preload("res://scripts/price_terminal.gd")
+const PriceOverrideScript = preload("res://scripts/price_override.gd")
 const SaveSystem = preload("res://scripts/save_system.gd")
 const TutorialOverlayScript = preload("res://scripts/tutorial_overlay.gd")
 const DailyBonusScript = preload("res://scripts/daily_bonus.gd")
@@ -161,6 +163,10 @@ func _ready() -> void:
 	_game_clock.day_changed.connect(_on_day_changed)
 	_game_clock.shift_report.connect(_on_shift_report)
 
+	# ── Price Override Singleton (Phase 6) ──
+	var price_override = PriceOverrideScript.new()
+	add_child(price_override)
+
 	_maintenance_system = MaintenanceSystemScript.new()
 	add_child(_maintenance_system)
 	_maintenance_system.configure(_game_clock)
@@ -256,6 +262,10 @@ func _ready() -> void:
 	add_child(_section_browse)
 	_section_browse.item_added.connect(_on_item_added_to_cart)
 	_section_browse.closed.connect(_on_browse_closed)
+	# ── Food Stall Browse Panel ──
+	_food_stall_browse = FoodStallBrowseScript.new()
+	add_child(_food_stall_browse)
+	_food_stall_browse.item_added.connect(_on_item_added_to_cart)
 	# Welcome toast
 	_toasts.show_toast("Welcome to Pixel Supermarket!", Color(0.08, 0.14, 0.22, 0.90))
 		_tutorial_overlay.show_tutorial()
@@ -362,6 +372,16 @@ func _build_floor(idx: int) -> void:
 	for machine in _floor_builder.get_claw_machines():
 		if machine.has_signal("interact_requested"):
 			machine.interact_requested.connect(_on_claw_interact_requested)
+	# Wire checkout signals
+	for counter in _checkout_counters:
+		if counter.has_signal("checkout_interacted"):
+			counter.checkout_interacted.connect(_on_checkout_interacted)
+		if counter.has_signal("express_rejected"):
+			counter.express_rejected.connect(_on_express_rejected)
+		if counter.has_signal("self_checkout_error"):
+			counter.self_checkout_error.connect(_on_self_checkout_error)
+		if counter.has_signal("self_checkout_cleared"):
+			counter.self_checkout_cleared.connect(_on_self_checkout_cleared)
 
 func _clear_floor_nodes() -> void:
 	for node in _floor_nodes:
@@ -530,6 +550,42 @@ func _build_hud() -> void:
 	tab_hint.add_theme_color_override("font_color", Color(0.45, 0.45, 0.45))
 	tab_hint.add_theme_font_size_override("font_size", 7)
 	add_child(tab_hint)
+
+	# ── Checkout Receipt Panel ──
+	_build_checkout_receipt_panel()
+
+func _build_checkout_receipt_panel() -> void:
+	# Receipt overlay panel (hidden until checkout)
+	var panel := ColorRect.new()
+	panel.name = "CheckoutReceipt"
+	panel.position = Vector2(80.0, 30.0)
+	panel.size = Vector2(160.0, 120.0)
+	panel.color = Color(0.08, 0.08, 0.12, 0.95)
+	panel.visible = false
+	panel.z_index = 500
+	add_child(panel)
+	_checkout_receipt = panel
+
+	var title := Label.new()
+	title.text = "RECEIPT"
+	title.position = Vector2(60.0, 34.0)
+	title.add_theme_color_override("font_color", Color(0.90, 0.90, 0.60))
+	title.add_theme_font_size_override("font_size", 10)
+	panel.add_child(title)
+
+	_checkout_receipt_items_lbl = Label.new()
+	_checkout_receipt_items_lbl.text = ""
+	_checkout_receipt_items_lbl.position = Vector2(8.0, 48.0)
+	_checkout_receipt_items_lbl.add_theme_color_override("font_color", Color(0.80, 0.80, 0.70))
+	_checkout_receipt_items_lbl.add_theme_font_size_override("font_size", 7)
+	panel.add_child(_checkout_receipt_items_lbl)
+
+	_checkout_total_lbl = Label.new()
+	_checkout_total_lbl.text = ""
+	_checkout_total_lbl.position = Vector2(8.0, 105.0)
+	_checkout_total_lbl.add_theme_color_override("font_color", Color(0.90, 0.90, 0.60))
+	_checkout_total_lbl.add_theme_font_size_override("font_size", 8)
+	panel.add_child(_checkout_total_lbl)
 
 func _update_floor_hud() -> void:
 	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(_current_floor_idx)
@@ -776,6 +832,7 @@ func _process(_delta: float) -> void:
 	_update_atm_proximity()
 	_update_warehouse_proximity()
 	_update_monitor_proximity()
+	_update_terminal_proximity()
 
 func _update_elevator_proximity() -> void:
 	if _player == null or _elevator == null:
@@ -1225,3 +1282,282 @@ func _on_game_paused() -> void:
 
 func _on_game_resumed() -> void:
 	if _toasts != null: _toasts.toast_info("Game Resumed")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHASE 3-6 WIRING: Signal handlers & proximity updates that were connected
+# but never implemented. These make E-key interactions actually work.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Section enter/exit ───────────────────────────────────────────
+func _on_section_entered(section_id: String) -> void:
+	# Find the section node and set it as nearby
+	if _floor_builder == null:
+		return
+	for sec in _sections:
+		if sec.get_def().id == section_id:
+			_nearby_section = sec
+			var prompt_lbl = get_node_or_null("PromptLbl")
+			var prompt_bg = get_node_or_null("PromptBg")
+			if prompt_lbl != null:
+				prompt_lbl.text = "[E] Browse %s" % sec.get_def().name
+				prompt_lbl.visible = true
+			if prompt_bg != null:
+				prompt_bg.visible = true
+			break
+
+func _on_section_exited(section_id: String) -> void:
+	if _nearby_section != null and _nearby_section.get_def().id == section_id:
+		_nearby_section = null
+
+# ── Player E-key interact ───────────────────────────────────────
+func _on_player_interact() -> void:
+	# Priority: UI panels > checkout > section > elevator > ATM > stall > claw
+	if _current_section_browse != null and _current_section_browse.visible:
+		return
+	if _checkout_receipt_visible:
+		return
+	if _in_elevator:
+		return
+	if _pause_menu != null and _pause_menu.visible:
+		return
+
+	# Checkout
+	if _nearby_checkout != null:
+		_do_checkout_interaction()
+		return
+
+	# Section browse
+	if _nearby_section != null:
+		_open_section_browse(_nearby_section)
+		return
+
+	# Elevator
+	if _nearby_elevator:
+		_elevator.open_panel()
+		return
+
+	# ATM
+	if _nearby_atm:
+		_open_atm_panel()
+		return
+
+	# Price terminal (staff mode)
+	if _nearby_terminal and _player != null and _player.is_in_staff_mode():
+		_open_price_terminal()
+		return
+
+	# Food stall (already emits interact_requested on body enter,
+	# but handle E as fallback)
+	if _nearby_stall != null:
+		_open_stall_browse(_nearby_stall)
+		return
+
+	# Claw machine
+	if _nearby_claw_machine != null:
+		_nearby_claw_machine.start_game()
+		return
+
+# ── Food stall interaction ──────────────────────────────────────
+func _on_stall_interact_requested(stall_id: String) -> void:
+	if _floor_builder == null:
+		return
+	for stall in _floor_builder.get_food_stalls():
+		if stall.get_stall_id() == stall_id:
+			_open_stall_browse(stall)
+			break
+
+func _open_stall_browse(stall) -> void:
+	if _food_stall_browse != null and _food_stall_browse.visible:
+		return
+	_food_stall_browse.open(stall)
+
+# ── Claw machine interaction ──────────────────────────────────────
+func _on_claw_interact_requested() -> void:
+	if _nearby_claw_machine != null:
+		_nearby_claw_machine.start_game()
+
+# ── Checkout proximity & interaction ─────────────────────────────
+func _update_checkout_proximity() -> void:
+	_nearby_checkout = null
+	if _floor_builder == null or _player == null:
+		return
+	var ppos = _player.position
+	var nearest_dist := 99999.0
+	for counter in _checkout_counters:
+		var cpos = counter.position
+		var dist := ppos.distance_to(cpos)
+		if dist < nearest_dist and dist < CELL_SIZE * 8.0:
+			nearest_dist = dist
+			_nearby_checkout = counter
+
+	var prompt_lbl = get_node_or_null("PromptLbl")
+	var prompt_bg = get_node_or_null("PromptBg")
+	if _nearby_checkout != null and not _nearby_elevator and not _nearby_stairs:
+		var ctype = _nearby_checkout.get_checkout_type()
+		var type_str := "Checkout"
+		match ctype:
+			CheckoutCounter.CheckoutType.STAFFED:
+				type_str = "[E] Staffed Checkout"
+			CheckoutCounter.CheckoutType.SELF:
+				type_str = "[E] Self-Checkout"
+			CheckoutCounter.CheckoutType.EXPRESS:
+				type_str = "[E] Express Checkout"
+		if prompt_lbl != null:
+			prompt_lbl.text = type_str
+			prompt_lbl.visible = true
+		if prompt_bg != null:
+			prompt_bg.visible = true
+	else:
+		if prompt_lbl != null and prompt_lbl.text == "[E] Staffed Checkout" or prompt_lbl.text == "[E] Self-Checkout" or prompt_lbl.text == "[E] Express Checkout" or prompt_lbl.text == "[E] Checkout":
+			prompt_lbl.text = ""
+
+func _on_checkout_interacted(checkout_id: int, checkout_type) -> void:
+	_do_checkout_interaction()
+
+func _do_checkout_interaction() -> void:
+	if _nearby_checkout == null:
+		return
+	var cart: Player = _player
+	if cart == null:
+		return
+	var items = cart.get_cart_items()
+	if items.size() == 0:
+		if _toasts != null: _toasts.toast_warning("Cart is empty!")
+		return
+
+	var ctype = _nearby_checkout.get_checkout_type()
+
+	# Express lane item count check
+	if ctype == CheckoutCounter.CheckoutType.EXPRESS:
+		var item_count := 0
+		for item in items:
+			item_count += item.get("qty", 1)
+		if item_count > CheckoutCounter.MAX_EXPRESS_ITEMS:
+			_nearby_checkout.check_express_items(item_count)
+			_on_express_rejected()
+			return
+
+	# Self-checkout random error
+	if ctype == CheckoutCounter.CheckoutType.SELF:
+		if _nearby_checkout.roll_self_checkout_error():
+			_on_self_checkout_error()
+			return
+
+	# Proceed with checkout
+	_finish_checkout()
+
+func _finish_checkout() -> void:
+	if _player == null:
+		return
+	var cart = _player
+	var items = cart.get_cart_items()
+	if items.size() == 0:
+		return
+	var subtotal := 0.0
+	for item in items:
+		subtotal += item.price * item.get("qty", 1)
+	var tax = subtotal * 0.08
+	var total = subtotal + tax
+
+	# Deduct cash
+	var stats = _player_stats
+	if stats != null:
+		stats.add_cash(-total)
+
+	# Award XP
+	if stats != null:
+		stats.add_xp(max(1, int(total * 0.5)))
+
+	# Clear cart
+	cart.clear_cart()
+
+	# Show receipt
+	_show_checkout_receipt(items, subtotal, tax, total)
+
+	# Notify
+	notify_telegram("Checkout complete! $%.2f spent. Cart cleared." % total)
+	if _toasts != null: _toasts.toast_success("Checkout complete! -$%.2f" % total)
+
+	# Auto-save
+	SaveSystem.save_game(self)
+
+func _show_checkout_receipt(items: Array, subtotal: float, tax: float, total: float) -> void:
+	# Receipt display (re-use existing receipt panel or create)
+	if _checkout_receipt == null:
+		return
+	_checkout_receipt.visible = true
+	_checkout_receipt_items_lbl.text = ""
+	for item in items:
+		var qty = item.get("qty", 1)
+		_checkout_receipt_items_lbl.text += "%dx %s $%.2f\n" % [qty, item.name, item.price * qty]
+	_checkout_total_lbl.text = "Subtotal: $%.2f\nTax: $%.2f\nTOTAL: $%.2f" % [subtotal, tax, total]
+	_checkout_receipt_visible = true
+	await get_tree().create_timer(5.0).timeout
+	if _checkout_receipt != null:
+		_checkout_receipt.visible = false
+		_checkout_receipt_visible = false
+
+func _on_express_rejected() -> void:
+	if _toasts != null:
+		_toasts.toast_error("Express lane: max %d items only!" % CheckoutCounter.MAX_EXPRESS_ITEMS)
+
+func _on_self_checkout_error() -> void:
+	if _toasts != null:
+		_toasts.toast_error("Unexpected item in bagging area! Press E to retry.")
+
+func _on_self_checkout_cleared() -> void:
+	# Retry checkout after error dismissed
+	_do_checkout_interaction()
+
+# ── Section browse ──────────────────────────────────────────────
+func _open_section_browse(section) -> void:
+	if _section_browse == null:
+		return
+	_section_browse.open_section(section)
+	_current_section_browse = _section_browse
+
+# ── Staff mode (Phase 6) ────────────────────────────────────────
+func can_toggle_staff_mode() -> bool:
+	return _current_floor_idx == 9
+
+func show_staff_only_hint() -> void:
+	if _toasts != null:
+		_toasts.toast_info("Staff Only — Press K on Floor 9 to clock in")
+
+func on_staff_mode_toggled(is_staff: bool) -> void:
+	if is_staff:
+		_staff_blocked_floor = -1  # can access all floors when staff
+		if _toasts != null: _toasts.toast_success("[STAFF MODE] Clocked in!")
+	else:
+		_staff_blocked_floor = 9  # lock floor 9 again
+		if _toasts != null: _toasts.toast_info("[STAFF MODE] Clocked out.")
+
+# ── Price terminal proximity (Phase 6) ───────────────────────────
+func _update_terminal_proximity() -> void:
+	_nearby_terminal = false
+	if _floor_builder == null or _player == null:
+		return
+	if _current_floor_idx != 9:
+		return
+	# Check if player is near the office_desk zone (terminal on Floor 9)
+	var terminal_center = _floor_builder.get_office_desk_zone_center()
+	if terminal_center.x < 0:
+		return
+	var ppos = _player.position
+	if ppos.distance_to(terminal_center) < CELL_SIZE * 12.0:
+		_nearby_terminal = true
+
+	var prompt_lbl = get_node_or_null("PromptLbl")
+	var prompt_bg = get_node_or_null("PromptBg")
+	if _nearby_terminal and _player != null and _player.is_in_staff_mode():
+		if prompt_lbl != null:
+			prompt_lbl.text = "[E] Price Terminal"
+			prompt_lbl.visible = true
+		if prompt_bg != null:
+			prompt_bg.visible = true
+
+func _open_price_terminal() -> void:
+	if _price_terminal == null:
+		_price_terminal = PriceTerminalScript.new()
+		add_child(_price_terminal)
+	_price_terminal.open()
