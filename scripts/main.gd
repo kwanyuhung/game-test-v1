@@ -34,6 +34,7 @@ const ShoppingListScript = preload("res://scripts/shopping_list.gd")
 const QuestSystemScript = preload("res://scripts/quest_system.gd")
 const QuestJournalScript = preload("res://scripts/quest_journal.gd")
 const SettingsPanelScript = preload("res://scripts/settings_panel.gd")
+const PauseMenuScript = preload("res://scripts/pause_menu.gd")
 const MiniMapScript = preload("res://scripts/mini_map.gd")
 const ToastManagerScript = preload("res://scripts/toast_manager.gd")
 const FloatingTextScript = preload("res://scripts/floating_text.gd")
@@ -89,6 +90,7 @@ var _shopping_list_visible: bool = false
 var _quest_system: QuestSystem = null
 var _quest_journal: QuestJournal = null
 var _settings_panel: SettingsPanel = null
+var _pause_menu: PauseMenu = null
 var _shopping_list_visible: bool = false
 var _audio: AudioManager = null
 
@@ -233,9 +235,11 @@ func _ready() -> void:
 	add_child(_quest_journal)
 	_settings_panel = SettingsPanelScript.new()
 	add_child(_settings_panel)
-	_settings_panel.visible = false
-	_settings_panel.setting_changed.connect(_on_setting_changed)
-	add_child(_settings_panel)
+	_pause_menu = PauseMenuScript.new()
+	add_child(_pause_menu)
+	_pause_menu.visible = false
+	_pause_menu.paused.connect(_on_game_paused)
+	_pause_menu.resumed.connect(_on_game_resumed)
 	_settings_panel.visible = false
 	_settings_panel.setting_changed.connect(_on_setting_changed)
 	_quest_journal.set_quest_system(_quest_system)
@@ -744,6 +748,11 @@ func _input(event: InputEvent) -> void:
 			# O ── Settings
 			KEY_O:
 				_toggle_settings_panel()
+			# P / SPACE ── Pause / Resume
+			KEY_P:
+				_toggle_pause()
+			KEY_SPACE:
+				_toggle_pause()
 
 func _process(_delta: float) -> void:
 	if _current_section_browse != null and _current_section_browse.visible:
@@ -1199,3 +1208,16 @@ func _on_setting_changed(key: String, value) -> void:
 			# Toasts are always on, just a flag
 		"notif_telegram":
 			# Telegram handled by flag in telegram_bot
+
+func _toggle_pause() -> void:
+	if _current_section_browse != null and _current_section_browse.visible: return
+	if _checkout_receipt_visible: return
+	if _in_elevator: return
+	if _pause_menu == null: return
+	_pause_menu.toggle()
+
+func _on_game_paused() -> void:
+	if _toasts != null: _toasts.toast_info("Game Paused")
+
+func _on_game_resumed() -> void:
+	if _toasts != null: _toasts.toast_info("Game Resumed")
