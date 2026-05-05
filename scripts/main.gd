@@ -95,6 +95,7 @@ var _floating_text: FloatingText = null
 var _fade: FadeTransition = null
 var _daily_bonus: DailyBonus = null
 var _shopping_list: ShoppingList = null
+var _loyalty_panel: Node2D = null
 var _shopping_list_visible: bool = false
 var _quest_system: QuestSystem = null
 var _quest_journal: QuestJournal = null
@@ -193,6 +194,11 @@ func _ready() -> void:
 	_brand_manager = BrandManagerScript.new()
 	_brand_manager.name = "BrandManager"
 	add_child(_brand_manager)
+
+	# ── Phase O: Promotion & Loyalty Manager ──
+	_promo_manager = PromotionManagerScript.new()
+	_promo_manager.name = "PromotionManager"
+	add_child(_promo_manager)
 	_brand_portal = BrandPortalScript.new()
 	add_child(_brand_portal)
 	_brand_portal.closed.connect(_on_brand_portal_closed)
@@ -270,6 +276,10 @@ func _ready() -> void:
 	_daily_bonus.check_and_award(self)
 	_shopping_list = ShoppingListScript.new()
 	add_child(_shopping_list)
+	_loyalty_panel = Node2D.new()
+	_loyalty_panel.name = "LoyaltyPanel"
+	_loyalty_panel.visible = false
+	add_child(_loyalty_panel)
 	_quest_system = QuestSystemScript.new()
 	add_child(_quest_system)
 	_quest_journal = QuestJournalScript.new()
@@ -850,6 +860,9 @@ func _input(event: InputEvent) -> void:
 			# L ── Shopping List
 			KEY_L:
 				_toggle_shopping_list()
+			# M ── Loyalty Panel
+			KEY_M:
+				_toggle_loyalty_panel()
 			# B ── Brand Portal
 			KEY_B:
 				_toggle_brand_portal()
@@ -1379,6 +1392,36 @@ func _show_tutorial_overlay() -> void:
 	_tutorial_overlay.show_tutorial()
 	_tutorial_overlay.dismissed.connect(_on_tutorial_dismissed)
 
+func _toggle_loyalty_panel() -> void:
+	if _loyalty_panel == null:
+		return
+	_loyalty_panel.visible = not _loyalty_panel.visible
+	if _loyalty_panel.visible:
+		_refresh_loyalty_panel()
+
+func _refresh_loyalty_panel() -> void:
+	if _loyalty_panel == null or not _promo_manager:
+		return
+	for c in _loyalty_panel.get_children():
+		c.queue_free()
+	var pan := ColorRect.new()
+	pan.color = Color(0.05, 0.08, 0.15, 0.95)
+	pan.size = Vector2(200, 120)
+	_loyalty_panel.add_child(pan)
+	var lbl := Label.new()
+	lbl.add_theme_font_size_override("font_size", 8)
+	var tier := _promo_manager.get_tier_name()
+	var tier_col := _promo_manager.get_tier_color()
+	var pts := _promo_manager.get_loyalty_points()
+	var disc := int(_promo_manager.get_tier_discount() * 100)
+	var mult := _promo_manager.get_tier_point_multiplier()
+	var prog := _promo_manager.get_tier_progress()
+	lbl.text = "%s LOYALTY\n\nPoints: %d\nDiscount: %d%%\nPoint Bonus: x%.1f\n\nProgress: %d / %d pts" % [
+		tier.to_upper(), pts, disc, mult, prog["current"], prog["threshold"]]
+	lbl.add_theme_color_override("font_color", tier_col)
+	lbl.position = Vector2(10, 10)
+	_loyalty_panel.add_child(lbl)
+
 func _toggle_shopping_list() -> void:
 	if _shopping_list == null: return
 	_shopping_list_visible = not _shopping_list_visible
@@ -1696,7 +1739,11 @@ func _finish_checkout() -> void:
 	var loyalty_credit := 0.0
 	if stats != null and stats.is_loyalty_member():
 		loyalty_credit = stats.redeem_loyalty_credit()
-	var taxable := subtotal - loyalty_credit
+	# ── Phase O: Loyalty tier discount from promotion_manager ─────
+	var tier_discount := 0.0
+	if _promo_manager != null:
+		tier_discount = _promo_manager.get_loyalty_discount(subtotal)
+	var taxable := subtotal - loyalty_credit - tier_discount
 	if taxable < 0:
 		taxable = 0.0
 	var tax = taxable * 0.08
@@ -1736,13 +1783,25 @@ func _finish_checkout() -> void:
 		if stats != null and stats.has_method("get_satisfaction_bonus"):
 			satisfaction_mult = stats.get_satisfaction_bonus()
 			stats.record_customer_served(was_satisfied)
-		var final_xp := max(1, int(total_xp * satisfaction_mult))
+		# ── Phase O: Apply promotion manager XP multiplier ───────────
+		var promo_mult := 1.0
+		if _promo_manager != null:
+			promo_mult = _promo_manager.get_checkout_xp_multiplier()
+		var final_xp := max(1, int(total_xp * satisfaction_mult * promo_mult))
 		stats.add_xp(final_xp)
-		if satisfaction_mult > 1.05:
+		if satisfaction_mult > 1.05 or promo_mult > 1.0:
 			if _toasts:
 				_toasts.toast_success("Satisfied customer! +%d XP (%.0f%% bonus)" % [final_xp, (satisfaction_mult-1.0)*100])
 		# Award staff XP for completing checkout task
 		stats.add_staff_xp(items.size(), "Checkout: %d items" % items.size())
+
+	# ── Phase O: Earn loyalty points ───────────────────────────────
+	if _promo_manager != null:
+		var pts := _promo_manager.get_checkout_point_bonus(total)
+		_promo_manager.add_loyalty_points(pts)
+		if pts > 0:
+			if _toasts:
+				_toasts.toast_info("+%d Loyalty Points!" % pts)
 
 	# Record brand stats
 	if _brand_manager != null:

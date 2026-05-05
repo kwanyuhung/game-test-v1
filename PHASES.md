@@ -264,6 +264,32 @@ Business Mode (Shift+B) → Staff tab shows real roster from player_stats.
 
 ---
 
+---
+
+## Phase O ✅ Promotions & Events
+**Loyalty tiers, promotions, double XP events, loyalty point system**
+
+**Loyalty Tiers:**
+- **Bronze** (0–499 pts): 1× points, 1% discount
+- **Silver** (500–1,999 pts): 1.5× points, 3% discount
+- **Gold** (2,000–4,999 pts): 2× points, 5% discount
+- **Platinum** (5,000+ pts): 3× points, 10% discount
+
+**Press `[M]` to open Loyalty Panel** — shows tier, points, discount, progress to next tier.
+
+**Checkout Integration:**
+- Loyalty tier discount applied before tax at checkout
+- Loyalty points earned: 1 pt per $1 × tier multiplier
+- XP multiplier from promotion manager stacked with satisfaction bonus
+
+**Promotion Manager (`promotion_manager.gd`):**
+- Tracks loyalty points and tier automatically
+- `get_checkout_xp_multiplier()` — returns 2.0× during double XP events
+- `get_loyalty_discount(subtotal)` — returns tier discount amount
+- `get_checkout_point_bonus(total)` — returns points to award
+
+---
+
 ## Phase L ✅ Inventory & Stock Management
 **Stock depletion, restocking, and section-level inventory tracking**
 
