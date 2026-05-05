@@ -64,6 +64,9 @@ var _checkout_counters: Array = []
 var _nearby_section: Node = null
 var _nearby_checkout: Node = null
 var _nearby_stall: Node = null
+var _nearby_karaoke: bool = false         # Floor 17 karaoke room
+	var _nearby_pool_table: bool = false      # Floor 17 pool table
+	var _nearby_darts_board: bool = false    # Floor 17 darts board
 var _nearby_claw_machine: ClawMachine = null
 var _nearby_npc_for_chat: NPCController = null
 var _npcs: Array = []
@@ -1696,6 +1699,16 @@ func _on_player_interact() -> void:
 		_read_store_news()
 		return
 
+if _nearby_karaoke:
+		_play_karaoke()
+		return
+	if _nearby_pool_table:
+		_play_pool()
+		return
+	if _nearby_darts_board:
+		_play_darts()
+		return
+
 # ── Food stall interaction ──────────────────────────────────────
 func _on_stall_interact_requested(stall_id: String) -> void:
 	if _floor_builder == null:
@@ -2444,6 +2457,34 @@ func _do_truck_unload() -> void:
 
 
 
+
+func _play_karaoke() -> void:
+	# Karaoke mini-game - sing for XP bonus!
+	var bonus_xp = 20 + randi() % 30  # 20-50 XP
+	if _player_stats != null:
+		_player_stats.add_xp(bonus_xp)
+	if _toasts != null:
+		_toasts.toast_success("Karaoke! +%d XP - You are a star!" % bonus_xp)
+	notify_telegram("Karaoke performed! +%d XP earned!" % bonus_xp)
+
+func _play_pool() -> void:
+	# Pool table mini-game - shoot some pool!
+	var bonus_xp = 15 + randi() % 20  # 15-35 XP
+	if _player_stats != null:
+		_player_stats.add_xp(bonus_xp)
+	if _toasts != null:
+		_toasts.toast_info("Pool shot! +%d XP for the game!" % bonus_xp)
+
+func _play_darts() -> void:
+	# Darts mini-game - throw some darts!
+	var bonus_xp = 10 + randi() % 25  # 10-35 XP
+	var bonus_cash = clamp(float(randi() % 15) * 0.1, 0.5, 1.5)
+	if _player_stats != null:
+		_player_stats.add_xp(bonus_xp)
+		_player_stats.add_cash(bonus_cash)
+	if _toasts != null:
+		_toasts.toast_success("Bullseye! +%d XP + $%.2f prize money!" % [bonus_xp, bonus_cash])
+	notify_telegram("Darts champion! +%d XP + $%.2f prize!" % [bonus_xp, bonus_cash])
 func _read_store_news() -> void:
 	if _toasts != null:
 		_toasts.toast_info("STORE TIPS: Restock low sections for bonus XP! Loyalty = bigger savings at checkout!")
@@ -2537,6 +2578,9 @@ func _update_phase3_proximity() -> void:
 	_nearby_cafe = false
 	_nearby_vending = false
 	_nearby_warehouse_dock = false
+	_nearby_karaoke = false
+	_nearby_pool_table = false
+	_nearby_darts_board = false
 	_nearby_promo_booth = false
 	_nearby_lost_found = false
 	if _floor_builder == null or _player == null:
@@ -2559,6 +2603,12 @@ func _update_phase3_proximity() -> void:
 		_nearby_promo_booth = true
 	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_STORE_NEWS, ppos):
 		_nearby_store_news = true
+	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_KARAOKE, ppos):
+		_nearby_karaoke = true
+	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_POOL_TABLE, ppos):
+		_nearby_pool_table = true
+	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_DARTS_BOARD, ppos):
+		_nearby_darts_board = true
 	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_LOST_FOUND, ppos):
 		_nearby_lost_found = true
 	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_VENDING_MACHINE, ppos):
@@ -2579,7 +2629,10 @@ func _update_phase3_proximity() -> void:
 		elif _nearby_warehouse: txt += "Warehouse Ctrl [E Enter]"
 		elif _nearby_info_desk: txt += "Info Desk"
 		elif _nearby_cafe: txt += "Cafe Menu"
-			elif _nearby_promo_booth: txt += "Daily Deals [E Browse]"
+			elif _nearby_karaoke: txt += "Karaoke [E Sing]"
+			elif _nearby_pool_table: txt += "Pool Table [E Play]"
+			elif _nearby_darts_board: txt += "Darts [E Throw]"
+elif _nearby_promo_booth: txt += "Daily Deals [E Browse]"
 			elif _nearby_lost_found: txt += "Lost & Found"
 			elif _nearby_store_news: txt += "Store News [E Read]"
 			elif _nearby_promo_booth: txt += "Daily Deals [E Browse]"
