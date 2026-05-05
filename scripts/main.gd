@@ -32,6 +32,7 @@ const TutorialOverlayScript = preload("res://scripts/tutorial_overlay.gd")
 const DailyBonusScript = preload("res://scripts/daily_bonus.gd")
 const ShoppingListScript = preload("res://scripts/shopping_list.gd")
 const QuestSystemScript = preload("res://scripts/quest_system.gd")
+const QuestJournalScript = preload("res://scripts/quest_journal.gd")
 const MiniMapScript = preload("res://scripts/mini_map.gd")
 const ToastManagerScript = preload("res://scripts/toast_manager.gd")
 const FloatingTextScript = preload("res://scripts/floating_text.gd")
@@ -85,6 +86,7 @@ var _daily_bonus: DailyBonus = null
 var _shopping_list: ShoppingList = null
 var _shopping_list_visible: bool = false
 var _quest_system: QuestSystem = null
+var _quest_journal: QuestJournal = null
 var _shopping_list_visible: bool = false
 var _audio: AudioManager = null
 
@@ -225,6 +227,10 @@ func _ready() -> void:
 	add_child(_shopping_list)
 	_quest_system = QuestSystemScript.new()
 	add_child(_quest_system)
+	_quest_journal = QuestJournalScript.new()
+	add_child(_quest_journal)
+	_quest_journal.set_quest_system(_quest_system)
+	_quest_journal.visible = false
 	_quest_system.quest_completed.connect(_on_quest_completed)
 	_quest_system.all_daily_complete.connect(_on_all_quests_complete)
 	_shopping_list.visible = false
@@ -1137,3 +1143,8 @@ func _on_all_quests_complete() -> void:
 	notify_telegram("🏅 *All Daily Quests Done!* Epic bonus incoming!")
 	if _player_stats != null:
 		_player_stats.add_xp(50, "All Quests Bonus")
+
+func _toggle_quest_journal() -> void:
+	if _quest_journal == null: return
+	_quest_journal.toggle()
+	if _quest_journal.visible: _quest_journal.refresh_from_quest_system(_quest_system)

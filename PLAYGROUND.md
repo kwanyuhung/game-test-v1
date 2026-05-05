@@ -19,6 +19,7 @@ Welcome! Here's everything you can do on each floor.
 | `N` | Toggle mini-map |
 | `?` | Re-show controls tutorial |
 | `L` | Toggle shopping list |
+| `J` | Toggle quest journal |
 | `ESC` | Close any open panel |
 
 ---
@@ -404,6 +405,8 @@ Press **`N`** to toggle the mini-map overlay (top-right corner).
 - "Visit 3 different floors" — +20 XP
 
 Completing all 3 daily quests grants a **+50 XP epic bonus**.
+
+Press **J** to open the Quest Journal and see your progress.
 
 ---
 
