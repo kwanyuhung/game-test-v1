@@ -155,6 +155,7 @@ var _in_elevator: bool = false
 
 const AISLE_NAMES := {
 const StoreExpansionScript = preload("res://scripts/store_expansion.gd")
+const AntiTheftScript = preload("res://scripts/anti_theft.gd")
 	"dairy":   "DAIRY",
 	"produce": "PRODUCE",
 	"bakery":  "BAKERY",
@@ -204,6 +205,10 @@ func _ready() -> void:
 	_store_expansion = StoreExpansionScript.new()
 	_store_expansion.name = "StoreExpansion"
 	add_child(_store_expansion)
+	# ── Phase Q: Anti-Theft System ──
+	_anti_theft = AntiTheftScript.new()
+	_anti_theft.name = "AntiTheft"
+	add_child(_anti_theft)
 	_brand_portal = BrandPortalScript.new()
 	add_child(_brand_portal)
 	_brand_portal.closed.connect(_on_brand_portal_closed)
@@ -871,6 +876,9 @@ func _input(event: InputEvent) -> void:
 			# X ── Renovate nearby section (staff mode)
 			KEY_X:
 				_renovate_nearby_section()
+			# F ── Catch thief (when suspicious activity nearby)
+			KEY_F:
+				_attempt_catch_thief()
 			# B ── Brand Portal
 			KEY_B:
 				_toggle_brand_portal()
@@ -1879,6 +1887,22 @@ func _on_self_checkout_cleared() -> void:
 	_do_checkout_interaction()
 
 # ── Section browse ──────────────────────────────────────────────
+func _attempt_catch_thief() -> void:
+	if _anti_theft == null or _player == null:
+		return
+	if _anti_theft.get_active_thefts() == 0:
+		if _toasts:
+			_toasts.toast_info("No suspicious activity detected")
+		return
+	# Try to catch any nearby suspicious NPC
+	var reward = _anti_theft.catch_thief(null, true)
+	if _toasts:
+		_toasts.toast_success("Thief caught! +%d XP, $%.2f fine" % [reward["xp"], reward["cash"]])
+	if _player_stats != null:
+		_player_stats.add_xp(reward["xp"], "Caught shoplifter")
+		_player_stats.add_cash(reward["cash"])
+	notify_telegram("Thief caught! +%d XP, $%.2f" % [reward["xp"], reward["cash"]])
+
 func _renovate_nearby_section() -> void:
 	if _nearby_section == null or _store_expansion == null:
 		return

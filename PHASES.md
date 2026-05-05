@@ -317,6 +317,29 @@ Business Mode (Shift+B) → Staff tab shows real roster from player_stats.
 
 ---
 
+---
+
+## Phase Q ✅ Anti-Theft System
+**Security patrols, suspicious customers, thief apprehension**
+
+**How it works:**
+- NPCs that linger too long near a section become **suspicious** (detected after 15s)
+- Active thefts shown in HUD as alert level: CLEAR → SUSPICIOUS → ACTIVE THEFT
+- Press **[F]** to attempt catching a thief when active theft is detected
+
+**Rewards:**
+- **Caught thief**: +25–50 XP (player catches = 2× bonus), +$15–22 fine
+- Fines accumulate in anti_theft system
+- Security robots on patrol can also catch thieves
+
+**AntiTheftScript:**
+- Tracks suspicious NPCs with linger timer
+- `get_active_thefts()` — number of confirmed thefts in progress
+- `catch_thief(npc, was_player)` — apprehend and get reward
+- `get_security_alert_level()` — CLEAR / SUSPICIOUS / ACTIVE THEFT
+
+---
+
 ## Phase L ✅ Inventory & Stock Management
 **Stock depletion, restocking, and section-level inventory tracking**
 
