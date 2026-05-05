@@ -89,6 +89,7 @@ var _minimap_visible: bool = false
 var _time_label: Label = null
 var _store_status_label: Label = null
 var _shopping_list_count_lbl: Label = null
+var _cart_gift_wrapped: bool = false  # Phase G: gift wrap applied to cart
 var _xp_bar_bg: ColorRect = null
 var _xp_bar_fill: ColorRect = null
 var _floating_text: FloatingText = null
@@ -108,7 +109,11 @@ var _audio: AudioManager = null
 var _nearby_monitor: bool = false
 var _monitor_panel: MonitorPanel = null
 var _nearby_warehouse: bool = false
-var _warehouse_mode: bool = false   # player is controlling warehouse equipment
+var _nearby_warehouse_dock: bool = false  # Floor G receiving dock
+var _warehouse_mode: bool = false
+var _truck_dock_node: Node2D = null       # Truck visual at receiving dock
+var _truck_arrived: bool = false          # Truck currently at dock
+var _dock_stock_label: Label = null       # Shows warehouse stock summary   # player is controlling warehouse equipment
 var _warehouse_floor: Node2D = null
 var _nearby_elevator: bool = false
 var _nearby_parking: bool = false
@@ -281,6 +286,9 @@ func _ready() -> void:
 	_minimap.set_player(_player)
 	_minimap.set_floor(_current_floor_idx)
 	_minimap.visible = false
+	# Show/hide truck dock based on floor
+	if _truck_dock_node != null:
+		_truck_dock_node.visible = _current_floor_idx == 0
 	# ── Toast Manager ──
 	_toasts = ToastManagerScript.new()
 	add_child(_toasts)
@@ -1165,7 +1173,9 @@ func _update_warehouse_proximity() -> void:
 			prompt_bg.visible = true
 
 func _on_warehouse_delivery_arrived(contents: Dictionary) -> void:
-	notify_telegram("Delivery arrived at warehouse! Stock updated for %d sections." % contents.size())
+	# Spawn truck at dock on Floor G
+	_spawn_truck_at_dock()
+	notify_telegram("Delivery arrived! Truck at dock — press [E] to unload for bonus XP!" % contents.size())
 
 func _on_warehouse_low_stock(section_id: String) -> void:
 	var section_name := section_id.to_upper()
@@ -1607,7 +1617,18 @@ func _on_player_interact() -> void:
 		_nearby_claw_machine.start_game()
 		return
 
-	# Warehouse (Floor 11)
+	# Warehouse Receiving Dock (Floor G) — truck unloading
+	if _nearby_warehouse_dock:
+		if _truck_arrived:
+			_do_truck_unload()
+		else:
+			if _warehouse_system != null and not _warehouse.is_delivery_pending():
+				_warehouse.trigger_delivery()
+				if _toasts: _toasts.toast_info("Truck ordered! Will arrive shortly...")
+			else:
+				if _toasts: _toasts.toast_info("No delivery pending.")
+		return
+# Warehouse Control Mode (Floor 11)
 	if _nearby_warehouse:
 		if _warehouse_mode:
 			# Exit warehouse control mode
@@ -1640,8 +1661,12 @@ func _on_player_interact() -> void:
 			hint.text = "[1] Coins  [2] Loyalty  [E] Done"
 		return
 	if _nearby_gift_wrap:
-		if _toasts != null: _toasts.toast_success("Gift wrapped! +10 XP bonus earned!")
-		if _player_stats != null: _player_stats.add_xp(10)
+		if _cart_gift_wrapped:
+			if _toasts != null: _toasts.toast_info("Cart already gift wrapped!")
+		else:
+			_cart_gift_wrapped = true
+			if _toasts != null: _toasts.toast_success("Cart gift wrapped! +15 XP + $2 tip at checkout!")
+			if _player_stats != null: _player_stats.add_xp(15)
 		return
 	if _nearby_digital_kiosk:
 		if _toasts != null: _toasts.toast_info("Floor Directory: G=Lobby+Food, 1=Fresh, 2=Pantry, 3=Drinks, 4=Snacks, 5=Frozen, 6=Household, 7=H+B, 8=Arcade, 9=Staff, 10=Cafe")
@@ -1832,7 +1857,14 @@ func _finish_checkout() -> void:
 		if satisfaction_mult > 1.05 or promo_mult > 1.0:
 			if _toasts:
 				_toasts.toast_success("Satisfied customer! +%d XP (%.0f%% bonus)" % [final_xp, (satisfaction_mult-1.0)*100])
-		# Award staff XP for completing checkout task
+		# Gift wrap bonus at checkout
+		if _cart_gift_wrapped:
+			_cart_gift_wrapped = false
+			if stats != null:
+				stats.add_xp(15)
+				stats.add_cash(2.0)
+			if _toasts: _toasts.toast_success("Gift wrap bonus! +15 XP + $2 tip!")
+# Award staff XP for completing checkout task
 		stats.add_staff_xp(items.size(), "Checkout: %d items" % items.size())
 
 	# ── Phase O: Earn loyalty points ───────────────────────────────
@@ -2307,6 +2339,82 @@ func _open_cafe_browse() -> void:
 		hint.text = "[1-8] Add item  [E] finish order"
 
 # ── Phase 3: Vending Machine Browse ─────────────────────────────
+
+
+
+func _spawn_truck_at_dock() -> void:
+	# Show truck visual at the receiving dock (Floor G, y=35..42)
+	_truck_arrived = true
+	if _truck_dock_node == null:
+		_truck_dock_node = Node2D.new()
+		_truck_dock_node.name = "TruckDock"
+		add_child(_truck_dock_node)
+	# Build truck sprite from colored rects (truck cab + cargo body)
+	for ch in _truck_dock_node.get_children():
+		ch.queue_free()
+	var CELL = 16
+	# Cargo area (large box truck body)
+	var cargo := ColorRect.new()
+	cargo.color = Color(0.50, 0.55, 0.60)
+	cargo.size = Vector2(22 * CELL, 10 * CELL)
+	cargo.position = Vector2(0, 35 * CELL)
+	_truck_dock_node.add_child(cargo)
+	# Cab (front of truck)
+	var cab := ColorRect.new()
+	cab.color = Color(0.35, 0.42, 0.55)
+	cab.size = Vector2(7 * CELL, 7 * CELL)
+	cab.position = Vector2(22 * CELL, 38 * CELL)
+	_truck_dock_node.add_child(cab)
+	# Windshield
+	var windshield := ColorRect.new()
+	windshield.color = Color(0.55, 0.75, 0.90)
+	windshield.size = Vector2(5 * CELL, 4 * CELL)
+	windshield.position = Vector2(24 * CELL, 38 * CELL)
+	_truck_dock_node.add_child(windshield)
+	# Wheels
+	for wx in [1, 8, 16]:
+		for wy in [0, 1]:
+			var wheel := ColorRect.new()
+			wheel.color = Color(0.15, 0.15, 0.15)
+			wheel.size = Vector2(3 * CELL, 3 * CELL)
+			wheel.position = Vector2((wx * CELL), (44 + wy * 2) * CELL)
+			_truck_dock_node.add_child(wheel)
+	_truck_dock_node.visible = true
+	if _toasts:
+		_toasts.toast_info("🚚 Delivery truck arrived at dock! Press [E] to unload!")
+
+func _do_truck_unload() -> void:
+	# Called when player presses E at the truck dock with truck present
+	if _warehouse_system == null:
+		return
+	if not _truck_arrived:
+		return
+	_truck_arrived = false
+	# Hide truck visual
+	if _truck_dock_node != null:
+		_truck_dock_node.visible = false
+	# Receive the pending delivery into warehouse stock
+	if _warehouse.is_delivery_pending():
+		var pending = _warehouse.get_delivery_contents()
+		if pending.size() > 0:
+			var item_count = pending.values().reduce(func(a, b): return a + b, 0)
+			_warehouse.receive_delivery(pending)
+			# Bonus rewards for unloading
+			var bonus_xp = mini(item_count * 2, 50)
+			var bonus_cash = clamp(float(item_count) * 0.1, 1.0, 10.0)
+			if _player_stats != null:
+				_player_stats.add_xp(bonus_xp)
+				_player_stats.add_cash(bonus_cash)
+			if _toasts:
+				_toasts.toast_success("Truck unloaded! +%d XP + $%.2f bonus!" % [bonus_xp, bonus_cash])
+			notify_telegram("� Truck unloaded! +%d XP + $%.2f bonus!" % [bonus_xp, bonus_cash])
+		else:
+			_warehouse.receive_delivery(pending)
+			if _toasts: _toasts.toast_success("Truck unloaded! Stock updated.")
+	else:
+		if _toasts: _toasts.toast_warning("No delivery to unload.")
+
+
 func _open_vending_browse() -> void:
 	if _toasts == null:
 		return
@@ -2381,6 +2489,7 @@ func _update_phase3_proximity() -> void:
 	_nearby_info_desk = false
 	_nearby_cafe = false
 	_nearby_vending = false
+	_nearby_warehouse_dock = false
 	if _floor_builder == null or _player == null:
 		return
 	var ppos = _player.position
@@ -2400,13 +2509,19 @@ func _update_phase3_proximity() -> void:
 	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_VENDING_MACHINE, ppos):
 		_nearby_vending = true
 
+	# Floor G: warehouse receiving dock proximity
+	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_WAREHOUSE, ppos) and _current_floor_idx == 0:
+		_nearby_warehouse_dock = true
+
 	# Update prompt if no higher-priority prompt is showing
 	var show_phase3 = _nearby_loyalty or _nearby_gift_wrap or _nearby_digital_kiosk or _nearby_info_desk or _nearby_cafe or _nearby_vending
 	if show_phase3 and not _nearby_elevator and not _nearby_stairs and _nearby_section == null and _nearby_checkout == null:
 		var txt := "[E] "
 		if _nearby_loyalty: txt += "Loyalty Sign-Up"
 		elif _nearby_gift_wrap: txt += "Gift Wrap (+XP)"
-		elif _nearby_digital_kiosk: txt += "Info Directory"
+		elif _nearby_digital_kiosk: txt += "Info Directory [E Browse]"
+				elif _nearby_warehouse_dock: txt += "Truck Dock [E Unload]"
+		elif _nearby_warehouse: txt += "Warehouse Ctrl [E Enter]"
 		elif _nearby_info_desk: txt += "Info Desk"
 		elif _nearby_cafe: txt += "Cafe Menu"
 		elif _nearby_vending: txt += "Vending Machine"
