@@ -214,6 +214,31 @@ scripts/
 
 ---
 
+---
+
+## Phase M ✅ Staff Management System
+**Staff hiring, wages, morale, and performance**
+
+Business Mode (Shift+B) → Staff tab shows real roster from player_stats.
+
+**Hiring & Wages:**
+- Press **[H]** in Business Mode Staff tab to hire a staff member
+- Staff cost **$65–85/day** in wages, auto-deducted at day change
+- Press **[F]** to fire the last hired staff
+
+**Staff Morale:**
+- Each staff member has a **morale** (0–100%)
+- Status shown in roster: **OK** (≥70%), **LOW** (40–70%), **CRIT** (<40%)
+- Shift completion: all staff morale +5% per completed shift
+- Morale affects **store performance bonus**: up to +20% at full morale
+
+**Daily Payroll:**
+- Deduction happens at `_on_day_changed()` (store close)
+- Toast warns if insufficient cash for wages
+- Telegram notified of daily wage payout
+
+---
+
 ## Phase L ✅ Inventory & Stock Management
 **Stock depletion, restocking, and section-level inventory tracking**
 
