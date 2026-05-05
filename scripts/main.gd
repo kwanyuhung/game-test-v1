@@ -124,6 +124,8 @@ var _nearby_gift_wrap: bool = false
 var _nearby_digital_kiosk: bool = false
 var _nearby_info_desk: bool = false
 var _nearby_cafe: bool = false
+	var _nearby_promo_booth: bool = false  # Floor G promo booth
+	var _nearby_lost_found: bool = false      # Floor G lost & found
 var _nearby_vending: bool = false
 var _in_checkout: bool = false
 var _cart_panel: CanvasLayer
@@ -1683,6 +1685,12 @@ func _on_player_interact() -> void:
 	if _nearby_vending:
 		_open_vending_browse()
 		return
+	if _nearby_promo_booth:
+		_open_promo_booth()
+		return
+	if _nearby_lost_found:
+		if _toasts: _toasts.toast_info("Lost & Found: No items reported yet!")
+		return
 
 # ── Food stall interaction ──────────────────────────────────────
 func _on_stall_interact_requested(stall_id: String) -> void:
@@ -2415,6 +2423,20 @@ func _do_truck_unload() -> void:
 		if _toasts: _toasts.toast_warning("No delivery to unload.")
 
 
+func _open_promo_booth() -> void:
+	# Daily Deals promo booth - featured products with bonus XP
+	if _toasts != null:
+		_toasts.toast_info("Daily Deals! Featured: Burger, Pizza, Fried Chicken - 1.5x XP!")
+	if _player_stats != null:
+		_player_stats.add_xp(5)
+
+func _open_promo_booth() -> void:
+	# Daily Deals promo booth - featured products with bonus XP
+	if _toasts != null:
+		_toasts.toast_info("Daily Deals! Burger, Pizza, Fried Chicken - 1.5x XP!")
+	if _player_stats != null:
+		_player_stats.add_xp(5)
+
 func _open_vending_browse() -> void:
 	if _toasts == null:
 		return
@@ -2490,6 +2512,8 @@ func _update_phase3_proximity() -> void:
 	_nearby_cafe = false
 	_nearby_vending = false
 	_nearby_warehouse_dock = false
+	_nearby_promo_booth = false
+	_nearby_lost_found = false
 	if _floor_builder == null or _player == null:
 		return
 	var ppos = _player.position
@@ -2506,6 +2530,10 @@ func _update_phase3_proximity() -> void:
 		_nearby_info_desk = true
 	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_CAFE_COUNTER, ppos):
 		_nearby_cafe = true
+	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_PROMO_BOOTH, ppos):
+		_nearby_promo_booth = true
+	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_LOST_FOUND, ppos):
+		_nearby_lost_found = true
 	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_VENDING_MACHINE, ppos):
 		_nearby_vending = true
 
@@ -2524,6 +2552,12 @@ func _update_phase3_proximity() -> void:
 		elif _nearby_warehouse: txt += "Warehouse Ctrl [E Enter]"
 		elif _nearby_info_desk: txt += "Info Desk"
 		elif _nearby_cafe: txt += "Cafe Menu"
+			elif _nearby_promo_booth: txt += "Daily Deals [E Browse]"
+			elif _nearby_lost_found: txt += "Lost & Found"
+			elif _nearby_promo_booth: txt += "Daily Deals [E Browse]"
+			elif _nearby_lost_found: txt += "Lost & Found"
+			elif _nearby_promo_booth: txt += "Daily Deals [E Browse]"
+			elif _nearby_lost_found: txt += "Lost & Found"
 		elif _nearby_vending: txt += "Vending Machine"
 		if prompt_lbl != null:
 			prompt_lbl.text = txt

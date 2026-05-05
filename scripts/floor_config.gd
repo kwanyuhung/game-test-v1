@@ -95,6 +95,9 @@ const ZONE_SMART_HOME     := "smart_home"     # smart home devices
 const ZONE_ELECTRONICS    := "electronics"     # general electronics shelf
 const ZONE_REPAIR_COUNTER := "repair_counter"  # tech repair / service counter
 const ZONE_CAFE_COUNTER    := "cafe_counter"     # rooftop café counter
+const ZONE_PROMO_BOOTH        := "promo_booth"        # promotional daily deals booth
+const ZONE_WAREHOUSE_STOCK_VIEW := "wh_stock_view"    # warehouse stock level display
+const ZONE_LOST_FOUND           := "lost_found"        # lost and found / customer service
 const ZONE_VENDING_MACHINE := "vending_machine"  # vending machine
 
 # ── Zone helper ─────────────────────────────────────────────────
@@ -237,6 +240,10 @@ func _init_floors() -> void:
 			# Vending machines
 			Z(ZONE_VENDING_MACHINE, 70,  3, 10, 10, {"name": "VENDING", "items": ["Water $1.50","Cola $2.00","Juice $2.50","Chips $1.80","Chocolate $2.20","Energy Drink $3.00"]}),
 			Z(ZONE_VENDING_MACHINE, 70, 20, 10, 10, {"name": "VENDING", "items": ["Water $1.50","Cola $2.00","Juice $2.50","Chips $1.80","Chocolate $2.20","Energy Drink $3.00"]}),
+			# New: Daily deals promo booth, warehouse stock viewer, lost & found
+			Z(ZONE_PROMO_BOOTH,          3,  3, 12,  8, {"name": "DAILY DEALS", "color": Color(0.80, 0.55, 0.20)}),
+			Z(ZONE_WAREHOUSE_STOCK_VIEW, 116, 35, 10, 12, {"name": "STOCK STATUS", "color": Color(0.45, 0.60, 0.45)}),
+			Z(ZONE_LOST_FOUND,           22,  3, 12,  7, {"name": "LOST & FOUND", "color": Color(0.60, 0.50, 0.65)}),
 		],
 		[],
 		false, false, true, true
