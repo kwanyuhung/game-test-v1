@@ -85,6 +85,11 @@ const ZONE_KIDS_CLOTHING    := "kids_clothing"   # kids clothing section
 const ZONE_NURSING_ROOM     := "nursing_room"    # nursing / baby room
 const ZONE_FAMILY_WC        := "family_wc"      # family restroom / changing
 const ZONE_KIDS_CLUB        := "kids_club"       # kids club reception
+const ZONE_ENTERTAINMENT   := "entertainment"
+const ZONE_DARTS_BOARD     := "darts_board"
+const ZONE_POOL_TABLE      := "pool_table"
+const ZONE_KARAOKE         := "karaoke"
+const ZONE_CANTEEN         := "canteen"
 const ZONE_PHONE_GADGETS   := "phone_gadgets"   # phone / gadget accessories
 const ZONE_SMART_HOME     := "smart_home"     # smart home devices
 const ZONE_ELECTRONICS    := "electronics"     # general electronics shelf
@@ -152,6 +157,17 @@ class FoodStallDef:
 		_stalls["italian"]    = {"name": "Italian", "cuisine": "Italian", "color": Color(0.85, 0.55, 0.45), "glow": Color(1.0, 0.65, 0.45)}
 		_stalls["mexican"]    = {"name": "Mexican", "cuisine": "Mexican", "color": Color(0.85, 0.60, 0.40), "glow": Color(1.0, 0.70, 0.35)}
 		_stalls["drinks"]     = {"name": "Drinks", "cuisine": "Beverages", "color": Color(0.60, 0.80, 0.90), "glow": Color(0.70, 1.0, 1.0)}
+		_stalls["canteen_rice"]       = {"name": "Rice & Congee", "cuisine": "Chinese", "color": Color(0.85, 0.75, 0.60), "glow": Color(1.0, 0.90, 0.70)}
+		_stalls["canteen_noodle"]     = {"name": "Noodle Bar", "cuisine": "Asian", "color": Color(0.80, 0.70, 0.55), "glow": Color(1.0, 0.85, 0.60)}
+		_stalls["canteen_meat"]       = {"name": "Grill Station", "cuisine": "International", "color": Color(0.85, 0.60, 0.50), "glow": Color(1.0, 0.75, 0.60)}
+		_stalls["canteen_veg"]        = {"name": "Veggie Corner", "cuisine": "Vegetarian", "color": Color(0.60, 0.85, 0.60), "glow": Color(0.80, 1.0, 0.80)}
+		_stalls["canteen_drinks"]     = {"name": "Drinks Bar", "cuisine": "Beverages", "color": Color(0.60, 0.80, 0.90), "glow": Color(0.70, 1.0, 1.0)}
+		_stalls["canteen_fruit"]      = {"name": "Fruit Station", "cuisine": "Fresh", "color": Color(0.80, 0.55, 0.40), "glow": Color(1.0, 0.75, 0.55)}
+		_stalls["burger_king_style"]  = {"name": "Burger Bar", "cuisine": "American", "color": Color(0.85, 0.65, 0.40), "glow": Color(1.0, 0.85, 0.50)}
+		_stalls["pizza_hut_style"]     = {"name": "Pizza Corner", "cuisine": "Italian", "color": Color(0.85, 0.55, 0.45), "glow": Color(1.0, 0.65, 0.45)}
+		_stalls["fried_chicken_style"] = {"name": "Fried Chicken", "cuisine": "American", "color": Color(0.85, 0.70, 0.45), "glow": Color(1.0, 0.85, 0.50)}
+		_stalls["hot_dog_style"]       = {"name": "Hot Dog Stand", "cuisine": "American", "color": Color(0.85, 0.60, 0.50), "glow": Color(1.0, 0.75, 0.55)}
+		_stalls["ice_cream_style"]    = {"name": "Ice Cream Parlor", "cuisine": "Dessert", "color": Color(0.80, 0.70, 0.85), "glow": Color(0.95, 0.85, 1.0)}
 
 	static func get(sid: String) -> Dictionary:
 		return _stalls.get(sid, {"name": sid, "cuisine": "Other", "color": Color(0.7, 0.7, 0.7), "glow": Color(0.8, 0.8, 0.8)})
@@ -1980,6 +1996,87 @@ e
 		true, false, true, true
 	))
 
+
+
+	# ── Floor 15 — Canteen (Communal Dining) ───────────────────────────────────
+	FLOOR_DEFS.append(FloorDef.new(
+		15, "15", "canteen", Color(0.55, 0.50, 0.42),
+		[
+			Z(ZONE_COMMON,          2,  3, 78, 38),
+			# Long serving counter spanning most of the width
+			Z(ZONE_CANTEEN,         2,  3, 76,  8, {"name": "CANTEEN COUNTER", "color": Color(0.70, 0.65, 0.55)}),
+			# Left side: rice and noodle stations
+			Z(ZONE_FOOD_STALL,    2,  3, 12,  8, {"stall_id": "canteen_rice"}),
+			Z(ZONE_FOOD_STALL,   16,  3, 12,  8, {"stall_id": "canteen_noodle"}),
+			# Centre: meat and veg stations
+			Z(ZONE_FOOD_STALL,   30,  3, 12,  8, {"stall_id": "canteen_meat"}),
+			Z(ZONE_FOOD_STALL,   44,  3, 12,  8, {"stall_id": "canteen_veg"}),
+			# Right side: drinks and fruit
+			Z(ZONE_FOOD_STALL,   58,  3, 12,  8, {"stall_id": "canteen_drinks"}),
+			Z(ZONE_FOOD_STALL,   70,  3,  8,  8, {"stall_id": "canteen_fruit"}),
+			# Seating area (communal long tables)
+			Z(ZONE_DECOR,         4, 14, 72, 22, {"decor_type": "canteen_tables"}),
+			# Entrance markers
+			Z(ZONE_ENTRY_GATE,    38,  3,  6,  5, {"name": "CANTEEN ENTRANCE", "color": Color(0.80, 0.70, 0.30)}),
+			Z(ZONE_ELEVATOR,    80,  2,  4, 40),
+			Z(ZONE_STAIRS,      84,  2,  6, 40),
+		],
+		[],
+		true, false, true, false
+	))
+
+	# ── Floor 16 — Food Court (Fast Food Style) ─────────────────────────────────
+	FLOOR_DEFS.append(FloorDef.new(
+		16, "16", "food_court", Color(0.58, 0.45, 0.35),
+		[
+			Z(ZONE_COMMON,          2,  3, 78, 38),
+			# Fast food stalls
+			Z(ZONE_FOOD_STALL,    2,  3, 14,  8, {"stall_id": "burger_king_style"}),
+			Z(ZONE_FOOD_STALL,  18,  3, 14,  8, {"stall_id": "pizza_hut_style"}),
+			Z(ZONE_FOOD_STALL,  34,  3, 14,  8, {"stall_id": "fried_chicken_style"}),
+			Z(ZONE_FOOD_STALL,  50,  3, 14,  8, {"stall_id": "hot_dog_style"}),
+			Z(ZONE_FOOD_STALL,  66,  3, 14,  8, {"stall_id": "ice_cream_style"}),
+			# Food court seating area
+			Z(ZONE_FOOD_COURT,    2, 14, 76, 22, {"name": "FOOD COURT SEATING", "color": Color(0.60, 0.50, 0.40)}),
+			# Trash bins
+			Z(ZONE_DECOR,        6, 14,  4,  4, {"decor_type": "trash_bin"}),
+			Z(ZONE_DECOR,       30, 14,  4,  4, {"decor_type": "trash_bin"}),
+			Z(ZONE_DECOR,       54, 14,  4,  4, {"decor_type": "trash_bin"}),
+			Z(ZONE_DECOR,       72, 14,  4,  4, {"decor_type": "trash_bin"}),
+			Z(ZONE_ELEVATOR,    80,  2,  4, 40),
+			Z(ZONE_STAIRS,      84,  2,  6, 40),
+		],
+		[],
+		true, false, true, false
+	))
+
+	# ── Floor 17 — Entertainment Floor ─────────────────────────────────────────────
+	FLOOR_DEFS.append(FloorDef.new(
+		17, "17", "entertainment", Color(0.35, 0.25, 0.50),
+		[
+			Z(ZONE_COMMON,           2,  3, 78, 38),
+			# Karaoke rooms (left side)
+			Z(ZONE_KARAOKE,          2,  3, 28, 20, {"name": "KARAOKE ROOMS", "color": Color(0.25, 0.18, 0.38)}),
+			# Pool tables area (center)
+			Z(ZONE_POOL_TABLE,      32,  3, 20, 10, {"name": "POOL AREA", "color": Color(0.28, 0.52, 0.38)}),
+			# Darts boards
+			Z(ZONE_DARTS_BOARD,     32, 16, 10, 10, {"name": "DARTS", "color": Color(0.30, 0.32, 0.25)}),
+			# Arcade machines (right side)
+			Z(ZONE_CLAW_MACHINE,   54,  3,  8,  8, {"name": "CLAW MACHINE 1", "color": Color(0.50, 0.30, 0.70)}),
+			Z(ZONE_CLAW_MACHINE,   54, 13,  8,  8, {"name": "CLAW MACHINE 2", "color": Color(0.40, 0.50, 0.70)}),
+			Z(ZONE_CLAW_MACHINE,   54, 23,  8,  8, {"name": "CLAW MACHINE 3", "color": Color(0.70, 0.40, 0.50)}),
+			# More arcade (top right)
+			Z(ZONE_DECOR,          64,  3, 14, 14, {"decor_type": "arcade_machines"}),
+			# Lounge seating
+			Z(ZONE_DECOR,          64, 19, 14, 18, {"decor_type": "lounge_seating"}),
+			# Neon sign
+			Z(ZONE_AD,             64,  3,  4,  5, {"ad_id": "entertainment", "ad_text": "FUN ZONE!", "ad_color": Color(0.80, 0.20, 0.80)}),
+			Z(ZONE_ELEVATOR,       80,  2,  4, 40),
+			Z(ZONE_STAIRS,         84,  2,  6, 40),
+		],
+		[],
+		true, false, true, false
+	))
 
 static func get_floor(idx: int) -> FloorDef:
 	if idx < 0 or idx >= FLOOR_DEFS.size():

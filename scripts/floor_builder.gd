@@ -122,7 +122,155 @@ func _build_zone(zone: FloorConfig.Zone) -> void:
 		FloorConfig.ZONE_REPAIR_COUNTER:   _build_zone_repair_counter(zone)
 		FloorConfig.ZONE_CAFE_COUNTER:     _build_zone_cafe_counter(zone)
 		FloorConfig.ZONE_VENDING_MACHINE:  _build_zone_vending_machine(zone)
-		# Unknown types are silently skipped (extensible)
+				FloorConfig.ZONE_CANTEEN:  _build_zone_canteen(zone)
+		FloorConfig.ZONE_KARAOKE:  _build_zone_karaoke(zone)
+		FloorConfig.ZONE_POOL_TABLE:  _build_zone_pool_table(zone)
+		FloorConfig.ZONE_DARTS_BOARD:  _build_zone_darts_board(zone)
+		FloorConfig.ZONE_ENTERTAINMENT:  _build_zone_entertainment(zone)
+# Unknown types are silently skipped (extensible)
+
+
+
+func _build_zone_entertainment(zone: FloorConfig.Zone) -> void:
+	var bg = ColorRect.new()
+	bg.color = zone.get("color", Color(0.25, 0.20, 0.35))
+	bg.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	bg.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	_floor_node.add_child(bg)
+	# Neon strip lights along ceiling
+	for xi in range(0, zone.w, 6):
+		var neon = ColorRect.new()
+		neon.color = Color(0.6, 0.1, 0.8, 0.8)
+		neon.size = Vector2(4, 2)
+		neon.position = Vector2((zone.x + xi) * CELL_SIZE, (zone.y + 1) * CELL_SIZE)
+		_floor_node.add_child(neon)
+
+func _build_zone_canteen(zone: FloorConfig.Zone) -> void:
+	var base = ColorRect.new()
+	base.color = zone.get("color", Color(0.55, 0.50, 0.42))
+	base.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	base.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	_floor_node.add_child(base)
+	# Long serving counter
+	var counter = ColorRect.new()
+	counter.color = Color(0.65, 0.60, 0.50)
+	counter.size = Vector2(zone.w * CELL_SIZE, 6)
+	counter.position = Vector2(zone.x * CELL_SIZE, (zone.y + 4) * CELL_SIZE)
+	_floor_node.add_child(counter)
+	# Counter top (food trays)
+	var ctop = ColorRect.new()
+	ctop.color = Color(0.75, 0.72, 0.65)
+	ctop.size = Vector2(zone.w * CELL_SIZE, 2)
+	ctop.position = Vector2(zone.x * CELL_SIZE, (zone.y + 4) * CELL_SIZE)
+	_floor_node.add_child(ctop)
+	# Tables (every 8 tiles)
+	for ti in range(4, zone.w - 4, 8):
+		for row in range(2):
+			var table = ColorRect.new()
+			table.color = Color(0.50, 0.45, 0.38)
+			table.size = Vector2(6 * CELL_SIZE, 4 * CELL_SIZE)
+			table.position = Vector2((zone.x + ti) * CELL_SIZE, (zone.y + 10 + row * 10) * CELL_SIZE)
+			_floor_node.add_child(table)
+			# Table leg
+			var leg = ColorRect.new()
+			leg.color = Color(0.35, 0.30, 0.25)
+			leg.size = Vector2(CELL_SIZE, CELL_SIZE)
+			leg.position = Vector2((zone.x + ti + 2) * CELL_SIZE, (zone.y + 13 + row * 10) * CELL_SIZE)
+			_floor_node.add_child(leg)
+
+func _build_zone_karaoke(zone: FloorConfig.Zone) -> void:
+	var base = ColorRect.new()
+	base.color = zone.get("color", Color(0.20, 0.15, 0.28))
+	base.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	base.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	_floor_node.add_child(base)
+	# Individual karaoke room dividers
+	var room_w = 14
+	var rooms = zone.w // room_w
+	for r in range(rooms):
+		var room_bg = ColorRect.new()
+		room_bg.color = Color(0.18 + r * 0.04, 0.12, 0.22 + r * 0.03)
+		room_bg.size = Vector2((room_w - 1) * CELL_SIZE, (zone.h - 4) * CELL_SIZE)
+		room_bg.position = Vector2((zone.x + 1 + r * room_w) * CELL_SIZE, (zone.y + 2) * CELL_SIZE)
+		_floor_node.add_child(room_bg)
+		# Room number
+		var lbl = Label.new()
+		lbl.text = "%d" % (r + 1)
+		lbl.add_theme_color_override("font_color", Color(1.0, 0.6, 0.9))
+		lbl.add_theme_font_size_override("font_size", 8)
+		lbl.position = Vector2((zone.x + 5 + r * room_w) * CELL_SIZE, (zone.y + 3) * CELL_SIZE)
+		_floor_node.add_child(lbl)
+		# Mic icon (speaker shape)
+		var mic_bg = ColorRect.new()
+		mic_bg.color = Color(0.7, 0.1, 0.6, 0.6)
+		mic_bg.size = Vector2(3 * CELL_SIZE, 3 * CELL_SIZE)
+		mic_bg.position = Vector2((zone.x + 5 + r * room_w) * CELL_SIZE, (zone.y + 8) * CELL_SIZE)
+		_floor_node.add_child(mic_bg)
+
+func _build_zone_pool_table(zone: FloorConfig.Zone) -> void:
+	var base = ColorRect.new()
+	base.color = zone.get("color", Color(0.28, 0.52, 0.38))
+	base.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	base.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	_floor_node.add_child(base)
+	# Table surface (green felt)
+	var felt = ColorRect.new()
+	felt.color = Color(0.30, 0.60, 0.38)
+	felt.size = Vector2(16 * CELL_SIZE, 8 * CELL_SIZE)
+	felt.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	_floor_node.add_child(felt)
+	# Rails (cushions)
+	for rail in [
+		(0, -1, 16, 1),
+		(0, 8, 16, 1),
+		(-1, 0, 1, 8),
+		(16, 0, 1, 8),
+	]:
+		var r = ColorRect.new()
+		r.color = Color(0.40, 0.25, 0.15)
+		r.size = Vector2(rail[2] * CELL_SIZE, rail[3] * CELL_SIZE)
+		r.position = Vector2((zone.x + rail[0]) * CELL_SIZE, (zone.y + rail[1]) * CELL_SIZE)
+		_floor_node.add_child(r)
+	# Corner pockets
+	for px, py in [(0,0),(15,0),(0,7),(15,7)]:
+		var pocket = ColorRect.new()
+		pocket.color = Color(0.05, 0.05, 0.05)
+		pocket.size = Vector2(2 * CELL_SIZE, 2 * CELL_SIZE)
+		pocket.position = Vector2((zone.x + px) * CELL_SIZE, (zone.y + py) * CELL_SIZE)
+		_floor_node.add_child(pocket)
+	# Balls (colored dots)
+	var ball_colors = [Color(1,1,1), Color(1,0.8,0), Color(0,0,0.8), Color(0.8,0,0), Color(0.9,0.4,0), Color(0.2,0.5,0.2), Color(0.7,0.1,0.1), Color(0.8,0.3,0.3), Color(0.1,0.1,0.5)]
+	for i, (bx, by) in enumerate([(3,1),(5,2),(7,3),(4,4),(6,3),(3,5),(5,5),(2,3),(4,2)]):
+		if i < len(ball_colors):
+			var ball = ColorRect.new()
+			ball.color = ball_colors[i]
+			ball.size = Vector2(2 * CELL_SIZE, 2 * CELL_SIZE)
+			ball.position = Vector2((zone.x + bx) * CELL_SIZE, (zone.y + by) * CELL_SIZE)
+			_floor_node.add_child(ball)
+
+func _build_zone_darts_board(zone: FloorConfig.Zone) -> void:
+	var base = ColorRect.new()
+	base.color = zone.get("color", Color(0.30, 0.32, 0.25))
+	base.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+	base.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	_floor_node.add_child(base)
+	# Dartboard - concentric circles
+	var cx = zone.x + zone.w // 2
+	var cy = zone.y + zone.h // 2
+	var radii = [8, 6, 4, 2]  # outer to inner
+	var colors = [Color(0.1, 0.5, 0.1), Color(0.8, 0.8, 0.8), Color(0.8, 0.1, 0.1), Color(0.1, 0.7, 0.1)]
+	for r, col in zip(radii, colors):
+		var circle = ColorRect.new()
+		circle.color = col
+		circle.size = Vector2(r * 2 * CELL_SIZE, r * 2 * CELL_SIZE)
+		circle.position = Vector2((cx - r) * CELL_SIZE, (cy - r) * CELL_SIZE)
+		_floor_node.add_child(circle)
+	# Bullseye
+	var bull = ColorRect.new()
+	bull.color = Color(0.9, 0.2, 0.2)
+	bull.size = Vector2(2 * CELL_SIZE, 2 * CELL_SIZE)
+	bull.position = Vector2(cx * CELL_SIZE, cy * CELL_SIZE)
+	_floor_node.add_child(bull)
 
 # ─── Individual Zone Builders ───────────────────────────────────
 
@@ -648,6 +796,41 @@ func _build_zone_decor(zone: FloorConfig.Zone) -> void:
 			_build_planter(zone.x, zone.y, zone.w, zone.h)
 		"shelf":
 			_build_prize_shelf(zone.x, zone.y, zone.w, zone.h)
+
+		"canteen_tables":
+			for ti in range(zone.w // 10):
+				for row in range(2):
+					_build_dining_table(zone.x + ti * 10, zone.y + row * 8)
+		"arcade_machines":
+			for ax in range(zone.w // 8):
+				var cab := ColorRect.new()
+				cab.color = Color(0.30, 0.25, 0.40)
+				cab.size = Vector2(7 * CELL_SIZE, 10 * CELL_SIZE)
+				cab.position = Vector2((zone.x + ax * 8) * CELL_SIZE, (zone.y + 2) * CELL_SIZE)
+				_parent.add_child(cab); _floor_nodes.append(cab)
+				var screen := ColorRect.new()
+				screen.color = Color(0.20, 0.60, 0.80)
+				screen.size = Vector2(5 * CELL_SIZE, 5 * CELL_SIZE)
+				screen.position = Vector2((zone.x + ax * 8 + 1) * CELL_SIZE, (zone.y + 3) * CELL_SIZE)
+				_parent.add_child(screen); _floor_nodes.append(screen)
+		"lounge_seating":
+			var lounge_bg := ColorRect.new()
+			lounge_bg.color = Color(0.25, 0.20, 0.30)
+			lounge_bg.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
+			lounge_bg.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+			_parent.add_child(lounge_bg); _floor_nodes.append(lounge_bg)
+			for sx in range(zone.w // 12):
+				var seat := ColorRect.new()
+				seat.color = Color(0.45, 0.30, 0.50)
+				seat.size = Vector2(10 * CELL_SIZE, 6 * CELL_SIZE)
+				seat.position = Vector2((zone.x + sx * 12) * CELL_SIZE, (zone.y + 2) * CELL_SIZE)
+				_parent.add_child(seat); _floor_nodes.append(seat)
+		"trash_bin":
+			var bin := ColorRect.new()
+			bin.color = Color(0.35, 0.45, 0.30)
+			bin.size = Vector2(3 * CELL_SIZE, 3 * CELL_SIZE)
+			bin.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+			_parent.add_child(bin); _floor_nodes.append(bin)
 		_:
 			# Generic floor patch
 			var r := ColorRect.new()
