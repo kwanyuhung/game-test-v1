@@ -2484,6 +2484,17 @@ func _play_darts() -> void:
 	if _toasts != null:
 		_toasts.toast_success("Bullseye! +%d XP + $%.2f prize money!" % [bonus_xp, bonus_cash])
 	notify_telegram("Darts champion! +%d XP + $%.2f prize!" % [bonus_xp, bonus_cash])
+# ── Telegram notification helper ─────────────────────────────────────────────
+func notify_telegram(text: String) -> void:
+	if _telegram_bot != null:
+		_telegram_bot.queue_report(text)
+	else:
+		TelegramBot.send_message(text)
+
+func notify_telegram_npc(count: int) -> void:
+	notify_telegram("NPCs in store: %d" % count)
+
+# ── Store news bulletin board ───────────────────────────────────────────────
 func _read_store_news() -> void:
 	if _toasts != null:
 		_toasts.toast_info("STORE TIPS: Restock low sections for bonus XP! Loyalty = bigger savings at checkout!")
