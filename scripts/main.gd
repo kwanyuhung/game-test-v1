@@ -27,6 +27,7 @@ const ATMPanelScript = preload("res://scripts/atm_panel.gd")
 const DevToolsScript = preload("res://scripts/dev_tools.gd")
 const AudioManagerScript = preload("res://scripts/audio_manager.gd")
 const MonitorPanelScript = preload("res://scripts/monitor_panel.gd")
+const PriceTerminalScript = preload("res://scripts/price_terminal.gd")
 const SaveSystem = preload("res://scripts/save_system.gd")
 const TutorialOverlayScript = preload("res://scripts/tutorial_overlay.gd")
 const DailyBonusScript = preload("res://scripts/daily_bonus.gd")
@@ -100,6 +101,7 @@ var _nearby_warehouse: bool = false
 var _nearby_elevator: bool = false
 var _nearby_parking: bool = false
 var _nearby_stairs: bool = false
+var _nearby_terminal: bool = false
 var _in_checkout: bool = false
 var _cart_panel: CanvasLayer
 var _cart_items_lbl: Label
@@ -111,6 +113,8 @@ var _checkout_items_lbl: Label
 var _checkout_total_lbl: Label
 var _checkout_receipt_visible: bool = false
 var _cart_panel_visible: bool = false
+var _price_terminal: PriceTerminal = null
+var _staff_blocked_floor: int = -1
 
 var _world_bg: ColorRect = null
 var _aisle_labels: Array = []

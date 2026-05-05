@@ -1,6 +1,6 @@
-﻿# npc_controller.gd
-# ═══════════════════════════════════════════════════════════════════════
-# AI Actor — handles both customers and staff with full behavior systems.
+# npc_controller.gd
+# ????????????????????????????????????????????????????????????????????????
+# AI Actor ??handles both customers and staff with full behavior systems.
 #
 # CUSTOMERS: Wander, browse sections, use elevator, shop in groups.
 # STAFF: Have roles (cashier, cleaner, etc.) and task lists.
@@ -8,7 +8,7 @@
 #
 # EXTENDING: Add new behaviors by implementing _do_<behavior_name>() and
 # adding to the behavior state machine in _update_behavior().
-# ═══════════════════════════════════════════════════════════════════════
+# ????????????????????????????????????????????????????????????????????????
 class_name NPCController
 extends CharacterBody2D
 
@@ -16,21 +16,22 @@ const ActorData = preload("res://scripts/actor_data.gd")
 const AIChatBrain = preload("res://scripts/ai_chat_brain.gd")
 const NPCSprite = preload("res://scripts/npc_sprite.gd")
 
-# ─── Speed Constants ────────────────────────────────────────
+# ??? Speed Constants ????????????????????????????????????????
 const SPEED_CUSTOMER := 55.0
 const SPEED_STAFF   := 62.0
 const SPEED_SENIOR   := 38.0
 const SPEED_CHILD    := 45.0
+const SPEED_TEEN     := 68.0  # Fast-moving teens ??quick in-and-out shoppers
 
 const CELL_SIZE := 16.0
 
-# ─── Floor Bounds ────────────────────────────────────────────
+# ??? Floor Bounds ????????????????????????????????????????????
 const BOUNDS := {
 	0: { "min": Vector2(64.0, 64.0), "max": Vector2(1248.0, 752.0) },  # Ground
 	1: { "min": Vector2(64.0, 64.0), "max": Vector2(1248.0, 752.0) },  # Food Street / retail
 }
 
-# ─── State Machine ───────────────────────────────────────────
+# ??? State Machine ???????????????????????????????????????????
 enum BehaviorState {
 	IDLE,
 	WALKING_TO_TARGET,
@@ -49,9 +50,12 @@ enum BehaviorState {
 	SHOPPING_SECTION,
 	GOING_TO_CHECKOUT_NPC,
 	AT_CHECKOUT_NPC,
+	RECEIVING_HELP,
+	ASSISTING_ELDER,
+	SCAN_GO_COMPANION,
 }
 
-# ─── Staff Task Definitions ─────────────────────────────────
+# ??? Staff Task Definitions ?????????????????????????????????
 const STAFF_TASK_TEMPLATES = {
 	ActorData.StaffRole.CASHIER: [
 		{"name": "Man checkout lane", "floor": 0, "x": 20, "y": 34, "urgency": 1},
@@ -85,9 +89,12 @@ const STAFF_TASK_TEMPLATES = {
 		{"name": "Help customer", "floor": 1, "x": 200, "y": 200, "urgency": 1},
 		{"name": "Organize shelf", "floor": 1, "x": 500, "y": 300, "urgency": 0},
 	],
+	ActorData.StaffRole.SCAN_GO: [
+		{"name": "Scan & Go station", "floor": 0, "x": 500, "y": 200, "urgency": 1},
+	],
 }
 
-# ─── Instance Data ─────────────────────────────────────────
+# ??? Instance Data ?????????????????????????????????????????
 var _actor: ActorData.Actor
 var _chat_brain: AIChatBrain
 var _state: BehaviorState = BehaviorState.IDLE
@@ -101,6 +108,12 @@ var _has_stroller: bool = false
 var _stroller_sprite: Sprite2D = null
 var _group_leader: NPCController = null   # for group members
 var _group_members: Array = []            # for group leaders
+
+# Elder assistance
+var _needs_help_at_checkout: bool = false
+var _help_received: bool = false
+var _assisting_staff: NPCController = null
+var _speech_bubble: Label = null
 
 # Shopping cart (customers)
 var _has_cart: bool = false
@@ -116,7 +129,7 @@ var _name_label: Label
 var _status_label: Label
 var _shadow_sprite: Sprite2D
 
-# ─── Initialization ────────────────────────────────────────
+# ??? Initialization ????????????????????????????????????????
 
 func configure(actor: ActorData.Actor) -> void:
 	_actor = actor
@@ -125,9 +138,9 @@ func configure(actor: ActorData.Actor) -> void:
 	_chat_brain = AIChatBrain.new()
 	_chat_brain.configure(actor)
 
-	# Build sprite from appearance
+	# Build sprite from appearance (age-specific variant)
 	_body_sprite = Sprite2D.new()
-	_body_sprite.texture = NPCSprite.make_actor_texture(actor.appearance, 16)
+	_body_sprite.texture = NPCSprite.make_actor_texture(actor.appearance, 16, actor.life_stage)
 	_body_sprite.z_index = 3
 	add_child(_body_sprite)
 
@@ -176,7 +189,7 @@ func configure(actor: ActorData.Actor) -> void:
 	# Set initial state
 	_start_idle(randf_range(1.0, 3.0))
 
-# ─── Main Loop ─────────────────────────────────────────────
+# ??? Main Loop ?????????????????????????????????????????????
 
 func _physics_process(delta: float) -> void:
 	_state_timer -= delta
@@ -189,7 +202,7 @@ func _physics_process(delta: float) -> void:
 	if _has_stroller and _stroller_sprite != null:
 		_stroller_sprite.position = Vector2(-8, 8)
 
-# ─── Cart Helpers ─────────────────────────────────────────
+# ??? Cart Helpers ?????????????????????????????????????????
 func _update_cart_position() -> void:
 	if _cart_sprite == null:
 		return
@@ -231,7 +244,7 @@ func _hide_cart() -> void:
 	if _cart_sprite != null:
 		_cart_sprite.visible = false
 
-# ─── Behavior State Machine ────────────────────────────────
+# ??? Behavior State Machine ????????????????????????????????
 
 func _update_behavior(delta: float) -> void:
 	match _state:
@@ -272,6 +285,12 @@ func _update_behavior(delta: float) -> void:
 		BehaviorState.LEAVING_STORE:
 			_do_leave_store(delta)
 
+		BehaviorState.RECEIVING_HELP:
+			_do_receiving_help(delta)
+
+		BehaviorState.ASSISTING_ELDER:
+			_do_assisting_elder(delta)
+
 	# Update status label
 	_update_status_label()
 
@@ -294,8 +313,48 @@ func _choose_customer_behavior() -> void:
 	if _actor.role == ActorData.Role.CUSTOMER and _has_cart:
 		_go_to_checkout_npc()
 		return
-	# Default wander behavior
+	# Age-specific default behavior
 	var roll := randf()
+	# TEEN: fast in-and-out ??skip idle, go straight to shopping
+	if _actor.life_stage == ActorData.LifeStage.TEEN:
+		if roll < 0.40:
+			_go_to_cart_pickup()
+		elif roll < 0.70:
+			_start_wander()
+		elif roll < 0.85:
+			_start_elevator_travel()
+		else:
+			_leave_store()
+		return
+	# SENIOR: slow, linger at sections, avoid crowds
+	if _actor.life_stage == ActorData.LifeStage.SENIOR:
+		if roll < 0.20:
+			_start_wander()
+		elif roll < 0.50:
+			_start_browse()
+		elif roll < 0.65:
+			_start_idle(randf_range(2.0, 6.0))  # linger longer
+		elif roll < 0.80:
+			_start_elevator_travel()
+		elif roll < 0.90:
+			_start_idle(randf_range(1.0, 3.0))
+		else:
+			_leave_store()
+		return
+	# CHILD: gravitate toward toys, sweets
+	if _actor.life_stage == ActorData.LifeStage.CHILD:
+		if roll < 0.35:
+			_go_to_cart_pickup()
+		elif roll < 0.55:
+			_start_wander()
+		elif roll < 0.70:
+			_start_idle(randf_range(1.0, 3.0))
+		elif roll < 0.85:
+			_start_elevator_travel()
+		else:
+			_leave_store()
+		return
+	# Default adult behavior
 	if roll < 0.15:
 		_start_wander()
 	elif roll < 0.30:
@@ -337,7 +396,7 @@ func _choose_staff_behavior() -> void:
 		_:
 			_start_wander()
 
-# ─── Behavior Implementations ───────────────────────────────
+# ??? Behavior Implementations ???????????????????????????????
 
 func _start_idle(duration: float) -> void:
 	_state = BehaviorState.IDLE
@@ -474,7 +533,7 @@ func _do_staff_work(delta: float) -> void:
 		_flip_sprite(dir.x)
 		return
 
-	# At task location — work animation
+	# At task location ??work animation
 	var t := Time.get_ticks_msec() / 1000.0
 	var work_bob := sin(t * 4.0) * 0.05
 	if _body_sprite != null:
@@ -517,7 +576,7 @@ func _do_elevator(delta: float) -> void:
 		_flip_sprite(dir.x)
 		return
 
-	# At elevator — simulate travel
+	# At elevator ??simulate travel
 	if _state_timer > 0.0:
 		# Waiting for elevator animation
 		var t := Time.get_ticks_msec() / 1000.0
@@ -525,7 +584,7 @@ func _do_elevator(delta: float) -> void:
 			_body_sprite.scale = Vector2(1.0 + sin(t * 6.0) * 0.02, 1.0)
 		return
 
-	# Elevator arrived — change floor
+	# Elevator arrived ??change floor
 	if _elevator_target >= 0 and _elevator_target != _actor.current_floor:
 		_actor.current_floor = _elevator_target
 		_actor.target_floor = -1
@@ -582,7 +641,7 @@ func _leave_store() -> void:
 	_state = BehaviorState.LEAVING_STORE
 	_state_timer = 20.0
 
-# ─── Cart Shopping Behaviors ─────────────────────────────────
+# ??? Cart Shopping Behaviors ?????????????????????????????????
 
 const CART_PICKUP_POS := Vector2(400.0, 600.0)  # Near entrance on ground floor
 const CHECKOUT_NPC_POS := Vector2(350.0, 592.0)  # Near checkout lanes on ground floor
@@ -642,7 +701,7 @@ func _do_shopping_section(delta: float) -> void:
 		move_and_collide(dir * _get_speed() * delta)
 		_flip_sprite(dir.x)
 	else:
-		# At section — "browse" for a while
+		# At section ??"browse" for a while
 		if _state_timer <= 0.0:
 			# Add item to cart (simulate)
 			if _shopping_list_idx < _actor.shopping_list.size():
@@ -676,6 +735,14 @@ func _do_going_to_checkout_npc(delta: float) -> void:
 
 func _do_at_checkout_npc(delta: float) -> void:
 	_state_timer -= delta
+	# Seniors may need help at checkout
+	if _actor.life_stage == ActorData.LifeStage.SENIOR and not _help_received and randf() < 0.4:
+		_needs_help_at_checkout = true
+		_show_speech_bubble("Need help?")
+		_state = BehaviorState.RECEIVING_HELP
+		_state_timer = 8.0
+		_try_find_assisting_staff()
+		return
 	if _state_timer <= 0.0:
 		# Checkout done! Leave store
 		_actor.cart_item_count = 0
@@ -683,6 +750,89 @@ func _do_at_checkout_npc(delta: float) -> void:
 		_actor.has_cart = false
 		_hide_cart()
 		_leave_store()
+
+# ─── Elder Assistance ───────────────────────────────────────
+
+func _show_speech_bubble(text: String) -> void:
+	if _speech_bubble == null:
+		_speech_bubble = Label.new()
+		_speech_bubble.add_theme_color_override("font_color", Color(0.95, 0.95, 0.70))
+		_speech_bubble.add_theme_font_size_override("font_size", 6)
+		_speech_bubble.z_index = 15
+		add_child(_speech_bubble)
+	_speech_bubble.text = text
+	_speech_bubble.position = Vector2(-10, -28)
+
+func _try_find_assisting_staff() -> void:
+	# Find a nearby staff member on the same floor to assist
+	var main_node = get_tree().get_first_node_in_group("main")
+	if main_node == null:
+		return
+	var npcs: Array = main_node.get("_npcs")
+	for npc in npcs:
+		if npc == self:
+			continue
+		var actor: ActorData.Actor = npc.get_actor()
+		if actor == null or not actor.is_active:
+			continue
+		if actor.role != ActorData.Role.STAFF:
+			continue
+		if npc.global_position.distance_to(global_position) > 300.0:
+			continue
+		# Staff member found! Direct them to assist
+		npc._start_assist_elder(self)
+		_assisting_staff = npc
+		break
+
+func _start_assist_elder(elder: NPCController) -> void:
+	_state = BehaviorState.ASSISTING_ELDER
+	_target_pos = elder.global_position
+	_state_timer = 6.0
+
+func _do_receiving_help(delta: float) -> void:
+	# Stand still, waiting for staff
+	if _state_timer <= 0.0 or _assisting_staff != null:
+		if _help_received:
+			_hide_speech_bubble()
+			_state_timer = 3.0
+			_state = BehaviorState.IDLE
+		else:
+			# No help came, proceed anyway
+			_needs_help_at_checkout = false
+			_hide_speech_bubble()
+			_state_timer = 2.0
+			_state = BehaviorState.IDLE
+
+func _do_assisting_elder(delta: float) -> void:
+	var speed := _get_speed()
+	var to_target := _target_pos - global_position
+	var dist := to_target.length()
+	if dist > 10.0:
+		var dir := to_target / dist
+		move_and_collide(dir * speed * delta)
+		_flip_sprite(dir.x)
+		return
+	# At elder — show help bubble
+	_show_speech_bubble("Here, let me help!")
+	_state_timer -= delta
+	if _state_timer <= 0.0:
+		# Help complete — award XP to player if main node available
+		_help_received = true
+		_needs_help_at_checkout = false
+		var main_node = get_tree().get_first_node_in_group("main")
+		if main_node != null:
+			var ps = main_node.get("_player_stats")
+			if ps != null:
+				ps.add_xp(5, "Elder assistance")
+			var ft = main_node.get("_floating_text")
+			if ft != null:
+				ft.show_text(global_position, "+5 XP", Color(0.40, 0.85, 0.50))
+		_hide_speech_bubble()
+		_start_idle(randf_range(2.0, 4.0))
+
+func _hide_speech_bubble() -> void:
+	if _speech_bubble != null:
+		_speech_bubble.text = ""
 
 func _get_floor_for_section(section_id: String) -> int:
 	var section_floors := {
@@ -698,6 +848,36 @@ func _get_floor_for_section(section_id: String) -> int:
 		"pet": 11,
 	}
 	return section_floors.get(section_id, 1)
+
+# ??? Age-based floor preference ???????????????????????????????
+# Returns preferred floors for the NPC's life stage
+func _get_preferred_floors() -> Array:
+	match _actor.life_stage:
+		ActorData.LifeStage.CHILD:
+			return [8, 4, 1, 0]  # toys, snacks, fresh market, ground
+		ActorData.LifeStage.TEEN:
+			return [4, 3, 8, 1]  # snacks, drinks, toys, fresh
+		ActorData.LifeStage.SENIOR:
+			return [0, 1, 10, 4]  # ground floor first (easy navigation), rooftop
+		ActorData.LifeStage.ADULT, ActorData.LifeStage.ADULT_MID:
+			return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]  # full store
+		_:
+			return [0, 1, 4, 8]
+
+func _get_age_preferred_section() -> String:
+	"""Returns the section_id most appropriate for this age on their target floor."""
+	match _actor.life_stage:
+		ActorData.LifeStage.CHILD:
+			var opts := ["toys", "candy", "snacks", "produce"]
+			return opts[randi() % opts.size()]
+		ActorData.LifeStage.TEEN:
+			var opts := ["snacks", "drinks", "candy", "frozen", "toys"]
+			return opts[randi() % opts.size()]
+		ActorData.LifeStage.SENIOR:
+			var opts := ["produce", "bakery", "dairy", "meat", "pharm", "cafe"]
+			return opts[randi() % opts.size()]
+		_:
+			return ""
 
 func _get_section_world_pos(section_id: String, floor: int) -> Vector2:
 	# Returns world position for a section on a given floor
@@ -719,13 +899,15 @@ func _get_section_world_pos(section_id: String, floor: int) -> Vector2:
 	var x := section_x_map.get(section_id, 400.0)
 	return Vector2(x, floor_base_y + 100.0)
 
-# ─── Helpers ────────────────────────────────────────────────
+# ??? Helpers ????????????????????????????????????????????????
 
 func _get_speed() -> float:
 	if _actor.role == ActorData.Role.STAFF:
 		return SPEED_STAFF
 	if _actor.life_stage == ActorData.LifeStage.SENIOR:
 		return SPEED_SENIOR
+	if _actor.life_stage == ActorData.LifeStage.TEEN:
+		return SPEED_TEEN
 	if _actor.life_stage == ActorData.LifeStage.CHILD:
 		return SPEED_CHILD
 	return SPEED_CUSTOMER
@@ -772,7 +954,7 @@ func _update_status_label() -> void:
 		BehaviorState.WAITING_FOR_GROUP:
 			_status_label.text = "[waiting]"
 
-# ─── Public API ────────────────────────────────────────────
+# ??? Public API ????????????????????????????????????????????
 
 func get_actor() -> ActorData.Actor:
 	return _actor

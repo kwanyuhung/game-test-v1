@@ -96,10 +96,10 @@ static func _static_init() -> void:
 			Color(0.35, 0.35, 0.40),
 			false, false, true, true, true),
 
-		# Floor 9 — Rooftop Café
-		FloorDef.new(9, "9", "rooftop",
-			Color(0.65, 0.60, 0.50),
-			true, false, true, false, false, true),
+		# Floor 9 — Staff Room (price management terminal, staff locker)
+		FloorDef.new(9, "9", "staff_room",
+			Color(0.38, 0.42, 0.50),
+			false, false, true, true, true),
 
 		# Floor 10 — Pet Paradise
 		FloorDef.new(10, "10", "pet_paradise",

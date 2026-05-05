@@ -22,6 +22,7 @@ enum StaffRole {
 	GREETER        # Welcomes customers at entrance
 	MANAGER        # Walks the floor supervising
 	FLOOR_STAFF    # General floor assistance
+	SCAN_GO        # Scan & Go staff — walks alongside player, auto-scans items
 }
 
 # ─── Customer Group Type ────────────────────────────────────────
@@ -40,7 +41,9 @@ enum CustomerGroupType {
 # ─── Life Stage ────────────────────────────────────────────────
 enum LifeStage {
 	ADULT          # 18-64
-	SENIOR         # 65+
+	ADULT_MID     # 35-60 (sub-category)
+	SENIOR         # 60+ (includes 60-65+)
+	TEEN           # 13-19
 	CHILD          # 6-12
 	TODDLER        # 1-5
 	INFANT         # 0-1 (in baby cart)
@@ -249,7 +252,7 @@ class Actor:
 		a.happiness = randf_range(0.6, 1.0)
 		a.cart_item_count = randi() % 10
 
-		# Life stage based on group type
+		# Life stage based on group type and random chance
 		match p_group:
 			CustomerGroupType.FAMILY_BABY:
 				a.life_stage = LifeStage.ADULT
@@ -260,8 +263,13 @@ class Actor:
 			CustomerGroupType.FAMILY_EXTENDED:
 				a.life_stage = LifeStage.ADULT
 			_:
-				if randi() % 20 == 0:
+				var roll := randi() % 100
+				if roll < 3:
+					a.life_stage = LifeStage.TEEN
+				elif roll < 15:
 					a.life_stage = LifeStage.SENIOR
+				else:
+					a.life_stage = LifeStage.ADULT
 
 		# Generate a random name
 		var first_names := ["Alex", "Jordan", "Sam", "Morgan", "Taylor", "Casey", "Riley", "Quinn", "Avery", "Blake", "Drew", "Reese", "Finley", "Sage", "River"]
@@ -320,6 +328,9 @@ class Actor:
 			StaffRole.FLOOR_STAFF:
 				a.appearance.top_color = Color(0.42, 0.42, 0.48)
 				a.appearance.bottom_color = Color(0.22, 0.22, 0.42)
+			StaffRole.SCAN_GO:
+				a.appearance.top_color = Color(0.20, 0.62, 0.82)
+				a.appearance.bottom_color = Color(0.22, 0.28, 0.48)
 
 		return a
 
@@ -333,6 +344,7 @@ class Actor:
 				StaffRole.GREETER: "Greeter",
 				StaffRole.MANAGER: "Manager",
 				StaffRole.FLOOR_STAFF: "Floor Staff",
+				StaffRole.SCAN_GO: "Scan & Go",
 			}
 			return "STAFF | %s | Energy: %d%%" % [
 				role_names.get(staff_role, "Worker"),
@@ -341,7 +353,9 @@ class Actor:
 		else:
 			var stage_names := {
 				LifeStage.ADULT: "Adult",
+				LifeStage.ADULT_MID: "Adult",
 				LifeStage.SENIOR: "Senior",
+				LifeStage.TEEN: "Teen",
 				LifeStage.CHILD: "Child",
 				LifeStage.TODDLER: "Toddler",
 				LifeStage.INFANT: "Infant",

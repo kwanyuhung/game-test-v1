@@ -12,18 +12,40 @@ const ActorData = preload("res://scripts/actor_data.gd")
 
 # ─── Textures ────────────────────────────────────────────────
 
-static func make_actor_texture(appearance: ActorData.Appearance, scale: int = 16) -> Texture2D:
+static func make_actor_texture(appearance: ActorData.Appearance, scale: int = 16, life_stage: int = -1) -> Texture2D:
 	var sz := scale
 	var img := Image.create(sz, sz, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	_draw_shadow(img, sz)
-	_draw_shoes(img, appearance.shoes_color, appearance.shoes_style, sz)
-	_draw_lower_body(img, appearance.bottom_color, appearance.bottom_style, sz)
-	_draw_upper_body(img, appearance.top_color, appearance.top_style, sz)
-	_draw_head(img, appearance.skin_tone, appearance.has_glasses, appearance.glasses_tint if appearance.has("glasses_tint") else Color.WHITE, sz)
-	_draw_hair(img, appearance.hair_color, appearance.hair_style, sz)
-	_draw_accessory(img, appearance.accessory, appearance.top_color, sz)
-	_draw_makeup(img, appearance.skin_tone, appearance.makeup_intensity, sz)
+	_draw_shadow(img, sz, life_stage)
+	if life_stage == ActorData.LifeStage.CHILD:
+		_draw_shoes_child(img, appearance.shoes_color, sz)
+		_draw_lower_body_child(img, appearance.bottom_color, appearance.bottom_style, sz)
+		_draw_upper_body_child(img, appearance.top_color, appearance.top_style, sz)
+		_draw_head_child(img, appearance.skin_tone, false, Color.WHITE, sz)
+		_draw_hair(img, appearance.hair_color, appearance.hair_style, sz)
+	elif life_stage == ActorData.LifeStage.TEEN:
+		_draw_shoes(img, appearance.shoes_color, appearance.shoes_style, sz)
+		_draw_lower_body(img, appearance.bottom_color, appearance.bottom_style, sz)
+		_draw_upper_body_teen(img, appearance.top_color, appearance.top_style, sz)
+		_draw_head(img, appearance.skin_tone, appearance.has_glasses, Color.WHITE, sz)
+		_draw_hair(img, appearance.hair_color, appearance.hair_style, sz)
+		_draw_phone_in_hand(img, appearance.top_color, sz)
+		_draw_makeup(img, appearance.skin_tone, appearance.makeup_intensity, sz)
+	elif life_stage == ActorData.LifeStage.SENIOR:
+		_draw_shoes_senior(img, appearance.shoes_color, sz)
+		_draw_lower_body_senior(img, appearance.bottom_color, appearance.bottom_style, sz)
+		_draw_upper_body_senior(img, appearance.top_color, appearance.top_style, sz)
+		_draw_head_senior(img, appearance.skin_tone, appearance.has_glasses, Color.WHITE, sz)
+		_draw_hair_senior(img, appearance.hair_color, appearance.hair_style, sz)
+		_draw_walking_stick(img, Color(0.45, 0.30, 0.18), sz)
+	else:
+		_draw_shoes(img, appearance.shoes_color, appearance.shoes_style, sz)
+		_draw_lower_body(img, appearance.bottom_color, appearance.bottom_style, sz)
+		_draw_upper_body(img, appearance.top_color, appearance.top_style, sz)
+		_draw_head(img, appearance.skin_tone, appearance.has_glasses, Color.WHITE, sz)
+		_draw_hair(img, appearance.hair_color, appearance.hair_style, sz)
+		_draw_accessory(img, appearance.accessory, appearance.top_color, sz)
+		_draw_makeup(img, appearance.skin_tone, appearance.makeup_intensity, sz)
 	return ImageTexture.create_from_image(img)
 
 static func make_baby_texture(child: ActorData.ChildData, scale: int = 12) -> Texture2D:
@@ -281,6 +303,143 @@ static func _draw_stroller(img: Image, child: ActorData.ChildData, sz: int) -> v
 	# Baby inside (tiny)
 	_fill_img(img, int(6*sc), int(10*sc), int(8*sc), int(4*sc), child.outfit_color, sz)
 	_fill_img(img, int(7*sc), int(8*sc), int(6*sc), int(3*sc), child.skin_tone, sz)
+
+# ─── Child Sprite (short, round, bright) ───────────────────────
+
+static func _draw_shoes_child(img: Image, col: Color, sz: int) -> void:
+	var sc := float(sz) / 12.0  # child is ~12px scale
+	var shoes_dark := col.darkened(0.3)
+	_fill_img(img, int(2*sc), int(10*sc), int(4*sc), int(2*sc), col, sz)
+	_fill_img(img, int(6*sc), int(10*sc), int(4*sc), int(2*sc), col, sz)
+	_fill_img(img, int(2*sc), int(10*sc), int(4*sc), int(1*sc), shoes_dark, sz)
+	_fill_img(img, int(6*sc), int(10*sc), int(4*sc), int(1*sc), shoes_dark, sz)
+
+static func _draw_lower_body_child(img: Image, col: Color, style: int, sz: int) -> void:
+	var sc := float(sz) / 12.0
+	# Short chubby legs
+	_fill_img(img, int(2*sc), int(7*sc), int(3*sc), int(3*sc), col, sz)
+	_fill_img(img, int(6*sc), int(7*sc), int(4*sc), int(3*sc), col, sz)
+	_fill_img(img, int(2*sc), int(8*sc), int(3*sc), int(2*sc), col.darkened(0.15), sz)
+	_fill_img(img, int(6*sc), int(8*sc), int(3*sc), int(2*sc), col.darkened(0.15), sz)
+
+static func _draw_upper_body_child(img: Image, col: Color, style: int, sz: int) -> void:
+	var sc := float(sz) / 12.0
+	# Round chubby torso
+	_fill_img(img, int(2*sc), int(4*sc), int(8*sc), int(4*sc), col, sz)
+	_fill_img(img, int(1*sc), int(5*sc), int(2*sc), int(2*sc), col.darkened(0.1), sz)
+	_fill_img(img, int(9*sc), int(5*sc), int(2*sc), int(2*sc), col.darkened(0.1), sz)
+	_fill_img(img, int(3*sc), int(4*sc), int(6*sc), int(1*sc), col.lightened(0.15), sz)
+
+static func _draw_head_child(img: Image, skin: Color, has_glasses: bool, glasses_col: Color, sz: int) -> void:
+	var sc := float(sz) / 12.0
+	# Rounder, bigger head for child
+	_fill_img(img, int(3*sc), int(0*sc), int(6*sc), int(1*sc), skin.darkened(0.1), sz)
+	_fill_img(img, int(2*sc), int(1*sc), int(8*sc), int(3*sc), skin, sz)
+	_fill_img(img, int(3*sc), int(4*sc), int(6*sc), int(1*sc), skin.darkened(0.1), sz)
+	# Big cute eyes
+	_set_img(img, int(4*sc), int(2*sc), Color.WHITE, sz)
+	_set_img(img, int(7*sc), int(2*sc), Color.WHITE, sz)
+	_set_img(img, int(4*sc), int(2*sc), Color(0.12, 0.08, 0.06), sz)
+	_set_img(img, int(7*sc), int(2*sc), Color(0.12, 0.08, 0.06), sz)
+	_set_img(img, int(3*sc), int(1*sc), Color.WHITE.lightened(0.5), sz)
+	_set_img(img, int(6*sc), int(1*sc), Color.WHITE.lightened(0.5), sz)
+	# Cute little mouth
+	_set_img(img, int(5*sc), int(4*sc), skin.darkened(0.2), sz)
+	_set_img(img, int(6*sc), int(4*sc), skin.darkened(0.2), sz)
+
+# ─── Teen Sprite (taller, phone-in-hand) ─────────────────────
+
+static func _draw_upper_body_teen(img: Image, col: Color, style: int, sz: int) -> void:
+	var sc := float(sz) / 16.0
+	# Hoodie / casual style
+	_fill_img(img, int(3*sc), int(6*sc), int(10*sc), int(5*sc), col.darkened(0.1), sz)
+	_fill_img(img, int(4*sc), int(7*sc), int(8*sc), int(4*sc), col, sz)
+	_fill_img(img, int(1*sc), int(7*sc), int(2*sc), int(3*sc), col.darkened(0.1), sz)
+	_fill_img(img, int(13*sc), int(7*sc), int(2*sc), int(3*sc), col.darkened(0.1), sz)
+	# Hood
+	_fill_img(img, int(4*sc), int(5*sc), int(8*sc), int(2*sc), col.darkened(0.15), sz)
+	_fill_img(img, int(3*sc), int(6*sc), int(10*sc), int(1*sc), col.lightened(0.1), sz)
+
+static func _draw_phone_in_hand(img: Image, top_col: Color, sz: int) -> void:
+	var sc := float(sz) / 16.0
+	# Phone held in hand (right side)
+	_fill_img(img, int(13*sc), int(9*sc), int(2*sc), int(3*sc), Color(0.15, 0.15, 0.20), sz)
+	_fill_img(img, int(13*sc), int(9*sc), int(2*sc), int(1*sc), Color(0.25, 0.35, 0.55), sz)  # screen glow
+
+# ─── Senior Sprite (hunched, walking stick) ─────────────────
+
+static func _draw_shoes_senior(img: Image, col: Color, sz: int) -> void:
+	var sc := float(sz) / 16.0
+	var shoes_dark := col.darkened(0.3)
+	# Orthopedic shoes — wider, flatter
+	_fill_img(img, int(2*sc), int(14*sc), int(5*sc), int(2*sc), shoes_dark, sz)
+	_fill_img(img, int(9*sc), int(14*sc), int(5*sc), int(2*sc), shoes_dark, sz)
+	_fill_img(img, int(2*sc), int(14*sc), int(5*sc), int(1*sc), col, sz)
+	_fill_img(img, int(9*sc), int(14*sc), int(5*sc), int(1*sc), col, sz)
+
+static func _draw_lower_body_senior(img: Image, col: Color, style: int, sz: int) -> void:
+	var sc := float(sz) / 16.0
+	# Slightly hunched posture — pants with slight sag
+	_fill_img(img, int(3*sc), int(11*sc), int(4*sc), int(3*sc), col, sz)
+	_fill_img(img, int(9*sc), int(11*sc), int(4*sc), int(3*sc), col, sz)
+	_fill_img(img, int(3*sc), int(12*sc), int(3*sc), int(2*sc), col.darkened(0.15), sz)
+	_fill_img(img, int(10*sc), int(12*sc), int(3*sc), int(2*sc), col.darkened(0.15), sz)
+
+static func _draw_upper_body_senior(img: Image, col: Color, style: int, sz: int) -> void:
+	var sc := float(sz) / 16.0
+	# Cardigan / comfortable shirt — hunched posture (slightly compressed vertically)
+	_fill_img(img, int(3*sc), int(7*sc), int(10*sc), int(4*sc), col.darkened(0.08), sz)
+	_fill_img(img, int(4*sc), int(7*sc), int(8*sc), int(3*sc), col, sz)
+	_fill_img(img, int(1*sc), int(7*sc), int(2*sc), int(3*sc), col.darkened(0.1), sz)
+	_fill_img(img, int(13*sc), int(7*sc), int(2*sc), int(3*sc), col.darkened(0.1), sz)
+	# Collar
+	_fill_img(img, int(5*sc), int(6*sc), int(6*sc), int(1*sc), col.lightened(0.1), sz)
+
+static func _draw_head_senior(img: Image, skin: Color, has_glasses: bool, glasses_col: Color, sz: int) -> void:
+	var sc := float(sz) / 16.0
+	# Head slightly hunched forward
+	_fill_img(img, int(5*sc), int(2*sc), int(6*sc), int(1*sc), skin.darkened(0.1), sz)
+	_fill_img(img, int(4*sc), int(3*sc), int(8*sc), int(4*sc), skin, sz)
+	_fill_img(img, int(5*sc), int(7*sc), int(6*sc), int(1*sc), skin.darkened(0.1), sz)
+	# Eyes
+	_set_img(img, int(6*sc), int(5*sc), Color.WHITE, sz)
+	_set_img(img, int(9*sc), int(5*sc), Color.WHITE, sz)
+	_set_img(img, int(6*sc), int(5*sc), Color(0.12, 0.08, 0.06), sz)
+	_set_img(img, int(9*sc), int(5*sc), Color(0.12, 0.08, 0.06), sz)
+	_set_img(img, int(5*sc), int(4*sc), Color.WHITE.lightened(0.5), sz)
+	_set_img(img, int(8*sc), int(4*sc), Color.WHITE.lightened(0.5), sz)
+	# Slight frown / neutral mouth
+	_set_img(img, int(7*sc), int(7*sc), skin.darkened(0.25), sz)
+	# Glasses — thicker frames for seniors
+	if has_glasses:
+		_fill_img(img, int(5*sc), int(4*sc), int(3*sc), int(2*sc), glasses_col.darkened(0.3), sz)
+		_fill_img(img, int(8*sc), int(4*sc), int(3*sc), int(2*sc), glasses_col.darkened(0.3), sz)
+		_set_img(img, int(7*sc), int(5*sc), glasses_col.darkened(0.5), sz)
+		_set_img(img, int(7*sc), int(4*sc), glasses_col.darkened(0.5), sz)
+
+static func _draw_hair_senior(img: Image, col: Color, style: int, sz: int) -> void:
+	var sc := float(sz) / 16.0
+	# Thinning hair — sparse, grey-ish
+	var h := col.darkened(0.1)
+	# Very short or bald — just a little hair on top
+	_fill_img(img, int(5*sc), int(1*sc), int(6*sc), int(1*sc), h.darkened(0.1), sz)
+	_fill_img(img, int(6*sc), int(0*sc), int(4*sc), int(2*sc), col.darkened(0.2), sz)
+
+static func _draw_walking_stick(img: Image, col: Color, sz: int) -> void:
+	var sc := float(sz) / 16.0
+	# Walking stick on the left side
+	_fill_img(img, int(1*sc), int(8*sc), int(1*sc), int(7*sc), col, sz)
+	_fill_img(img, int(0*sc), int(8*sc), int(2*sc), int(1*sc), col.darkened(0.2), sz)  # handle
+
+# ─── Shadow (supports child scale) ───────────────────────────
+
+static func _draw_shadow(img: Image, sz: int, life_stage: int = -1) -> void:
+	var sc := float(sz) / 16.0
+	if life_stage == ActorData.LifeStage.CHILD:
+		sc = float(sz) / 12.0
+		_fill_img(img, int(3*sc), int(10*sc), int(6*sc), int(2*sc), Color(0, 0, 0, 0.18), sz)
+	else:
+		_fill_img(img, int(4*sc), int(14*sc), int(8*sc), int(2*sc), Color(0, 0, 0, 0.18), sz)
 
 # ─── Legacy support (random sprite) ─────────────────────────
 

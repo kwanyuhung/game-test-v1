@@ -68,10 +68,17 @@ static func _static_init() -> void:
 		# Floor 11 — Pet Paradise
 		SectionDef.new("pet",     "PET PARADISE", 2,  3, 22, 20, SectionStyle.SHELF,    Color(0.55, 0.80, 0.65),  "E", 11),
 	]
+	# Checkout lane definitions by floor.
+	# type: "staffed" | "self" | "express"
+	# floors: array of floor indices where this lane appears
 	CHECKOUT_LANES = [
-		{"x": 18, "name": "LANE 1"},
-		{"x": 36, "name": "LANE 2"},
-		{"x": 54, "name": "LANE 3"},
+		# Floor G (index 0) — all 3 types
+		{"x": 14, "name": "LANE 1", "type": "staffed", "floors": [0]},
+		{"x": 30, "name": "LANE 2", "type": "self",    "floors": [0]},
+		{"x": 46, "name": "EXPRESS", "type": "express", "floors": [0]},
+		# Floors 1-8 — self-checkout and express only (no staffed)
+		{"x": 18, "name": "SELF-CHECK", "type": "self",    "floors": [1, 2, 3, 4, 5, 6, 7, 8]},
+		{"x": 38, "name": "EXPRESS",   "type": "express", "floors": [1, 2, 3, 4, 5, 6, 7, 8]},
 	]
 	CATALOG = [
 		# ═══════════════════ PRODUCE ═══════════════════

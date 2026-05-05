@@ -899,19 +899,18 @@ r
 		false, false, true, true, true
 	))
 
-	# ── FLOOR 9 — Rooftop Café ──────────────────────────────────────────────────
+	# ── FLOOR 9 — Staff Room ───────────────────────────────────────────────────
 	FLOOR_DEFS.append(FloorDef.new(
-		9, "9", "rooftop", Color(0.65, 0.60, 0.50),
+		9, "9", "staff_room", Color(0.38, 0.42, 0.50),
 		[
-			Z(ZONE_ROOFTOP,       2,  3, 78, 38),
-			Z(ZONE_FOOD_COURT,    2,  3, 50, 20),
-			Z(ZONE_FOOD_STALL,    2,  3, 14,  8, {"stall_id": "jp_ramen"}),
-			Z(ZONE_FOOD_STALL,   18,  3, 14,  8, {"stall_id": "jp_sushi"}),
-			Z(ZONE_FOOD_STALL,   34,  3, 14,  8, {"stall_id": "jp_takoyaki"}),
+			Z(ZONE_COMMON,         2,  3, 78, 38),
+			Z(ZONE_OFFICE_DESK,   10,  3, 30, 20, {"name": "PRICE TERMINAL", "terminal": true, "color": Color(0.40, 0.55, 0.65)}),
+			Z(ZONE_STAFF_LOUNGE,  42,  3, 34, 20, {"name": "STAFF AREA", "color": Color(0.45, 0.45, 0.50)}),
+			Z(ZONE_TRAINING,       2, 25, 78, 14, {"name": "OPERATIONS CENTER", "color": Color(0.38, 0.48, 0.55)}),
 			Z(ZONE_ELEVATOR,    80,  2,  4, 40),
 		],
-		[SZ("cafe", 2, 3, 50, 20)],
-		true, false, true, false, false, true
+		[],
+		false, false, true, true, true  # is_staff_only=true (6th arg)
 	))
 
 	# ── FLOOR 10 — Pet Paradise ──────────────────────────────────────────────────

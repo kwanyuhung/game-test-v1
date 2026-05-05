@@ -1178,26 +1178,47 @@ func _build_checkout_if_needed() -> void:
 		return
 	var lanes := StoreData.CHECKOUT_LANES
 	var CHECKOUT_Y := StoreData.CHECKOUT_Y
+	var counter_id := 0
 	for lane in lanes:
-		var counter := Node2D.new()
+		# Filter: only lanes valid for this floor
+		var lane_floors: Array = lane.get("floors", [])
+		if not lane_floors.is_empty() and not lane_floors.has(_floor_idx):
+			continue
+
+		var ctype_str: String = lane.get("type", "staffed")
+		var ctype: CheckoutCounter.CheckoutType
+		match ctype_str:
+			"self":
+				ctype = CheckoutCounter.CheckoutType.SELF
+			"express":
+				ctype = CheckoutCounter.CheckoutType.EXPRESS
+			_:
+				ctype = CheckoutCounter.CheckoutType.STAFFED
+
+		var counter := CheckoutCounter.new()
+		counter.configure(counter_id, ctype)
 		counter.position = Vector2(lane["x"] * CELL_SIZE, (CHECKOUT_Y + 2) * CELL_SIZE)
 		counter.name = "Counter_%s" % lane["name"]
-		var bg := ColorRect.new()
-		bg.size = Vector2(CELL_SIZE * 8, CELL_SIZE * 3)
-		bg.color = Color(0.35, 0.28, 0.38)
-		counter.add_child(bg)
-		var top_c := ColorRect.new()
-		top_c.size = Vector2(CELL_SIZE * 8, 2)
-		top_c.color = Color(0.55, 0.45, 0.60)
-		counter.add_child(top_c)
-		var lbl := Label.new()
-		lbl.text = lane["name"]
-		lbl.position = Vector2(CELL_SIZE * 0.5, CELL_SIZE * 0.5)
-		lbl.add_theme_color_override("font_color", Color(0.85, 0.80, 0.90))
-		lbl.add_theme_font_size_override("font_size", 8)
-		counter.add_child(lbl)
+		counter.checkout_interacted.connect(_on_checkout_interacted)
+		counter.express_rejected.connect(_on_express_rejected)
+		counter.self_checkout_error.connect(_on_self_checkout_error)
+		counter.self_checkout_cleared.connect(_on_self_checkout_cleared)
 		_parent.add_child(counter)
 		_checkout_counters.append(counter)
+		counter_id += 1
+
+func _on_checkout_interacted(checkout_id: int, ctype) -> void:
+	# Forward to main via signal (main listens to floor_builder parent)
+	pass
+
+func _on_express_rejected() -> void:
+	pass
+
+func _on_self_checkout_error() -> void:
+	pass
+
+func _on_self_checkout_cleared() -> void:
+	pass
 
 # ─── Floor Sign ─────────────────────────────────────────────────
 

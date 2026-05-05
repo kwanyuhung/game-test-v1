@@ -173,6 +173,10 @@ func open_panel(world_pos: Vector2, player) -> void:
 	_player_ref = player
 	_show_floor_panel()
 
+func is_floor_staff_only(floor_idx: int) -> bool:
+	# Floor 9 is the Staff Room
+	return floor_idx == 9
+
 func close_panel() -> void:
 	if _panel != null:
 		_panel.queue_free()
@@ -181,6 +185,20 @@ func close_panel() -> void:
 
 func call_to_floor(idx: int) -> void:
 	if idx == _current_floor or _is_traveling:
+		return
+	# Check staff-only floor access
+	var is_blocked := false
+	if is_floor_staff_only(idx):
+		if _player_ref != null and _player_ref.has_method("is_in_staff_mode"):
+			if not _player_ref.is_in_staff_mode():
+				is_blocked = true
+		else:
+			is_blocked = true
+	if is_blocked:
+		# Show staff-only message (emit signal to main)
+		var main = get_parent()
+		if main and main.has_method("on_elevator_staff_blocked"):
+			main.on_elevator_staff_blocked(idx)
 		return
 	_target_floor = idx
 	_travel_from_y = FLOOR_Y[_current_floor]
@@ -241,14 +259,26 @@ func _show_floor_panel() -> void:
 		btn.position = Vector2(bx, by)
 		btn.size = Vector2(btn_w, btn_h)
 		var is_current := (i == _current_floor)
+		var is_staff_only := fd.is_staff_only
+		# Check if player can access (staff mode check)
+		var player_is_staff := false
+		if _player_ref != null and _player_ref.has_method("is_in_staff_mode"):
+			player_is_staff = _player_ref.is_in_staff_mode()
+		var is_blocked := is_staff_only and not player_is_staff
 		btn.color = Color(0.22, 0.20, 0.28) if !is_current else Color(0.18, 0.40, 0.25)
+		if is_blocked:
+			btn.color = Color(0.15, 0.12, 0.18)
 		panel.add_child(btn)
 
 		var lbl := Label.new()
 		lbl.text = "Floor %s" % fd.label
+		if is_blocked:
+			lbl.text = "Floor %s [LOCKED]" % fd.label
 		lbl.position = Vector2(bx + 4, by + 4)
-		lbl.add_theme_color_override("font_color",
-			Color(0.90, 0.88, 0.80) if !is_current else Color(0.50, 0.95, 0.60))
+		var lbl_color := Color(0.90, 0.88, 0.80) if !is_current and !is_blocked else Color(0.50, 0.95, 0.60)
+		if is_blocked:
+			lbl_color = Color(0.45, 0.35, 0.40)
+		lbl.add_theme_color_override("font_color", lbl_color)
 		lbl.add_theme_font_size_override("font_size", 8)
 		panel.add_child(lbl)
 
