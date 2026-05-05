@@ -1730,7 +1730,17 @@ func _finish_checkout() -> void:
 					# Section ran out of stock — toast warning
 					if _toasts:
 						_toasts.toast_warning("%s is now out of stock!" % item_prod.get("name", "Item").to_upper())
-		stats.add_xp(max(1, total_xp))
+		# ── Phase N: Customer satisfaction bonus on XP ─────────────
+		var satisfaction_mult := 1.0
+		var was_satisfied := true
+		if stats != null and stats.has_method("get_satisfaction_bonus"):
+			satisfaction_mult = stats.get_satisfaction_bonus()
+			stats.record_customer_served(was_satisfied)
+		var final_xp := max(1, int(total_xp * satisfaction_mult))
+		stats.add_xp(final_xp)
+		if satisfaction_mult > 1.05:
+			if _toasts:
+				_toasts.toast_success("Satisfied customer! +%d XP (%.0f%% bonus)" % [final_xp, (satisfaction_mult-1.0)*100])
 		# Award staff XP for completing checkout task
 		stats.add_staff_xp(items.size(), "Checkout: %d items" % items.size())
 

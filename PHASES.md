@@ -239,6 +239,31 @@ Business Mode (Shift+B) → Staff tab shows real roster from player_stats.
 
 ---
 
+---
+
+## Phase N ✅ Customer Experience
+**Satisfaction tracking, complaints, XP bonuses based on store reputation**
+
+**Customer Satisfaction:**
+- Global satisfaction score tracked in `player_stats`
+- Star rating shown in Business Mode Overview (***** down to *)
+- **XP multiplier at checkout: 1.0–1.5×** based on satisfaction
+- Customers served counter and complaint counter
+- `player_stats.get_satisfaction_bonus()` — returns 1.0–1.5× XP multiplier
+
+**Complaints System:**
+- `player_stats.record_customer_served(was_satisfied)` — call on each checkout
+- Complaints today shown in Business Mode Overview tab
+- Complaints reduce satisfaction score over time
+
+**Business Mode Overview Tab now shows:**
+- Customer star rating with XP bonus %
+- Real customers served count from player_stats
+- Complaints today counter
+- Satisfaction data pulled live from player_stats
+
+---
+
 ## Phase L ✅ Inventory & Stock Management
 **Stock depletion, restocking, and section-level inventory tracking**
 

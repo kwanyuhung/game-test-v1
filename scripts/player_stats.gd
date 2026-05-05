@@ -260,6 +260,46 @@ func get_staff_performance_bonus() -> float:
 	avg_morale /= float(_hired_staff.size())
 	return 1.0 + avg_morale * 0.2  # 1.0 to 1.2
 
+# ── Phase N: Customer Satisfaction ────────────────────────────────
+var _total_customers_served: int = 0
+var _customers_satisfied: int = 0
+var _customers_complained: int = 0
+var _avg_satisfaction: float = 1.0
+var _customer_complaints_today: int = 0
+
+signal customer_satisfied()
+signal customer_complained()
+
+func record_customer_served(was_satisfied: bool) -> void:
+	_total_customers_served += 1
+	if was_satisfied:
+		_customers_satisfied += 1
+		customer_satisfied.emit()
+	else:
+		_customers_complained += 1
+		_customer_complaints_today += 1
+		customer_complained.emit()
+	# Rolling average
+	_avg_satisfaction = float(_customers_satisfied) / max(1, _total_customers_served)
+
+func get_customer_satisfaction() -> float:
+	return _avg_satisfaction
+
+func get_satisfaction_bonus() -> float:
+	# Returns XP/multiplier bonus based on satisfaction (1.0 to 1.5)
+	return 1.0 + _avg_satisfaction * 0.5
+
+func get_today_complaints() -> int:
+	return _customer_complaints_today
+
+func reset_daily_complaints() -> void:
+	_customer_complaints_today = 0
+
+func get_satisfaction_stars() -> String:
+	var stars := ceili(_avg_satisfaction * 5.0)
+	stars = clampi(stars, 0, 5)
+	return "%s" % ["*", "**", "***", "****", "*****"][clampi(stars-1, 0, 4)]
+
 # ─── Event Hooks ───────────────────────────────────────────────────
 
 func on_item_bought(product_id: String, price: float) -> void:

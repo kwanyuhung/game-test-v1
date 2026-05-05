@@ -143,16 +143,34 @@ func _refresh_data() -> void:
 \t]
 
 func _draw_overview(vbox: VBoxContainer) -> void:
-\t_add_section_header(vbox, "TODAY'S STORE OVERVIEW")
+	_add_section_header(vbox, "TODAY'S STORE OVERVIEW")
 
-\tvar stats := [
-\t\t{\"label\": \"Sales Today\", \"value\": \"$%.2f\" % _today_sales, \"color\": Color(0.30, 0.90, 0.50)},
-\t\t{\"label\": \"Customers Served\", \"value\": \"%d\" % _today_customers, \"color\": Color(0.30, 0.60, 0.90)},
-\t\t{\"label\": \"Staff On Duty\", \"value\": \"%d\" % _staff_on_duty, \"color\": Color(0.90, 0.70, 0.30)},
-\t\t{\"label\": \"Stock Alerts\", \"value\": \"%d sections\" % _stock_alert_count, \"color\": Color(0.90, 0.40, 0.30)},
-\t\t{\"label\": \"Avg Transaction\", \"value\": \"$%.2f\" % (_today_sales / max(1, _today_customers)), \"color\": Color(0.70, 0.60, 0.90)},
-\t\t{\"label\": \"Shifts Completed Today\", \"value\": \"%d\" % (3 if randi() % 2 == 0 else 2), \"color\": Color(0.60, 0.85, 0.70)},
-\t]
+	# ── Phase N: Real satisfaction data from player_stats ────────────
+	var satisfaction := 1.0
+	var complaints := 0
+	var total_served := 0
+	var satisfaction_stars := "*****"
+	var sat_bonus := ""
+	if _player_stats != null:
+		satisfaction = _player_stats.get_customer_satisfaction()
+		complaints = _player_stats.get_today_complaints()
+		total_served = _player_stats.get_total_customers_served()
+		satisfaction_stars = _player_stats.get_satisfaction_stars()
+		var bonus := _player_stats.get_satisfaction_bonus()
+		sat_bonus = " (+%.0f%% XP)" % ((bonus - 1.0) * 100.0)
+
+	var stats := [
+		{"label": "Customer Satisfaction", "value": "%s%s" % [satisfaction_stars, sat_bonus], "color": Color(0.30, 0.90, 0.50)},
+		{"label": "Customers Served", "value": "%d" % total_served, "color": Color(0.30, 0.60, 0.90)},
+		{"label": "Complaints Today", "value": "%d" % complaints, "color": Color(0.90, 0.40, 0.30) if complaints > 0 else Color(0.50, 0.70, 0.50)},
+		{"label": "Staff On Duty", "value": "%d" % _staff_on_duty, "color": Color(0.90, 0.70, 0.30)},
+		{"label": "Stock Alerts", "value": "%d sections" % _stock_alert_count, "color": Color(0.90, 0.40, 0.30)},
+		{"label": "Avg Transaction", "value": "$%.2f" % (_today_sales / max(1, _today_customers)), "color": Color(0.70, 0.60, 0.90)},
+		{"label": "Shifts Completed Today", "value": "%d" % (3 if randi() % 2 == 0 else 2), "color": Color(0.60, 0.85, 0.70)},
+	]
+	for s in stats:
+		_add_stat_row(vbox, s["label"], s["value"], s["color"])
+
 \tfor s in stats:
 \t\t_add_stat_row(vbox, s["label"], s["value"], s["color"])
 
