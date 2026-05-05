@@ -157,6 +157,7 @@ const AISLE_NAMES := {
 const StoreExpansionScript = preload("res://scripts/store_expansion.gd")
 const AntiTheftScript = preload("res://scripts/anti_theft.gd")
 const DynamicPricingScript = preload("res://scripts/dynamic_pricing.gd")
+const SupplierManagerScript = preload("res://scripts/supplier_manager.gd")
 	"dairy":   "DAIRY",
 	"produce": "PRODUCE",
 	"bakery":  "BAKERY",
@@ -214,6 +215,10 @@ func _ready() -> void:
 	_dynamic_pricing = DynamicPricingScript.new()
 	_dynamic_pricing.name = "DynamicPricing"
 	add_child(_dynamic_pricing)
+	# Phase S: Supplier Manager
+	_supplier_manager = SupplierManagerScript.new()
+	_supplier_manager.name = "SupplierManager"
+	add_child(_supplier_manager)
 	_brand_portal = BrandPortalScript.new()
 	add_child(_brand_portal)
 	_brand_portal.closed.connect(_on_brand_portal_closed)
