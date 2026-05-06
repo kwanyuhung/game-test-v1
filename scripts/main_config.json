@@ -1,0 +1,62 @@
+{
+  "aisle_names": {
+    "dairy": "DAIRY",
+    "produce": "PRODUCE",
+    "bakery": "BAKERY",
+    "drinks": "DRINKS",
+    "snacks": "SNACKS",
+    "meat": "MEAT / DELI",
+    "pantry": "PANTRY",
+    "frozen": "FROZEN"
+  },
+  "staff_spawns": {
+    "0": { "x": [36, 38, 40, 20, 40, 60], "y": [10, 12, 14, 20, 20, 20] },
+    "1": { "x": [20, 40, 60, 20, 40], "y": [10, 10, 10, 20, 20] },
+    "2": { "x": [20, 40, 60], "y": [10, 10, 20] },
+    "3": { "x": [30, 50, 20], "y": [10, 10, 20] },
+    "4": { "x": [20, 40, 60], "y": [10, 10, 20] }
+  },
+  "customer_spawns": [
+    { "type": "FAMILY_BABY", "floor": 0, "x": 300, "y": 200 },
+    { "type": "FAMILY_BABY", "floor": 0, "x": 600, "y": 250 },
+    { "type": "FAMILY_TODDLER", "floor": 1, "x": 200, "y": 200 },
+    { "type": "FAMILY_TODDLER", "floor": 0, "x": 500, "y": 400 },
+    { "type": "TWO_COUPLES", "floor": 1, "x": 400, "y": 300 },
+    { "type": "TWO_COUPLES", "floor": 0, "x": 200, "y": 300 },
+    { "type": "COUPLE", "floor": 1, "x": 300, "y": 400 },
+    { "type": "COUPLE", "floor": 3, "x": 250, "y": 250 },
+    { "type": "COUPLE", "floor": 4, "x": 350, "y": 300 },
+    { "type": "SOLO", "floor_range": [0, 4], "count": 8, "x_range": [80, 580], "y_range": [80, 480] },
+    { "type": "PAIR", "floor_range": [1, 4], "count": 4, "x_range": [100, 500], "y_range": [100, 400] },
+    { "type": "THREE_FRIENDS", "floor": 1, "x": 500, "y": 200 },
+    { "type": "THREE_FRIENDS", "floor": 2, "x": 300, "y": 350 },
+    { "type": "FAMILY_EXTENDED", "floor": 1, "x": 600, "y": 150 }
+  ],
+  "staff_roles": [
+    "CASHIER", "SHELF_STOCKER", "CLEANER", "SECURITY", "GREETER", "MANAGER", "FLOOR_STAFF"
+  ],
+  "robot_humanoid_roles": [
+    "GREETER", "CLEANER"
+  ],
+  "robot_single_roles": [
+    "CLEANING_ROBOT", "GUIDANCE_ROBOT"
+  ],
+  "cafe_items": [
+    { "name": "Espresso", "price": 3.50 },
+    { "name": "Latte", "price": 4.50 },
+    { "name": "Cappuccino", "price": 4.80 },
+    { "name": "Americano", "price": 3.00 },
+    { "name": "Muffin", "price": 2.80 },
+    { "name": "Croissant", "price": 3.20 },
+    { "name": "Iced Coffee", "price": 4.20 },
+    { "name": "Smoothie", "price": 5.50 }
+  ],
+  "vending_items": [
+    { "name": "Water", "price": 1.50 },
+    { "name": "Cola", "price": 2.00 },
+    { "name": "Juice", "price": 2.50 },
+    { "name": "Chips", "price": 1.80 },
+    { "name": "Chocolate", "price": 2.20 },
+    { "name": "Energy Drink", "price": 3.00 }
+  ]
+}

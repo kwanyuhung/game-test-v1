@@ -1,4 +1,4 @@
-﻿# main.gd
+# main.gd
 # 10-floor supermarket ??data-driven world builder.
 # Uses floor_config.gd for all floor/zone data.
 # Uses floor_builder.gd for rendering.
@@ -48,13 +48,29 @@ const MiniMapScript = preload("res://scripts/mini_map.gd")
 const ToastManagerScript = preload("res://scripts/toast_manager.gd")
 const FloatingTextScript = preload("res://scripts/floating_text.gd")
 const FadeTransitionScript = preload("res://scripts/fade_transition.gd")
-const AudioManagerScript = preload("res://scripts/audio_manager.gd")
+const ProximitySystemScript = preload("res://scripts/proximity_system.gd")
+const CheckoutSystemScript = preload("res://scripts/checkout_system.gd")
+const FoodCourtSystemScript = preload("res://scripts/food_court_system.gd")
+const TruckDockSystemScript = preload("res://scripts/truck_dock_system.gd")
+const StoreExpansionScript = preload("res://scripts/store_expansion.gd")
+const AntiTheftScript = preload("res://scripts/anti_theft.gd")
+const DynamicPricingScript = preload("res://scripts/dynamic_pricing.gd")
+const SupplierManagerScript = preload("res://scripts/supplier_manager.gd")
+const RobotPanelSystemScript = preload("res://scripts/robot_panel_system.gd")
+const PromotionManagerScript = preload("res://scripts/promotion_manager.gd")
+const MainSpawnerScript = preload("res://scripts/main_spawner.gd")
+const MainInitScript = preload("res://scripts/main_init.gd")
 
 const DEV_MODE := true  # Set to false to disable dev tools
 
 const CELL_SIZE := FloorConfig.CELL_SIZE
 const WORLD_W  := FloorConfig.WORLD_W
 const WORLD_H  := FloorConfig.WORLD_H
+
+var _proximity_system: Node = null
+var _checkout_system: Node = null
+var _food_court_system: Node = null
+var _truck_dock_system: Node = null
 
 var _player: Player
 var _sections: Array = []
@@ -65,8 +81,8 @@ var _nearby_section: Node = null
 var _nearby_checkout: Node = null
 var _nearby_stall: Node = null
 var _nearby_karaoke: bool = false         # Floor 17 karaoke room
-	var _nearby_pool_table: bool = false      # Floor 17 pool table
-	var _nearby_darts_board: bool = false    # Floor 17 darts board
+var _nearby_pool_table: bool = false      # Floor 17 pool table
+var _nearby_darts_board: bool = false    # Floor 17 darts board
 var _nearby_claw_machine: ClawMachine = null
 var _nearby_npc_for_chat: NPCController = null
 var _npcs: Array = []
@@ -106,8 +122,6 @@ var _quest_journal: QuestJournal = null
 var _settings_panel: SettingsPanel = null
 var _pause_menu: PauseMenu = null
 var _stats_dashboard: StatsDashboard = null
-var _shopping_list_visible: bool = false
-var _audio: AudioManager = null
 
 var _nearby_monitor: bool = false
 var _monitor_panel: MonitorPanel = null
@@ -127,9 +141,9 @@ var _nearby_gift_wrap: bool = false
 var _nearby_digital_kiosk: bool = false
 var _nearby_info_desk: bool = false
 var _nearby_cafe: bool = false
-	var _nearby_promo_booth: bool = false  # Floor G promo booth
-	var _nearby_lost_found: bool = false
-	var _nearby_store_news: bool = false      # Floor G lost & found
+var _nearby_promo_booth: bool = false  # Floor G promo booth
+var _nearby_lost_found: bool = false
+var _nearby_store_news: bool = false      # Floor G lost & found
 var _nearby_vending: bool = false
 var _in_checkout: bool = false
 var _cart_panel: CanvasLayer
@@ -148,6 +162,7 @@ var _brand_manager: BrandManager = null
 var _brand_portal: BrandPortal = null
 var _business_mode: BusinessMode = null
 var _robots: Array = []           # active AI robot staff NPCs
+var _robot_panel_system: Node = null
 var _robot_panel: Control = null   # robot management UI
 var _temp_order_mode: String = ""  # "cafe" or "vending"
 var _temp_order_items: Array = []
@@ -156,6 +171,17 @@ var _world_bg: ColorRect = null
 var _aisle_labels: Array = []
 var _telegram_bot: Node = null
 var _elevator: ElevatorScript
+var _main_panels: Node = null
+var _main_spawner: Node = null
+var _main_init: Node = null
+var _promo_manager = null
+var _store_expansion = null
+var _anti_theft = null
+var _dynamic_pricing = null
+var _supplier_manager = null
+var _dev_tools = null
+var _stairs_node: Node2D = null
+var _parking_lot: Node = null
 var _current_floor_idx: int = 0
 var _floor_nodes: Array = []
 var _floor_ambient: Color = Color(0.18, 0.18, 0.16)
@@ -165,10 +191,6 @@ var _food_stall_browse: FoodStallBrowse
 var _in_elevator: bool = false
 
 const AISLE_NAMES := {
-const StoreExpansionScript = preload("res://scripts/store_expansion.gd")
-const AntiTheftScript = preload("res://scripts/anti_theft.gd")
-const DynamicPricingScript = preload("res://scripts/dynamic_pricing.gd")
-const SupplierManagerScript = preload("res://scripts/supplier_manager.gd")
 	"dairy":   "DAIRY",
 	"produce": "PRODUCE",
 	"bakery":  "BAKERY",
@@ -180,245 +202,18 @@ const SupplierManagerScript = preload("res://scripts/supplier_manager.gd")
 }
 
 func _ready() -> void:
-	add_to_group("main")  # allow NPCs to find main node
-	_telegram_bot = get_node_or_null("/root/Main/TelegramBot")
-
-	# Build ground floor (G) first
-	_current_floor_idx = 0
-	_build_floor(_current_floor_idx)
-	_setup_camera()
-	_build_hud()
-	_build_elevator()
-	_build_stairs()
-	_spawn_player()
-	_build_npcs()
-	_update_floor_hud()
-
-	# ?? Game Clock & Maintenance System ??
-	_game_clock = GameClockScript.new()
-	add_child(_game_clock)
-	_game_clock.hour_changed.connect(_on_hour_changed)
-	_game_clock.day_changed.connect(_on_day_changed)
-	_game_clock.shift_report.connect(_on_shift_report)
-
-	# ── Price Override Singleton (Phase 6) ──
-	var price_override = PriceOverrideScript.new()
-	add_child(price_override)
-
-	# ── Brand Manager ──
-	_brand_manager = BrandManagerScript.new()
-	_brand_manager.name = "BrandManager"
-	add_child(_brand_manager)
-
-	# ── Phase O: Promotion & Loyalty Manager ──
-	_promo_manager = PromotionManagerScript.new()
-	_promo_manager.name = "PromotionManager"
-	add_child(_promo_manager)
-	# ── Phase P: Store Expansion ──
-	_store_expansion = StoreExpansionScript.new()
-	_store_expansion.name = "StoreExpansion"
-	add_child(_store_expansion)
-	# ── Phase Q: Anti-Theft System ──
-	_anti_theft = AntiTheftScript.new()
-	_anti_theft.name = "AntiTheft"
-	add_child(_anti_theft)
-	# ── Phase R: Dynamic Pricing ──
-	_dynamic_pricing = DynamicPricingScript.new()
-	_dynamic_pricing.name = "DynamicPricing"
-	add_child(_dynamic_pricing)
-	# Phase S: Supplier Manager
-	_supplier_manager = SupplierManagerScript.new()
-	_supplier_manager.name = "SupplierManager"
-	add_child(_supplier_manager)
-	_brand_portal = BrandPortalScript.new()
-	add_child(_brand_portal)
-	_brand_portal.closed.connect(_on_brand_portal_closed)
-
-	_maintenance_system = MaintenanceSystemScript.new()
-	add_child(_maintenance_system)
-	_maintenance_system.configure(_game_clock)
-	_maintenance_system.issue_created.connect(_on_issue_created)
-	_maintenance_system.issue_resolved.connect(_on_issue_resolved)
-
-	_maintenance_visual = MaintenanceVisualScript.new()
-	add_child(_maintenance_visual)
-	_maintenance_visual.configure(self)
-
-	# ?? Warehouse System ??
-	_warehouse = WarehouseSystemScript.new()
-	add_child(_warehouse)
-	_warehouse.delivery_arrived.connect(_on_warehouse_delivery_arrived)
-	_warehouse.low_stock_warning.connect(_on_warehouse_low_stock)
-
-	# ?? Player Stats & Progression ??
-	_player_stats = PlayerStatsScript.new()
-	add_child(_player_stats)
-	_player_stats.achievement_unlocked.connect(_on_achievement_unlocked)
-	_player_stats.level_up.connect(_on_player_level_up)
-	_player_stats.staff_rank_up.connect(_on_staff_rank_up)
-
-	# Start chat manager
-	_chat_manager = ChatManagerScript.new()
-	add_child(_chat_manager)
-	for npc in _npcs:
-		_chat_manager.register_npc(npc)
-
-	notify_telegram("🟢 *Game Loaded*\n10-floor supermarket — Ground (G) ready\nUse [E] near elevator to change floors")
-
-	# ── Audio Manager ──
-	_audio = get_node_or_null("/root/Main/AudioManager")
-
-	# ── Save Hint Label ──
-	_save_hint_label = Label.new()
-	_save_hint_label.text = ""
-	_save_hint_label.position = Vector2(120.0, 80.0)
-	_save_hint_label.add_theme_color_override("font_color", Color(0.72, 0.90, 0.72))
-	_save_hint_label.add_theme_font_size_override("font_size", 9)
-	_save_hint_label.z_index = 200
-	add_child(_save_hint_label)
-
-	# ── Try Load Save ──
-	if SaveSystem.load_game(self):
-		_show_save_hint("Save loaded!")
-		notify_telegram("📁 *Save loaded* — resuming game")
-	else:
-		notify_telegram("📋 *New game* — no save found")
-		_tutorial_overlay = TutorialOverlayScript.new()
-		add_child(_tutorial_overlay)
-	_tutorial_overlay.dismissed.connect(_on_tutorial_dismissed)
-	# ── MiniMap ──
-	_minimap = MiniMapScript.new()
-	add_child(_minimap)
-	_minimap.set_player(_player)
-	_minimap.set_floor(_current_floor_idx)
-	_minimap.visible = false
-	# Show/hide truck dock based on floor
-	if _truck_dock_node != null:
-		_truck_dock_node.visible = _current_floor_idx == 0
-	# ── Toast Manager ──
-	_toasts = ToastManagerScript.new()
-	add_child(_toasts)
-	# ── Floating Text ──
-	_floating_text = FloatingTextScript.new()
-	add_child(_floating_text)
-	# ── Screen Fade ──
-	_fade = FadeTransitionScript.new()
-	add_child(_fade)
-	_daily_bonus = DailyBonusScript.new()
-	add_child(_daily_bonus)
-	_daily_bonus.streak_reward.connect(_on_streak_reward)
-	_daily_bonus.check_and_award(self)
-	_shopping_list = ShoppingListScript.new()
-	add_child(_shopping_list)
-	_loyalty_panel = Node2D.new()
-	_loyalty_panel.name = "LoyaltyPanel"
-	_loyalty_panel.visible = false
-	add_child(_loyalty_panel)
-	_quest_system = QuestSystemScript.new()
-	add_child(_quest_system)
-	_quest_journal = QuestJournalScript.new()
-	add_child(_quest_journal)
-	_settings_panel = SettingsPanelScript.new()
-	add_child(_settings_panel)
-	_pause_menu = PauseMenuScript.new()
-	add_child(_pause_menu)
-	_pause_menu.visible = false
-	_pause_menu.paused.connect(_on_game_paused)
-	_stats_dashboard = StatsDashboardScript.new()
-	add_child(_stats_dashboard)
-	_stats_dashboard.visible = false
-	_pause_menu.resumed.connect(_on_game_resumed)
-	_settings_panel.visible = false
-	_settings_panel.setting_changed.connect(_on_setting_changed)
-	_quest_journal.set_quest_system(_quest_system)
-	_quest_journal.visible = false
-	_quest_system.quest_completed.connect(_on_quest_completed)
-	_quest_system.all_daily_complete.connect(_on_all_quests_complete)
-	_shopping_list.visible = false
-	# ── Section Browse Panel ──
-	_section_browse = SectionBrowseScript.new()
-	add_child(_section_browse)
-	_section_browse.item_added.connect(_on_item_added_to_cart)
-	_section_browse.closed.connect(_on_browse_closed)
-	# ── Food Stall Browse Panel ──
-	_food_stall_browse = FoodStallBrowseScript.new()
-	add_child(_food_stall_browse)
-	_food_stall_browse.item_added.connect(_on_item_added_to_cart)
-	# Welcome toast
-	_toasts.show_toast("Welcome to Pixel Supermarket!", Color(0.08, 0.14, 0.22, 0.90))
-		_tutorial_overlay.show_tutorial()
-		_tutorial_overlay.dismissed.connect(_on_tutorial_dismissed)
-	# ── Dev Tools (dev mode only) ──
-	if DEV_MODE:
-		_dev_tools = DevToolsScript.new()
-		_dev_tools.set_main(self)
-		_dev_tools.dev_commandIssued.connect(_on_dev_command)
-		_dev_tools.position = Vector2(100.0, 100.0)
-		_dev_tools.z_index = 1000
-		add_child(_dev_tools)
-
-# ???????????????????????????????????????????????????????????????????????????????????????????????# FLOOR BUILDING ??data-driven via FloorBuilder
-# ???????????????????????????????????????????????????????????????????????????????????????????????
+	_main_init = preload("res://scripts/main_init.gd").new()
+	add_child(_main_init)
+	_main_init.setup(self)
+	_main_init.init_all()
+	_build_floor(0)
 func _build_floor(idx: int) -> void:
 	_clear_floor_nodes()
 	_current_floor_idx = idx
 	if _player_stats != null:
 		_player_stats.on_floor_visited(idx)
-	if _time_label == null:
-		_time_label = Label.new()
-		_time_label.name = "TimeLabelHUD"
-		_time_label.position = Vector2(268.0, 4.0)
-		_time_label.add_theme_color_override("font_color", Color(0.60, 0.70, 0.90))
-		_time_label.add_theme_font_size_override("font_size", 8)
-		_time_label.z_index = 10
-		add_child(_time_label)
-	if _game_clock != null:
-		var h = _game_clock.game_hour
-		var m = _game_clock.game_minute
-		_time_label.text = "%02d:%02d" % [h, m]
-	# Store status label
-	if _store_status_label == null:
-		_store_status_label = Label.new()
-		_store_status_label.position = Vector2(268.0, 14.0)
-		_store_status_label.add_theme_color_override("font_color", Color(0.60, 0.90, 0.60))
-		_store_status_label.add_theme_font_size_override("font_size", 8)
-		_store_status_label.z_index = 10
-		add_child(_store_status_label)
-	if _game_clock != null:
-		var is_open = _game_clock.is_store_open()
-		_store_status_label.text = "OPEN" if is_open else "CLOSED"
-		if is_open:
-			_store_status_label.add_theme_color_override("font_color", Color(0.50, 0.90, 0.50))
-		else:
-	# Shopping list count label
-	if _shopping_list_count_lbl == null:
-		_shopping_list_count_lbl = Label.new()
-		_shopping_list_count_lbl.position = Vector2(268.0, 24.0)
-		_shopping_list_count_lbl.add_theme_color_override("font_color", Color(0.55, 0.70, 0.90))
-		_shopping_list_count_lbl.add_theme_font_size_override("font_size", 7)
-		_shopping_list_count_lbl.z_index = 10
-		add_child(_shopping_list_count_lbl)
-	if _shopping_list != null:
-		var count = _shopping_list.get_items().size()
-		_shopping_list_count_lbl.text = "List: %d" % count if count > 0 else ""
-			_store_status_label.add_theme_color_override("font_color", Color(0.90, 0.50, 0.50))
-	# XP progress bar (below cart count)
-	if _xp_bar_bg == null:
-		_xp_bar_bg = ColorRect.new()
-		_xp_bar_bg.position = Vector2(4.0, 20.0)
-		_xp_bar_bg.size = Vector2(70.0, 4.0)
-		_xp_bar_bg.color = Color(0.15, 0.15, 0.20, 0.80)
-		_xp_bar_bg.z_index = 10
-		add_child(_xp_bar_bg)
-		_xp_bar_fill = ColorRect.new()
-		_xp_bar_fill.position = Vector2(4.0, 20.0)
-		_xp_bar_fill.size = Vector2(0.0, 4.0)
-		_xp_bar_fill.color = Color(0.40, 0.85, 0.50)
-		_xp_bar_fill.z_index = 11
-		add_child(_xp_bar_fill)
-	if _player_stats != null:
-		var progress = _player_stats.xp_progress()
-		_xp_bar_fill.size.x = max(0.0, 70.0 * progress)
+	# HUD labels (time, status, shopping list, XP bar)
+	_main_panels.build_floor_hud(idx)
 	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(idx)
 
 	# Use FloorBuilder to render this floor
@@ -465,9 +260,9 @@ func _build_floor(idx: int) -> void:
 		if counter.has_signal("checkout_interacted"):
 			counter.checkout_interacted.connect(_on_checkout_interacted)
 		if counter.has_signal("express_rejected"):
-			counter.express_rejected.connect(_on_express_rejected)
+			counter.express_rejected.connect(_checkout_system._on_express_rejected)
 		if counter.has_signal("self_checkout_error"):
-			counter.self_checkout_error.connect(_on_self_checkout_error)
+			counter.self_checkout_error.connect(_checkout_system._on_self_checkout_error)
 		if counter.has_signal("self_checkout_cleared"):
 			counter.self_checkout_cleared.connect(_on_self_checkout_cleared)
 
@@ -505,22 +300,14 @@ func _apply_ambient_shift() -> void:
 # ???????????????????????????????????????????????????????????????????????????????????????????????# ELEVATOR & STAIRS
 # ???????????????????????????????????????????????????????????????????????????????????????????????
 func _build_elevator() -> void:
-	_elevator = ElevatorScript.new()
-	_elevator.name = "Elevator"
-	_elevator.floor_reached.connect(_on_elevator_floor_reached)
-	_elevator.travel_finished.connect(_on_elevator_travel_finished)
-	add_child(_elevator)
+	if _main_panels != null:
+		_main_panels.build_elevator()
 
-func _build_stairs() -> void:
-	# Stairs node (not animated, just visual reference + proximity)
-	_stairs_node = Node2D.new()
-	_stairs_node.name = "Stairs"
-	add_child(_stairs_node)
+
 
 func _build_parking() -> void:
-	_parking_lot = ParkingLotScript.new()
-	_parking_lot.name = "ParkingLot"
-	add_child(_parking_lot)
+	if _main_panels != null:
+		_main_panels.build_parking()
 
 # ?????? Player boards elevator ????????????????????????????????????????????????????????????????????????
 
@@ -555,6 +342,15 @@ func _on_elevator_travel_finished() -> void:
 		_toasts.toast_info("Entered: " + fname)
 	if _audio != null:
 		_audio.play_floor_change()
+
+func _build_sections_for_current_floor() -> void:
+	if _main_panels != null:
+		_main_panels.build_sections_for_current_floor()
+
+func _build_checkout_for_current_floor() -> void:
+	if _main_panels != null:
+		_main_panels.build_checkout_for_current_floor()
+
 func _rebuild_floor(idx: int) -> void:
 	_clear_floor_nodes()
 	_world_bg = null
@@ -582,298 +378,38 @@ func _setup_camera() -> void:
 	cam.make_current()
 
 func _build_hud() -> void:
-	# Cart count top-left
-	var cart_bg := ColorRect.new()
-	cart_bg.position = Vector2(4.0, 4.0)
-	cart_bg.size = Vector2(70.0, 16.0)
-	cart_bg.color = Color(0.06, 0.06, 0.09, 0.85)
-	add_child(cart_bg)
-
-	var cart_icon := Label.new()
-	cart_icon.text = "Cart:"
-	cart_icon.position = Vector2(6.0, 5.0)
-	cart_icon.add_theme_color_override("font_color", Color(0.60, 0.60, 0.60))
-	cart_icon.add_theme_font_size_override("font_size", 8)
-	add_child(cart_icon)
-
-	_cart_count_lbl = Label.new()
-	_cart_count_lbl.text = "0 items  $0.00"
-	_cart_count_lbl.position = Vector2(30.0, 5.0)
-	_cart_count_lbl.add_theme_color_override("font_color", Color(0.88, 0.78, 0.42))
-	_cart_count_lbl.add_theme_font_size_override("font_size", 8)
-	add_child(_cart_count_lbl)
-
-	# Zone prompt bottom center
-	var prompt_bg := ColorRect.new()
-	prompt_bg.name = "PromptBg"
-	prompt_bg.position = Vector2(100.0, 164.0)
-	prompt_bg.size = Vector2(120.0, 14.0)
-	prompt_bg.color = Color(0.06, 0.06, 0.09, 0.85)
-	prompt_bg.visible = false
-	add_child(prompt_bg)
-
-	var prompt_lbl := Label.new()
-	prompt_lbl.name = "PromptLbl"
-	prompt_lbl.text = "[E] Browse"
-	prompt_lbl.position = Vector2(104.0, 166.0)
-	prompt_lbl.add_theme_color_override("font_color", Color(0.88, 0.78, 0.42))
-	prompt_lbl.add_theme_font_size_override("font_size", 8)
-	prompt_lbl.visible = false
-	add_child(prompt_lbl)
-
-	# Checkout label
-	_checkout_counter_label = Label.new()
-	_checkout_counter_label.text = ""
-	_checkout_counter_label.position = Vector2(100.0, 150.0)
-	_checkout_counter_label.add_theme_color_override("font_color", Color(0.88, 0.88, 0.72))
-	_checkout_counter_label.add_theme_font_size_override("font_size", 9)
-	_checkout_counter_label.visible = false
-	add_child(_checkout_counter_label)
-
-	# Tab hint bottom right
-	var tab_hint := Label.new()
-	tab_hint.name = "TabHint"
-	tab_hint.text = "[TAB] Cart"
-	tab_hint.position = Vector2(264.0, 4.0)
-	tab_hint.add_theme_color_override("font_color", Color(0.45, 0.45, 0.45))
-	tab_hint.add_theme_font_size_override("font_size", 7)
-	add_child(tab_hint)
-
-	# ── Checkout Receipt Panel ──
-	_build_checkout_receipt_panel()
-
+pass  # HUD built by main_hud.gd in _ready()
 func _build_checkout_receipt_panel() -> void:
-	# Receipt overlay panel (hidden until checkout)
-	var panel := ColorRect.new()
-	panel.name = "CheckoutReceipt"
-	panel.position = Vector2(80.0, 30.0)
-	panel.size = Vector2(160.0, 120.0)
-	panel.color = Color(0.08, 0.08, 0.12, 0.95)
-	panel.visible = false
-	panel.z_index = 500
-	add_child(panel)
-	_checkout_receipt = panel
-
-	var title := Label.new()
-	title.text = "RECEIPT"
-	title.position = Vector2(60.0, 34.0)
-	title.add_theme_color_override("font_color", Color(0.90, 0.90, 0.60))
-	title.add_theme_font_size_override("font_size", 10)
-	panel.add_child(title)
-
-	_checkout_receipt_items_lbl = Label.new()
-	_checkout_receipt_items_lbl.text = ""
-	_checkout_receipt_items_lbl.position = Vector2(8.0, 48.0)
-	_checkout_receipt_items_lbl.add_theme_color_override("font_color", Color(0.80, 0.80, 0.70))
-	_checkout_receipt_items_lbl.add_theme_font_size_override("font_size", 7)
-	panel.add_child(_checkout_receipt_items_lbl)
-
-	_checkout_total_lbl = Label.new()
-	_checkout_total_lbl.text = ""
-	_checkout_total_lbl.position = Vector2(8.0, 105.0)
-	_checkout_total_lbl.add_theme_color_override("font_color", Color(0.90, 0.90, 0.60))
-	_checkout_total_lbl.add_theme_font_size_override("font_size", 8)
-	panel.add_child(_checkout_total_lbl)
-
+	pass  # receipt panel built by main_hud.gd
 func get_warehouse() -> Node:
 	return _warehouse
 
 func _update_floor_hud() -> void:
-	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(_current_floor_idx)
-	if _floor_label != null and is_instance_valid(_floor_label):
-		_floor_label.text = "Floor %s ??%s" % [fd.label, fd.theme.replace("_", " ").capitalize()]
-	else:
-		_floor_label = get_node_or_null("FloorLabelHUD")
-		if _floor_label != null:
-			_floor_label.text = "Floor %s ??%s" % [fd.label, fd.theme.replace("_", " ").capitalize()]
-	_update_staff_rank_hud()
+	if _main_panels != null:
+		_main_panels.update_floor_hud()
 
 # ???????????????????????????????????????????????????????????????????????????????????????????????# PLAYER & NPCS
 # ???????????????????????????????????????????????????????????????????????????????????????????????
 func _spawn_player() -> void:
-	_player = Player.new()
-	_player.position = Vector2(12 * CELL_SIZE, 4 * CELL_SIZE)
-	add_child(_player)
-	_player.set_world(self)
-	_player.cart_updated.connect(_on_cart_updated)
-	_player.interact_requested.connect(_on_player_interact)
-	_player.tab_pressed.connect(_on_tab_pressed)
-	_build_cart_panel()
+	_main_spawner.spawn_player()
+
+func _on_cart_updated(items: Array, subtotal: float) -> void:
+	var main_hud = get_node_or_null("MainHUD")
+	if main_hud != null and main_hud.has_method("update_cart"):
+		main_hud.update_cart(items, subtotal)
 
 func _build_npcs() -> void:
-	# ??? Staff per floor ????????????????????????????????????????????
-	# Staff spawn positions (x, y tile coords) per floor
-	var staff_spawns := {
-		0: { "x": [36, 38, 40, 20, 40, 60], "y": [10, 12, 14, 20, 20, 20] },  # Ground: lobby + food street
-		1: { "x": [20, 40, 60, 20, 40], "y": [10, 10, 10, 20, 20] },  # Floor 1
-		2: { "x": [20, 40, 60], "y": [10, 10, 20] },   # Pantry
-		3: { "x": [30, 50, 20], "y": [10, 10, 20] },   # Beverages
-		4: { "x": [20, 40, 60], "y": [10, 10, 20] },   # Snacks
-	}
-
-	var staff_roles := [
-		ActorData.StaffRole.CASHIER,
-		ActorData.StaffRole.SHELF_STOCKER,
-		ActorData.StaffRole.CLEANER,
-		ActorData.StaffRole.SECURITY,
-		ActorData.StaffRole.GREETER,
-		ActorData.StaffRole.MANAGER,
-		ActorData.StaffRole.FLOOR_STAFF,
-	]
-
-	# Spawn 2-3 staff per role across different floors
-	for role in staff_roles:
-		var count := 2 if role == ActorData.StaffRole.SHELF_STOCKER else 1
-		for c in range(count):
-			var floor_idx := c % 5  # distribute across floors 0-4
-			var spawns = staff_spawns.get(floor_idx, {"x": [30], "y": [10]})
-			var sx := spawns["x"][c % spawns["x"].size()] * CELL_SIZE
-			var sy := spawns["y"][c % spawns["y"].size()] * CELL_SIZE
-			_spawn_npc_staff(role, floor_idx, Vector2(sx, sy))
-
-	# ??? Customers ??diverse groups ????????????????????????????????
-	# Family with baby (stroller)
-	_spawn_customer_group(ActorData.CustomerGroupType.FAMILY_BABY, 0, Vector2(300, 200))
-	_spawn_customer_group(ActorData.CustomerGroupType.FAMILY_BABY, 0, Vector2(600, 250))
-
-	# Family with toddler
-	_spawn_customer_group(ActorData.CustomerGroupType.FAMILY_TODDLER, 1, Vector2(200, 200))
-	_spawn_customer_group(ActorData.CustomerGroupType.FAMILY_TODDLER, 0, Vector2(500, 400))
-
-	# Two couples
-	_spawn_customer_group(ActorData.CustomerGroupType.TWO_COUPLES, 1, Vector2(400, 300))
-	_spawn_customer_group(ActorData.CustomerGroupType.TWO_COUPLES, 0, Vector2(200, 300))
-
-	# Couple shopping
-	_spawn_customer_group(ActorData.CustomerGroupType.COUPLE, 1, Vector2(300, 400))
-	_spawn_customer_group(ActorData.CustomerGroupType.COUPLE, 3, Vector2(250, 250))
-	_spawn_customer_group(ActorData.CustomerGroupType.COUPLE, 4, Vector2(350, 300))
-
-	# Solo shoppers
-	for i in range(8):
-		var floor_i := i % 5
-		var px := (80 + randi() % 500) as float
-		var py := (80 + randi() % 400) as float
-		_spawn_customer(ActorData.CustomerGroupType.SOLO, floor_i, Vector2(px, py))
-
-	# Pair of friends
-	for i in range(4):
-		var floor_i := (i % 4) + 1
-		var px := (100 + randi() % 400) as float
-		var py := (100 + randi() % 300) as float
-		_spawn_customer_group(ActorData.CustomerGroupType.PAIR, floor_i, Vector2(px, py))
-
-	# Three friends
-	_spawn_customer_group(ActorData.CustomerGroupType.THREE_FRIENDS, 1, Vector2(500, 200))
-	_spawn_customer_group(ActorData.CustomerGroupType.THREE_FRIENDS, 2, Vector2(300, 350))
-
-	# Extended family (2 adults + kids + grandparent)
-	_spawn_customer_group(ActorData.CustomerGroupType.FAMILY_EXTENDED, 1, Vector2(600, 150))
-
-	notify_telegram_npc(_npc_count)
-
-var _npc_count: int = 0
-
+    _main_spawner.build_npcs()
+    return
 func _spawn_npc_staff(role: int, floor_idx: int, pos: Vector2) -> void:
-	var npc_scene = preload("res://scripts/npc_controller.gd")
-	var npc = npc_scene.new()
-	var actor = ActorData.Actor.new()
-	actor = ActorData.Actor.random_staff(role)
-	actor.current_floor = floor_idx
-	npc.configure(actor)
-	npc.position = pos
-	npc.name = "Staff_%s_%d" % [actor.display_name.replace(" ", "_"), _npc_count]
-	add_child(npc)
-	_npcs.append(npc)
-	if _chat_manager != null:
-		_chat_manager.register_npc(npc)
-	_npc_count += 1
-
+    _main_spawner.spawn_npc_staff(role, floor_idx, pos)
+    return
 func _spawn_customer(group_type: int, floor_idx: int, pos: Vector2) -> void:
-	var npc_scene = preload("res://scripts/npc_controller.gd")
-	var npc = npc_scene.new()
-	var actor = ActorData.Actor.random_customer(group_type)
-	actor.current_floor = floor_idx
-	npc.configure(actor)
-	npc.position = pos
-	npc.name = "Customer_%d" % _npc_count
-	add_child(npc)
-	_npcs.append(npc)
-	if _chat_manager != null:
-		_chat_manager.register_npc(npc)
-	_npc_count += 1
-
+    _main_spawner.spawn_customer(group_type, floor_idx, pos)
+    return
 func _spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void:
-	# Spawn a group leader + follow members based on group type
-	var leader = null
-	var offsets := []
-	var has_baby := false
-	var has_toddler := false
-	var has_kids := false
-
-	match group_type:
-		ActorData.CustomerGroupType.FAMILY_BABY:
-			offsets = [Vector2(0,0), Vector2(20,0), Vector2(10,-15)]
-			has_baby = true
-		ActorData.CustomerGroupType.FAMILY_TODDLER:
-			offsets = [Vector2(0,0), Vector2(20,0), Vector2(10,-12)]
-			has_toddler = true
-		ActorData.CustomerGroupType.FAMILY_KIDS:
-			offsets = [Vector2(0,0), Vector2(20,0), Vector2(10,-12), Vector2(30,-12)]
-			has_kids = true
-		ActorData.CustomerGroupType.FAMILY_EXTENDED:
-			offsets = [Vector2(0,0), Vector2(22,0), Vector2(44,0), Vector2(11,-12), Vector2(33,-12), Vector2(-15,0)]
-		ActorData.CustomerGroupType.COUPLE:
-			offsets = [Vector2(0,0), Vector2(20,0)]
-		ActorData.CustomerGroupType.PAIR:
-			offsets = [Vector2(0,0), Vector2(20,0)]
-		ActorData.CustomerGroupType.TWO_COUPLES:
-			offsets = [Vector2(0,0), Vector2(20,0), Vector2(40,0), Vector2(60,0)]
-		ActorData.CustomerGroupType.THREE_FRIENDS:
-			offsets = [Vector2(0,0), Vector2(20,0), Vector2(40,0)]
-		_:
-			offsets = [Vector2(0,0)]
-
-	for i in range(offsets.size()):
-		var npc_scene = preload("res://scripts/npc_controller.gd")
-		var npc = npc_scene.new()
-		var actor = ActorData.Actor.random_customer(group_type)
-		actor.current_floor = floor_idx
-
-		# Children get child appearance
-		if i >= 2 and (has_baby or has_toddler or has_kids):
-			actor.appearance.top_style = randi() % 2  # t-shirt or tank
-			actor.appearance.bottom_style = randi() % 2  # shorts or pants
-			actor.appearance.shoes_style = randi() % 2  # sneakers or sandals
-
-		# Baby/toddler data
-		if has_baby and i == 2:
-			actor.child = ActorData.ChildData.random_infant()
-			actor.life_stage = ActorData.LifeStage.ADULT  # parent, not baby
-		if has_toddler and i == 2:
-			actor.child = ActorData.ChildData.random_toddler()
-			actor.life_stage = ActorData.LifeStage.ADULT
-
-		npc.configure(actor)
-		npc.position = pos + offsets[i] * Vector2(1.0, 1.0)
-
-		var member_name := "Group_%d_Member_%d" % [_npc_count, i]
-		if i == 0:
-			member_name = "GroupLeader_%d" % _npc_count
-		npc.name = member_name
-		add_child(npc)
-		_npcs.append(npc)
-
-		if i == 0:
-			leader = npc
-		else if leader != null:
-			npc.set_group_leader(leader)
-			var leader_actor: ActorData.Actor = leader.get_actor()
-			leader_actor.group_members.append(npc)
-		_npc_count += 1
-
-# ???????????????????????????????????????????????????????????????????????????????????????????????# GAME LOOP ??Proximity & Input
-# ???????????????????????????????????????????????????????????????????????????????????????????????
+    _main_spawner.spawn_customer_group(group_type, floor_idx, pos)
+    return
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
 		match event.keycode:
@@ -896,7 +432,7 @@ func _input(event: InputEvent) -> void:
 				_toggle_shopping_list()
 			# M ── Loyalty Panel
 			KEY_M:
-				_toggle_loyalty_panel()
+				_food_court_system.toggle_loyalty_panel()
 			# X ── Renovate nearby section (staff mode)
 			KEY_X:
 				_renovate_nearby_section()
@@ -941,9 +477,9 @@ func _input(event: InputEvent) -> void:
 				if idx < _temp_order_items.size():
 					var item: Dictionary = _temp_order_items[idx]
 					if _temp_order_mode == "loyalty":
-						_handle_loyalty_key(idx, item)
+						_food_court_system.handle_loyalty_key(idx, item)
 					else:
-						_add_order_item(idx, item)
+						_food_court_system.add_order_item(idx, item)
 				return
 
 		# Warehouse equipment controls (active when in warehouse mode)
@@ -976,211 +512,17 @@ func _process(_delta: float) -> void:
 		return
 	if _in_elevator:
 		return
-	_update_player_section_proximity()
-	_update_checkout_proximity()
-	_update_elevator_proximity()
-	_update_stairs_proximity()
-	_update_stall_proximity()
-	_update_claw_machine_proximity()
-	_update_npc_chat_proximity()
-	_update_issue_proximity()
-	_update_atm_proximity()
-	_update_warehouse_proximity()
-	_update_monitor_proximity()
-	_update_terminal_proximity()
-	_update_phase3_proximity()
+	_proximity_system.update_all()
 
 	# Self-checkout error dismiss on E key
 	if Input.is_action_just_pressed("interact") and _nearby_checkout != null:
 		if _nearby_checkout.is_self_checkout():
 			_nearby_checkout.dismiss_error()
-			_do_checkout_interaction()
-
-func _update_elevator_proximity() -> void:
-	if _player == null or _elevator == null:
-		_nearby_elevator = false
-		return
-	_nearby_elevator = _elevator.is_nearby(_player.position)
-	_nearby_stairs = false
-	_nearby_parking = false
-
-	# Show prompt
-	var prompt_bg = get_node_or_null("PromptBg")
-	var prompt_lbl = get_node_or_null("PromptLbl")
-	if _nearby_elevator:
-		if prompt_lbl != null:
-			prompt_lbl.text = "[E] Elevator"
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
-		_checkout_counter_label.visible = false
-
-func _update_stall_proximity() -> void:
-	_nearby_stall = null
-	if _floor_builder == null or _player == null:
-		return
-	var ppos = _player.position
-	var nearest_dist := 99999.0
-	for stall in _floor_builder.get_food_stalls():
-		var zone = stall.get_zone()
-		var stall_center := Vector2(
-			(zone.x + zone.w * 0.5) * CELL_SIZE,
-			(zone.y + zone.h * 0.5) * CELL_SIZE
-		)
-		var dist := ppos.distance_to(stall_center)
-		if dist < nearest_dist and dist < CELL_SIZE * 10.0:
-			nearest_dist = dist
-			_nearby_stall = stall
-
-	var prompt_lbl = get_node_or_null("PromptLbl")
-	var prompt_bg = get_node_or_null("PromptBg")
-	if _nearby_stall != null and not _nearby_elevator and not _nearby_stairs:
-		if prompt_lbl != null:
-			var fd = _nearby_stall.get_stall_def()
-			prompt_lbl.text = "[E] Order at %s" % fd.name
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
-
-func _update_claw_machine_proximity() -> void:
-	_nearby_claw_machine = null
-	if _floor_builder == null or _player == null:
-		return
-	var ppos = _player.position
-	var nearest_dist := 99999.0
-	for machine in _floor_builder.get_claw_machines():
-		var zone = machine.get_zone()
-		var mc_center := Vector2(
-			(zone.x + zone.w * 0.5) * CELL_SIZE,
-			(zone.y + zone.h * 0.5) * CELL_SIZE
-		)
-		var dist := ppos.distance_to(mc_center)
-		if dist < nearest_dist and dist < CELL_SIZE * 10.0:
-			nearest_dist = dist
-			_nearby_claw_machine = machine
-
-	var prompt_lbl = get_node_or_null("PromptLbl")
-	var prompt_bg = get_node_or_null("PromptBg")
-	if _nearby_claw_machine != null and not _nearby_elevator and not _nearby_stairs:
-		if prompt_lbl != null:
-			var mid = _nearby_claw_machine.get_machine_id()
-			prompt_lbl.text = "[E] Play Claw #%s" % mid.replace("claw_", "")
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
-
-func _update_npc_chat_proximity() -> void:
-	_nearby_npc_for_chat = null
-	if _player == null or _npcs.is_empty():
-		return
-	var ppos = _player.position
-	var nearest_dist := 99999.0
-	for npc in _npcs:
-		if not is_instance_valid(npc):
-			continue
-		var actor: ActorData.Actor = npc.get_actor()
-		if actor == null or not actor.is_active:
-			continue
-		var dist := ppos.distance_to(npc.global_position)
-		if dist < nearest_dist and dist < CELL_SIZE * 8.0:
-			nearest_dist = dist
-			_nearby_npc_for_chat = npc
-
-	var prompt_lbl = get_node_or_null("PromptLbl")
-	var prompt_bg = get_node_or_null("PromptBg")
-	if _nearby_npc_for_chat != null and not _nearby_elevator and not _nearby_stairs:
-		if _chat_panel == null or not _chat_panel._is_open:
-			if prompt_lbl != null:
-				var actor: ActorData.Actor = _nearby_npc_for_chat.get_actor()
-				var role_str := ""
-				if actor.role == ActorData.Role.STAFF:
-					var role_names := {
-						ActorData.StaffRole.CASHIER: "Cashier",
-						ActorData.StaffRole.SHELF_STOCKER: "Stocker",
-						ActorData.StaffRole.CLEANER: "Cleaner",
-						ActorData.StaffRole.SECURITY: "Security",
-						ActorData.StaffRole.GREETER: "Greeter",
-						ActorData.StaffRole.MANAGER: "Manager",
-						ActorData.StaffRole.FLOOR_STAFF: "Staff",
-					}
-					role_str = role_names.get(actor.staff_role, "Staff")
-					prompt_lbl.text = "[C] Chat with %s (%s)" % [actor.display_name, role_str]
-				else:
-					prompt_lbl.text = "[C] Chat with %s" % actor.display_name
-				prompt_lbl.visible = true
-			if prompt_bg != null:
-				prompt_bg.visible = true
-	else:
-		# Only hide chat hint if no other prompt is showing
-		pass  # don't override other prompts
-
-# ??? Issue / Maintenance Proximity ???????????????????????????????
-func _update_issue_proximity() -> void:
-	_nearby_issue = false
-	if _player == null or _maintenance_system == null:
-		return
-	var issue := _maintenance_system.get_issue_at_pos(_player.position, CELL_SIZE * 7.0)
-	_nearby_issue = (issue != null)
-	var prompt_lbl = get_node_or_null("PromptLbl")
-	var prompt_bg = get_node_or_null("PromptBg")
-	if issue != null and not _nearby_elevator and not _nearby_stairs:
-		if prompt_lbl != null:
-			prompt_lbl.text = "[E] Fix: %s [%s]" % [issue.label, issue.assigned_to]
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
-	# If player has a target issue, show direction prompt
-	if _target_issue != null and _target_issue.status < 2:
-		if prompt_lbl != null and not _nearby_issue:
-			prompt_lbl.text = "[E] Fix: %s (Floor %d)" % [_target_issue.label, _target_issue.floor]
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
-
-# ??? ATM Proximity ??????????????????????????????????????????????
-func _update_atm_proximity() -> void:
-	_nearby_atm = false
-	if _player == null:
-		return
-	# Check if near any ATM node
-	for node in get_children():
-		if node.has_method("is_nearby") and node.name.begins_with("ATM_"):
-			if node.is_nearby(_player.position):
-				_nearby_atm = true
-				break
-	var prompt_lbl = get_node_or_null("PromptLbl")
-	var prompt_bg = get_node_or_null("PromptBg")
-	if _nearby_atm and not _nearby_elevator and not _nearby_stairs:
-		if prompt_lbl != null:
-			prompt_lbl.text = "[E] Use ATM"
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
-
-# ??? Warehouse Proximity ????????????????????????????????????????
-func _update_warehouse_proximity() -> void:
-	_nearby_warehouse = false
-	if _player == null or _current_floor_idx != 11:
-		return
-	# On Floor 11 (warehouse), show interaction prompt if in range
-	var wh_pos := Vector2(40 * CELL_SIZE, 20 * CELL_SIZE)
-	if _player.position.distance_to(wh_pos) < CELL_SIZE * 12.0:
-		_nearby_warehouse = true
-	var prompt_lbl = get_node_or_null("PromptLbl")
-	var prompt_bg = get_node_or_null("PromptBg")
-	if _nearby_warehouse and not _nearby_elevator and not _nearby_stairs:
-		if prompt_lbl != null:
-			if _warehouse_mode:
-				prompt_lbl.text = "[WASD] Drive Truck  [Q/E] Forklift  [F] Conveyor  [Space] Stop  [E] Exit"
-			else:
-				prompt_lbl.text = "[E] Warehouse  [R] Robot Panel"
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
+		_checkout_system.retry_checkout(_nearby_checkout)
 
 func _on_warehouse_delivery_arrived(contents: Dictionary) -> void:
 	# Spawn truck at dock on Floor G
-	_spawn_truck_at_dock()
+	_truck_dock_system.spawn_truck()
 	notify_telegram("Delivery arrived! Truck at dock — press [E] to unload for bonus XP!" % contents.size())
 
 func _on_warehouse_low_stock(section_id: String) -> void:
@@ -1212,26 +554,6 @@ func _open_atm_panel() -> void:
 
 func _on_atm_panel_closed() -> void:
 	_atm_panel = null
-
-func _update_monitor_proximity() -> void:
-	_nearby_monitor = false
-	if _player == null:
-		return
-	# Check if player is on floor 7 or 8 (back office / exec office)
-	if _current_floor_idx != 7 and _current_floor_idx != 8:
-		return
-	# Check if near monitor room zone
-	var wh_pos := Vector2(66 * CELL_SIZE + 2 * CELL_SIZE, 3 * CELL_SIZE + 2 * CELL_SIZE)
-	if _player.position.distance_to(wh_pos) < CELL_SIZE * 8.0:
-		_nearby_monitor = true
-	var prompt_lbl = get_node_or_null('PromptLbl')
-	var prompt_bg = get_node_or_null('PromptBg')
-	if _nearby_monitor and not _nearby_elevator and not _nearby_stairs:
-		if prompt_lbl != null:
-			prompt_lbl.text = '[E] Open Monitor Panel'
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
 
 func _open_monitor_panel() -> void:
 	if _monitor_panel != null and _monitor_panel.visible:
@@ -1271,23 +593,11 @@ func _on_dev_command(cmd: String, args: Dictionary) -> void:
 			_kill_all_test_npcs()
 
 func _spawn_test_customers(count: int) -> void:
-	for i in range(count):
-		var npc: Node = preload("res://scripts/npc_controller.gd").new()
-		npc.position = Vector2(300.0 + randf_range(-50, 50), 500.0 + randf_range(-30, 30))
-		add_child(npc)
-		npc.configure(ActorData.new_test_customer())
-		_npcs.append(npc)
-		_chat_manager.register_npc(npc)
-
+    _main_spawner.spawn_test_customers(count)
+    return
 func _spawn_test_staff(count: int) -> void:
-	for i in range(count):
-		var npc: Node = preload("res://scripts/npc_controller.gd").new()
-		npc.position = Vector2(350.0 + randf_range(-50, 50), 300.0 + randf_range(-30, 30))
-		add_child(npc)
-		npc.configure(ActorData.new_test_staff())
-		_npcs.append(npc)
-		_chat_manager.register_npc(npc)
-
+    _main_spawner.spawn_test_staff(count)
+    return
 func _kill_all_test_npcs() -> void:
 	for npc in _npcs:
 		if npc != null and is_instance_valid(npc):
@@ -1360,13 +670,8 @@ func _on_staff_rank_up(new_rank: PlayerStats.StaffRank) -> void:
 	notify_telegram("Staff rank up! Now: %s" % rank_name)
 
 func _update_staff_rank_hud() -> void:
-	if _player_stats == null:
-		return
-	var rank_lbl = get_node_or_null("StaffRankLbl")
-	if rank_lbl != null:
-		rank_lbl.text = "[%s]" % _player_stats.get_staff_rank_name()
-		var progress := _player_stats.get_staff_xp_progress()
-		rank_lbl.tooltip_text = "Staff XP: %d/100 progress to next rank" % int(progress * 100)
+	if _main_panels != null:
+		_main_panels.update_staff_rank_hud()
 
 func _on_player_level_up(new_level: int) -> void:
 	notify_telegram("LEVEL UP! You are now Level %d!" % new_level)
@@ -1433,36 +738,6 @@ func _show_tutorial_overlay() -> void:
 	add_child(_tutorial_overlay)
 	_tutorial_overlay.show_tutorial()
 	_tutorial_overlay.dismissed.connect(_on_tutorial_dismissed)
-
-func _toggle_loyalty_panel() -> void:
-	if _loyalty_panel == null:
-		return
-	_loyalty_panel.visible = not _loyalty_panel.visible
-	if _loyalty_panel.visible:
-		_refresh_loyalty_panel()
-
-func _refresh_loyalty_panel() -> void:
-	if _loyalty_panel == null or not _promo_manager:
-		return
-	for c in _loyalty_panel.get_children():
-		c.queue_free()
-	var pan := ColorRect.new()
-	pan.color = Color(0.05, 0.08, 0.15, 0.95)
-	pan.size = Vector2(200, 120)
-	_loyalty_panel.add_child(pan)
-	var lbl := Label.new()
-	lbl.add_theme_font_size_override("font_size", 8)
-	var tier := _promo_manager.get_tier_name()
-	var tier_col := _promo_manager.get_tier_color()
-	var pts := _promo_manager.get_loyalty_points()
-	var disc := int(_promo_manager.get_tier_discount() * 100)
-	var mult := _promo_manager.get_tier_point_multiplier()
-	var prog := _promo_manager.get_tier_progress()
-	lbl.text = "%s LOYALTY\n\nPoints: %d\nDiscount: %d%%\nPoint Bonus: x%.1f\n\nProgress: %d / %d pts" % [
-		tier.to_upper(), pts, disc, mult, prog["current"], prog["threshold"]]
-	lbl.add_theme_color_override("font_color", tier_col)
-	lbl.position = Vector2(10, 10)
-	_loyalty_panel.add_child(lbl)
 
 func _toggle_shopping_list() -> void:
 	if _shopping_list == null: return
@@ -1589,7 +864,7 @@ func _on_player_interact() -> void:
 		# Dismiss self-checkout error on E, then retry
 		if _nearby_checkout.has_error():
 			_nearby_checkout.dismiss_error()
-		_do_checkout_interaction()
+		_checkout_system.do_checkout(_nearby_checkout)
 		return
 
 	# Section browse
@@ -1625,36 +900,21 @@ func _on_player_interact() -> void:
 
 	# Warehouse Receiving Dock (Floor G) — truck unloading
 	if _nearby_warehouse_dock:
-		if _truck_arrived:
-			_do_truck_unload()
-		else:
-			if _warehouse != null and not _warehouse.is_delivery_pending():
-				_warehouse.trigger_delivery()
-				if _toasts: _toasts.toast_info("Truck ordered! Will arrive shortly...")
-			else:
-				if _toasts: _toasts.toast_info("No delivery pending.")
+		_truck_dock_system.do_unload()
 		return
-# Warehouse Control Mode (Floor 11)
+	# Warehouse Control Mode (Floor 11)
 	if _nearby_warehouse:
-		if _warehouse_mode:
-			# Exit warehouse control mode
-			_warehouse_mode = false
-			_warehouse_floor.set_staff_mode(false) if _warehouse_floor else null
-			if _toasts: _toasts.toast_info("Exited warehouse control.")
-		else:
-			# Enter warehouse control mode (staff only)
-			if _player != null and _player.is_in_staff_mode():
-				_warehouse_mode = true
-				if _warehouse_floor:
-					_warehouse_floor.set_staff_mode(true)
-				if _toasts: _toasts.toast_success("Warehouse Control Mode — use WASD/Q/E/F to operate equipment!")
-			else:
-				if _toasts: _toasts.toast_warning("Staff mode required for warehouse control. Press [K] to enter staff mode.")
+		_handle_warehouse_interact()
 		return
 
 	# Phase 3: Interactive facilities
+	if _nearby_loyalty or _nearby_gift_wrap or _nearby_digital_kiosk or _nearby_info_desk or _temp_order_mode != "" or _nearby_cafe or _nearby_vending or _nearby_promo_booth or _nearby_lost_found or _nearby_store_news or _nearby_karaoke or _nearby_pool_table or _nearby_darts_board:
+		_handle_facility_interact()
+		return
+
+# ── Facility interactions (loyalty, gift wrap, kiosk, cafe, etc.) ──
+func _handle_facility_interact() -> void:
 	if _nearby_loyalty:
-		# Enter loyalty/coin mode
 		_temp_order_mode = "loyalty"
 		_temp_order_items = [{"name": "5 Coins", "price": 2.0}, {"name": "Sign Up Loyalty", "price": 0.0}]
 		if _player_stats != null and _player_stats.is_loyalty_member():
@@ -1680,32 +940,31 @@ func _on_player_interact() -> void:
 		if _toasts != null: _toasts.toast_info("Welcome to Pixel Supermarket! Use elevator or stairs to navigate.")
 		return
 	if _temp_order_mode != "":
-		_finish_order()
+		_food_court_system.finish_order()
 		return
 	if _nearby_cafe:
-		_open_cafe_browse()
+		_food_court_system.open_cafe_browse()
 		return
 	if _nearby_vending:
-		_open_vending_browse()
+		_food_court_system.open_vending_browse()
 		return
 	if _nearby_promo_booth:
-		_open_promo_booth()
+		_food_court_system.open_promo_booth()
 		return
 	if _nearby_lost_found:
 		if _toasts: _toasts.toast_info("Lost & Found: No items reported yet!")
 		return
 	if _nearby_store_news:
-		_read_store_news()
+		_food_court_system.read_store_news()
 		return
-
-if _nearby_karaoke:
-		_play_karaoke()
+	if _nearby_karaoke:
+		_food_court_system.play_karaoke()
 		return
 	if _nearby_pool_table:
-		_play_pool()
+		_food_court_system.play_pool()
 		return
 	if _nearby_darts_board:
-		_play_darts()
+		_food_court_system.play_darts()
 		return
 
 # ── Food stall interaction ──────────────────────────────────────
@@ -1721,6 +980,20 @@ func _open_stall_browse(stall) -> void:
 	if _food_stall_browse != null and _food_stall_browse.visible:
 		return
 	_food_stall_browse.open(stall)
+
+func _handle_warehouse_interact() -> void:
+	if _warehouse_mode:
+		_warehouse_mode = false
+		_warehouse_floor.set_staff_mode(false) if _warehouse_floor else null
+		if _toasts: _toasts.toast_info("Exited warehouse control.")
+	else:
+		if _player != null and _player.is_in_staff_mode():
+			_warehouse_mode = true
+			if _warehouse_floor:
+				_warehouse_floor.set_staff_mode(true)
+			if _toasts: _toasts.toast_success("Warehouse Control Mode — use WASD/Q/E/F to operate equipment!")
+		else:
+			if _toasts: _toasts.toast_warning("Staff mode required for warehouse control. Press [K] to enter staff mode.")
 
 # ── Claw machine interaction ──────────────────────────────────────
 func _on_claw_interact_requested() -> void:
@@ -1738,241 +1011,12 @@ func _on_claw_played(prize_name: String, won: bool, machine) -> void:
 			_toasts.toast_info("No prize this time. Try again!")
 
 # ── Checkout proximity & interaction ─────────────────────────────
-func _update_checkout_proximity() -> void:
-	_nearby_checkout = null
-	if _floor_builder == null or _player == null:
-		return
-	var ppos = _player.position
-	var nearest_dist := 99999.0
-	for counter in _checkout_counters:
-		var cpos = counter.position
-		var dist := ppos.distance_to(cpos)
-		if dist < nearest_dist and dist < CELL_SIZE * 8.0:
-			nearest_dist = dist
-			_nearby_checkout = counter
-
-	var prompt_lbl = get_node_or_null("PromptLbl")
-	var prompt_bg = get_node_or_null("PromptBg")
-	if _nearby_checkout != null and not _nearby_elevator and not _nearby_stairs:
-		var ctype = _nearby_checkout.get_checkout_type()
-		var type_str := "Checkout"
-		match ctype:
-			CheckoutCounter.CheckoutType.STAFFED:
-				type_str = "[E] Staffed Checkout"
-			CheckoutCounter.CheckoutType.SELF:
-				type_str = "[E] Self-Checkout"
-			CheckoutCounter.CheckoutType.EXPRESS:
-				type_str = "[E] Express Checkout"
-		if prompt_lbl != null:
-			prompt_lbl.text = type_str
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
-	else:
-		if prompt_lbl != null and prompt_lbl.text == "[E] Staffed Checkout" or prompt_lbl.text == "[E] Self-Checkout" or prompt_lbl.text == "[E] Express Checkout" or prompt_lbl.text == "[E] Checkout":
-			prompt_lbl.text = ""
-
 func _on_checkout_interacted(checkout_id: int, checkout_type) -> void:
-	_do_checkout_interaction()
-
-func _do_checkout_interaction() -> void:
-	if _nearby_checkout == null:
-		return
-	var cart: Player = _player
-	if cart == null:
-		return
-	var items = cart.get_cart_items()
-	if items.size() == 0:
-		if _toasts != null: _toasts.toast_warning("Cart is empty!")
-		return
-
-	var ctype = _nearby_checkout.get_checkout_type()
-
-	# Express lane item count check
-	if ctype == CheckoutCounter.CheckoutType.EXPRESS:
-		var item_count := 0
-		for item in items:
-			item_count += item.get("qty", 1)
-		if item_count > CheckoutCounter.MAX_EXPRESS_ITEMS:
-			_nearby_checkout.check_express_items(item_count)
-			_on_express_rejected()
-			return
-
-	# Self-checkout random error
-	if ctype == CheckoutCounter.CheckoutType.SELF:
-		if _nearby_checkout.roll_self_checkout_error():
-			_on_self_checkout_error()
-			return
-
-	# Proceed with checkout
-	_finish_checkout()
-
-func _finish_checkout() -> void:
-	if _player == null:
-		return
-	var cart = _player
-	var items = cart.get_cart_items()
-	if items.size() == 0:
-		return
-	var subtotal := 0.0
-	for item in items:
-		var item_prod = item.get("product", item)
-		var base_price := item_prod.price
-		# ── Phase R: Apply dynamic pricing ───────────────────────────
-		var sec_id = item_prod.get("section", "")
-		var adj_price := base_price
-		if sec_id != "" and _dynamic_pricing != null:
-			adj_price = _dynamic_pricing.get_adjusted_price(base_price, sec_id, _warehouse)
-		subtotal += adj_price * item.get("qty", 1)
-	# Apply loyalty credit if member (100 pts = $5 off)
-	var loyalty_credit := 0.0
-	if stats != null and stats.is_loyalty_member():
-		loyalty_credit = stats.redeem_loyalty_credit()
-	# ── Phase O: Loyalty tier discount from promotion_manager ─────
-	var tier_discount := 0.0
-	if _promo_manager != null:
-		tier_discount = _promo_manager.get_loyalty_discount(subtotal)
-	var taxable := subtotal - loyalty_credit - tier_discount
-	if taxable < 0:
-		taxable = 0.0
-	var tax = taxable * 0.08
-	var total = taxable + tax
-
-	# Deduct cash
-	var stats = _player_stats
-	if stats != null:
-		stats.add_cash(-total)
-
-	# Award XP (with brand event multipliers)
-	var base_xp := max(1, int(total * 0.5))
-	var brand_bonus_xp := 0
-	if stats != null:
-		var total_xp := 0
-		for item in items:
-			var item_prod = item.get("product", item)  # support both dict and product ref
-			var item_xp := max(1, int(item_prod.price * item.get("qty", 1) * 0.5))
-			var multiplier := 1.0
-			if _brand_manager != null:
-				multiplier = _brand_manager.get_xp_multiplier_for_product(item_prod.get("id", ""))
-			total_xp += int(item_xp * multiplier)
-			if multiplier > 1.0:
-				brand_bonus_xp += int(item_xp * (multiplier - 1.0))
-			# ── Phase L: Consume stock from warehouse ──────────────────
-			var sec_id = item_prod.get("section", "")
-			if sec_id != "" and _warehouse != null:
-				var qty := item.get("qty", 1) as int
-				var available := _warehouse.consume_stock(sec_id, qty)
-				if not available:
-					# Section ran out of stock — toast warning
-					if _toasts:
-						_toasts.toast_warning("%s is now out of stock!" % item_prod.get("name", "Item").to_upper())
-		# ── Phase N: Customer satisfaction bonus on XP ─────────────
-		var satisfaction_mult := 1.0
-		var was_satisfied := true
-		if stats != null and stats.has_method("get_satisfaction_bonus"):
-			satisfaction_mult = stats.get_satisfaction_bonus()
-			stats.record_customer_served(was_satisfied)
-		# ── Phase O: Apply promotion manager XP multiplier ───────────
-		var promo_mult := 1.0
-		if _promo_manager != null:
-			promo_mult = _promo_manager.get_checkout_xp_multiplier()
-		var final_xp := max(1, int(total_xp * satisfaction_mult * promo_mult))
-		stats.add_xp(final_xp)
-		if satisfaction_mult > 1.05 or promo_mult > 1.0:
-			if _toasts:
-				_toasts.toast_success("Satisfied customer! +%d XP (%.0f%% bonus)" % [final_xp, (satisfaction_mult-1.0)*100])
-		# Gift wrap bonus at checkout
-		if _cart_gift_wrapped:
-			_cart_gift_wrapped = false
-			if stats != null:
-				stats.add_xp(15)
-				stats.add_cash(2.0)
-			if _toasts: _toasts.toast_success("Gift wrap bonus! +15 XP + $2 tip!")
-# Phase R: Checkout savings display
-	var savings := 0.0
-	var mn = get_node_or_null("/root/Main")
-	if mn != null and cart != null:
-		var dp = mn.get_node_or_null("DynamicPricing")
-		var wh = mn.get_warehouse() if mn.has_method("get_warehouse") else null
-		for entry in cart.get_items():
-			var prod = entry["product"]
-			var qty = entry["qty"]
-			var adj = prod.price
-			if dp != null and wh != null and dp.has_method("get_price_multiplier_for_section"):
-				adj = prod.price * dp.get_price_multiplier_for_section(prod.section, wh)
-			savings += (prod.price - adj) * qty
-	if savings > 0.01 and _toasts != null:
-		_toasts.toast_success("You saved $%.2f on this shop!" % savings)
-
-# Award staff XP for completing checkout task
-		stats.add_staff_xp(items.size(), "Checkout: %d items" % items.size())
-
-	# ── Phase O: Earn loyalty points ───────────────────────────────
-	if _promo_manager != null:
-		var pts := _promo_manager.get_checkout_point_bonus(total)
-		_promo_manager.add_loyalty_points(pts)
-		if pts > 0:
-			if _toasts:
-				_toasts.toast_info("+%d Loyalty Points!" % pts)
-
-	# Record brand stats
-	if _brand_manager != null:
-		for item in items:
-			var item_prod = item.get("product", item)
-			var qty = item.get("qty", 1)
-			var item_total = item_prod.price * qty
-			_brand_manager.record_purchase(item_prod.get("id", ""), qty, item_total)
-
-	# Clear cart
-	cart.clear_cart()
-
-	# Show farewell bubble at staffed lanes
-	if _nearby_checkout != null and _nearby_checkout.is_staffed():
-		_nearby_checkout.show_farewell_bubble()
-
-	# Show receipt (include loyalty credit line if > 0)
-	_show_checkout_receipt(items, subtotal, tax, total, brand_bonus_xp, loyalty_credit)
-
-	# Notify
-	notify_telegram("Checkout complete! $%.2f spent. Cart cleared." % total)
-	if _toasts != null: _toasts.toast_success("Checkout complete! -$%.2f" % total)
-
-	# Auto-save
-	SaveSystem.save_game(self)
-
-func _show_checkout_receipt(items: Array, subtotal: float, tax: float, total: float, brand_bonus_xp: int = 0, loyalty_credit: float = 0.0) -> void:
-	# Receipt display (re-use existing receipt panel or create)
-	if _checkout_receipt == null:
-		return
-	_checkout_receipt.visible = true
-	_checkout_receipt_items_lbl.text = ""
-	for item in items:
-		var qty = item.get("qty", 1)
-		_checkout_receipt_items_lbl.text += "%dx %s $%.2f\n" % [qty, item.name, item.price * qty]
-	var receipt_text := ""
-	if loyalty_credit > 0:
-		receipt_text += "Loyalty Credit: -$%.2f\n" % loyalty_credit
-	receipt_text += "Subtotal: $%.2f\nTax: $%.2f\nTOTAL: $%.2f" % [subtotal, tax, total]
-	if brand_bonus_xp > 0:
-		receipt_text += "\n[color=#FFFF00]BRAND BONUS: +%d XP![/color]" % brand_bonus_xp
-	_checkout_total_lbl.text = receipt_text
-	_checkout_receipt_visible = true
-	await get_tree().create_timer(5.0).timeout
-	if _checkout_receipt != null:
-		_checkout_receipt.visible = false
-		_checkout_receipt_visible = false
-
-func _on_express_rejected() -> void:
-	if _toasts != null:
-		_toasts.toast_error("Express lane: max %d items only!" % CheckoutCounter.MAX_EXPRESS_ITEMS)
-
-func _on_self_checkout_error() -> void:
-	if _toasts != null:
-		_toasts.toast_error("Unexpected item in bagging area! Press E to retry.")
+	_checkout_system.do_checkout(_nearby_checkout)
 
 func _on_self_checkout_cleared() -> void:
 	# Retry checkout after error dismissed
-	_do_checkout_interaction()
+	_checkout_system.retry_checkout(_nearby_checkout)
 
 # ── Section browse ──────────────────────────────────────────────
 func _attempt_catch_thief() -> void:
@@ -2065,59 +1109,12 @@ func on_staff_mode_toggled(is_staff: bool) -> void:
 		_remove_scan_go_companion()
 
 func _spawn_scan_go_companion() -> void:
-	# Spawn a staff NPC that follows the player and "scans" items
-	var spawn_pos := _player.position + Vector2(40, 0)
-	var actor := ActorData.Actor.new()
-	actor.role = ActorData.Role.STAFF
-	actor.staff_role = ActorData.StaffRole.SCAN_GO
-	actor.life_stage = ActorData.LifeStage.ADULT
-	actor.current_floor = _current_floor_idx
-	actor.position = spawn_pos
-	actor.speed = ActorData.SPEED_ADULT
-	# Give a random appearance
-	var app := ActorData.Appearance.new()
-	app.skin_tone = ActorData.SKINS[randi() % ActorData.SKINS.size()]
-	app.top_color = Color(0.20, 0.50, 0.80)
-	app.bottom_color = Color(0.15, 0.15, 0.30)
-	app.hair_color = ActorData.HAIR_COLORS[randi() % ActorData.HAIR_COLORS.size()]
-	actor.appearance = app
-	var npc := NPCControllerScript.new(actor)
-	npc._player_reference = _player  # pass player ref for companion tracking
-	npc.position = spawn_pos
-	npc._state = NPCControllerScript.BehaviorState.SCAN_GO_COMPANION
-	npc.name = "ScanGoCompanion"
-	add_child(npc)
-	if _toasts != null: _toasts.toast_info("Scan & Go assistant has joined you!")
-
+    _main_spawner.spawn_scan_go_companion()
+    return
 func _remove_scan_go_companion() -> void:
-	var sg = get_node_or_null("ScanGoCompanion")
-	if sg != null:
-		sg.queue_free()
+	_main_spawner.remove_scan_go_companion()
 
 # ── Price terminal proximity (Phase 6) ───────────────────────────
-func _update_terminal_proximity() -> void:
-	_nearby_terminal = false
-	if _floor_builder == null or _player == null:
-		return
-	if _current_floor_idx != 9:
-		return
-	# Check if player is near the office_desk zone (terminal on Floor 9)
-	var terminal_center = _floor_builder.get_office_desk_zone_center()
-	if terminal_center.x < 0:
-		return
-	var ppos = _player.position
-	if ppos.distance_to(terminal_center) < CELL_SIZE * 12.0:
-		_nearby_terminal = true
-
-	var prompt_lbl = get_node_or_null("PromptLbl")
-	var prompt_bg = get_node_or_null("PromptBg")
-	if _nearby_terminal and _player != null and _player.is_in_staff_mode():
-		if prompt_lbl != null:
-			prompt_lbl.text = "[E] Price Terminal"
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
-
 func _open_price_terminal() -> void:
 	if _price_terminal == null:
 		_price_terminal = PriceTerminalScript.new()
@@ -2162,193 +1159,27 @@ func close_business_mode() -> void:
 
 func _toggle_robot_panel() -> void:
 	if _robot_panel == null:
-		_build_robot_panel()
-	if _robot_panel.visible:
+		_robot_panel_system.build_robot_panel()
+		_robot_panel = _robot_panel_system.get_robot_panel()
+	if _robot_panel != null and _robot_panel.visible:
 		_robot_panel.visible = false
 	else:
 		if _player != null and not _player.is_in_staff_mode():
 			if _toasts: _toasts.toast_warning("Staff mode required for robot management. Press [K].")
 			return
-		_robot_panel.visible = true
-		_update_robot_panel()
-
-func _build_robot_panel() -> void:
-	_robot_panel = Control.new()
-	_robot_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_robot_panel.size = Vector2(300, 400)
-	_robot_panel.color = Color(0.10, 0.10, 0.15, 0.95)
-	_robot_panel.visible = false
-	add_child(_robot_panel)
-
-	var title := Label.new()
-	title.text = "ROBOT STAFF PANEL"
-	title.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	title.add_theme_color_override("font_color", Color(0.30, 0.90, 1.0))
-	title.add_theme_font_size_override("font_size", 10)
-	title.position = Vector2(0, 6)
-	_robot_panel.add_child(title)
-
-	var subtitle := Label.new()
-	subtitle.text = "Staff mode only  |  [R] close"
-	subtitle.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	subtitle.add_theme_color_override("font_color", Color(0.60, 0.60, 0.70))
-	subtitle.add_theme_font_size_override("font_size", 7)
-	subtitle.position = Vector2(0, 18)
-	_robot_panel.add_child(subtitle)
-
-	# Scroll container for robot list
-	var scroll := ScrollContainer.new()
-	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
-	scroll.position = Vector2(0, 30)
-	scroll.size = Vector2(300, 340)
-	_robot_panel.add_child(scroll)
-
-	var list := VBoxContainer.new()
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(list)
-
-	# ── HUMANOID ROBOTS ──
-	var h_label := Label.new()
-	h_label.text = "━━ HUMANOID (like human, uses tools) ━━"
-	h_label.add_theme_color_override("font_color", Color(0.30, 0.90, 1.0))
-	h_label.add_theme_font_size_override("font_size", 7)
-	list.add_child(h_label)
-
-	var humanoid_types := [
-		{"staff_role": ActorData.StaffRole.GREETER, "name": "Greeter", "desc": "Welcomes & directs customers", "cost": 400},
-		{"staff_role": ActorData.StaffRole.CASHIER, "name": "Cashier", "desc": "Operates checkout lane", "cost": 500},
-		{"staff_role": ActorData.StaffRole.CLEANER, "name": "Cleaner", "desc": "Mops & tidies the store", "cost": 350},
-		{"staff_role": ActorData.StaffRole.SHELF_STOCKER, "name": "Stocker", "desc": "Restocks shelves", "cost": 400},
-		{"staff_role": ActorData.StaffRole.SECURITY, "name": "Security", "desc": "Patrols & monitors", "cost": 450},
-		{"staff_role": ActorData.StaffRole.SCAN_GO, "name": "Scan & Go", "desc": "Assists player with scanning", "cost": 450},
-	]
-	for rt in humanoid_types:
-		var btn := Button.new()
-		btn.text = "[%s] %dXP  %s" % [rt["name"], rt["cost"], rt["desc"]]
-		btn.add_theme_color_override("font_color", Color(0.80, 0.88, 0.90))
-		btn.add_theme_color_override("bg_color", Color(0.18, 0.35, 0.45))
-		btn.connect("pressed", _on_robot_humanoid_pressed.bind(rt["staff_role"], rt["cost"]))
-		list.add_child(btn)
-
-	# ── SINGLE-FUNCTION ROBOTS ──
-	var s_label := Label.new()
-	s_label.text = "━━ SINGLE-FUNCTION (automated machine) ━━"
-	s_label.add_theme_color_override("font_color", Color(0.30, 0.90, 1.0))
-	s_label.add_theme_font_size_override("font_size", 7)
-	list.add_child(s_label)
-
-	var single_types := [
-		{"rrole": ActorData.RobotRole.CLEANING_ROBOT, "name": "CleanerBot", "desc": "Auto-cleans floors (battery)", "cost": 250},
-		{"rrole": ActorData.RobotRole.GUIDANCE_ROBOT, "name": "GuideBot", "desc": "Answers questions", "cost": 200},
-		{"rrole": ActorData.RobotRole.SHELF_ROBOT, "name": "ShelfBot", "desc": "Auto-scans shelf stock", "cost": 300},
-		{"rrole": ActorData.RobotRole.SECURITY_ROBOT, "name": "SecurityBot", "desc": "Patrol robot (red eye)", "cost": 350},
-		{"rrole": ActorData.RobotRole.DELIVERY_ROBOT, "name": "DeliveryBot", "desc": "Transports cargo", "cost": 400},
-	]
-	for rt in single_types:
-		var btn := Button.new()
-		btn.text = "[%s] %dXP  %s" % [rt["name"], rt["cost"], rt["desc"]]
-		btn.add_theme_color_override("font_color", Color(0.80, 0.85, 0.75))
-		btn.add_theme_color_override("bg_color", Color(0.25, 0.28, 0.22))
-		btn.connect("pressed", _on_robot_single_pressed.bind(rt["rrole"], rt["cost"]))
-		list.add_child(btn)
-
-	var close_btn := Button.new()
-	close_btn.text = "[R] Close"
-	close_btn.position = Vector2(0, 375)
-	close_btn.connect("pressed", _toggle_robot_panel)
-	_robot_panel.add_child(close_btn)
-
-func _update_robot_panel() -> void:
-	var active_count = _robots.size()
-	# Find the subtitle label and update it
-	if _robot_panel:
-		for child in _robot_panel.get_children():
-			if child is Label and child.text == "Staff mode only":
-				child.text = "Active robots: %d" % active_count
-				break
-
-func _on_robot_humanoid_pressed(staff_role: ActorData.StaffRole, cost: int) -> void:
-	if _player_stats == null:
-		return
-	if not _player_stats.can_use_humanoid_robots():
-		var next_xp := _player_stats.get_staff_xp_for_next_rank()
-		if _toasts: _toasts.toast_warning("Humanoid robots unlock at Senior rank! %d more Staff XP needed." % max(0, next_xp))
-		return
-	if _player_stats.get_xp() < cost:
-		if _toasts: _toasts.toast_warning("Not enough XP! Need %d XP to deploy %s" % [cost, staff_role])
-		return
-	_player_stats.spend_xp(cost)
-	_player_stats.complete_staff_task()
-	_spawn_robot_humanoid(staff_role)
-	if _toasts: _toasts.toast_success("Deployed HUMANOID %s! -%d XP" % [staff_role, cost])
-	_update_robot_panel()
-
-func _on_robot_single_pressed(rrole: ActorData.RobotRole, cost: int) -> void:
-	if _player_stats == null:
-		return
-	if not _player_stats.can_use_single_function_robots():
-		var next_xp := _player_stats.get_staff_xp_for_next_rank()
-		if _toasts: _toasts.toast_warning("Single-function robots unlock at Worker rank! %d more Staff XP needed." % max(0, next_xp))
-		return
-	if _player_stats.get_xp() < cost:
-		if _toasts: _toasts.toast_warning("Not enough XP! Need %d XP to deploy %s" % [cost, rrole])
-		return
-	_player_stats.spend_xp(cost)
-	_player_stats.complete_staff_task()
-	_spawn_robot_single(rrole)
-	if _toasts: _toasts.toast_success("Deployed %s! -%d XP" % [rrole, cost])
-	_update_robot_panel()
+		if _robot_panel != null:
+			_robot_panel.visible = true
+		_robot_panel_system._update_robot_panel()
 
 func _spawn_robot_humanoid(staff_role: ActorData.StaffRole) -> void:
-	var spawn_pos := Vector2.ZERO
-	match staff_role:
-		ActorData.StaffRole.CASHIER:
-			spawn_pos = Vector2(580, 320)
-		ActorData.StaffRole.GREETER:
-			spawn_pos = Vector2(250, 120)
-		ActorData.StaffRole.CLEANER:
-			spawn_pos = Vector2(400, 400)
-		ActorData.StaffRole.SHELF_STOCKER:
-			spawn_pos = Vector2(200, 300)
-		ActorData.StaffRole.SECURITY:
-			spawn_pos = Vector2(100, 200)
-		ActorData.StaffRole.FLOOR_STAFF:
-			spawn_pos = Vector2(400, 250)
-		ActorData.StaffRole.SCAN_GO:
-			spawn_pos = Vector2(350, 200)
-		ActorData.StaffRole.MANAGER:
-			spawn_pos = Vector2(500, 300)
-	var robot := RobotControllerScript.new()
-	robot.configure_humanoid(staff_role, spawn_pos)
-	add_child(robot)
-	_robots.append(robot)
-
+    _main_spawner.spawn_robot_humanoid(staff_role)
+    return
 func _spawn_robot_single(rrole: ActorData.RobotRole) -> void:
-	var spawn_pos := Vector2.ZERO
-	match rrole:
-		ActorData.RobotRole.CLEANING_ROBOT:
-			spawn_pos = Vector2(400, 400)
-		ActorData.RobotRole.GUIDANCE_ROBOT:
-			spawn_pos = Vector2(300, 100)
-		ActorData.RobotRole.SECURITY_ROBOT:
-			spawn_pos = Vector2(100, 200)
-		ActorData.RobotRole.DELIVERY_ROBOT:
-			spawn_pos = Vector2(40 * CELL_SIZE, 20 * CELL_SIZE)
-		ActorData.RobotRole.SHELF_ROBOT:
-			spawn_pos = Vector2(200, 300)
-	var robot := RobotControllerScript.new()
-	robot.configure_single_function(rrole, spawn_pos)
-	add_child(robot)
-	_robots.append(robot)
-
+    _main_spawner.spawn_robot_single(rrole)
+    return
 func _spawn_robots() -> void:
-	# Humanoid robots (look like humans, can do any job)
-	_spawn_robot_humanoid(ActorData.StaffRole.GREETER)
-	_spawn_robot_humanoid(ActorData.StaffRole.CLEANER)
-	# Single-function robots
-	_spawn_robot_single(ActorData.RobotRole.CLEANING_ROBOT)
-	_spawn_robot_single(ActorData.RobotRole.GUIDANCE_ROBOT)
-
+    _main_spawner.spawn_robots()
+    return
 func _on_brand_portal_closed() -> void:
 	# Refresh any brand data that may have changed
 	pass
@@ -2357,134 +1188,9 @@ func get_game_clock() -> Node:
 	return _game_clock
 
 # ── Phase 3: Cafe Counter Browse ────────────────────────────────
-func _open_cafe_browse() -> void:
-	if _toasts == null:
-		return
-	var items := [
-		{"name": "Espresso", "price": 3.50},
-		{"name": "Latte", "price": 4.50},
-		{"name": "Cappuccino", "price": 4.80},
-		{"name": "Americano", "price": 3.00},
-		{"name": "Muffin", "price": 2.80},
-		{"name": "Croissant", "price": 3.20},
-		{"name": "Iced Coffee", "price": 4.20},
-		{"name": "Smoothie", "price": 5.50},
-	]
-	_temp_order_mode = "cafe"
-	_temp_order_items = items
-	_toasts.toast_info("Cafe: [1]Espresso $3.50 [2]Latte $4.50 [3]Capp $4.80 [4]Americano $3.00")
-	_toasts.toast_info("Muffin $2.80 [5]  Croissant $3.20 [6]  Iced $4.20 [7]  Smoothie $5.50 [8]")
-	var hint := get_node_or_null("PromptLbl")
-	if hint != null:
-		hint.text = "[1-8] Add item  [E] finish order"
-
-# ── Phase 3: Vending Machine Browse ─────────────────────────────
-
-
-
 func _spawn_truck_at_dock() -> void:
-	# Show truck visual at the receiving dock (Floor G, y=35..42)
-	_truck_arrived = true
-	if _truck_dock_node == null:
-		_truck_dock_node = Node2D.new()
-		_truck_dock_node.name = "TruckDock"
-		add_child(_truck_dock_node)
-	# Build truck sprite from colored rects (truck cab + cargo body)
-	for ch in _truck_dock_node.get_children():
-		ch.queue_free()
-	var CELL = 16
-	# Cargo area (large box truck body)
-	var cargo := ColorRect.new()
-	cargo.color = Color(0.50, 0.55, 0.60)
-	cargo.size = Vector2(22 * CELL, 10 * CELL)
-	cargo.position = Vector2(0, 35 * CELL)
-	_truck_dock_node.add_child(cargo)
-	# Cab (front of truck)
-	var cab := ColorRect.new()
-	cab.color = Color(0.35, 0.42, 0.55)
-	cab.size = Vector2(7 * CELL, 7 * CELL)
-	cab.position = Vector2(22 * CELL, 38 * CELL)
-	_truck_dock_node.add_child(cab)
-	# Windshield
-	var windshield := ColorRect.new()
-	windshield.color = Color(0.55, 0.75, 0.90)
-	windshield.size = Vector2(5 * CELL, 4 * CELL)
-	windshield.position = Vector2(24 * CELL, 38 * CELL)
-	_truck_dock_node.add_child(windshield)
-	# Wheels
-	for wx in [1, 8, 16]:
-		for wy in [0, 1]:
-			var wheel := ColorRect.new()
-			wheel.color = Color(0.15, 0.15, 0.15)
-			wheel.size = Vector2(3 * CELL, 3 * CELL)
-			wheel.position = Vector2((wx * CELL), (44 + wy * 2) * CELL)
-			_truck_dock_node.add_child(wheel)
-	_truck_dock_node.visible = true
-	if _toasts:
-		_toasts.toast_info("🚚 Delivery truck arrived at dock! Press [E] to unload!")
-
-func _do_truck_unload() -> void:
-	# Called when player presses E at the truck dock with truck present
-	if _warehouse == null:
-		return
-	if not _truck_arrived:
-		return
-	_truck_arrived = false
-	# Hide truck visual
-	if _truck_dock_node != null:
-		_truck_dock_node.visible = false
-	# Receive the pending delivery into warehouse stock
-	if _warehouse.is_delivery_pending():
-		var pending = _warehouse.get_delivery_contents()
-		if pending.size() > 0:
-			var item_count = pending.values().reduce(func(a, b): return a + b, 0)
-			_warehouse.receive_delivery(pending)
-			# Bonus rewards for unloading
-			var bonus_xp = mini(item_count * 2, 50)
-			var bonus_cash = clamp(float(item_count) * 0.1, 1.0, 10.0)
-			if _player_stats != null:
-				_player_stats.add_xp(bonus_xp)
-				_player_stats.add_cash(bonus_cash)
-			if _toasts:
-				_toasts.toast_success("Truck unloaded! +%d XP + $%.2f bonus!" % [bonus_xp, bonus_cash])
-			notify_telegram("� Truck unloaded! +%d XP + $%.2f bonus!" % [bonus_xp, bonus_cash])
-		else:
-			_warehouse.receive_delivery(pending)
-			if _toasts: _toasts.toast_success("Truck unloaded! Stock updated.")
-	else:
-		if _toasts: _toasts.toast_warning("No delivery to unload.")
-
-
-
-
-func _play_karaoke() -> void:
-	# Karaoke mini-game - sing for XP bonus!
-	var bonus_xp = 20 + randi() % 30  # 20-50 XP
-	if _player_stats != null:
-		_player_stats.add_xp(bonus_xp)
-	if _toasts != null:
-		_toasts.toast_success("Karaoke! +%d XP - You are a star!" % bonus_xp)
-	notify_telegram("Karaoke performed! +%d XP earned!" % bonus_xp)
-
-func _play_pool() -> void:
-	# Pool table mini-game - shoot some pool!
-	var bonus_xp = 15 + randi() % 20  # 15-35 XP
-	if _player_stats != null:
-		_player_stats.add_xp(bonus_xp)
-	if _toasts != null:
-		_toasts.toast_info("Pool shot! +%d XP for the game!" % bonus_xp)
-
-func _play_darts() -> void:
-	# Darts mini-game - throw some darts!
-	var bonus_xp = 10 + randi() % 25  # 10-35 XP
-	var bonus_cash = clamp(float(randi() % 15) * 0.1, 0.5, 1.5)
-	if _player_stats != null:
-		_player_stats.add_xp(bonus_xp)
-		_player_stats.add_cash(bonus_cash)
-	if _toasts != null:
-		_toasts.toast_success("Bullseye! +%d XP + $%.2f prize money!" % [bonus_xp, bonus_cash])
-	notify_telegram("Darts champion! +%d XP + $%.2f prize!" % [bonus_xp, bonus_cash])
-# ── Telegram notification helper ─────────────────────────────────────────────
+    _truck_dock_system.spawn_truck()
+    return
 func notify_telegram(text: String) -> void:
 	if _telegram_bot != null:
 		_telegram_bot.queue_report(text)
@@ -2495,167 +1201,6 @@ func notify_telegram_npc(count: int) -> void:
 	notify_telegram("NPCs in store: %d" % count)
 
 # ── Store news bulletin board ───────────────────────────────────────────────
-func _read_store_news() -> void:
-	if _toasts != null:
-		_toasts.toast_info("STORE TIPS: Restock low sections for bonus XP! Loyalty = bigger savings at checkout!")
-		_toasts.toast_info("Press [L] for your shopping list, [J] for quests!")
-func _open_promo_booth() -> void:
-	# Daily Deals promo booth - featured products with bonus XP
-	if _toasts != null:
-		_toasts.toast_info("Daily Deals! Featured: Burger, Pizza, Fried Chicken - 1.5x XP!")
-	if _player_stats != null:
-		_player_stats.add_xp(5)
-
-func _open_promo_booth() -> void:
-	# Daily Deals promo booth - featured products with bonus XP
-	if _toasts != null:
-		_toasts.toast_info("Daily Deals! Burger, Pizza, Fried Chicken - 1.5x XP!")
-	if _player_stats != null:
-		_player_stats.add_xp(5)
-
-func _open_vending_browse() -> void:
-	if _toasts == null:
-		return
-	var items := [
-		{"name": "Water", "price": 1.50},
-		{"name": "Cola", "price": 2.00},
-		{"name": "Juice", "price": 2.50},
-		{"name": "Chips", "price": 1.80},
-		{"name": "Chocolate", "price": 2.20},
-		{"name": "Energy Drink", "price": 3.00},
-	]
-	_temp_order_mode = "vending"
-	_temp_order_items = items
-	_toasts.toast_info("Vending: [1]Water $1.50 [2]Cola $2.00 [3]Juice $2.50 [4]Chips $1.80 [5]Choco $2.20 [6]Energy $3.00")
-	var hint := get_node_or_null("PromptLbl")
-	if hint != null:
-		hint.text = "[1-6] Add item  [E] done"
-
-func _add_order_item(idx: int, item: Dictionary) -> void:
-	if _player == null:
-		return
-	var cart = _player.get_cart()
-	if cart == null:
-		return
-	# Create a minimal product-like object for the cart
-	var cart_item := {
-		"id": _temp_order_mode + "_" + str(idx),
-		"name": item.name,
-		"price": item.price,
-		"qty": 1
-	}
-	cart.add_item(cart_item)
-	if _toasts != null:
-		_toasts.toast_success("+1 %s $%.2f" % [item.name, item.price])
-	_update_cart_ui()
-
-func _finish_order() -> void:
-	_temp_order_mode = ""
-	_temp_order_items = []
-	var hint := get_node_or_null("PromptLbl")
-	if hint != null:
-		hint.text = ""
-	if _toasts != null:
-		_toasts.toast_success("Done!")
-
-func _handle_loyalty_key(idx: int, item: Dictionary) -> void:
-	if _player_stats == null:
-		return
-	if idx == 0:	# Buy 5 coins for $2
-		var cost: float = item.get("price", 2.0)
-		if _player_stats.spend_cash(cost):
-			_player_stats.add_coins(5)
-			if _toasts != null:
-				_toasts.toast_success("+5 Coins! Now have %d coins" % _player_stats.get_coins())
-		else:
-			if _toasts != null:
-				_toasts.toast_warning("Not enough cash!")
-	elif idx == 1:	# Sign up or check status
-		if _player_stats.is_loyalty_member():
-			var pts = _player_stats.get_loyalty_points()
-			_toasts.toast_info("Loyalty: %d pts" % pts)
-		else:
-			if _player_stats.signup_loyalty():
-				if _toasts != null:
-					_toasts.toast_success("Welcome to Loyalty! 1 pt/$1 -- 100 pts = $5 credit!")
-
-# ── Phase 3: Interactive Facilities Proximity ───────────────────
-func _update_phase3_proximity() -> void:
-	_nearby_loyalty = false
-	_nearby_gift_wrap = false
-	_nearby_digital_kiosk = false
-	_nearby_info_desk = false
-	_nearby_cafe = false
-	_nearby_vending = false
-	_nearby_warehouse_dock = false
-	_nearby_karaoke = false
-	_nearby_pool_table = false
-	_nearby_darts_board = false
-	_nearby_promo_booth = false
-	_nearby_lost_found = false
-	if _floor_builder == null or _player == null:
-		return
-	var ppos = _player.position
-	var prompt_lbl = get_node_or_null("PromptLbl")
-	var prompt_bg = get_node_or_null("PromptBg")
-
-	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_LOYALTY_KIOSK, ppos):
-		_nearby_loyalty = true
-	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_GIFT_WRAP, ppos):
-		_nearby_gift_wrap = true
-	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_DIGITAL_KIOSK, ppos):
-		_nearby_digital_kiosk = true
-	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_INFO_DESK, ppos):
-		_nearby_info_desk = true
-	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_CAFE_COUNTER, ppos):
-		_nearby_cafe = true
-	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_PROMO_BOOTH, ppos):
-		_nearby_promo_booth = true
-	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_STORE_NEWS, ppos):
-		_nearby_store_news = true
-	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_KARAOKE, ppos):
-		_nearby_karaoke = true
-	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_POOL_TABLE, ppos):
-		_nearby_pool_table = true
-	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_DARTS_BOARD, ppos):
-		_nearby_darts_board = true
-	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_LOST_FOUND, ppos):
-		_nearby_lost_found = true
-	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_VENDING_MACHINE, ppos):
-		_nearby_vending = true
-
-	# Floor G: warehouse receiving dock proximity
-	if _floor_builder.is_near_zone_type(FloorConfig.ZONE_WAREHOUSE, ppos) and _current_floor_idx == 0:
-		_nearby_warehouse_dock = true
-
-	# Update prompt if no higher-priority prompt is showing
-	var show_phase3 = _nearby_loyalty or _nearby_gift_wrap or _nearby_digital_kiosk or _nearby_info_desk or _nearby_cafe or _nearby_vending
-	if show_phase3 and not _nearby_elevator and not _nearby_stairs and _nearby_section == null and _nearby_checkout == null:
-		var txt := "[E] "
-		if _nearby_loyalty: txt += "Loyalty Sign-Up"
-		elif _nearby_gift_wrap: txt += "Gift Wrap (+XP)"
-		elif _nearby_digital_kiosk: txt += "Info Directory [E Browse]"
-				elif _nearby_warehouse_dock: txt += "Truck Dock [E Unload]"
-		elif _nearby_warehouse: txt += "Warehouse Ctrl [E Enter]"
-		elif _nearby_info_desk: txt += "Info Desk"
-		elif _nearby_cafe: txt += "Cafe Menu"
-			elif _nearby_karaoke: txt += "Karaoke [E Sing]"
-			elif _nearby_pool_table: txt += "Pool Table [E Play]"
-			elif _nearby_darts_board: txt += "Darts [E Throw]"
-elif _nearby_promo_booth: txt += "Daily Deals [E Browse]"
-			elif _nearby_lost_found: txt += "Lost & Found"
-			elif _nearby_store_news: txt += "Store News [E Read]"
-			elif _nearby_promo_booth: txt += "Daily Deals [E Browse]"
-			elif _nearby_lost_found: txt += "Lost & Found"
-			elif _nearby_promo_booth: txt += "Daily Deals [E Browse]"
-			elif _nearby_lost_found: txt += "Lost & Found"
-		elif _nearby_vending: txt += "Vending Machine"
-		if prompt_lbl != null:
-			prompt_lbl.text = txt
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
-
 func _toggle_stats_dashboard() -> void:
 	if _stats_dashboard == null: return
 	_stats_dashboard.toggle()
