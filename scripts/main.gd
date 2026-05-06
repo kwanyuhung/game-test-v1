@@ -378,7 +378,7 @@ func _setup_camera() -> void:
 	cam.make_current()
 
 func _build_hud() -> void:
-pass  # HUD built by main_hud.gd in _ready()
+	pass  # HUD built by main_hud.gd in _ready()
 func _build_checkout_receipt_panel() -> void:
 	pass  # receipt panel built by main_hud.gd
 func get_warehouse() -> Node:
@@ -399,17 +399,17 @@ func _on_cart_updated(items: Array, subtotal: float) -> void:
 		main_hud.update_cart(items, subtotal)
 
 func _build_npcs() -> void:
-    _main_spawner.build_npcs()
-    return
+	_main_spawner.build_npcs()
+	return
 func _spawn_npc_staff(role: int, floor_idx: int, pos: Vector2) -> void:
-    _main_spawner.spawn_npc_staff(role, floor_idx, pos)
-    return
+	_main_spawner.spawn_npc_staff(role, floor_idx, pos)
+	return
 func _spawn_customer(group_type: int, floor_idx: int, pos: Vector2) -> void:
-    _main_spawner.spawn_customer(group_type, floor_idx, pos)
-    return
+	_main_spawner.spawn_customer(group_type, floor_idx, pos)
+	return
 func _spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void:
-    _main_spawner.spawn_customer_group(group_type, floor_idx, pos)
-    return
+	_main_spawner.spawn_customer_group(group_type, floor_idx, pos)
+	return
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
 		match event.keycode:
@@ -443,7 +443,7 @@ func _input(event: InputEvent) -> void:
 			KEY_B:
 				_toggle_brand_portal()
 			# Shift+B ── Business Mode (Manager)
-			if event.shift:
+				if event.shift:
 				_toggle_business_mode()
 			# J ── Quest Journal
 			KEY_J:
@@ -593,11 +593,11 @@ func _on_dev_command(cmd: String, args: Dictionary) -> void:
 			_kill_all_test_npcs()
 
 func _spawn_test_customers(count: int) -> void:
-    _main_spawner.spawn_test_customers(count)
-    return
+	_main_spawner.spawn_test_customers(count)
+	return
 func _spawn_test_staff(count: int) -> void:
-    _main_spawner.spawn_test_staff(count)
-    return
+	_main_spawner.spawn_test_staff(count)
+	return
 func _kill_all_test_npcs() -> void:
 	for npc in _npcs:
 		if npc != null and is_instance_valid(npc):
@@ -1109,8 +1109,8 @@ func on_staff_mode_toggled(is_staff: bool) -> void:
 		_remove_scan_go_companion()
 
 func _spawn_scan_go_companion() -> void:
-    _main_spawner.spawn_scan_go_companion()
-    return
+	_main_spawner.spawn_scan_go_companion()
+	return
 func _remove_scan_go_companion() -> void:
 	_main_spawner.remove_scan_go_companion()
 
@@ -1172,14 +1172,14 @@ func _toggle_robot_panel() -> void:
 		_robot_panel_system._update_robot_panel()
 
 func _spawn_robot_humanoid(staff_role: ActorData.StaffRole) -> void:
-    _main_spawner.spawn_robot_humanoid(staff_role)
-    return
+	_main_spawner.spawn_robot_humanoid(staff_role)
+	return
 func _spawn_robot_single(rrole: ActorData.RobotRole) -> void:
-    _main_spawner.spawn_robot_single(rrole)
-    return
+	_main_spawner.spawn_robot_single(rrole)
+	return
 func _spawn_robots() -> void:
-    _main_spawner.spawn_robots()
-    return
+	_main_spawner.spawn_robots()
+	return
 func _on_brand_portal_closed() -> void:
 	# Refresh any brand data that may have changed
 	pass
@@ -1189,8 +1189,8 @@ func get_game_clock() -> Node:
 
 # ── Phase 3: Cafe Counter Browse ────────────────────────────────
 func _spawn_truck_at_dock() -> void:
-    _truck_dock_system.spawn_truck()
-    return
+	_truck_dock_system.spawn_truck()
+	return
 func notify_telegram(text: String) -> void:
 	if _telegram_bot != null:
 		_telegram_bot.queue_report(text)
