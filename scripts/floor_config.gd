@@ -233,5 +233,5 @@ func get_floor(idx: int) -> FloorDef:
 func floor_count() -> int:
 	return FLOOR_DEFS.size()
 
-func get_stall_def(stall_id: String) -> Dictionary:
-	return FoodStallDef.get_stall(stall_id)  # 从 get() 改为 get_stall()
+static func get_stall_def(stall_id: String) -> Dictionary:
+	return FoodStallDef.get_stall(stall_id)

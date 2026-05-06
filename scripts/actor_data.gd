@@ -8,63 +8,63 @@
 
 # ─── Role ─────────────────────────────────────────────────────────
 enum Role {
-	CUSTOMER       # Shopping at the supermarket
-	STAFF          # Working in the store
-	ROBOT          # AI robot staff member
+	CUSTOMER,       # Shopping at the supermarket
+	STAFF,          # Working in the store
+	ROBOT,          # AI robot staff member
 }
 
 # ─── Staff Roles (when Role == STAFF) ─────────────────────────
 enum StaffRole {
-	NONE
-	CASHIER        # Operates checkout lanes
-	SHELF_STOCKER  # Restocks shelves
-	CLEANER        # Keeps the store tidy
-	SECURITY       # Patrols the store
-	GREETER        # Welcomes customers at entrance
-	MANAGER        # Walks the floor supervising
-	FLOOR_STAFF    # General floor assistance
-	SCAN_GO        # Scan & Go staff — walks alongside player, auto-scans items
+	NONE,
+	CASHIER,        # Operates checkout lanes
+	SHELF_STOCKER,  # Restocks shelves
+	CLEANER,        # Keeps the store tidy
+	SECURITY,       # Patrols the store
+	GREETER,        # Welcomes customers at entrance
+	MANAGER,        # Walks the floor supervising
+	FLOOR_STAFF,    # General floor assistance
+	SCAN_GO,        # Scan & Go staff — walks alongside player, auto-scans items
 }
 
 # ─── Robot Type ────────────────────────────────────────────────
 # Robots can be HUMANOID (look like humans, use tools, communicate)
 # or SINGLE_FUNCTION (specialized machine for one task)
 enum RobotType {
-	HUMANOID        # Looks like a person, uses tools, talks, does any job
+	HUMANOID,        # Looks like a person, uses tools, talks, does any job
 	SINGLE_FUNCTION # Automated machine — cleaning, guiding, delivery, etc.
 }
 
 # ─── Robot Role (for SINGLE_FUNCTION robots) ────────────────────
 enum RobotRole {
-	CLEANING_ROBOT  # Auto-cleans floors, battery-powered
-	GUIDANCE_ROBOT  # Directs customers, answers questions
-	DELIVERY_ROBOT  # Transports stock between zones
-	SECURITY_ROBOT  # Patrols and monitors
-	SHELF_ROBOT     # Auto-restock scanning
+	CLEANING_ROBOT,  # Auto-cleans floors, battery-powered
+	GUIDANCE_ROBOT,  # Directs customers, answers questions
+	DELIVERY_ROBOT,  # Transports stock between zones
+	SECURITY_ROBOT,  # Patrols and monitors
+	SHELF_ROBOT,     # Auto-restock scanning
 }
 
 # ─── Customer Group Type ────────────────────────────────────────
 enum CustomerGroupType {
-	SOLO           # Single shopper
-	COUPLE         # Two adults, shopping together
-	PAIR           # Two friends shopping
-	TWO_COUPLES    # Four adults (two pairs)
-	FAMILY_BABY    # Two adults + infant in cart
-	FAMILY_TODDLER # Two adults + toddler
-	FAMILY_KIDS    # Two adults + two children
-	FAMILY_EXTENDED # 2 adults + 2 kids + grandparent
+	SOLO,           # Single shopper
+	COUPLE,         # Two adults, shopping together
+	PAIR,           # Two friends shopping
+	TWO_COUPLES,    # Four adults (two pairs)
+	FAMILY_BABY,    # Two adults + infant in cart
+	FAMILY_TODDLER, # Two adults + toddler
+	FAMILY_KIDS,    # Two adults + two children
+	FAMILY_EXTENDED, # 2 adults + 2 kids + grandparent
 	THREE_FRIENDS  # Three friends shopping together
 }
 
 # ─── Life Stage ────────────────────────────────────────────────
 enum LifeStage {
-	ADULT          # 18-64
-	ADULT_MID     # 35-60 (sub-category)
-	SENIOR         # 60+ (includes 60-65+)
-	TEEN           # 13-19
-	CHILD          # 6-12
-	TODDLER        # 1-5
-	INFANT         # 0-1 (in baby cart)
+	ADULT,          # 18-64
+	ADULT_MID,     # 35-60 (sub-category)
+	SENIOR,         # 60+ (includes 60-65+)
+	TEEN,           # 13-19
+	CHILD,          # 6-12
+	TODDLER,        # 1-5
+	INFANT,         # 0-1 (in baby cart)
 }
 
 # ─── Appearance ────────────────────────────────────────────────

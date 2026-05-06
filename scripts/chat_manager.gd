@@ -57,8 +57,8 @@ func _check_for_npc_chats() -> void:
 			if _chat_cooldowns.get(id_a, 0.0) > 0.0 or _chat_cooldowns.get(id_b, 0.0) > 0.0:
 				continue
 			# Check if within range
-			var pos_a := npc_a.global_position if "global_position" in npc_a else Vector2.ZERO
-			var pos_b := npc_b.global_position if "global_position" in npc_b else Vector2.ZERO
+			var pos_a: Vector2 = npc_a.global_position if "global_position" in npc_a else Vector2.ZERO
+			var pos_b: Vector2 = npc_b.global_position if "global_position" in npc_b else Vector2.ZERO
 			if pos_a.distance_to(pos_b) > CHAT_RANGE:
 				continue
 			# Start a chat between these two
@@ -116,6 +116,6 @@ func _show_npc_bubble(npc: Node, text: String) -> void:
 	if npc.get_parent() != null:
 		npc.get_parent().add_child(bubble)
 		bubble.global_position = npc.global_position + Vector2(0, -30)
-		bubble.show(text, 3.5)
+		bubble.display(text, 3.5)
 	else:
 		return

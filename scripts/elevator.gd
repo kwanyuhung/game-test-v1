@@ -259,7 +259,7 @@ func _show_floor_panel() -> void:
 		btn.position = Vector2(bx, by)
 		btn.size = Vector2(btn_w, btn_h)
 		var is_current := (i == _current_floor)
-		var is_staff_only := fd.is_staff_only
+		var is_staff_only: bool = fd.is_staff_only 
 		# Check if player can access (staff mode check)
 		var player_is_staff := false
 		if _player_ref != null and _player_ref.has_method("is_in_staff_mode"):

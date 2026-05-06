@@ -3,7 +3,7 @@
 # ═══════════════════════════════════════════════════════════════════════
 # USAGE:
 #   var bubble := ChatBubble.new()
-#   bubble.show("Hello there!", duration_seconds)
+#   bubble.display("Hello there!", duration_seconds)  # 改为 display()
 #   add_child(bubble)
 #   bubble.position = npc_position + Vector2(0, -30)
 # ═══════════════════════════════════════════════════════════════════════
@@ -35,14 +35,15 @@ func _init() -> void:
 func _ready() -> void:
 	size = Vector2(100, 24)
 
-func show(text: String, duration: float = 4.0) -> void:
+# 重命名为 display()，避免与父类的 show() 冲突
+func display(text: String, duration: float = 4.0) -> void:
 	_timer = 0.0
 	_duration = duration
 	_label.text = text
 	visible = true
 
 	# Auto-size based on text length
-	var text_w := max(80, text.length() * 4 + 20)
+	var text_w :int= max(80, text.length() * 4 + 20)
 	var text_h := 24.0
 	size = Vector2(text_w, text_h)
 	_bg.size = size

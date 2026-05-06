@@ -1,4 +1,4 @@
-﻿# player_stats.gd
+# player_stats.gd
 # Tracks all player statistics, XP, level, and achievements.
 # ═══════════════════════════════════════════════════════════════════════
 # XP Sources:
@@ -111,11 +111,11 @@ func get_xp() -> int:
 # Staff rank determines which features robots and abilities unlock.
 # Rank is earned through XP spent on staff activities.
 enum StaffRank {
-	TRAINEE      # Rank 1 - basic checkout, browse
-	WORKER       # Rank 2 - single-function robots unlocked
-	SENIOR       # Rank 3 - humanoid robots unlocked
-	SUPERVISOR   # Rank 4 - all robots + business lite
-	MANAGER      # Rank 5 - full Business Mode
+	TRAINEE,      # Rank 1 - basic checkout, browse
+	WORKER,       # Rank 2 - single-function robots unlocked
+	SENIOR ,      # Rank 3 - humanoid robots unlocked
+	SUPERVISOR ,  # Rank 4 - all robots + business lite
+	MANAGER ,     # Rank 5 - full Business Mode
 }
 
 var _staff_rank: StaffRank = StaffRank.TRAINEE
@@ -174,7 +174,7 @@ func get_staff_xp_for_next_rank() -> int:
 	return _staff_rank_xp_thresholds[idx]
 
 func get_staff_xp_progress() -> float:
-	var current_threshold := _staff_rank_xp_thresholds[_staff_rank as int]
+	var current_threshold :float= _staff_rank_xp_thresholds[_staff_rank as int]
 	var next_threshold := -1
 	var idx := (_staff_rank + 1) as int
 	if idx < _staff_rank_xp_thresholds.size():
@@ -358,10 +358,6 @@ func spend_coins(amount: int) -> bool:
 func add_loyalty_points(amount: int) -> void:
 	_loyalty_points += amount
 
-func on_claw_win() -> void:
-	_claw_wins += 1
-	_check_achievements()
-
 func on_issue_resolved(issue_label: String) -> void:
 	_issues_resolved += 1
 	_daily_issues_resolved += 1
@@ -420,21 +416,21 @@ const _ACHIEVEMENTS := {
 }
 
 func _check_achievements() -> void:
-	var checks := [
-		["first_purchase",    func: bool:  return _checkout_count >= 1],
-		["full_cart",         func: bool:  return _items_bought >= 10],
-		["issue_fixer",       func: bool:  return _issues_resolved >= 5],
-		["hero_of_the_floor", func: bool:  return _issues_resolved >= 25],
-		["collector",         func: bool:  return _unique_items_bought >= 20],
-		["big_spender",       func: bool:  return _total_spent >= 500.0],
-		["claw_champion",     func: bool:  return _claw_wins >= 5],
-		["animal_friend",     func: bool:  return _pets_adopted >= 1],
-		["social_butterfly",  func: bool:  return _chats_with_npcs >= 10],
-		["world_explorer",    func: bool:  return _floors_visited >= 11],
-		["regular_customer",  func: bool:  return _checkout_count >= 20],
-		["chatty_patty",      func: bool:  return _chats_with_npcs >= 50],
-		["supermarket_master",func: bool:  return _level >= 10],
-	]
+	var checks := {
+		"first_purchase":     func(): return _checkout_count >= 1,
+		"full_cart":          func(): return _items_bought >= 10,
+		"issue_fixer":        func(): return _issues_resolved >= 5,
+		"hero_of_the_floor":  func(): return _issues_resolved >= 25,
+		"collector":          func(): return _unique_items_bought >= 20,
+		"big_spender":        func(): return _total_spent >= 500.0,
+		"claw_champion":      func(): return _claw_wins >= 5,
+		"animal_friend":      func(): return _pets_adopted >= 1,
+		"social_butterfly":   func(): return _chats_with_npcs >= 10,
+		"world_explorer":     func(): return _floors_visited >= 11,
+		"regular_customer":   func(): return _checkout_count >= 20,
+		"chatty_patty":       func(): return _chats_with_npcs >= 50,
+		"supermarket_master": func(): return _level >= 10,
+	}
 	for ach in checks:
 		var ach_id: String = ach[0]
 		if _achievements_unlocked.has(ach_id):

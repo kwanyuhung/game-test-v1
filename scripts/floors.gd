@@ -28,10 +28,17 @@ class FloorDef:
 		p_staff: bool = false,
 		p_rooftop: bool = false
 	):
-		index = p_index; label = p_label; theme = p_theme
-		color_ambient = p_color; has_shopping = p_shopping
-		has_checkout = p_checkout; has_elevator = p_elevator
-		has_stairs = p_stairs; is_staff_only = p_staff; is_rooftop = p_rooftop
+		index = p_index
+		label = p_label
+		theme = p_theme
+		wx = 0  # All floors start at x=0
+		color_ambient = p_color
+		has_shopping = p_shopping
+		has_checkout = p_checkout
+		has_elevator = p_elevator
+		has_stairs = p_stairs
+		is_staff_only = p_staff
+		is_rooftop = p_rooftop
 
 	# World Y of the elevator shaft within this floor's grid
 	func elevator_tile() -> Vector2i:
@@ -51,7 +58,6 @@ static var CURRENT: int = 0
 static func _static_init() -> void:
 	ALL = [
 		# Ground Floor G (index 0)
-		# Compact front-of-store: entrance, lobby, small market area, staff entrance
 		FloorDef.new(0, "G", "lobby",
 			Color(0.42, 0.44, 0.40),
 			false, false, true, true),
@@ -110,22 +116,22 @@ static func _static_init() -> void:
 		FloorDef.new(11, "11", "warehouse",
 			Color(0.55, 0.45, 0.38),
 			false, false, true, false),
-	]
-
+		
 		# Floor 12 — Juice Bar & Fresh (Phase J)
-		FloorDef.new(12, '12', 'juice_bar',
+		FloorDef.new(12, "12", "juice_bar",
 			Color(0.55, 0.72, 0.58),
 			true, false, true, true),
 
 		# Floor 13 — Kids Kingdom (Phase K)
-		FloorDef.new(13, '13', 'kids_kingdom',
-
-		# Floor 14 — Electronics Megastore (Phase H)
-		FloorDef.new(14, '14', 'electronics',
-			Color(0.35, 0.45, 0.65),
-			true, false, true, true),
+		FloorDef.new(13, "13", "kids_kingdom",
 			Color(0.72, 0.58, 0.80),
 			true, false, true, true),
+
+		# Floor 14 — Electronics Megastore (Phase H)
+		FloorDef.new(14, "14", "electronics",
+			Color(0.35, 0.45, 0.65),
+			true, false, true, true),
+	]
 
 # Floor index → FloorDef
 static func floor_at(idx: int) -> FloorDef:

@@ -168,8 +168,8 @@ func _build() -> void:
 
 	# Total
 	if _selected < _items.size():
-		var total := _items[_selected]["price"] * _qty
-		var tot_lbl := Label.new()
+		var total: float = _items[_selected]["price"] * _qty
+		var tot_lbl: Label = Label.new()
 		tot_lbl.text = "TOTAL: $%.2f" % total
 		tot_lbl.position = Vector2(pan_x + PANEL_W - 80, y_pos)
 		tot_lbl.add_theme_color_override("font_color", _stall_def.glow_color)
@@ -188,10 +188,11 @@ func _build() -> void:
 	_item_nodes.append(hint)
 
 func _on_overlay_input(event: InputEvent) -> void:
-	if not (event is InputEventKey and (event as InputEventKey).pressed:
+	var key_event := event as InputEventKey
+	if not (key_event and key_event.pressed):
 		return
-	var k := event as InputEventKey
-	match k.keycode:
+	
+	match key_event.keycode:
 		KEY_ESCAPE:
 			close()
 		KEY_W, KEY_UP:
@@ -203,7 +204,7 @@ func _on_overlay_input(event: InputEvent) -> void:
 		KEY_E, KEY_KP_ADD, KEY_PLUS:
 			_add_to_cart()
 		KEY_1, KEY_2, KEY_3, KEY_4, KEY_5:
-			_qty = k.keycode - KEY_0
+			_qty = key_event.keycode - KEY_0
 			_refresh()
 
 func _on_item_input(event: InputEvent) -> void:

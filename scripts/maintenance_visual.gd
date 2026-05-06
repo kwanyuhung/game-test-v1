@@ -39,12 +39,8 @@ func build_issue_sprite(issue: Issue) -> Node2D:
 	# Pulsing animation for urgent issues
 	if issue.urgency >= 2:
 		var tween := create_tween()
-		tween.tween_property(spr, "modulate:a", 0.5, 0.8)\
-			.set_trans(Tween.TRANSC_SINE)\
-			.set_ease(Tween.EASE_IN_OUT)
-		tween.tween_property(spr, "modulate:a", 1.0, 0.8)\
-			.set_trans(Tween.TRANSC_SINE)\
-			.set_ease(Tween.EASE_IN_OUT)
+		tween.tween_property(spr, "modulate:a", 0.5, 0.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tween.tween_property(spr, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		tween.set_loops(-1)
 
 	if _parent != null:
@@ -99,7 +95,7 @@ func _make_spill_texture() -> Texture2D:
 				var alpha := 0.7 - dist / W * 0.5
 				img.set_pixel(x, y, Color(0.40, 0.65, 0.90, alpha))
 	# Highlight shimmer
-	for x in range(W * 0.3, W * 0.7) as int:
+	for x in range(W * 0.3, W * 0.7):
 		for y in range(3, 8):
 			img.set_pixel(x, y, Color(0.80, 0.90, 1.0, 0.4))
 	return ImageTexture.create_from_image(img)
@@ -229,31 +225,50 @@ func _make_cleanup_texture() -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 func _make_power_texture() -> Texture2D:
-	var W := 20; var H := 20
-	var img := Image.create(W, H, false, Image.FORMAT_RGBA8)
+	var width := 20
+	var height := 20
+	var img := Image.create(width, height, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	# Lightning bolt
-	var bolt := [
-		[8, 2], [10, 2], [9, 8], [12, 8], [7, 14], [9, 14], [8, 18], [11, 18]
+	
+	# Lightning bolt vertices (x, y)
+	var bolt_points := [
+		Vector2i(8, 2), Vector2i(10, 2), Vector2i(9, 8), Vector2i(12, 8),
+		Vector2i(7, 14), Vector2i(9, 14), Vector2i(8, 18), Vector2i(11, 18)
 	]
-	var prev := bolt[0]
-	for pt in bolt:
-		var dx := signi(pt[0] - prev[0])
-		var dy := signi(pt[1] - prev[1])
-		var x := prev[0]; var y := prev[1]
-		while x != pt[0] or y != pt[1]:
-			for wy in range(-1, 2):
-				for wx in range(-1, 2):
-					if x + wx >= 0 and x + wx < W and y + wy >= 0 and y + wy < H:
-						img.set_pixel(x + wx, y + wy, Color(0.90, 0.85, 0.20, 0.9))
-			x += dx; y += dy
-		prev = pt
-	# Final pixel
-	for wy in range(-1, 2):
-		for wx in range(-1, 2):
-			if pt[0] + wx >= 0 and pt[0] + wx < W and pt[1] + wy >= 0 and pt[1] + wy < H:
-				img.set_pixel(pt[0] + wx, pt[1] + wy, Color(0.90, 0.85, 0.20, 0.9))
+	
+	var bolt_color := Color(0.95, 0.90, 0.25, 0.95)
+	var thickness := 2  # 线条粗细
+	
+	for i in range(bolt_points.size() - 1):
+		var from :Vector2i= bolt_points[i]
+		var to :Vector2i= bolt_points[i + 1]
+		_draw_line_thick(img, from, to, thickness, bolt_color)
+	
+	# 确保端点也被绘制
+	for pt in bolt_points:
+		_draw_circle_fill(img, pt, thickness, bolt_color)
+	
 	return ImageTexture.create_from_image(img)
+
+func _draw_line_thick(img: Image, from: Vector2i, to: Vector2i, thickness: int, color: Color) -> void:
+	var dx: int = sign(to.x - from.x)
+	var dy: int = sign(to.y - from.y)
+	var x: int = from.x
+	var y: int = from.y
+	
+	while x != to.x or y != to.y:
+		_draw_circle_fill(img, Vector2i(x, y), thickness, color)
+		x += dx
+		y += dy
+
+func _draw_circle_fill(img: Image, center: Vector2i, radius: int, color: Color) -> void:
+	for wy in range(-radius, radius + 1):
+		for wx in range(-radius, radius + 1):
+			var px := center.x + wx
+			var py := center.y + wy
+			if px >= 0 and px < img.get_width() and py >= 0 and py < img.get_height():
+				if wx * wx + wy * wy <= radius * radius:  # 圆形范围
+					img.set_pixel(px, py, color)
 
 func _make_generic_texture() -> Texture2D:
 	var W := 16; var H := 16

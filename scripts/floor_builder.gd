@@ -358,8 +358,8 @@ func _build_zone_food_stall(zone: Dictionary) -> void:
 	_parent.add_child(counter_top)
 	_floor_nodes.append(counter_top)
 
-	var wall_h := zone.h - 3
-	var wc := fd.get("color", Color(0.85, 0.70, 0.50)).darkened(0.3)
+	var wall_h: int = zone.h - 3
+	var wc: Color = fd.get("color", Color(0.85, 0.70, 0.50)).darkened(0.3) 
 
 	var bw_bg := ColorRect.new()
 	bw_bg.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
@@ -391,10 +391,10 @@ func _build_zone_food_stall(zone: Dictionary) -> void:
 	bot_wall.color = wc.darkened(0.2)
 	_parent.add_child(bot_wall); _floor_nodes.append(bot_wall)
 
-	var board_x := (zone.x + 1) * CELL_SIZE
-	var board_y := (zone.y + 1) * CELL_SIZE
-	var board_w := (zone.w - 2) * CELL_SIZE
-	var board_h := (wall_h - 2) * CELL_SIZE
+	var board_x:int = (zone.x + 1) * CELL_SIZE
+	var board_y:int= (zone.y + 1) * CELL_SIZE
+	var board_w:int= (zone.w - 2) * CELL_SIZE
+	var board_h:int= (wall_h - 2) * CELL_SIZE
 	if board_w > 0 and board_h > 0:
 		var board := ColorRect.new()
 		board.position = Vector2(board_x, board_y)
@@ -402,7 +402,7 @@ func _build_zone_food_stall(zone: Dictionary) -> void:
 		board.color = Color(0.05, 0.12, 0.08)
 		_parent.add_child(board); _floor_nodes.append(board)
 
-	var glow_color := fd.get("glow", Color(1.0, 0.85, 0.60))
+	var glow_color :Color = fd.get("glow", Color(1.0, 0.85, 0.60))
 	var glow := Sprite2D.new()
 	glow.position = Vector2((zone.x + zone.w * 0.5) * CELL_SIZE, (zone.y - 7) * CELL_SIZE)
 	glow.texture = _make_glow(glow_color)
@@ -439,8 +439,8 @@ func _build_zone_food_court(zone: Dictionary) -> void:
 	_floor_nodes.append(floor_c)
 
 	for i in range(4):
-		var lx := (zone.x + 10 + i * 16) * CELL_SIZE
-		var ly := (zone.y + 3) * CELL_SIZE
+		var lx :int= (zone.x + 10 + i * 16) * CELL_SIZE
+		var ly :int= (zone.y + 3) * CELL_SIZE
 		var lantern := Sprite2D.new()
 		lantern.position = Vector2(lx, ly)
 		lantern.texture = _make_lantern()
@@ -537,9 +537,9 @@ func _build_zone_stairs(zone: Dictionary) -> void:
 	_parent.add_child(bg); _floor_nodes.append(bg)
 
 	var n_steps := 12
-	var step_h := (zone.h * CELL_SIZE) / n_steps
+	var step_h :int= (zone.h * CELL_SIZE) / n_steps
 	for i in range(n_steps):
-		var step_y := zone.y * CELL_SIZE + i * step_h
+		var step_y :int= zone.y * CELL_SIZE + i * step_h
 		var step_l := ColorRect.new()
 		step_l.position = Vector2(zone.x * CELL_SIZE, step_y)
 		step_l.size = Vector2(zone.w * CELL_SIZE, 2)
@@ -661,10 +661,10 @@ func _build_prize_shelf(px: int, py: int, pw: int, ph: int) -> void:
 func _build_zone_pet_adoption(zone: Dictionary) -> void:
 	var adopt_name: String = zone.meta.get("name", "ADOPTION")
 	var adopt_color: Color = zone.meta.get("color", Color(0.60, 0.88, 0.70))
-	var cx := zone.x * CELL_SIZE
-	var cy := zone.y * CELL_SIZE
-	var cw := zone.w * CELL_SIZE
-	var ch := zone.h * CELL_SIZE
+	var cx :int= zone.x * CELL_SIZE
+	var cy :int= zone.y * CELL_SIZE
+	var cw :int= zone.w * CELL_SIZE
+	var ch :int= zone.h * CELL_SIZE
 
 	var bg := ColorRect.new()
 	bg.position = Vector2(cx, cy)
@@ -774,10 +774,10 @@ func _make_pet_sprite(pet_type: int) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 func _build_zone_warehouse(zone: Dictionary) -> void:
-	var cx := zone.x * CELL_SIZE
-	var cy := zone.y * CELL_SIZE
-	var cw := zone.w * CELL_SIZE
-	var ch := zone.h * CELL_SIZE
+	var cx :int= zone.x * CELL_SIZE
+	var cy :int= zone.y * CELL_SIZE
+	var cw :int= zone.w * CELL_SIZE
+	var ch :int= zone.h * CELL_SIZE
 
 	var floor_bg := ColorRect.new()
 	floor_bg.position = Vector2(cx, cy)
@@ -887,8 +887,8 @@ func _build_zone_storage_shelf(zone: Dictionary) -> void:
 
 func _build_zone_atm(zone: Dictionary) -> void:
 	var atm_id: String = zone.meta.get("atm_id", "atm_1")
-	var cx := zone.x * CELL_SIZE
-	var cy := zone.y * CELL_SIZE
+	var cx :int= zone.x * CELL_SIZE
+	var cy :int= zone.y * CELL_SIZE
 
 	var body := ColorRect.new()
 	body.position = Vector2(cx + CELL_SIZE * 2, cy + CELL_SIZE * 2)
@@ -950,10 +950,10 @@ func _build_zone_claw_machine(zone: Dictionary) -> void:
 func _build_zone_shoes_rack(zone: Dictionary) -> void:
 	var name: String = zone.meta.get("name", "SHOES")
 	var zone_color: Color = zone.meta.get("color", Color(0.70, 0.60, 0.55))
-	var cx := zone.x * CELL_SIZE
-	var cy := zone.y * CELL_SIZE
-	var cw := zone.w * CELL_SIZE
-	var ch := zone.h * CELL_SIZE
+	var cx :int= zone.x * CELL_SIZE
+	var cy :int= zone.y * CELL_SIZE
+	var cw :int= zone.w * CELL_SIZE
+	var ch :int= zone.h * CELL_SIZE
 
 	var bg := ColorRect.new()
 	bg.position = Vector2(cx, cy); bg.size = Vector2(cw, ch)
@@ -985,10 +985,10 @@ func _build_zone_shoes_rack(zone: Dictionary) -> void:
 func _build_zone_dress_rack(zone: Dictionary) -> void:
 	var name: String = zone.meta.get("name", "DRESSES")
 	var zone_color: Color = zone.meta.get("color", Color(0.75, 0.55, 0.70))
-	var cx := zone.x * CELL_SIZE
-	var cy := zone.y * CELL_SIZE
-	var cw := zone.w * CELL_SIZE
-	var ch := zone.h * CELL_SIZE
+	var cx :int= zone.x * CELL_SIZE
+	var cy :int= zone.y * CELL_SIZE
+	var cw :int= zone.w * CELL_SIZE
+	var ch :int= zone.h * CELL_SIZE
 
 	var bg := ColorRect.new()
 	bg.position = Vector2(cx, cy); bg.size = Vector2(cw, ch)
@@ -1022,10 +1022,10 @@ func _build_zone_dress_rack(zone: Dictionary) -> void:
 func _build_zone_sport_area(zone: Dictionary) -> void:
 	var name: String = zone.meta.get("name", "SPORT")
 	var zone_color: Color = zone.meta.get("color", Color(0.50, 0.65, 0.75))
-	var cx := zone.x * CELL_SIZE
-	var cy := zone.y * CELL_SIZE
-	var cw := zone.w * CELL_SIZE
-	var ch := zone.h * CELL_SIZE
+	var cx :int= zone.x * CELL_SIZE
+	var cy :int= zone.y * CELL_SIZE
+	var cw :int= zone.w * CELL_SIZE
+	var ch :int= zone.h * CELL_SIZE
 
 	var bg := ColorRect.new()
 	bg.position = Vector2(cx, cy); bg.size = Vector2(cw, ch)
@@ -1097,7 +1097,7 @@ func _build_zone_karaoke(zone: Dictionary) -> void:
 	_parent.add_child(base); _floor_nodes.append(base)
 
 	var room_w := 14
-	var rooms := zone.w / room_w
+	var rooms :int= zone.w / room_w
 	for r in range(rooms):
 		var room_bg := ColorRect.new()
 		room_bg.color = Color(0.18 + r * 0.04, 0.12, 0.22 + r * 0.03)
@@ -1182,8 +1182,8 @@ func _build_zone_darts_board(zone: Dictionary) -> void:
 	base.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
 	_parent.add_child(base); _floor_nodes.append(base)
 
-	var cx := zone.x + zone.w / 2
-	var cy := zone.y + zone.h / 2
+	var cx :int= zone.x + zone.w / 2
+	var cy :int= zone.y + zone.h / 2
 	var radii := [8, 6, 4, 2]
 	var colors := [Color(0.1, 0.5, 0.1), Color(0.8, 0.8, 0.8), Color(0.8, 0.1, 0.1), Color(0.1, 0.7, 0.1)]
 	for i in range(radii.size()):
@@ -1204,8 +1204,10 @@ func _build_zone_darts_board(zone: Dictionary) -> void:
 
 func _build_zone_vending_machine(zone: Dictionary) -> void:
 	var name: String = zone.meta.get("name", "VENDING")
-	var cx := zone.x * CELL_SIZE; var cy := zone.y * CELL_SIZE
-	var cw := zone.w * CELL_SIZE; var ch := zone.h * CELL_SIZE
+	var cx :int= zone.x * CELL_SIZE; 
+	var cy :int= zone.y * CELL_SIZE
+	var cw :int= zone.w * CELL_SIZE; 
+	var ch :int= zone.h * CELL_SIZE
 
 	var body := ColorRect.new()
 	body.position = Vector2(cx, cy); body.size = Vector2(cw, ch)
@@ -1472,8 +1474,9 @@ func _build_floor_sign() -> void:
 func _build_shaft_visuals() -> void:
 	if not _floor_def.has_elevator:
 		return
-	var shaft_x := FloorConfig.STAIRS_RIGHT_X - 6
-	for floor_i in range(FloorConfig.floor_count()):
+	var shaft_x :=  6
+	var floor_config := FloorConfig.new()
+	for floor_i in range(floor_config.floor_count()):
 		var fy := _floor_y_in_shaft(floor_i)
 		var dot := ColorRect.new()
 		dot.position = Vector2((shaft_x + 0.5) * CELL_SIZE, fy)

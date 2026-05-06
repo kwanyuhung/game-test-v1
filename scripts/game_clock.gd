@@ -105,7 +105,7 @@ func is_store_open() -> bool:
 
 func is_rush_hour() -> bool:
 	return (_game_hour >= RUSH_MORNING_START and _game_hour <= 9) or \
-	       (_game_hour >= RUSH_EVENING_START and _game_hour <= 20)
+		   (_game_hour >= RUSH_EVENING_START and _game_hour <= 20)
 
 func is_night() -> bool:
 	return _period == Period.NIGHT

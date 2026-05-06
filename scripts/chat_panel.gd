@@ -143,7 +143,7 @@ func _refresh_history() -> void:
 			lbl.queue_free()
 	_history_labels.clear()
 
-	var start_idx := max(0, _chat_history.size() - MAX_LINES)
+	var start_idx :int= max(0, _chat_history.size() - MAX_LINES)
 	var visible_history := _chat_history.slice(start_idx)
 
 	var pan_x := (320.0 - PANEL_W) * 0.5 + 6
@@ -160,7 +160,7 @@ func _refresh_history() -> void:
 			lbl.add_theme_color_override("font_color", Color(0.60, 0.90, 0.70))
 		else:
 			lbl.text = "  %s: %s" % [_target_actor.display_name, entry["text"]]
-			lbl.add_theme_color_override("font_color", Color(0.80, 0.85, 1.0)]
+			lbl.add_theme_color_override("font_color", Color(0.80, 0.85, 1.0))
 
 		lbl.add_theme_font_size_override("font_size", 7)
 		add_child(lbl)
@@ -174,7 +174,7 @@ func _show_npc_bubble(text: String) -> void:
 	_npc_bubble = ChatBubble.new()
 	_target_npc.get_parent().add_child(_npc_bubble)
 	_npc_bubble.global_position = _target_npc.global_position + Vector2(0, -30)
-	_npc_bubble.show(text, 4.0)
+	_npc_bubble.display(text, 4.0)
 
 func _clear_children() -> void:
 	for c in get_children():

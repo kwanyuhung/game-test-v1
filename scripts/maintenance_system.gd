@@ -37,14 +37,14 @@ class Issue:
 	var sprite_scene: PackedScene  # which visual sprite to show
 	var label: String           # short display name
 
-	static const TYPE_SPILL         := 0
-	static const TYPE_BROKEN_LIGHT := 1
-	static const TYPE_OUT_OF_STOCK  := 2
-	static const TYPE_BROKEN_MACHINE:= 3
-	static const TYPE_SECURITY_ALERT:= 4
-	static const TYPE_LOST_CHILD    := 5
-	static const TYPE_CLEANUP_NEEDED:= 6
-	static const TYPE_POWER_FLICKER := 7
+	const TYPE_SPILL         := 0
+	const TYPE_BROKEN_LIGHT := 1
+	const TYPE_OUT_OF_STOCK  := 2
+	const TYPE_BROKEN_MACHINE:= 3
+	const TYPE_SECURITY_ALERT:= 4
+	const TYPE_LOST_CHILD    := 5
+	const TYPE_CLEANUP_NEEDED:= 6
+	const TYPE_POWER_FLICKER := 7
 
 	static func type_name(t: int) -> String:
 		match t:
@@ -187,10 +187,10 @@ func _choose_issue_floor(issue_type: int) -> int:
 		else:
 			total += 0
 
-	var roll := randi() % max(1, total)
+	var roll :int= randi() % max(1, total)
 	var cumulative := 0
 	for k in weights:
-		var w := weights[k]
+		var w :int= weights[k]
 		if issue_type == Issue.TYPE_SECURITY_ALERT or issue_type == Issue.TYPE_LOST_CHILD:
 			pass
 		elif k != 0 and k != 1 and k != 8 and k != 11:
