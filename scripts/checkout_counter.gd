@@ -5,8 +5,8 @@ extends Area2D
 
 # ─── Checkout Types ──────────────────────────────────────────────
 enum CheckoutType {
-	STAFFED   # Standard lane with cashier NPC
-	SELF       # Self-checkout kiosk
+	STAFFED,   # Standard lane with cashier NPC
+	SELF,       # Self-checkout kiosk
 	EXPRESS    # Express lane — max 10 items
 }
 
@@ -331,7 +331,7 @@ func show_farewell_bubble() -> void:
 	if _checkout_type != CheckoutType.STAFFED:
 		return
 	var farewells := ["Thanks!", "Come again!", "Have a great day!", "Bye!", "See you!"]
-	var msg := farewells[randi() % farewells.size()]
+	var msg: String = farewells[randi() % farewells.size()]
 	_thought_label.text = msg
 	_thought_bubble.visible = true
 	_thought_label.visible = true
