@@ -206,7 +206,7 @@ func _ready() -> void:
 	add_child(_main_init)
 	_main_init.setup(self)
 	_main_init.init_all()
-	_build_floor(0)
+	# Note: _build_floor(0) is already called inside init_all()
 func _build_floor(idx: int) -> void:
 	_clear_floor_nodes()
 	_current_floor_idx = idx
