@@ -1,9 +1,7 @@
 # floor_builder.gd
-# ═══════════════════════════════════════════════════════════════════════
 # Data-driven floor renderer. Reads FloorDef + zones from floor_config.gd
 # and builds all visual content. Add new zone types by implementing
 # _build_<type>() and calling it from _build_zone().
-# ═══════════════════════════════════════════════════════════════════════
 class_name FloorBuilder
 extends Node2D
 
@@ -49,7 +47,6 @@ func build(floor_def: FloorConfig.FloorDef, parent: Node) -> void:
 	_build_floor_sign()
 	_build_shaft_visuals()
 
-# ─── World Background ────────────────────────────────────────────
 
 func _build_world_bg() -> void:
 	var bg := ColorRect.new()
@@ -59,7 +56,6 @@ func _build_world_bg() -> void:
 	_parent.add_child(bg)
 	_floor_nodes.append(bg)
 
-# ─── Zone Router ────────────────────────────────────────────────
 
 func _build_zones() -> void:
 	for zone in _floor_def.zones:
@@ -272,7 +268,6 @@ func _build_zone_darts_board(zone: FloorConfig.Zone) -> void:
 	bull.position = Vector2(cx * CELL_SIZE, cy * CELL_SIZE)
 	_floor_node.add_child(bull)
 
-# ─── Individual Zone Builders ───────────────────────────────────
 
 func _build_zone_wall(zone: FloorConfig.Zone) -> void:
 	var r := ColorRect.new()
@@ -778,7 +773,6 @@ func _build_zone_stairs(zone: FloorConfig.Zone) -> void:
 	lbl.add_theme_font_size_override("font_size", 7)
 	_parent.add_child(lbl); _floor_nodes.append(lbl)
 
-# ─── Decorative Zone (dining tables, planters, etc.) ───────────────
 # meta can specify: {decor_type: "dining_table"} or just renders as floor.
 func _build_zone_decor(zone: FloorConfig.Zone) -> void:
 	var decor_type: String = zone.meta.get("decor_type", "dining_table")
@@ -896,7 +890,6 @@ func _build_prize_shelf(px: int, py: int, pw: int, ph: int) -> void:
 	prize_lbl.add_theme_font_size_override("font_size", 9)
 	_parent.add_child(prize_lbl); _floor_nodes.append(prize_lbl)
 
-# ─── Pet Adoption Zone ───────────────────────────────────────────────
 # A cozy corner with kennels/cages for adoptable pets.
 # meta: {name: String, color: Color}
 func _build_zone_pet_adoption(zone: FloorConfig.Zone) -> void:
@@ -1000,7 +993,6 @@ func _build_zone_pet_adoption(zone: FloorConfig.Zone) -> void:
 			bag_spr.z_index = 3
 			_parent.add_child(bag_spr); _floor_nodes.append(bag_spr)
 
-# ─── Pet sprite (procedural: dog, cat, rabbit) ───────────────────────
 func _make_pet_sprite(pet_type: int) -> Texture2D:
 	var W := 20; var H := 20
 	var img := Image.create(W, H, false, Image.FORMAT_RGBA8)
@@ -1050,7 +1042,6 @@ func _make_pet_sprite(pet_type: int) -> Texture2D:
 
 	return ImageTexture.create_from_image(img)
 
-# ─── Pet food bag texture ─────────────────────────────────────────────
 func _make_pet_food_bag_texture(pet_idx: int, bag_idx: int) -> Texture2D:
 	var W := 10; var H := 14
 	var img := Image.create(W, H, false, Image.FORMAT_RGBA8)
@@ -1082,11 +1073,9 @@ func _make_pet_food_bag_texture(pet_idx: int, bag_idx: int) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 
-# ─── Claw Machine Zone ───────────────────────────────────────────────
 # Builds a complete claw machine cabinet with prizes, claw, rail, and
 # interaction zone. meta: {machine_id: String, prize_pool: int (0-3)}.
 
-# ─── Warehouse Zone ─────────────────────────────────────────────────
 # Visual representation of the warehouse receiving dock.
 # Shows shelving units, delivery doors, and stock crates.
 func _build_zone_storage_shelf(zone: FloorConfig.Zone) -> void:
@@ -1190,7 +1179,6 @@ func _build_zone_warehouse(zone: FloorConfig.Zone) -> void:
 	hint_lbl.add_theme_font_size_override("font_size", 6)
 	_parent.add_child(hint_lbl); _floor_nodes.append(hint_lbl)
 
-# ─── ATM Zone ─────────────────────────────────────────────────────
 # ATM machine — standalone or in a wall niche.
 # meta: {atm_id: String}
 func _build_zone_atm(zone: FloorConfig.Zone) -> void:
@@ -1248,7 +1236,6 @@ func _build_zone_atm(zone: FloorConfig.Zone) -> void:
 	brand_lbl.add_theme_font_size_override("font_size", 6)
 	_parent.add_child(brand_lbl); _floor_nodes.append(brand_lbl)
 
-# ─── Crate texture (for warehouse shelves) ─────────────────────────
 func _make_crate_texture(rack_idx: int, row_idx: int) -> Texture2D:
 	var W := 12; var H := 12
 	var img := Image.create(W, H, false, Image.FORMAT_RGBA8)
@@ -1298,7 +1285,6 @@ func _build_zone_claw_machine(zone: FloorConfig.Zone) -> void:
 	_parent.add_child(machine)
 	_claw_machines.append(machine)
 
-# ─── Section Zones ─────────────────────────────────────────────
 
 func _build_section_zones() -> void:
 	for sz: FloorConfig.SectionZone in _floor_def.section_zones:
@@ -1366,7 +1352,6 @@ func _build_section_zone(sz: FloorConfig.SectionZone) -> void:
 	lbl.z_index = 6
 	_parent.add_child(lbl); _aisle_labels.append(lbl)
 
-# ─── Checkout Counters ─────────────────────────────────────────
 
 func _build_checkout_if_needed() -> void:
 	if not _floor_def.has_checkout:
@@ -1409,7 +1394,6 @@ func _on_checkout_interacted(checkout_id: int, ctype) -> void:
 
 
 
-# ─── Floor Sign ─────────────────────────────────────────────────
 
 func _build_floor_sign() -> void:
 	var sign_bg := ColorRect.new()
@@ -1425,7 +1409,6 @@ func _build_floor_sign() -> void:
 	theme_lbl.add_theme_font_size_override("font_size", 8)
 	_parent.add_child(theme_lbl); _floor_nodes.append(theme_lbl)
 
-# ─── Elevator Shaft Visuals ─────────────────────────────────────
 
 func _build_shaft_visuals() -> void:
 	if not _floor_def.has_elevator:
@@ -1446,10 +1429,8 @@ func _floor_y_in_shaft(floor_idx: int) -> float:
 	var floor_spacing := 4.0 * CELL_SIZE
 	return base_y - floor_idx * floor_spacing
 
-# ─── Wall Tile Helper ──────────────────────────────────────────
 
 
-# ─── Style Helpers ─────────────────────────────────────────────
 
 func _get_wall_base_color() -> Color:
 	return Color(0.38, 0.35, 0.32)
@@ -1474,7 +1455,6 @@ func _get_section_wall_color(style: int) -> Color:
 		StoreData.SectionStyle.FREEZER:  return Color(0.55, 0.78, 0.95)
 	return Color(0.65, 0.60, 0.50)
 
-# ─── Texture Helpers ───────────────────────────────────────────
 
 func _make_glow(col: Color) -> Texture2D:
 	var sz := 48
@@ -1545,7 +1525,6 @@ func _make_lantern() -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 
-# ─── Shoes Rack Zone ─────────────────────────────────────────────────────────
 # Display racks for shoes — ladies, mens, kids, sport, sandals
 func _build_zone_shoes_rack(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "SHOES")
@@ -1593,7 +1572,6 @@ func _build_zone_shoes_rack(zone: FloorConfig.Zone) -> void:
 			sole.color = Color(0.20, 0.18, 0.16)
 			_parent.add_child(sole); _floor_nodes.append(sole)
 
-# ─── Dress Rack Zone ─────────────────────────────────────────────────────────
 # Clothing racks for dresses / fashion wear
 func _build_zone_dress_rack(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "DRESSES")
@@ -1651,7 +1629,6 @@ func _build_zone_dress_rack(zone: FloorConfig.Zone) -> void:
 		tag.add_theme_font_size_override("font_size", 6)
 		_parent.add_child(tag); _floor_nodes.append(tag)
 
-# ─── Sport Area Zone ─────────────────────────────────────────────────────────
 # Sports equipment — gym, team sports, fitness
 func _build_zone_sport_area(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "SPORT")
@@ -1697,7 +1674,6 @@ func _build_zone_sport_area(zone: FloorConfig.Zone) -> void:
 			stripe.color = shelf_colors[row % 3].lightened(0.25)
 			_parent.add_child(stripe); _floor_nodes.append(stripe)
 
-# ─── Outdoor Area Zone ───────────────────────────────────────────────────────
 # Fishing, hiking, running, camping, cycling gear
 func _build_zone_outdoor_area(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "OUTDOOR")
@@ -1738,7 +1714,6 @@ func _build_zone_outdoor_area(zone: FloorConfig.Zone) -> void:
 			item.color = item_colors[col % item_colors.size()]
 			_parent.add_child(item); _floor_nodes.append(item)
 
-# ─── Stationery Zone ─────────────────────────────────────────────────────────
 # Office and school supplies — notebooks, pens, desk accessories
 func _build_zone_stationery(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "STATIONERY")
@@ -1782,7 +1757,6 @@ func _build_zone_stationery(zone: FloorConfig.Zone) -> void:
 			item.color = item_types[(row + col) % item_types.size()]
 			_parent.add_child(item); _floor_nodes.append(item)
 
-# ─── Plants Area Zone ────────────────────────────────────────────────────────
 # Indoor plants, garden plants, pots, soil
 func _build_zone_plants_area(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "PLANTS")
@@ -1829,7 +1803,6 @@ func _build_zone_plants_area(zone: FloorConfig.Zone) -> void:
 			plant.color = plant_colors[(row + col) % 3]
 			_parent.add_child(plant); _floor_nodes.append(plant)
 
-# ─── Locker Zone ─────────────────────────────────────────────────────────────
 # Staff locker room — rows of metal lockers
 func _build_zone_locker(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "LOCKER ROOM")
@@ -1875,7 +1848,6 @@ func _build_zone_locker(zone: FloorConfig.Zone) -> void:
 			lock_dot.color = Color(0.80, 0.72, 0.40)
 			_parent.add_child(lock_dot); _floor_nodes.append(lock_dot)
 
-# ─── Staff Lounge Zone ───────────────────────────────────────────────────────
 # Staff break room — sofas, tables, vending machines
 func _build_zone_staff_lounge(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "STAFF LOUNGE")
@@ -1929,7 +1901,6 @@ func _build_zone_staff_lounge(zone: FloorConfig.Zone) -> void:
 	vm_screen.color = Color(0.20, 0.40, 0.30)
 	_parent.add_child(vm_screen); _floor_nodes.append(vm_screen)
 
-# ─── Training Room Zone ─────────────────────────────────────────────────────
 # Staff training room — projector screen, chairs, whiteboards
 func _build_zone_training(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "TRAINING ROOM")
@@ -1981,7 +1952,6 @@ func _build_zone_training(zone: FloorConfig.Zone) -> void:
 	wb.color = Color(0.95, 0.97, 0.95)
 	_parent.add_child(wb); _floor_nodes.append(wb)
 
-# ─── Office Desk Zone ────────────────────────────────────────────────────────
 # Open plan office with desks
 func _build_zone_office_desk(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "OFFICE")
@@ -2027,7 +1997,6 @@ func _build_zone_office_desk(zone: FloorConfig.Zone) -> void:
 			glow.color = Color(0.30, 0.45, 0.65)
 			_parent.add_child(glow); _floor_nodes.append(glow)
 
-# ─── Executive Office Zone ──────────────────────────────────────────────────
 # Executive suites — large desks, leather chairs, dark wood aesthetic
 func _build_zone_exec_office(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "EXEC OFFICE")
@@ -2356,7 +2325,6 @@ func _build_zone_monitor_room(zone: FloorConfig.Zone) -> void:
 	_floor_nodes.append(hint)
 
 
-# ─── Phase G: Garden & Home Living Zones ──────────────────────────────────────
 
 func _build_zone_home_decor(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "HOME DECOR")
@@ -2464,7 +2432,6 @@ func _build_zone_lighting(zone: FloorConfig.Zone) -> void:
 			glow.color = Color(1.0, 0.98, 0.80, 0.6)
 			_parent.add_child(glow); _floor_nodes.append(glow)
 
-# ─── Phase I: Info Hub & Services Zones ───────────────────────────────────────
 
 func _build_zone_customer_service(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "CUSTOMER SERVICE")
@@ -2562,7 +2529,6 @@ func _build_zone_digital_kiosk(zone: FloorConfig.Zone) -> void:
 	hint.add_theme_font_size_override("font_size", 6)
 	_parent.add_child(hint); _floor_nodes.append(hint)
 
-# ─── Phase J: Juice Bar & Fresh Zones ─────────────────────────────────────────
 
 	var name: String = zone.meta.get("name", "JUICE BAR")
 	var zone_color: Color = zone.meta.get("color", Color(1.0, 0.75, 0.30))
@@ -2651,7 +2617,6 @@ func _build_zone_salad_bar(zone: FloorConfig.Zone) -> void:
 			ing.color = ing_colors[(row + col) % ing_colors.size()]
 			_parent.add_child(ing); _floor_nodes.append(ing)
 
-# ─── Phase K: Kids Kingdom Zones ───────────────────────────────────────────────
 
 func _build_zone_kids_play(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "PLAY ZONE")
@@ -2767,7 +2732,6 @@ func _build_zone_kids_club(zone: FloorConfig.Zone) -> void:
 	hint.add_theme_font_size_override("font_size", 7)
 	_parent.add_child(hint); _floor_nodes.append(hint)
 
-# ─── Shared Helper ─────────────────────────────────────────────────────────────
 func _make_zone_label(text: String, pos: Vector2, col: Color) -> Label:
 	var lbl := Label.new()
 	lbl.text = text
@@ -3023,7 +2987,6 @@ func _build_zone_vending_machine(zone: FloorConfig.Zone) -> void:
 	hint.add_theme_font_size_override("font_size", 7)
 	_parent.add_child(hint); _floor_nodes.append(hint)
 
-# ─── Public Accessors ───────────────────────────────────────────
 
 func get_sections() -> Array:
 	return _sections
