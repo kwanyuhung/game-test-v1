@@ -307,14 +307,7 @@ func _build_zone_lobby(zone: FloorConfig.Zone) -> void:
 	_parent.add_child(stripe)
 	_floor_nodes.append(stripe)
 
-	# Top wall
-	for tx in range(zone.x, zone.x + zone.w):
-		_set_wall_tile(tx, zone.y)
 
-	# Left & right walls
-	for ty in range(zone.y, zone.y + zone.h):
-		_set_wall_tile(zone.x, ty)
-		_set_wall_tile(zone.x + zone.w - 1, ty)
 
 func _build_zone_parking(zone: FloorConfig.Zone) -> void:
 	# Parking level base — dark asphalt
@@ -1413,14 +1406,8 @@ func _on_checkout_interacted(checkout_id: int, ctype) -> void:
 	# Forward to main via signal (main listens to floor_builder parent)
 	pass
 
-func _on_express_rejected() -> void:
-	pass
 
-func _on_self_checkout_error() -> void:
-	pass
 
-func _on_self_checkout_cleared() -> void:
-	pass
 
 # ─── Floor Sign ─────────────────────────────────────────────────
 
@@ -1461,9 +1448,6 @@ func _floor_y_in_shaft(floor_idx: int) -> float:
 
 # ─── Wall Tile Helper ──────────────────────────────────────────
 
-func _set_wall_tile(x: int, y: int) -> void:
-	# No-op if no TileMap — walls are purely decorative ColorRects
-	pass
 
 # ─── Style Helpers ─────────────────────────────────────────────
 
@@ -2580,103 +2564,6 @@ func _build_zone_digital_kiosk(zone: FloorConfig.Zone) -> void:
 
 # ─── Phase J: Juice Bar & Fresh Zones ─────────────────────────────────────────
 
-func _build_zone_promo_booth(zone: FloorConfig.Zone) -> void:
-	# Promotional booth with banner and product displays
-	var banner := ColorRect.new()
-	banner.color = Color(0.85, 0.55, 0.15)
-	banner.size = Vector2(zone.w * CELL_SIZE, 3 * CELL_SIZE)
-	banner.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	_parent.add_child(banner); _floor_nodes.append(banner)
-	# "DAILY DEALS" label area
-	var label_bg := ColorRect.new()
-	label_bg.color = Color(0.90, 0.70, 0.20)
-	label_bg.size = Vector2(zone.w * CELL_SIZE, 2 * CELL_SIZE)
-	label_bg.position = Vector2(zone.x * CELL_SIZE, (zone.y + 3) * CELL_SIZE)
-	_parent.add_child(label_bg); _floor_nodes.append(label_bg)
-	# Product display shelves (3 shelves)
-	for shelf_i in range(3):
-		var shelf := ColorRect.new()
-		shelf.color = Color(0.55, 0.45, 0.35)
-		shelf.size = Vector2(3 * CELL_SIZE, 2 * CELL_SIZE)
-		shelf.position = Vector2((zone.x + 1 + shelf_i * 4) * CELL_SIZE, (zone.y + 5) * CELL_SIZE)
-		_parent.add_child(shelf); _floor_nodes.append(shelf)
-		var product := ColorRect.new()
-		product.color = Color(0.90, 0.30, 0.30) if shelf_i == 0 else Color(0.30, 0.75, 0.40) if shelf_i == 1 else Color(0.30, 0.50, 0.90)
-		product.size = Vector2(2 * CELL_SIZE, 2 * CELL_SIZE)
-		product.position = Vector2((zone.x + 1 + shelf_i * 4 + 0.5) * CELL_SIZE, (zone.y + 5) * CELL_SIZE)
-		_parent.add_child(product); _floor_nodes.append(product)
-	# Base platform
-	var base := ColorRect.new()
-	base.color = Color(0.50, 0.42, 0.35)
-	base.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
-	base.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	_parent.add_child(base); _floor_nodes.append(base)
-
-func _build_zone_warehouse_stock_view(zone: FloorConfig.Zone) -> void:
-	# Visual display of warehouse stock levels — green/yellow/red bars
-	var bg := ColorRect.new()
-	bg.color = Color(0.20, 0.22, 0.25)
-	bg.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
-	bg.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	_parent.add_child(bg); _floor_nodes.append(bg)
-	# Header bar
-	var header := ColorRect.new()
-	header.color = Color(0.40, 0.55, 0.40)
-	header.size = Vector2(zone.w * CELL_SIZE, 3 * CELL_SIZE)
-	header.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	_parent.add_child(header); _floor_nodes.append(header)
-	# Stock bars (3 sample sections)
-	for bar_i in range(3):
-		var bar_bg := ColorRect.new()
-		bar_bg.color = Color(0.15, 0.15, 0.18)
-		bar_bg.size = Vector2((zone.w - 2) * CELL_SIZE, 2 * CELL_SIZE)
-		bar_bg.position = Vector2((zone.x + 1) * CELL_SIZE, (zone.y + 4 + bar_i * 3) * CELL_SIZE)
-		_parent.add_child(bar_bg); _floor_nodes.append(bar_bg)
-		var fill_color = Color(0.25, 0.75, 0.35) if bar_i < 2 else Color(0.80, 0.60, 0.20)
-		var bar_fill := ColorRect.new()
-		bar_fill.color = fill_color
-		bar_fill.size = Vector2((zone.w - 4) * CELL_SIZE * (0.9 if bar_i < 2 else 0.45), 2 * CELL_SIZE)
-		bar_fill.position = Vector2((zone.x + 1) * CELL_SIZE, (zone.y + 4 + bar_i * 3) * CELL_SIZE)
-		_parent.add_child(bar_fill); _floor_nodes.append(bar_fill)
-
-func _build_zone_store_news(zone: FloorConfig.Zone) -> void:
-	var board := ColorRect.new()
-	board.color = Color(0.30, 0.40, 0.55)
-	board.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
-	board.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	_parent.add_child(board); _floor_nodes.append(board)
-	var header := ColorRect.new()
-	header.color = Color(0.40, 0.55, 0.75)
-	header.size = Vector2(zone.w * CELL_SIZE, 3 * CELL_SIZE)
-	header.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	_parent.add_child(header); _floor_nodes.append(header)
-	for ni in range(3):
-		var note := ColorRect.new()
-		note.color = Color(0.95, 0.92, 0.80)
-		note.size = Vector2(5 * CELL_SIZE, 4 * CELL_SIZE)
-		note.position = Vector2((zone.x + 1 + ni * 4) * CELL_SIZE, (zone.y + 4) * CELL_SIZE)
-		_parent.add_child(note); _floor_nodes.append(note)
-
-func _build_zone_lost_found(zone: FloorConfig.Zone) -> void:
-	# Lost & found / customer service desk
-	var desk := ColorRect.new()
-	desk.color = Color(0.65, 0.55, 0.45)
-	desk.size = Vector2(zone.w * CELL_SIZE, 3 * CELL_SIZE)
-	desk.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	_parent.add_child(desk); _floor_nodes.append(desk)
-	var front := ColorRect.new()
-	front.color = Color(0.55, 0.45, 0.38)
-	front.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
-	front.position = Vector2(zone.x * CELL_SIZE, (zone.y + 3) * CELL_SIZE)
-	_parent.add_child(front); _floor_nodes.append(front)
-	# Small signage
-	var sign := ColorRect.new()
-	sign.color = Color(0.75, 0.65, 0.80)
-	sign.size = Vector2(4 * CELL_SIZE, 2 * CELL_SIZE)
-	sign.position = Vector2((zone.x + 4) * CELL_SIZE, (zone.y + 0.5) * CELL_SIZE)
-	_parent.add_child(sign); _floor_nodes.append(sign)
-
-func _build_zone_juice_bar(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "JUICE BAR")
 	var zone_color: Color = zone.meta.get("color", Color(1.0, 0.75, 0.30))
 	var cx := zone.x * CELL_SIZE; var cy := zone.y * CELL_SIZE
