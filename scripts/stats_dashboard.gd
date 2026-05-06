@@ -1,4 +1,5 @@
 # stats_dashboard.gd
+class_name StatsDashboard
 # Player stats dashboard — shows level, XP, today's stats.
 # Press K to toggle.
 extends CanvasLayer

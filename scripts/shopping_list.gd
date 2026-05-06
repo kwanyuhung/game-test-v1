@@ -1,4 +1,5 @@
 # shopping_list.gd
+class_name ShoppingList
 # Player shopping list — press L to open, add items you want to find.
 # Does not consume items, just tracks what player is looking for.
 extends CanvasLayer

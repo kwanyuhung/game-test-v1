@@ -1,4 +1,5 @@
 # quest_system.gd
+class_name QuestSystem
 # Simple daily quests — 3 objectives per day, bonus XP on completion.
 # Tracks completion in save data.
 extends Node

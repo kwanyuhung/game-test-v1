@@ -16,6 +16,8 @@
 #   Change WORLD_W, WORLD_H, CELL_SIZE below. All zone coordinates
 #   are tile-based so they automatically scale.
 # ─────────────────────────────────────────────────────────────────────────────
+class_name FloorConfig
+
 extends Node
 
 static var _static_floors: Array = []

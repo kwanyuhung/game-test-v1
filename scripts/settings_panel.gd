@@ -1,4 +1,5 @@
 # settings_panel.gd
+class_name SettingsPanel
 # Game settings panel — audio volume, game speed, notification toggles.
 # Press O to toggle.
 extends CanvasLayer

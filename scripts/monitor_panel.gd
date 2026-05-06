@@ -1,4 +1,5 @@
 # monitor_panel.gd
+class_name MonitorPanel
 # CCTV / Floor Monitoring Panel — shows live status of all floors.
 # Press E near the monitor room zone on Floor 7 or 8 to open.
 extends Control

@@ -1,4 +1,5 @@
 # pause_menu.gd
+class_name PauseMenu
 # Pause overlay — press P or SPACE to pause/resume the game clock.
 extends CanvasLayer
 

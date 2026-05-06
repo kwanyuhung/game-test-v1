@@ -1,4 +1,5 @@
 # floating_text.gd
+class_name FloatingText
 # Floating text popups — "+1 Item Name" rises and fades when items are picked up.
 extends CanvasLayer
 

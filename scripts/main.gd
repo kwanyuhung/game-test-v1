@@ -422,11 +422,11 @@ func _input(event: InputEvent) -> void:
 				SaveSystem.load_game(self)
 				if _toasts != null: _toasts.toast_info("Game Loaded!")
 			# N ── Mini-map
-			KEY_N:
-				_toggle_minimap()
+			#KEY_N:
+				#_toggle_minimap()
 			# ? ── Tutorial
-			KEY_QUESTION:
-				_show_tutorial()
+			#KEY_QUESTION:
+				#_show_tutorial()
 			# L ── Shopping List
 			KEY_L:
 				_toggle_shopping_list()
@@ -625,6 +625,19 @@ func _on_maintenance_issue_selected(issue) -> void:
 	if _player != null and issue.floor != _current_floor_idx:
 		_navigate_to_floor(issue.floor)
 
+func _navigate_to_floor(floor_idx: int) -> void:
+	if floor_idx == _current_floor_idx:
+		return
+	_current_floor_idx = floor_idx
+	_rebuild_floor(floor_idx)
+	if _player:
+		_player.position = Vector2(80 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
+	if _minimap:
+		_minimap.set_floor(floor_idx)
+	if _toasts:
+		var fname = "Ground" if floor_idx == 0 else "Floor " + str(floor_idx)
+		_toasts.toast_info("Moved to " + fname)
+
 func _on_issue_created(issue) -> void:
 	if is_instance_valid(_maintenance_visual):
 		_maintenance_visual.build_issue_sprite(issue)
@@ -738,6 +751,11 @@ func _show_tutorial_overlay() -> void:
 	add_child(_tutorial_overlay)
 	_tutorial_overlay.show_tutorial()
 	_tutorial_overlay.dismissed.connect(_on_tutorial_dismissed)
+
+func _on_tutorial_dismissed() -> void:
+	# Optional: save a flag that tutorial was seen
+	if _player_stats:
+		_player_stats.set_tutorial_completed(true)
 
 func _toggle_shopping_list() -> void:
 	if _shopping_list == null: return
@@ -875,9 +893,9 @@ func _on_player_interact() -> void:
 		return
 
 	# Elevator
-	if _nearby_elevator:
-		_elevator.open_panel()
-		return
+	#if _nearby_elevator:
+		#_elevator.open_panel(_current_floor_idx, _player)
+		#return
 
 	# ATM
 	if _nearby_atm:
@@ -981,7 +999,7 @@ func _on_stall_interact_requested(stall_id: String) -> void:
 func _open_stall_browse(stall) -> void:
 	if _food_stall_browse != null and _food_stall_browse.visible:
 		return
-	_food_stall_browse.open(stall)
+	#_food_stall_browse.open(stall)
 
 func _handle_warehouse_interact() -> void:
 	if _warehouse_mode:

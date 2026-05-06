@@ -1,4 +1,5 @@
 # proximity_system.gd
+class_name ProximitySystem
 # All zone-proximity checks consolidated.
 # Called each frame by main.gd's _process().
 extends Node

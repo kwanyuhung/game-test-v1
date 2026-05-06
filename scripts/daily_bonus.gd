@@ -1,4 +1,5 @@
 # daily_bonus.gd
+class_name DailyBonus
 # Daily login streak — rewards players who return each day.
 # Tracks last login date and streak count in save data.
 extends Node

@@ -1,4 +1,5 @@
 # quest_journal.gd
+class_name QuestJournal
 # Quest journal panel — shows today's quests and progress. Press J to toggle.
 extends CanvasLayer
 

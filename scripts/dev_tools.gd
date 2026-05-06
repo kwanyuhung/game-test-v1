@@ -1,4 +1,5 @@
 # dev_tools.gd
+
 # Developer tools panel — accessible only in DEV_MODE
 # Press F3 to toggle this panel
 extends Control

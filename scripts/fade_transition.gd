@@ -1,4 +1,5 @@
 # fade_transition.gd
+class_name FadeTransition
 # Screen fade overlay for smooth floor transitions.
 extends CanvasLayer
 
