@@ -156,12 +156,12 @@ func generate_response(input_text: String) -> String:
 
 	# Staff have more helpful responses
 	if _actor != null and _actor.role == ActorData.Role.STAFF:
-		var role_responses := RESPONSES.get(topic, {}).get("staff_greeting", [])
+		var role_responses: Array = RESPONSES.get(topic, {}).get("staff_greeting", [])
 		if role_responses.is_empty():
 			role_responses = RESPONSES.get(topic, {}).get(mood_key, RESPONSES["default"][mood_key])
 		return _pick(role_responses)
 
-	var candidates := RESPONSES.get(topic, {}).get(mood_key, [])
+	var candidates :Array= RESPONSES.get(topic, {}).get(mood_key, [])
 	if candidates.is_empty():
 		candidates = RESPONSES.get("default", {}).get(mood_key, ["Sure!"])
 	return _pick(candidates)
@@ -205,7 +205,7 @@ func should_initiate_chat() -> bool:
 
 func trigger_autonomous_chat() -> String:
 	var topics := ["hello", "food", "arcade", "products", "family"]
-	var topic := topics[randi() % topics.size()]
+	var topic: String = topics[randi() % len(topics)]
 	var mood_key := "positive" if _mood > 0.6 else "neutral"
 	var candidates: Array = RESPONSES.get(topic, {}).get(mood_key, [])
 	if candidates.is_empty():

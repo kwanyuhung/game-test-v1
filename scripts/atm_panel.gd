@@ -22,6 +22,9 @@ var _display_lbl: Label
 
 const WITHDRAW_AMOUNTS := [10.0, 20.0, 50.0, 100.0]
 
+# ✅ 修复 1：声明缺失的 _attempts 变量（PIN 错误次数）
+var _attempts: int = 0
+
 func _ready() -> void:
 	visible = false
 
@@ -217,7 +220,9 @@ func _process_pin() -> void:
 		_attempts = 0
 	else:
 		_entered_pin = ""
-		var attempts_left := 3 - (_attempts + 1)
+		_attempts += 1  # ✅ 现在可以正常使用
+		var attempts_left: int = 3 - _attempts  # ✅ 明确类型
+		
 		if attempts_left <= 0:
 			_msg = "Too many attempts. ATM locked."
 			close()
@@ -248,7 +253,11 @@ func _update_display() -> void:
 	if _step == 0:
 		_display_lbl.text = "Welcome!\nYour Balance: $%.2f\nPress a key to begin." % _cash_balance
 	elif _step == 1:
-		var dots := "•" * _entered_pin.length()
+		# ✅ 修复 2：字符串 * 数字 → 正确写法
+		var pin_len: int = _entered_pin.length()
+		var dots: String = ""
+		for _i in range(pin_len):
+			dots += "•"
 		_display_lbl.text = "Enter PIN: %s" % dots
 	elif _step == 2:
 		var amt_str := "$%s" % _entered_amount if not _entered_amount.is_empty() else "$---"

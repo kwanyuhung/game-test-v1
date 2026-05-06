@@ -37,7 +37,7 @@ func _build_layout() -> void:
 
 	# Title bar
 	var title_bar := ColorRect.new()
-	title_bar.set_anchors_preset(Control.PRESET_TOP_LINE_RECT)
+	title_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	title_bar.offset_left = 0; title_bar.offset_top = 0
 	title_bar.offset_right = 900; title_bar.offset_bottom = 40
 	title_bar.color = Color(0.08, 0.10, 0.18, 1.0)
@@ -58,7 +58,7 @@ func _build_layout() -> void:
 	var status_lbl := Label.new()
 	status_lbl.name = "StatusLbl"
 	status_lbl.text = "● LIVE"
-	status_lbl.set_anchors_preset(Control.PRESET_TOP_LINE_RECT)
+	status_lbl.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	status_lbl.offset_left = 10; status_lbl.offset_top = 12
 	status_lbl.offset_right = 100; status_lbl.offset_bottom = 32
 	status_lbl.add_theme_color_override("font_color", Color(0.20, 1.0, 0.40))
@@ -69,7 +69,7 @@ func _build_layout() -> void:
 	var clock_lbl := Label.new()
 	clock_lbl.name = "ClockLbl"
 	clock_lbl.text = ""
-	clock_lbl.set_anchors_preset(Control.PRESET_TOP_LINE_RECT)
+	clock_lbl.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	clock_lbl.offset_left = 800; clock_lbl.offset_top = 12
 	clock_lbl.offset_right = 890; clock_lbl.offset_bottom = 32
 	clock_lbl.add_theme_color_override("font_color", Color(0.70, 0.85, 1.0))
@@ -139,7 +139,7 @@ func _build_layout() -> void:
 
 		# Header strip
 		var hdr := ColorRect.new()
-		hdr.set_anchors_preset(Control.PRESET_TOP_LINE_RECT)
+		hdr.set_anchors_preset(Control.PRESET_TOP_WIDE)
 		hdr.offset_left = 0; hdr.offset_top = 0
 		hdr.offset_right = 0; hdr.offset_bottom = 20
 		hdr.color = floor_colors[i].darkened(0.3)
@@ -169,7 +169,7 @@ func _build_layout() -> void:
 		var theme_lbl := Label.new()
 		theme_lbl.name = "ThemeLbl_%d" % i
 		theme_lbl.text = floor_themes[i]
-		theme_lbl.set_anchors_preset(Control.PRESET_TOP_LINE_RECT)
+		theme_lbl.set_anchors_preset(Control.PRESET_TOP_WIDE)
 		theme_lbl.offset_left = 6; theme_lbl.offset_top = 22
 		theme_lbl.offset_right = 0; theme_lbl.offset_bottom = 40
 		theme_lbl.add_theme_color_override("font_color", Color(0.80, 0.90, 1.0))
@@ -202,7 +202,7 @@ func _build_layout() -> void:
 		# Stats row at bottom of cell
 		var stats_lbl := Label.new()
 		stats_lbl.name = "StatsLbl_%d" % i
-		stats_lbl.set_anchors_preset(Control.PRESET_BOTTOM_LINE_RECT)
+		stats_lbl.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 		stats_lbl.offset_left = 4; stats_lbl.offset_top = -28
 		stats_lbl.offset_right = -4; stats_lbl.offset_bottom = -4
 		stats_lbl.add_theme_color_override("font_color", Color(0.60, 0.80, 0.60))
@@ -211,7 +211,7 @@ func _build_layout() -> void:
 
 		# Stock level bar
 		var stock_bar_bg := ColorRect.new()
-		stock_bar_bg.set_anchors_preset(Control.PRESET_BOTTOM_LINE_RECT)
+		stock_bar_bg.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 		stock_bar_bg.offset_left = 4; stock_bar_bg.offset_top = -12
 		stock_bar_bg.offset_right = -4; stock_bar_bg.offset_bottom = -4
 		stock_bar_bg.color = Color(0.15, 0.15, 0.20)
@@ -219,7 +219,7 @@ func _build_layout() -> void:
 
 		var stock_bar := ColorRect.new()
 		stock_bar.name = "StockBar_%d" % i
-		stock_bar.set_anchors_preset(Control.PRESET_BOTTOM_LINE_RECT)
+		stock_bar.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 		stock_bar.offset_left = 5; stock_bar.offset_top = -11
 		stock_bar.offset_right = -5; stock_bar.offset_bottom = -5
 		stock_bar.color = Color(0.20, 0.80, 0.40)
@@ -227,7 +227,7 @@ func _build_layout() -> void:
 
 	# Bottom bar — hint
 	var bottom_bar := ColorRect.new()
-	bottom_bar.set_anchors_preset(Control.PRESET_BOTTOM_LINE_RECT)
+	bottom_bar.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	bottom_bar.offset_left = 0; bottom_bar.offset_top = -36
 	bottom_bar.offset_right = 0; bottom_bar.offset_bottom = 0
 	bottom_bar.color = Color(0.05, 0.06, 0.10, 1.0)
@@ -235,7 +235,7 @@ func _build_layout() -> void:
 
 	var hint_lbl := Label.new()
 	hint_lbl.text = "[Click a floor to view details]   [ESC or E to close]"
-	hint_lbl.set_anchors_preset(Control.PRESET_BOTTOM_LINE_RECT)
+	hint_lbl.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	hint_lbl.offset_left = 10; hint_lbl.offset_top = -30
 	hint_lbl.offset_right = -10; hint_lbl.offset_bottom = -8
 	hint_lbl.add_theme_color_override("font_color", Color(0.40, 0.60, 0.80))
@@ -274,8 +274,8 @@ func _update_clock() -> void:
 	var clock = _main.get_node_or_null("_game_clock")
 	var lbl = get_node_or_null("ClockLbl")
 	if clock != null and lbl != null:
-		var time_of_day := clock.get("game_hour") if "game_hour" in clock else 12
-		var day := clock.get("current_day") if "current_day" in clock else 1
+		var time_of_day :int= clock.get("game_hour") if "game_hour" in clock else 12
+		var day :int= clock.get("current_day") if "current_day" in clock else 1
 		var ampm := "AM" if time_of_day < 12 else "PM"
 		var hour := time_of_day % 12
 		if hour == 0: hour = 12
@@ -292,8 +292,8 @@ func _update_floor_display() -> void:
 	for i in range(12):
 		var stats_lbl := get_node_or_null("StatsLbl_%d" % i)
 		if stats_lbl != null:
-			var cust := customer_counts[i]
-			var issues := issue_counts[i]
+			var cust :int= customer_counts[i]
+			var issues :int= issue_counts[i]
 			var issue_str := "  ⚠ %d issues" % issues if issues > 0 else ""
 			stats_lbl.text = "👥 %d customers%s" % [cust, issue_str]
 
@@ -312,7 +312,7 @@ func _get_customer_counts() -> Array:
 	for npc in npcs:
 		if npc == null or not is_instance_valid(npc):
 			continue
-		var floor := npc.get("current_floor") if "current_floor" in npc else 0
+		var floor :int= npc.get("current_floor") if "current_floor" in npc else 0
 		if floor >= 0 and floor < 12:
 			counts[floor] += 1
 	return counts

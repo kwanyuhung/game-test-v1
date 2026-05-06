@@ -101,9 +101,41 @@ const ZONE_STORE_NEWS          := "store_news"
 const ZONE_LOST_FOUND           := "lost_found"
 const ZONE_VENDING_MACHINE := "vending_machine"
 
+# ── Zone class ───────────────────────────────────────────────────
+class Zone:
+	var type: String
+	var x: int
+	var y: int
+	var w: int
+	var h: int
+	var meta: Dictionary
+
+	func _init(p_type: String = "", p_x: int = 0, p_y: int = 0, p_w: int = 0, p_h: int = 0, p_meta: Dictionary = {}) -> void:
+		type = p_type
+		x = p_x
+		y = p_y
+		w = p_w
+		h = p_h
+		meta = p_meta
+
+	func _from_dict(d: Dictionary) -> Zone:
+		type = d.get("type", "")
+		x = d.get("x", 0)
+		y = d.get("y", 0)
+		w = d.get("w", 0)
+		h = d.get("h", 0)
+		meta = d.get("meta", {})
+		return self
+
+	func to_dict() -> Dictionary:
+		return {"type": type, "x": x, "y": y, "w": w, "h": h, "meta": meta}
+
+	static func from_dict(d: Dictionary) -> Zone:
+		return Zone.new()._from_dict(d)
+
 # ── Zone helper ─────────────────────────────────────────────────
 static func Z(ztype: String, x: int, y: int, w: int, h: int, meta: Dictionary = {}) -> Dictionary:
-	return {"type": ztype, "x": x, "y": y, "w": w, "h": h, "meta": meta}
+	return Zone.new(ztype, x, y, w, h, meta).to_dict()
 
 static func SZ(section_id: String, x: int, y: int, w: int, h: int) -> Dictionary:
 	return {"type": ZONE_SECTION, "section_id": section_id, "x": x, "y": y, "w": w, "h": h}

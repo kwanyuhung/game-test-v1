@@ -149,7 +149,7 @@ func get_delivery_contents() -> Array:
 
 func _check_low_stock(section_id: String) -> void:
 	var qty := int(_stock[section_id]["qty"])
-	var min_qty := _section_min_stock.get(section_id, 10)
+	var min_qty :int= _section_min_stock.get(section_id, 10)
 	if qty <= min_qty and qty > 0:
 		low_stock_warning.emit(section_id)
 	elif qty == 0:

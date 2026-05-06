@@ -28,7 +28,7 @@ func _custom_init() -> void:
 
 	# Title bar
 	var title_bar := ColorRect.new()
-	title_bar.set_anchors_preset(Control.PRESET_TOP_LINE_RECT)
+	title_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	title_bar.offset_left = 0; title_bar.offset_top = 0
 	title_bar.offset_right = 340; title_bar.offset_bottom = 26
 	title_bar.color = Color(0.20, 0.20, 0.35, 1.0)
@@ -90,7 +90,7 @@ func _custom_init() -> void:
 
 	# Status bar at bottom
 	var status_bar := ColorRect.new()
-	status_bar.set_anchors_preset(Control.PRESET_BOTTOM_LINE_RECT)
+	status_bar.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	status_bar.offset_left = 0; status_bar.offset_top = -24
 	status_bar.offset_right = 340; status_bar.offset_bottom = 0
 	status_bar.color = Color(0.08, 0.08, 0.15, 1.0)
