@@ -18,6 +18,9 @@
 # ─────────────────────────────────────────────────────────────────────────────
 extends Node
 
+static var _static_floors: Array = []
+static var _initialized := false
+
 # ── World geometry ──────────────────────────────────────────────
 const CELL_SIZE := 16
 const WORLD_W   := 128   # tiles
@@ -225,13 +228,22 @@ func _init_floors() -> void:
 			floor_json.get("is_rooftop", false)
 		))
 
-func get_floor(idx: int) -> FloorDef:
-	if idx < 0 or idx >= FLOOR_DEFS.size():
-		return FLOOR_DEFS[0]
-	return FLOOR_DEFS[idx]
+static func _ensure_initialized() -> void:
+	if not _initialized:
+		var temp = FloorConfig.new()
+		temp._init_floors()
+		_static_floors = temp.FLOOR_DEFS
+		_initialized = true
 
-func floor_count() -> int:
-	return FLOOR_DEFS.size()
+static func get_floor(idx: int) -> FloorDef:
+	_ensure_initialized()
+	if idx < 0 or idx >= _static_floors.size():
+		return _static_floors[0]
+	return _static_floors[idx]
+
+static func floor_count() -> int:
+	_ensure_initialized()
+	return _static_floors.size()
 
 static func get_stall_def(stall_id: String) -> Dictionary:
 	return FoodStallDef.get_stall(stall_id)

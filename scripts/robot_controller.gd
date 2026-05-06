@@ -1,10 +1,11 @@
+extends Node2D
+class_name RobotController
+
 # robot_controller.gd
 const ActorData = preload("res://scripts/actor_data.gd")
 # AI robot staff — two types:
 #   HUMANOID: looks like a human, can communicate, use tools, do any job
 #   SINGLE_FUNCTION: specialized machine (cleaning, guiding, delivery, etc.)
-class_name RobotController
-extends Node2D
 
 const CELL_SIZE := 16
 
@@ -141,43 +142,56 @@ func _build_machine_sprite(rrole: ActorData.RobotRole) -> void:
 
 func _make_humanoid_texture() -> ImageTexture:
 	# Robot that looks like a human but with synthetic skin and LED eyes
-	var img := Image.create(16, 28, false, Image.FORMAT_RGBA8)
+	var img: Image = Image.create(16, 28, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
+	
 	# Head (human-like but slightly metallic skin)
 	for x in range(4, 12):
 		for y in range(2, 9):
 			img.set_pixel(x, y, Color(0.82, 0.84, 0.88, 1.0))  # synthetic skin
+	
 	# Hair (short robotic style)
 	for x in range(4, 12):
 		img.set_pixel(x, 1, Color(0.30, 0.30, 0.35, 1.0))
+	
 	# LED eyes (cyan glow)
 	for x in [5, 6]:
 		img.set_pixel(x, 5, Color(0.25, 1.0, 0.80, 1.0))
 	for x in [9, 10]:
 		img.set_pixel(x, 5, Color(0.25, 1.0, 0.80, 1.0))
+	
 	# Body (robot uniform based on role color)
-	var top_col := _actor.appearance.top_color if _actor.appearance else Color(0.42, 0.42, 0.48)
-	var bot_col := _actor.appearance.bottom_color if _actor.appearance else Color(0.22, 0.22, 0.42)
+	var top_col: Color = _actor.appearance.top_color if _actor.appearance else Color(0.42, 0.42, 0.48)
+	var bot_col: Color = _actor.appearance.bottom_color if _actor.appearance else Color(0.22, 0.22, 0.42)
+	
 	for x in range(3, 13):
 		for y in range(9, 20):
 			img.set_pixel(x, y, top_col)
+	
 	for x in range(4, 12):
 		for y in range(20, 27):
 			img.set_pixel(x, y, bot_col)
+	
 	# Arms (synthetic skin)
 	for y in range(10, 19):
 		img.set_pixel(2, y, Color(0.80, 0.82, 0.86, 1.0))
 		img.set_pixel(13, y, Color(0.80, 0.82, 0.86, 1.0))
+	
 	# Legs
 	for y in range(20, 27):
 		img.set_pixel(4, y, bot_col)
 		img.set_pixel(11, y, bot_col)
-	# Feet
-	for x in range(3, 7):
+	
+	# Feet - 修复：分别绘制左右脚
+	for x in range(3, 7):  # 左脚
 		img.set_pixel(x, 27, Color(0.20, 0.20, 0.25, 1.0))
-		img.set_pixel(9, y, Color(0.20, 0.20, 0.25, 1.0)) if x < 13 else null
+	
+	for x in range(9, 13):  # 右脚
+		img.set_pixel(x, 27, Color(0.20, 0.20, 0.25, 1.0))
+	
 	# Small antenna on head
 	img.set_pixel(8, 0, Color(0.60, 0.60, 0.65, 1.0))
+	
 	return ImageTexture.create_from_image(img)
 
 func _make_tool_texture(staff_role: ActorData.StaffRole) -> ImageTexture:
@@ -453,7 +467,7 @@ func _do_greeter_humanoid(delta: float) -> void:
 	if _state_timer >= 4.0:
 		_state_timer = 0.0
 		_patrol_index = (_patrol_index + 1) % _patrol_points.size()
-	var target := _patrol_points[_patrol_index]
+	var target :Vector2 = _patrol_points[_patrol_index]
 	_move_towards(target, delta)
 	if _global_pos.distance_to(target) < 10.0:
 		_show_speech_bubble_text("Welcome!")
@@ -462,7 +476,7 @@ func _do_security_humanoid(delta: float) -> void:
 	# Security patrols like NPC security
 	if _patrol_points.is_empty():
 		return
-	var target := _patrol_points[_patrol_index]
+	var target :Vector2 = _patrol_points[_patrol_index]
 	_move_towards(target, delta)
 	if _global_pos.distance_to(target) < 12.0:
 		_state_timer += delta
@@ -477,7 +491,7 @@ func _do_cleaner_humanoid(delta: float) -> void:
 		_tool_sprite.visible = true
 	if _patrol_points.is_empty():
 		return
-	var target := _patrol_points[_patrol_index]
+	var target :Vector2 = _patrol_points[_patrol_index]
 	_move_towards(target, delta)
 	if _global_pos.distance_to(target) < 10.0:
 		_state_timer += delta
@@ -490,7 +504,7 @@ func _do_stocker_humanoid(delta: float) -> void:
 	# Shelf stocker moves between sections
 	if _patrol_points.is_empty():
 		return
-	var target := _patrol_points[_patrol_index]
+	var target :Vector2 = _patrol_points[_patrol_index]
 	_move_towards(target, delta)
 	if _global_pos.distance_to(target) < 10.0:
 		_state_timer += delta
@@ -502,7 +516,7 @@ func _do_stocker_humanoid(delta: float) -> void:
 func _do_patrol_humanoid(delta: float) -> void:
 	if _patrol_points.is_empty():
 		return
-	var target := _patrol_points[_patrol_index]
+	var target :Vector2 = _patrol_points[_patrol_index]
 	_move_towards(target, delta)
 	if _global_pos.distance_to(target) < 10.0:
 		_patrol_index = (_patrol_index + 1) % _patrol_points.size()
@@ -560,7 +574,7 @@ func _do_guidance_machine(delta: float) -> void:
 	# Move between guidance points, show info
 	if _patrol_points.is_empty():
 		return
-	var target := _patrol_points[_patrol_index]
+	var target :Vector2 = _patrol_points[_patrol_index]
 	_move_towards(target, delta)
 	if _global_pos.distance_to(target) < 15.0:
 		_state_timer += delta
@@ -572,7 +586,7 @@ func _do_guidance_machine(delta: float) -> void:
 func _do_security_machine(delta: float) -> void:
 	if _patrol_points.is_empty():
 		return
-	var target := _patrol_points[_patrol_index]
+	var target :Vector2 = _patrol_points[_patrol_index]
 	_move_towards(target, delta)
 	if _global_pos.distance_to(target) < 12.0:
 		_state_timer += delta
@@ -635,7 +649,7 @@ func _move_towards_vec(target: Vector2, delta: float) -> float:
 func _do_shelf_machine(delta: float) -> void:
 	if _patrol_points.is_empty():
 		return
-	var target := _patrol_points[_patrol_index]
+	var target :Vector2 = _patrol_points[_patrol_index]
 	_move_towards(target, delta)
 	if _global_pos.distance_to(target) < 10.0:
 		_state_timer += delta

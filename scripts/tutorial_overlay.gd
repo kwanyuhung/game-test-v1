@@ -1,4 +1,5 @@
-﻿# tutorial_overlay.gd
+class_name TutorialOverlay
+# tutorial_overlay.gd
 # First-time player controls tutorial — shown on new game only.
 extends CanvasLayer
 
@@ -21,6 +22,8 @@ const CONTROLS := [
 	["P / Space", "Pause / Resume"],
 	["K", "Stats dashboard"],
 	["ESC", "Close any open panel"],
+	]
+	
 func _ready() -> void:
 	visible = false
 

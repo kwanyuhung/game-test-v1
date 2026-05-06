@@ -2,6 +2,7 @@
 # Procedural audio — no external files needed.
 # Uses Godot 4's AudioStreamGenerator to synthesize tones and noise.
 extends Node
+class_name AudioManager
 
 const SAMPLE_RATE := 44100.0
 const PI := 3.14159265

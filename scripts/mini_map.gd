@@ -1,3 +1,4 @@
+class_name MiniMap
 # mini_map.gd
 # Simple mini-map overlay — shows floor outline and player dot.
 # Renders to a small canvas in the corner of the screen.
@@ -95,6 +96,6 @@ func _process(_delta: float) -> void:
 		return
 	# Scale player position to mini-map coordinates
 	# Map area: 80×44 px representing 96×52 tiles
-	var px := (_player_ref.position.x / (WORLD_W * CELL_SIZE)) * 80.0
-	var py := (_player_ref.position.y / (WORLD_H * CELL_SIZE)) * 44.0
+	var px :float= (_player_ref.position.x / (WORLD_W * CELL_SIZE)) * 80.0
+	var py :float= (_player_ref.position.y / (WORLD_H * CELL_SIZE)) * 44.0
 	pdot.position = Vector2(2.0 + px, 2.0 + py)

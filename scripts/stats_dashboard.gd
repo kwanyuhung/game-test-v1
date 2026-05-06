@@ -73,7 +73,7 @@ func refresh_from_stats(stats) -> void:
 	if pan == null:
 		return
 
-	var y := pan.position.y + 20.0
+	var y :float= pan.position.y + 20.0
 
 	var rows := [
 		{"label": "Level", "value": "%d" % stats.level},

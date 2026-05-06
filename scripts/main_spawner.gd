@@ -3,6 +3,8 @@
 # Use setup(main, config) before calling any spawn methods.
 extends Node
 
+const ActorData = preload("res://scripts/actor_data.gd") 
+
 var _main: Node2D = null
 var _config: Node = null
 var _cell_size: int = 16
@@ -125,7 +127,7 @@ func spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void
 
 		if i == 0:
 			leader = npc
-		else if leader != null:
+		elif leader != null: 
 			npc.set_group_leader(leader)
 			var leader_actor: ActorData.Actor = leader.get_actor()
 			leader_actor.group_members.append(npc)
@@ -134,8 +136,8 @@ func spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void
 # ── Full NPC build (staff + customers) ───────────────────────────────────────
 
 func build_npcs() -> void:
-	var staff_spawns := _config.get_staff_spawns()
-	var staff_roles_arr := _config.get_staff_roles()
+	var staff_spawns: Dictionary = _config.get_staff_spawns()
+	var staff_roles_arr: Array = _config.get_staff_roles()
 
 	# Map string role names to ActorData.StaffRole enum values
 	var role_map := {
@@ -159,7 +161,7 @@ func build_npcs() -> void:
 			spawn_npc_staff(role, floor_idx, Vector2(sx, sy))
 
 	# Customers from config
-	var customer_spawns := _config.get_customer_spawns()
+	var customer_spawns: Array = _config.get_customer_spawns()
 	var group_type_map := {
 		"FAMILY_BABY": ActorData.CustomerGroupType.FAMILY_BABY,
 		"FAMILY_TODDLER": ActorData.CustomerGroupType.FAMILY_TODDLER,
@@ -240,8 +242,8 @@ func spawn_robot_single(rrole: ActorData.RobotRole) -> void:
 # ── Default robot batch ───────────────────────────────────────────────────────
 
 func spawn_robots() -> void:
-	var humanoid_roles := _config.get_robot_humanoid_roles()
-	var single_roles := _config.get_robot_single_roles()
+	var humanoid_roles: Array = _config.get_robot_humanoid_roles()
+	var single_roles: Array = _config.get_robot_single_roles()
 	var humanoid_map := {
 		"GREETER": ActorData.StaffRole.GREETER,
 		"CLEANER": ActorData.StaffRole.CLEANER,
@@ -285,7 +287,7 @@ func spawn_scan_go_companion() -> void:
 	npc.name = "ScanGoCompanion"
 	_main.add_child(npc)
 	var npcs: Array = _main.get("_npcs")
-	if npcs != null:
+	if npcs != null and npcs is Array:
 		npcs.append(npc)
 
 func remove_scan_go_companion() -> void:

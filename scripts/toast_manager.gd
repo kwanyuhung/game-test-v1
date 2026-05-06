@@ -1,6 +1,8 @@
-﻿# toast_manager.gd
+class_name ToastManager
+# toast_manager.gd
 # Sliding toast notifications — events slide in from the right, auto-dismiss.
 extends CanvasLayer
+
 
 const MAX_TOASTS := 4
 const TOAST_H := 20.0
@@ -111,8 +113,8 @@ func _cleanup_toast(entry) -> void:
 	_reposition_toasts()
 
 func _reposition_toasts() -> void:
-func _reposition_toasts() -> void:
 	for idx in range(_toasts.size()):
+		var entry: Dictionary = _toasts[idx]  # 添加这一行
 		var new_y := 4.0 + idx * (TOAST_H + TOAST_SPACING)
 		entry["bar"].position.y = new_y
 		entry["lbl"].position.y = new_y + 3

@@ -69,6 +69,21 @@ enum LifeStage {
 
 # ─── Appearance ────────────────────────────────────────────────
 class Appearance:
+	static var SKINS: Array[Color] = [
+		Color(0.96, 0.80, 0.65),
+		Color(0.88, 0.68, 0.48),
+		Color(0.72, 0.52, 0.38),
+		Color(0.55, 0.38, 0.28),
+		Color(0.42, 0.30, 0.22),
+	]
+	static var HAIR_COLORS: Array[Color] = [
+		Color(0.18, 0.12, 0.08),
+		Color(0.62, 0.42, 0.22),
+		Color(0.92, 0.72, 0.35),
+		Color(0.78, 0.32, 0.18),
+		Color(0.28, 0.22, 0.18),
+		Color(0.10, 0.10, 0.10),
+	]
 	var skin_tone: Color
 	var hair_color: Color
 	var hair_style: int       # 0=bob, 1=long, 2=short+neat, 3=bald/buzz
@@ -223,6 +238,11 @@ class StaffTask:
 
 # ─── Full Actor Definition ─────────────────────────────────────
 class Actor:
+	 # 添加速度常量
+	const SPEED_ADULT: float = 60.0
+	const SPEED_SENIOR: float = 40.0
+	const SPEED_TEEN: float = 55.0
+	const SPEED_CHILD: float = 45.0
 	var id: String
 	var role: Role
 	var staff_role: StaffRole
@@ -261,6 +281,32 @@ class Actor:
 		current_floor = 0
 		target_floor = 0
 		is_active = true
+
+	static func new_test_customer() -> Actor:
+		var a := Actor.new()
+		a.role = Role.CUSTOMER
+		a.group_type = CustomerGroupType.SOLO
+		a.appearance = Appearance.random()
+		a.energy = 0.8
+		a.hunger = 0.3
+		a.happiness = 0.7
+		a.cart_item_count = 3
+		a.life_stage = LifeStage.ADULT
+		a.display_name = "Test Customer"
+		a._generate_shopping_list()
+		return a
+		
+	static func new_test_staff() -> Actor:
+		var a := Actor.new()
+		a.role = Role.STAFF
+		a.staff_role = StaffRole.FLOOR_STAFF
+		a.appearance = Appearance.random()
+		a.energy = 0.9
+		a.hunger = 0.2
+		a.happiness = 0.8
+		a.current_floor = 0
+		a.display_name = "Test Staff"
+		return a
 
 	static func random_customer(p_group: CustomerGroupType = CustomerGroupType.SOLO) -> Actor:
 		var a := Actor.new()

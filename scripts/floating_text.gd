@@ -7,18 +7,19 @@ const MAX_POPUPS := 6
 var _popups: Array = []
 
 func _process(delta: float) -> void:
-	for p in _popups:
+	for i in range(_popups.size() - 1, -1, -1):
+		var p: Dictionary = _popups[i]
 		p["age"] += delta
-		var t := p["age"] / p["lifetime"]
+		var t: float = p["age"] / p["lifetime"]
 		if t >= 1.0:
 			p["label"].queue_free()
-			_popups.erase(p)
+			_popups.remove_at(i)
 			continue
 		# Rise upward
-		var y_offset := -30.0 * t
+		var y_offset: float = -30.0 * t
 		p["label"].position.y = p["base_y"] + y_offset
 		# Fade out in last 40% of life
-		var alpha := 1.0 if t < 0.6 else (1.0 - (t - 0.6) / 0.4)
+		var alpha: float = 1.0 if t < 0.6 else (1.0 - (t - 0.6) / 0.4)
 		p["label"].modulate = Color(1, 1, 1, alpha)
 
 func show_pickup(item_name: String, world_pos: Vector2) -> void:
