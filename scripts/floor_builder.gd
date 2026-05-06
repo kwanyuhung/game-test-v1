@@ -1,4 +1,5 @@
-extends FloorBuilder
+extends Node2D
+class_name FloorBuilder
 
 # floor_builder.gd
 # Data-driven floor renderer. Reads FloorDef + zones from floor_config.gd
@@ -118,11 +119,9 @@ func _build_zone(zone: FloorConfig.Zone) -> void:
 		FloorConfig.ZONE_REPAIR_COUNTER:   _build_zone_repair_counter(zone)
 		FloorConfig.ZONE_CAFE_COUNTER:     _build_zone_cafe_counter(zone)
 		FloorConfig.ZONE_VENDING_MACHINE:  _build_zone_vending_machine(zone)
-				FloorConfig.ZONE_CANTEEN:  _build_zone_canteen(zone)
+		FloorConfig.ZONE_CANTEEN:  _build_zone_canteen(zone)
 		FloorConfig.ZONE_KARAOKE:  _build_zone_karaoke(zone)
 		FloorConfig.ZONE_POOL_TABLE:  _build_zone_pool_table(zone)
 		FloorConfig.ZONE_DARTS_BOARD:  _build_zone_darts_board(zone)
 		FloorConfig.ZONE_ENTERTAINMENT:  _build_zone_entertainment(zone)
-# Unknown types are silently skipped (extensible)
-
-
+		# Unknown types are silently skipped (extensible)

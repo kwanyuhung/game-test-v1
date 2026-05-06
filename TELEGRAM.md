@@ -1,4 +1,4 @@
-﻿# Telegram Bot Integration
+# Telegram Bot Integration
 
 **Bot:** [@kwanyuhungbot](https://t.me/kwanyuhungbot)  
 **Chat ID:** `1718058079`  
@@ -40,8 +40,8 @@ _telegram_bot = get_node_or_null("/root/Main/TelegramBot")
 All game events call through thin wrapper methods that guard against null:
 ```gdscript
 func notify_telegram(msg: String) -> void:
-    if _telegram_bot != null:
-        _telegram_bot.queue_report(msg)
+	if _telegram_bot != null:
+		_telegram_bot.queue_report(msg)
 ```
 
 ---
@@ -51,15 +51,15 @@ func notify_telegram(msg: String) -> void:
 ```
 Event in game code
   -> main.gd notify wrapper
-      -> TelegramBot.queue_report(msg)
-          -> _report_queue.append(msg)      (deduped)
-          -> if starts with important emoji -> _flush_reports() immediately
-             else -> waits until timer hits 30s
+	  -> TelegramBot.queue_report(msg)
+		  -> _report_queue.append(msg)      (deduped)
+		  -> if starts with important emoji -> _flush_reports() immediately
+			 else -> waits until timer hits 30s
 
 _flush_reports()
   -> slices first 5 items, joins with \n\n
   -> _send_deferred()  (call_deferred)
-      -> send_message()  -> HTTP POST -> Telegram
+	  -> send_message()  -> HTTP POST -> Telegram
 ```
 
 **Deduplication:** identical messages within the same queue are dropped.

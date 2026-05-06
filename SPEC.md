@@ -223,7 +223,7 @@ game-test/
 │       ├── cart_panel.gd
 │       └── checkout_screen.gd
 └── assets/
-    └── (all procedural — no external files)
+	└── (all procedural — no external files)
 ```
 
 ---

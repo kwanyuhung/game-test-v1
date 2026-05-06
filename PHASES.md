@@ -183,26 +183,26 @@ scripts/
 {
   "brand_id": "ferrero",
   "products": [
-    {
-      "product_id": "ferrero_newbar",
-      "name": "Roccha Dark",
-      "price": 5.50,
-      "section": "snacks",
-      "subcategory": "Chocolate",
-      "shape": 0,
-      "color": "#3d1a00",
-      "description": "Dark chocolate with hazelnot"
-    }
+	{
+	  "product_id": "ferrero_newbar",
+	  "name": "Roccha Dark",
+	  "price": 5.50,
+	  "section": "snacks",
+	  "subcategory": "Chocolate",
+	  "shape": 0,
+	  "color": "#3d1a00",
+	  "description": "Dark chocolate with hazelnot"
+	}
   ],
   "active_events": [
-    {
-      "event_id": "ferrero_summer",
-      "name": "Ferrero Summer",
-      "xp_multiplier": 2.0,
-      "start_time": "2026-06-01T00:00",
-      "end_time": "2026-06-30T23:59",
-      "ad_text": "FERRERO SUMMER 2X XP!"
-    }
+	{
+	  "event_id": "ferrero_summer",
+	  "name": "Ferrero Summer",
+	  "xp_multiplier": 2.0,
+	  "start_time": "2026-06-01T00:00",
+	  "end_time": "2026-06-30T23:59",
+	  "ad_text": "FERRERO SUMMER 2X XP!"
+	}
   ]
 }
 ```

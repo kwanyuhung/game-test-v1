@@ -1,4 +1,4 @@
-﻿# floor_config.gd
+# floor_config.gd
 # ─────────────────────────────────────────────────────────────────────────────
 # CENTRAL FLOOR DATA — all floor layouts, zones, and world geometry.
 #
@@ -62,44 +62,39 @@ const ZONE_TRAINING      := "training"
 const ZONE_OFFICE_DESK   := "office_desk"
 const ZONE_EXEC_OFFICE   := "exec_office"
 const ZONE_MONITOR_ROOM  := "monitor_room"
-const ZONE_HOME_DECOR       := "home_decor"      # home decor (rugs, candles, vases)
-const ZONE_FURNITURE        := "furniture"        # furniture display
-const ZONE_OUTDOOR_LIVING   := "outdoor_living"  # outdoor / patio furniture
-const ZONE_ORGANIZATION     := "organization"     # home organization / storage
-const ZONE_LIGHTING        := "lighting"        # lamps and lighting fixtures
-const ZONE_CUSTOMER_SERVICE := "customer_service" # customer service desk
-const ZONE_LOYALTY_KIOSK    := "loyalty_kiosk"   # loyalty / membership kiosk
-const ZONE_GIFT_WRAP        := "gift_wrap"       # gift wrapping station
-const ZONE_DIGITAL_KIOSK    := "digital_kiosk"   # digital info kiosk / store map
-			# Phase H ??Home Electronics (Ground Floor extension)
-			Z(ZONE_PHONE_GADGETS,    8, 11, 18, 6, {"name": "PHONES & GADGETS", "color": Color(0.35, 0.55, 0.80)}),
-			Z(ZONE_SMART_HOME,      28, 11, 18, 6, {"name": "SMART HOME", "color": Color(0.40, 0.60, 0.70)}),
-			Z(ZONE_ELECTRONICS,     48, 11, 18, 6, {"name": "ELECTRONICS", "color": Color(0.45, 0.50, 0.65)}),
-			Z(ZONE_REPAIR_COUNTER,   8, 18, 18, 6, {"name": "REPAIR COUNTER", "color": Color(0.60, 0.45, 0.40)}),
-const ZONE_JUICE_BAR       := "juice_bar"       # fresh juice counter
-const ZONE_HEALTH_FOOD      := "health_food"     # health food shelf
-const ZONE_SMOOTHIE         := "smoothie"        # smoothie station
-const ZONE_SALAD_BAR        := "salad_bar"       # salad / grain bowl bar
-const ZONE_KIDS_PLAY        := "kids_play"       # supervised kids play zone
-const ZONE_KIDS_CLOTHING    := "kids_clothing"   # kids clothing section
-const ZONE_NURSING_ROOM     := "nursing_room"    # nursing / baby room
-const ZONE_FAMILY_WC        := "family_wc"      # family restroom / changing
-const ZONE_KIDS_CLUB        := "kids_club"       # kids club reception
+const ZONE_HOME_DECOR       := "home_decor"
+const ZONE_FURNITURE        := "furniture"
+const ZONE_OUTDOOR_LIVING   := "outdoor_living"
+const ZONE_ORGANIZATION     := "organization"
+const ZONE_LIGHTING        := "lighting"
+const ZONE_CUSTOMER_SERVICE := "customer_service"
+const ZONE_LOYALTY_KIOSK    := "loyalty_kiosk"
+const ZONE_GIFT_WRAP        := "gift_wrap"
+const ZONE_DIGITAL_KIOSK    := "digital_kiosk"
+const ZONE_JUICE_BAR       := "juice_bar"
+const ZONE_HEALTH_FOOD      := "health_food"
+const ZONE_SMOOTHIE         := "smoothie"
+const ZONE_SALAD_BAR        := "salad_bar"
+const ZONE_KIDS_PLAY        := "kids_play"
+const ZONE_KIDS_CLOTHING    := "kids_clothing"
+const ZONE_NURSING_ROOM     := "nursing_room"
+const ZONE_FAMILY_WC        := "family_wc"
+const ZONE_KIDS_CLUB        := "kids_club"
 const ZONE_ENTERTAINMENT   := "entertainment"
 const ZONE_DARTS_BOARD     := "darts_board"
 const ZONE_POOL_TABLE      := "pool_table"
 const ZONE_KARAOKE         := "karaoke"
 const ZONE_CANTEEN         := "canteen"
-const ZONE_PHONE_GADGETS   := "phone_gadgets"   # phone / gadget accessories
-const ZONE_SMART_HOME     := "smart_home"     # smart home devices
-const ZONE_ELECTRONICS    := "electronics"     # general electronics shelf
-const ZONE_REPAIR_COUNTER := "repair_counter"  # tech repair / service counter
-const ZONE_CAFE_COUNTER    := "cafe_counter"     # rooftop café counter
-const ZONE_PROMO_BOOTH        := "promo_booth"        # promotional daily deals booth
-const ZONE_WAREHOUSE_STOCK_VIEW := "wh_stock_view"    # warehouse stock level display
+const ZONE_PHONE_GADGETS   := "phone_gadgets"
+const ZONE_SMART_HOME     := "smart_home"
+const ZONE_ELECTRONICS    := "electronics"
+const ZONE_REPAIR_COUNTER := "repair_counter"
+const ZONE_CAFE_COUNTER    := "cafe_counter"
+const ZONE_PROMO_BOOTH        := "promo_booth"
+const ZONE_WAREHOUSE_STOCK_VIEW := "wh_stock_view"
 const ZONE_STORE_NEWS          := "store_news"
-const ZONE_LOST_FOUND           := "lost_found"        # lost and found / customer service
-const ZONE_VENDING_MACHINE := "vending_machine"  # vending machine
+const ZONE_LOST_FOUND           := "lost_found"
+const ZONE_VENDING_MACHINE := "vending_machine"
 
 # ── Zone helper ─────────────────────────────────────────────────
 static func Z(ztype: String, x: int, y: int, w: int, h: int, meta: Dictionary = {}) -> Dictionary:
@@ -173,10 +168,10 @@ class FoodStallDef:
 		_stalls["hot_dog_style"]       = {"name": "Hot Dog Stand", "cuisine": "American", "color": Color(0.85, 0.60, 0.50), "glow": Color(1.0, 0.75, 0.55)}
 		_stalls["ice_cream_style"]    = {"name": "Ice Cream Parlor", "cuisine": "Dessert", "color": Color(0.80, 0.70, 0.85), "glow": Color(0.95, 0.85, 1.0)}
 
-	static func get(sid: String) -> Dictionary:
+	static func get_stall(sid: String) -> Dictionary:
 		return _stalls.get(sid, {"name": sid, "cuisine": "Other", "color": Color(0.7, 0.7, 0.7), "glow": Color(0.8, 0.8, 0.8)})
 
-	static func get_all() -> Array:
+	static func get_all_stalls() -> Array:
 		return _stalls.values()
 
 # ── Floor Definitions ──────────────────────────────────────────
@@ -185,7 +180,6 @@ var FLOOR_DEFS := []
 func _init() -> void:
 	_init_floors()
 
-func _init_floors() -> void:
 func _init_floors() -> void:
 	FLOOR_DEFS = []
 	var f = FileAccess.open("res://scripts/floor_config_data.json", FileAccess.READ)
@@ -231,22 +225,13 @@ func _init_floors() -> void:
 			floor_json.get("is_rooftop", false)
 		))
 
-static func get_floor(idx: int) -> FloorDef:
+func get_floor(idx: int) -> FloorDef:
 	if idx < 0 or idx >= FLOOR_DEFS.size():
 		return FLOOR_DEFS[0]
 	return FLOOR_DEFS[idx]
 
-static func floor_count() -> int:
+func floor_count() -> int:
 	return FLOOR_DEFS.size()
 
-static func get_stall_def(stall_id: String) -> Dictionary:
-	return FoodStallDef.get(stall_id)
-
-static func get_all_stalls() -> Array:
-	return FoodStallDef.get_all()
-
-
-
-
-
-
+func get_stall_def(stall_id: String) -> Dictionary:
+	return FoodStallDef.get_stall(stall_id)  # 从 get() 改为 get_stall()

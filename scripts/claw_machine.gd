@@ -54,7 +54,7 @@ const PRIZE_NAMES := [
 enum State { IDLE, MOVING, DROPPING, GRABBING, RISING, COLLECTING, DISPENSING }
 
 var _state: State = State.IDLE
-var _zone: FloorConfig.Zone
+var _zone: Dictionary
 var _machine_id: String
 var _prizes: Array = []         # [{pos: Vector2, color: Color, name: String}, ...]
 var _claw_x: float = 0.0       # current claw pixel X within machine
@@ -82,7 +82,8 @@ signal interact_requested(machine_id: String)
 func _init() -> void:
 	pass
 
-func configure(zone: FloorConfig.Zone, machine_id: String) -> void:
+func configure(zone: Dictionary, machine_id: String) -> void:
+
 	_zone = zone
 	_machine_id = machine_id
 
@@ -91,15 +92,15 @@ func build(prize_pool: Array) -> void:
 	_prizes.clear()
 	_prize_sprites.clear()
 
-	var machine_w := _zone.w * CELL_SIZE
-	var machine_h := _zone.h * CELL_SIZE
-	var base_x := _zone.x * CELL_SIZE
-	var base_y := _zone.y * CELL_SIZE
+	var machine_w: float = _zone.w * CELL_SIZE
+	var machine_h: float = _zone.h * CELL_SIZE
+	var base_x: float = _zone.x * CELL_SIZE
+	var base_y: float = _zone.y * CELL_SIZE
 
 	# Machine cabinet background
 	var cab := ColorRect.new()
 	cab.position = Vector2(base_x, base_y)
-	cab.size = Vector2(millage_w := machine_w, machine_h)
+	cab.size = Vector2(machine_w, machine_h)
 	cab.color = Color(0.10, 0.10, 0.14)
 	add_child(cab)
 
@@ -116,14 +117,29 @@ func build(prize_pool: Array) -> void:
 	border.size = Vector2(machine_w, machine_h)
 	border.color = Color(0, 0, 0, 0)
 	# Draw border manually
-	for bx in range(machine_w):
-		for by in range(machine_h):
-			if bx < 3 or bx >= machine_w - 3 or by < 3 or by >= machine_h - 3:
-				var dot := ColorRect.new()
-				dot.position = Vector2(base_x + bx, base_y + by)
-				dot.size = Vector2(1, 1)
-				dot.color = Color(0.25, 0.25, 0.32)
-				add_child(dot)
+	var border_top := ColorRect.new()
+	border_top.position = Vector2(base_x, base_y)
+	border_top.size = Vector2(machine_w, 3)
+	border_top.color = Color(0.25, 0.25, 0.32)
+	add_child(border_top)
+
+	var border_bottom := ColorRect.new()
+	border_bottom.position = Vector2(base_x, base_y + machine_h - 3)
+	border_bottom.size = Vector2(machine_w, 3)
+	border_bottom.color = Color(0.25, 0.25, 0.32)
+	add_child(border_bottom)
+
+	var border_left := ColorRect.new()
+	border_left.position = Vector2(base_x, base_y)
+	border_left.size = Vector2(3, machine_h)
+	border_left.color = Color(0.25, 0.25, 0.32)
+	add_child(border_left)
+
+	var border_right := ColorRect.new()
+	border_right.position = Vector2(base_x + machine_w - 3, base_y)
+	border_right.size = Vector2(3, machine_h)
+	border_right.color = Color(0.25, 0.25, 0.32)
+	add_child(border_right)
 
 	# Prize rail (top bar)
 	var rail := ColorRect.new()
@@ -177,14 +193,14 @@ func build(prize_pool: Array) -> void:
 	_update_claw_sprite()
 
 	# Spawn prizes in the bed area
-	var bed_left := base_x + 10
-	var bed_right := base_x + machine_w - 26
-	var bed_top := base_y + machine_h - 18
-	var bed_bot := base_y + machine_h - 6
+	var bed_left: float = base_x + 10
+	var bed_right: float = base_x + machine_w - 26
+	var bed_top: float = base_y + machine_h - 18
+	var bed_bot: float = base_y + machine_h - 6
 
 	for i in range(prize_pool.size()):
-		var px := bed_left + randf() * (bed_right - bed_left - 12)
-		var py := bed_top + randf() * (bed_bot - bed_top - 12)
+		var px: float = bed_left + randf() * (bed_right - bed_left - 12)
+		var py: float = bed_top + randf() * (bed_bot - bed_top - 12)
 		var col: Color = prize_pool[i]
 		var pname: String = PRIZE_NAMES[i % PRIZE_NAMES.size()]
 
@@ -239,7 +255,7 @@ func _on_body_exited(body) -> void:
 func get_machine_id() -> String:
 	return _machine_id
 
-func get_zone() -> FloorConfig.Zone:
+func get_zone() -> Dictionary:
 	return _zone
 
 func is_player_near() -> bool:
@@ -264,9 +280,9 @@ func _process(delta: float) -> void:
 			_process_collecting(delta)
 
 func _process_moving(delta: float) -> void:
-	var machine_w := _zone.w * CELL_SIZE
-	var target := machine_w - 20.0  # drop at chute side
-	var dir := sign(target - _claw_x)
+	var machine_w: float = _zone.w * CELL_SIZE
+	var target: float = machine_w - 20.0
+	var dir: int = sign(target - _claw_x)
 	_claw_x += CLAW_SPEED * delta * dir
 	if (dir > 0 and _claw_x >= target) or (dir < 0 and _claw_x <= target):
 		_claw_x = target
@@ -275,8 +291,8 @@ func _process_moving(delta: float) -> void:
 	_update_claw_position()
 
 func _process_dropping(delta: float) -> void:
-	var machine_h := _zone.h * CELL_SIZE
-	var max_drop := machine_h - 32.0
+	var machine_h: float = _zone.h * CELL_SIZE
+	var max_drop: float = machine_h - 32.0
 	_claw_y += DROP_SPEED * delta
 	if _claw_y >= max_drop:
 		_claw_y = max_drop
@@ -313,7 +329,8 @@ func _dispense_prize() -> void:
 		var prize_name: String = _prizes[_grabbed_prize]["name"]
 		_prizes[_grabbed_prize]["taken"] = true
 		if _grabbed_prize < _prize_sprites.size():
-			var spr := _prize_sprites[_grabbed_prize]
+			var spr: Sprite2D = _prize_sprites[_grabbed_prize]
+
 			if is_instance_valid(spr):
 				# Animate prize falling to slot
 				var drop_tween := create_tween()
@@ -328,7 +345,8 @@ func _dispense_prize() -> void:
 func _on_prize_dispensed(prize_idx: int, prize_name: String) -> void:
 	# Remove the sprite
 	if prize_idx >= 0 and prize_idx < _prize_sprites.size():
-		var spr := _prize_sprites[prize_idx]
+		var spr: Sprite2D = _prize_sprites[prize_idx]
+
 		if is_instance_valid(spr):
 			spr.queue_free()
 		_prize_sprites[prize_idx] = null
@@ -352,7 +370,7 @@ func _try_grab() -> int:
 	for i in range(_prizes.size()):
 		if _prizes[i]["taken"]:
 			continue
-		var prize_screen := _prize_sprites[i].global_position if (i < _prize_sprites.size() and is_instance_valid(_prize_sprites[i])) else Vector2.ZERO
+		var prize_screen: Vector2 = _prize_sprites[i].global_position if (i < _prize_sprites.size() and is_instance_valid(_prize_sprites[i])) else Vector2.ZERO
 		var d := absf(claw_screen.x - prize_screen.x)
 		if d < best_dist:
 			best_dist = d
@@ -362,8 +380,8 @@ func _try_grab() -> int:
 func _update_claw_position() -> void:
 	if _claw_sprite == null:
 		return
-	var base_x := _zone.x * CELL_SIZE
-	var base_y := _zone.y * CELL_SIZE
+	var base_x: float = _zone.x * CELL_SIZE
+	var base_y: float = _zone.y * CELL_SIZE
 	_claw_sprite.position = Vector2(base_x + 8 + _claw_x, base_y + 12 + _claw_y)
 
 func _update_claw_sprite() -> void:
@@ -434,11 +452,10 @@ func start_round() -> bool:
 	var main_node = get_tree().get_first_node_in_group("main")
 	if main_node != null:
 		var ps = main_node.get("_player_stats")
-		if ps != null and ps.has_method("spend_coins"):
+		if ps != null and ps is Object and ps.has_method("spend_coins"):
 			if not ps.spend_coins(1):
-				# No coins — try to show message via main toast
 				var toasts = main_node.get("_toasts")
-				if toasts != null:
+				if toasts != null and toasts is Object and toasts.has_method("toast_warning"):
 					toasts.toast_warning("No coins! Visit the kiosk for more.")
 				return false
 	_coin_count += 1
@@ -452,7 +469,7 @@ func start_round() -> bool:
 func move_claw(dir: int) -> void:
 	"""dir: -1 = left, +1 = right. Only works during MOVING state."""
 	if _state == State.MOVING:
-		var machine_w := _zone.w * CELL_SIZE
+		var machine_w: float = _zone.w * CELL_SIZE
 		_claw_x = clampf(_claw_x + dir * CLAW_SPEED * 0.1, 4.0, machine_w - 20.0)
 		_update_claw_position()
 

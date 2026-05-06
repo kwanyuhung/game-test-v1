@@ -10,6 +10,14 @@ const CELL_SIZE = 16
 const WORLD_W  = 96
 const WORLD_H  = 50
 
+var _parent: Node2D
+var _floor_nodes: Array = []
+var _sections: Array = []
+var _food_stalls: Array = []
+var _claw_machines: Array = []
+var _checkout_counters: Array = []
+var _floor_def  # FloorConfig 类型
+
 func _build_zone_vending_machine(zone: FloorConfig.Zone) -> void:
 	var name: String = zone.meta.get("name", "VENDING")
 	var items: Array = zone.meta.get("items", ["Water $1.50", "Cola $2.00"])
@@ -40,7 +48,7 @@ func _build_zone_vending_machine(zone: FloorConfig.Zone) -> void:
 			var iy := cy + 4 + row * (ch * 0.35)
 			var slot := ColorRect.new()
 			slot.position = Vector2(ix, iy); slot.size = Vector2((cw - 8) / 3.5, ch * 0.30)
-		slot.color = item_colors[(row * 3 + col) % item_colors.size()]
+			slot.color = item_colors[(row * 3 + col) % item_colors.size()]
 			_parent.add_child(slot); _floor_nodes.append(slot)
 
 	# Coin slot / control panel at bottom
@@ -112,12 +120,3 @@ func is_near_zone_type(ztype: String, player_pos: Vector2, threshold: float = 12
 	if center.x < 0:
 		return false
 	return player_pos.distance_to(center) < CELL_SIZE * threshold
-
-
-
-
-
-
-
-
-

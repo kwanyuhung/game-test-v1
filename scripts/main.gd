@@ -439,16 +439,16 @@ func _input(event: InputEvent) -> void:
 			# F ── Catch thief (when suspicious activity nearby)
 			KEY_F:
 				_attempt_catch_thief()
-			# B ── Brand Portal
+			# B / Shift+B ── Brand Portal or Business Mode
 			KEY_B:
-				_toggle_brand_portal()
-			# Shift+B ── Business Mode (Manager)
 				if event.shift:
-				_toggle_business_mode()
+					_toggle_business_mode()
+				else:
+					_toggle_brand_portal()
 			# J ── Quest Journal
 			KEY_J:
 				_toggle_quest_journal()
-		# R ── Robot Panel (staff only) OR Restock section
+			# R ── Robot Panel (staff only) OR Restock section
 			KEY_R:
 				# If near a section and in staff mode, restock it
 				if _nearby_section != null and _player != null and _player.is_in_staff_mode():
@@ -603,7 +603,6 @@ func _kill_all_test_npcs() -> void:
 		if npc != null and is_instance_valid(npc):
 			npc.queue_free()
 	_npcs.clear()
-		prompt_lbl.visible = true
 
 func _toggle_maintenance_panel() -> void:
 	if _maintenance_panel != null and _maintenance_panel.visible:
@@ -716,7 +715,8 @@ func _on_day_changed() -> void:
 			var remaining := _player_stats.pay_staff_wages(_player_stats.get_cash())
 			if _toasts:
 				_toasts.toast_info("Daily wages paid: $%.2f" % wages)
-			notify_telegram("Wages paid: $%.2f for %d staff" % (wages, _player_stats.get_staff_count()))
+			# 修改这一行：
+			notify_telegram("Wages paid: $%.2f for %d staff" % [wages, _player_stats.get_staff_count()])
 	else:
 		if _toasts:
 			_toasts.toast_warn("Could not pay staff wages!")
@@ -785,8 +785,10 @@ func _on_setting_changed(key: String, value) -> void:
 			if _audio != null: _audio.set_sfx_volume(value)
 		"notif_toasts":
 			# Toasts are always on, just a flag
+			pass  # 添加这行
 		"notif_telegram":
 			# Telegram handled by flag in telegram_bot
+			pass  # 添加这行
 
 func _toggle_pause() -> void:
 	if _current_section_browse != null and _current_section_browse.visible: return
@@ -1054,7 +1056,7 @@ func _renovate_nearby_section() -> void:
 	_store_expansion.renovate_section(sec_id)
 	if _toasts:
 		_toasts.toast_success("Section renovated! +1 Rep")
-	notify_telegram("Section renovated: %s for $%d" % (_nearby_section.get_def().name, cost))
+	notify_telegram("Section renovated: %s for $%d" % [_nearby_section.get_def().name, cost])
 
 func _restock_nearby_section() -> void:
 	if _nearby_section == null or _warehouse == null:

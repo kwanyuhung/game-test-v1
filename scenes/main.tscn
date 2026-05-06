@@ -1,14 +1,14 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dpw43c3rjm7qu"]
 
 [ext_resource type="Script" uid="uid://khx10eijymwe" path="res://scripts/main.gd" id="1"]
-[ext_resource type="Script" uid="uid://telegram_bot_script" path="res://scripts/telegram_bot.gd" id="2"]
-[ext_resource type="Script" uid="uid://audio_mgr" path="res://scripts/audio_manager.gd" id="3"]
+[ext_resource type="Script" uid="uid://cayco2y0ef5pk" path="res://scripts/telegram_bot.gd" id="2"]
+[ext_resource type="Script" uid="uid://byd0b7s30my55" path="res://scripts/audio_manager.gd" id="3"]
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=1996144451]
 script = ExtResource("1")
 
-[node name="TelegramBot" type="Node" parent="."]
+[node name="TelegramBot" type="Node" parent="." unique_id=889850075]
 script = ExtResource("2")
 
-[node name="AudioManager" type="Node" parent="."]
+[node name="AudioManager" type="Node" parent="." unique_id=181671370]
 script = ExtResource("3")
