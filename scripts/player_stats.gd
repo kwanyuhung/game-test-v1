@@ -431,11 +431,13 @@ func _check_achievements() -> void:
 		"chatty_patty":       func(): return _chats_with_npcs >= 50,
 		"supermarket_master": func(): return _level >= 10,
 	}
-	for ach in checks:
-		var ach_id: String = ach[0]
+	for ach_id in checks:
+		# 如果已解锁，跳过
 		if _achievements_unlocked.has(ach_id):
 			continue
-		var cond: Callable = ach[1]
+		# 获取对应的条件函数
+		var cond: Callable = checks[ach_id]
+		# 调用条件函数
 		if cond.call():
 			_unlock_achievement(ach_id)
 

@@ -29,7 +29,8 @@ func _load_streak() -> void:
 	f.close()
 	if result != OK:
 		return
-	var data: Dictionary = json.result
+	# 🔥 修复：Godot 3 用 .data 而非 .result
+	var data: Dictionary = json.data
 	_streak_days = data.get("streak_days", 0)
 	_last_login_date = data.get("last_login_date", "")
 
@@ -38,9 +39,9 @@ func _save_streak() -> void:
 		"streak_days": _streak_days,
 		"last_login_date": _last_login_date,
 	}
-	# Godot 3 标准 JSON 序列化（修复API错误）
+	# 🔥 100% 兼容 Godot 3 的正确写法
 	var json = JSON.new()
-	var json_str: String = json.to_json(data)
+	var json_str: String = json.stringify(data)
 	
 	var f = FileAccess.open(STREAK_FILE, FileAccess.WRITE)
 	if f == null:

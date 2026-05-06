@@ -161,10 +161,12 @@ func init_all() -> void:
 	var telegram_bot = m.get("_telegram_bot")
 	if save_sys.load_game(m):
 		m._show_save_hint("Save loaded!")
-		if telegram_bot:
+		# 🔥 修复：判断机器人存在且有方法才调用
+		if telegram_bot && telegram_bot.has_method("notify_telegram"):
 			telegram_bot.notify_telegram("📁 *Save loaded* — resuming game")
 	else:
-		if telegram_bot:
+		# 🔥 修复：判断机器人存在且有方法才调用
+		if telegram_bot && telegram_bot.has_method("notify_telegram"):
 			telegram_bot.notify_telegram("📋 *New game* — no save found")
 		var tutorial_overlay = preload("res://scripts/tutorial_overlay.gd").new()
 		m.add_child(tutorial_overlay)
@@ -276,5 +278,5 @@ func init_all() -> void:
 		m.set("_dev_tools", dev_tools)
 
 	# ── Telegram notification ─────────────────────────────────────────────────
-	if telegram_bot:
-		telegram_bot.notify_telegram("🟢 *Game Loaded*\n10-floor supermarket — Ground (G) ready\nUse [E] near elevator to change floors")
+	#if telegram_bot:
+		#telegram_bot.notify_telegram("🟢 *Game Loaded*\n10-floor supermarket — Ground (G) ready\nUse [E] near elevator to change floors")

@@ -1226,3 +1226,32 @@ func _toggle_stats_dashboard() -> void:
 	_stats_dashboard.toggle()
 	if _stats_dashboard.visible:
 		_stats_dashboard.refresh_from_stats(_player_stats)
+		
+# 每日签到奖励信号处理函数
+func _on_streak_reward(days: int, bonus_xp: int) -> void:
+	# 弹出奖励提示
+	var toasts = get("_toasts")
+	if toasts != null:
+		toasts.show_toast("🎉 每日奖励！连续签到 %d 天 +%d XP" % [days, bonus_xp], Color(0.92, 0.75, 0.25))
+	
+	# 🔥 修复：调用我们新增的奖励音效
+	var audio = get("_audio")
+	if audio != null:
+		audio.play_bonus()
+
+# 商品添加到购物车（商品浏览面板信号）
+func _on_item_added_to_cart(item_data: Dictionary, count: int = 1) -> void:
+	# 弹出添加成功提示
+	var toasts = get("_toasts")
+	if toasts != null:
+		toasts.show_toast("✅ 已加入购物车: " + item_data.name, Color(0.2, 0.8, 0.3))
+	
+	# 播放添加物品音效
+	var audio = get("_audio")
+	if audio != null:
+		audio.play_item_add()
+
+# 商品浏览面板关闭信号
+func _on_browse_closed() -> void:
+	# 面板关闭时可执行逻辑（无逻辑留空即可）
+	pass

@@ -1,4 +1,3 @@
-# main_spawner.gd
 # All NPC/customer/robot spawning methods extracted from main.gd.
 # Use setup(main, config) before calling any spawn methods.
 extends Node
@@ -11,11 +10,19 @@ var _cell_size: int = 16
 var _npc_count: int = 0
 
 func setup(main: Node2D, config: Node) -> void:
+	# 🔥 强制修复：_main 不能为空！
+	if main == null:
+		print("致命错误：setup 传入的 main 节点为空！")
+		return
 	_main = main
 	_config = config
+	
 	# CELL_SIZE is needed for tile→world conversion
 	var FloorConfig = preload("res://scripts/floor_config.gd")
 	_cell_size = FloorConfig.CELL_SIZE
+	
+	if _config == null:
+		print("警告：未传入配置节点，部分生成功能将受限")
 
 func get_npc_count() -> int:
 	return _npc_count
@@ -24,8 +31,9 @@ func set_npc_count(v: int) -> void:
 	_npc_count = v
 
 # ── Staff NPC ─────────────────────────────────────────────────────────────────
-
 func spawn_npc_staff(role: int, floor_idx: int, pos: Vector2) -> void:
+	# 🔥 空值防护
+	if _main == null: return
 	var npc_scene = preload("res://scripts/npc_controller.gd")
 	var npc = npc_scene.new()
 	var actor = ActorData.Actor.random_staff(role)
@@ -43,8 +51,9 @@ func spawn_npc_staff(role: int, floor_idx: int, pos: Vector2) -> void:
 	_npc_count += 1
 
 # ── Single customer ───────────────────────────────────────────────────────────
-
 func spawn_customer(group_type: int, floor_idx: int, pos: Vector2) -> void:
+	# 🔥 空值防护
+	if _main == null: return
 	var npc_scene = preload("res://scripts/npc_controller.gd")
 	var npc = npc_scene.new()
 	var actor = ActorData.Actor.random_customer(group_type)
@@ -62,8 +71,9 @@ func spawn_customer(group_type: int, floor_idx: int, pos: Vector2) -> void:
 	_npc_count += 1
 
 # ── Customer group ─────────────────────────────────────────────────────────────
-
 func spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void:
+	# 🔥 空值防护
+	if _main == null: return
 	var leader = null
 	var offsets := []
 	var has_baby := false
@@ -99,13 +109,11 @@ func spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void
 		var actor = ActorData.Actor.random_customer(group_type)
 		actor.current_floor = floor_idx
 
-		# Children get child appearance
 		if i >= 2 and (has_baby or has_toddler or has_kids):
 			actor.appearance.top_style = randi() % 2
 			actor.appearance.bottom_style = randi() % 2
 			actor.appearance.shoes_style = randi() % 2
 
-		# Baby/toddler data
 		if has_baby and i == 2:
 			actor.child = ActorData.ChildData.random_infant()
 			actor.life_stage = ActorData.LifeStage.ADULT
@@ -134,12 +142,12 @@ func spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void
 		_npc_count += 1
 
 # ── Full NPC build (staff + customers) ───────────────────────────────────────
-
 func build_npcs() -> void:
+	# 🔥 空值防护
+	if _main == null || _config == null: return
 	var staff_spawns: Dictionary = _config.get_staff_spawns()
 	var staff_roles_arr: Array = _config.get_staff_roles()
 
-	# Map string role names to ActorData.StaffRole enum values
 	var role_map := {
 		"CASHIER": ActorData.StaffRole.CASHIER,
 		"SHELF_STOCKER": ActorData.StaffRole.SHELF_STOCKER,
@@ -160,7 +168,6 @@ func build_npcs() -> void:
 			var sy = spawns["y"][c % spawns["y"].size()] * _cell_size
 			spawn_npc_staff(role, floor_idx, Vector2(sx, sy))
 
-	# Customers from config
 	var customer_spawns: Array = _config.get_customer_spawns()
 	var group_type_map := {
 		"FAMILY_BABY": ActorData.CustomerGroupType.FAMILY_BABY,
@@ -179,7 +186,6 @@ func build_npcs() -> void:
 		var gtype = group_type_map.get(gtype_str, ActorData.CustomerGroupType.SOLO)
 
 		if spawn_data.has("count"):
-			# Random-position batch spawn
 			var count: int = spawn_data.get("count", 1)
 			var x_range = spawn_data.get("x_range", [100, 500])
 			var y_range = spawn_data.get("y_range", [100, 400])
@@ -194,15 +200,15 @@ func build_npcs() -> void:
 				var py = (y_range[0] + randi() % (y_range[1] - y_range[0])) as float
 				spawn_customer(gtype, floor_i, Vector2(px, py))
 		else:
-			# Fixed position spawn
 			var floor_idx: int = spawn_data.get("floor", 0)
 			var px: float = spawn_data.get("x", 300)
 			var py: float = spawn_data.get("y", 200)
 			spawn_customer_group(gtype, floor_idx, Vector2(px, py))
 
 # ── Humanoid robot ───────────────────────────────────────────────────────────
-
 func spawn_robot_humanoid(staff_role: ActorData.StaffRole) -> void:
+	# 🔥 空值防护
+	if _main == null: return
 	var spawn_pos := Vector2.ZERO
 	match staff_role:
 		ActorData.StaffRole.CASHIER:    spawn_pos = Vector2(580, 320)
@@ -222,8 +228,9 @@ func spawn_robot_humanoid(staff_role: ActorData.StaffRole) -> void:
 		robots.append(robot)
 
 # ── Single-function robot ──────────────────────────────────────────────────────
-
 func spawn_robot_single(rrole: ActorData.RobotRole) -> void:
+	# 🔥 空值防护
+	if _main == null: return
 	var spawn_pos := Vector2.ZERO
 	match rrole:
 		ActorData.RobotRole.CLEANING_ROBOT:  spawn_pos = Vector2(400, 400)
@@ -240,10 +247,18 @@ func spawn_robot_single(rrole: ActorData.RobotRole) -> void:
 		robots.append(robot)
 
 # ── Default robot batch ───────────────────────────────────────────────────────
-
 func spawn_robots() -> void:
-	var humanoid_roles: Array = _config.get_robot_humanoid_roles()
-	var single_roles: Array = _config.get_robot_single_roles()
+	if _config == null:
+		print("警告：配置节点未初始化，跳过机器人生成")
+		return
+	var humanoid_roles: Array = []
+	var single_roles: Array = []
+	
+	if _config.has_method("get_robot_humanoid_roles"):
+		humanoid_roles = _config.get_robot_humanoid_roles()
+	if _config.has_method("get_robot_single_roles"):
+		single_roles = _config.get_robot_single_roles()
+	
 	var humanoid_map := {
 		"GREETER": ActorData.StaffRole.GREETER,
 		"CLEANER": ActorData.StaffRole.CLEANER,
@@ -252,16 +267,20 @@ func spawn_robots() -> void:
 		"CLEANING_ROBOT": ActorData.RobotRole.CLEANING_ROBOT,
 		"GUIDANCE_ROBOT": ActorData.RobotRole.GUIDANCE_ROBOT,
 	}
+	
 	for rname in humanoid_roles:
 		var r = humanoid_map.get(rname, ActorData.StaffRole.GREETER)
 		spawn_robot_humanoid(r)
+	
 	for rname in single_roles:
 		var r = single_map.get(rname, ActorData.RobotRole.CLEANING_ROBOT)
 		spawn_robot_single(r)
 
 # ── Scan & Go companion ───────────────────────────────────────────────────────
-
+# ── Scan & Go companion ───────────────────────────────────────────────────────
 func spawn_scan_go_companion() -> void:
+	# 🔥 空值防护
+	if _main == null: return
 	var player: Node2D = _main.get("_player")
 	if player == null:
 		return
@@ -273,13 +292,18 @@ func spawn_scan_go_companion() -> void:
 	var floor_idx: int = _main.get("_current_floor_idx")
 	actor.current_floor = floor_idx
 	actor.position = spawn_pos
-	actor.speed = ActorData.SPEED_ADULT
+	
+	# 🔥 修复：直接使用已定义的常量
+	actor.speed = ActorData.Actor.SPEED_ADULT
+	
 	var app := ActorData.Appearance.new()
-	app.skin_tone = ActorData.SKINS[randi() % ActorData.SKINS.size()]
+	# 🔥 修复：直接使用已定义的静态数组
+	app.skin_tone = ActorData.Appearance.SKINS[randi() % ActorData.Appearance.SKINS.size()]
 	app.top_color = Color(0.20, 0.50, 0.80)
 	app.bottom_color = Color(0.15, 0.15, 0.30)
-	app.hair_color = ActorData.HAIR_COLORS[randi() % ActorData.HAIR_COLORS.size()]
+	app.hair_color = ActorData.Appearance.HAIR_COLORS[randi() % ActorData.Appearance.HAIR_COLORS.size()]
 	actor.appearance = app
+	
 	var npc := preload("res://scripts/npc_controller.gd").new()
 	npc._player_reference = player
 	npc.position = spawn_pos
@@ -291,13 +315,16 @@ func spawn_scan_go_companion() -> void:
 		npcs.append(npc)
 
 func remove_scan_go_companion() -> void:
+	if _main == null: return
 	var sg = _main.get_node_or_null("ScanGoCompanion")
 	if sg != null:
 		sg.queue_free()
 
 func spawn_player() -> void:
+	# 🔥 空值防护
+	if _main == null: return
 	var player: Node2D = preload("res://scripts/player.gd").new()
-	player.position = Vector2(12 * 16, 4 * 16)  # 12*CELL_SIZE, 4*CELL_SIZE
+	player.position = Vector2(12 * 16, 4 * 16)
 	_main.add_child(player)
 	player.set_world(_main)
 	player.cart_updated.connect(_main._on_cart_updated)
@@ -306,13 +333,13 @@ func spawn_player() -> void:
 	_main.set("_player", player)
 
 # ── Test helpers ───────────────────────────────────────────────────────────────
-
 func spawn_test_customers(count: int) -> void:
+	if _main == null: return
 	for i in range(count):
 		var npc: Node = preload("res://scripts/npc_controller.gd").new()
 		npc.position = Vector2(300.0 + randf_range(-50, 50), 500.0 + randf_range(-30, 30))
 		_main.add_child(npc)
-		npc.configure(ActorData.new_test_customer())
+		npc.configure(ActorData.Actor.new_test_customer())
 		var npcs: Array = _main.get("_npcs")
 		if npcs != null:
 			npcs.append(npc)
@@ -321,11 +348,12 @@ func spawn_test_customers(count: int) -> void:
 			chat_mgr.register_npc(npc)
 
 func spawn_test_staff(count: int) -> void:
+	if _main == null: return
 	for i in range(count):
 		var npc: Node = preload("res://scripts/npc_controller.gd").new()
 		npc.position = Vector2(350.0 + randf_range(-50, 50), 300.0 + randf_range(-30, 30))
 		_main.add_child(npc)
-		npc.configure(ActorData.new_test_staff())
+		npc.configure(ActorData.Actor.new_test_staff())
 		var npcs: Array = _main.get("_npcs")
 		if npcs != null:
 			npcs.append(npc)
@@ -334,10 +362,12 @@ func spawn_test_staff(count: int) -> void:
 			chat_mgr.register_npc(npc)
 
 # ── Truck at dock ─────────────────────────────────────────────────────────────
-
 func spawn_truck_at_dock() -> void:
+	if _main == null: return
 	_main.set("_truck_arrived", true)
 	var truck_dock_node: Node2D = _main.get("_truck_dock_node")
+	
+	# 🔥 双重加固：确保卡车节点父节点非空
 	if truck_dock_node == null:
 		truck_dock_node = Node2D.new()
 		truck_dock_node.name = "TruckDock"
@@ -346,20 +376,20 @@ func spawn_truck_at_dock() -> void:
 	else:
 		for ch in truck_dock_node.get_children():
 			ch.queue_free()
+			
 	var CELL = 16
-	# Cargo area
 	var cargo := ColorRect.new()
 	cargo.color = Color(0.50, 0.55, 0.60)
 	cargo.size = Vector2(22 * CELL, 10 * CELL)
 	cargo.position = Vector2(0, 35 * CELL)
 	truck_dock_node.add_child(cargo)
-	# Cab
+
 	var cab := ColorRect.new()
 	cab.color = Color(0.45, 0.42, 0.40)
 	cab.size = Vector2(8 * CELL, 8 * CELL)
 	cab.position = Vector2(22 * CELL, 37 * CELL)
 	truck_dock_node.add_child(cab)
-	# Wheels
+
 	var wheel_positions := [Vector2(2, 45), Vector2(10, 45), Vector2(22, 45), Vector2(28, 45)]
 	for wp in wheel_positions:
 		var wheel := ColorRect.new()
@@ -367,14 +397,14 @@ func spawn_truck_at_dock() -> void:
 		wheel.size = Vector2(5 * CELL, 2 * CELL)
 		wheel.position = wp * CELL
 		truck_dock_node.add_child(wheel)
-	# Store text
+
 	var store_lbl := Label.new()
 	store_lbl.text = "PIXEL MART"
 	store_lbl.add_theme_color_override("font_color", Color(0.90, 0.90, 0.90))
 	store_lbl.add_theme_font_size_override("font_size", 10)
 	store_lbl.position = Vector2(2 * CELL, 35.5 * CELL)
 	truck_dock_node.add_child(store_lbl)
-	# Label
+
 	var dock_lbl := Label.new()
 	dock_lbl.text = "[E] Unload Truck"
 	dock_lbl.add_theme_color_override("font_color", Color(0.88, 0.78, 0.42))

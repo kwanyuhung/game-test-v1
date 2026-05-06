@@ -477,49 +477,64 @@ static func _draw_shadow(img: Image, sz: int, life_stage: int = -1) -> void:
 # ─── Legacy support (random sprite) ─────────────────────────
 
 static func make_random_texture() -> Texture2D:
-	var skin := [
+	# 1. 修复：使用数组.size() 动态获取长度，彻底避免索引越界
+	var skin_colors: Array[Color] = [
 		Color(0.96, 0.80, 0.65),
 		Color(0.88, 0.68, 0.48),
 		Color(0.72, 0.52, 0.38),
 		Color(0.55, 0.38, 0.28),
-	][randi() % 4]
-	var hair := [
+		Color(0.42, 0.30, 0.22),
+	]
+	var skin: Color = skin_colors[randi() % skin_colors.size()]
+
+	var hair_colors: Array[Color] = [
 		Color(0.18, 0.12, 0.08),
 		Color(0.62, 0.42, 0.22),
 		Color(0.92, 0.72, 0.35),
 		Color(0.78, 0.32, 0.18),
-	][randi() % 4]
-	var top := [
+		Color(0.28, 0.22, 0.18),
+		Color(0.10, 0.10, 0.10),
+	]
+	var hair: Color = hair_colors[randi() % hair_colors.size()]
+
+	var top_colors: Array[Color] = [
 		Color(0.28, 0.42, 0.78),
 		Color(0.78, 0.28, 0.28),
 		Color(0.28, 0.68, 0.42),
 		Color(0.88, 0.68, 0.28),
 		Color(0.68, 0.28, 0.68),
-	][randi() % 5]
-	var bottom := [
+	]
+	var top: Color = top_colors[randi() % top_colors.size()]
+
+	var bottom_colors: Array[Color] = [
 		Color(0.22, 0.22, 0.42),
 		Color(0.42, 0.38, 0.32),
 		Color(0.32, 0.38, 0.52),
 		Color(0.22, 0.32, 0.22),
-	][randi() % 4]
-	var ap := ActorData.Appearance.new()
+	]
+	var bottom: Color = bottom_colors[randi() % bottom_colors.size()]
+
+	# 2. 正确创建 Appearance 对象
+	var ap: ActorData.Appearance = ActorData.Appearance.new()
 	ap.skin_tone = skin
 	ap.hair_color = hair
 	ap.top_color = top
 	ap.bottom_color = bottom
-	ap.hair_style = randi() % 4
-	ap.top_style = randi() % 3
-	ap.bottom_style = randi() % 2
-	ap.has_glasses = (randi() % 4 == 0)
-	ap.makeup_intensity = randi() % 3
-	ap.accessory = randi() % 4
+	
+	# 3. 修复：随机值匹配 actor_data 中的定义范围
+	ap.hair_style = randi() % 4          # 0-3（匹配原定义）
+	ap.top_style = randi() % 5           # 0-4（原定义5种上衣样式）
+	ap.bottom_style = randi() % 4        # 0-3（原定义4种下装样式）
+	ap.has_glasses = (randi() % 4 == 0)  # 25%概率戴眼镜
+	ap.makeup_intensity = randi() % 3    # 0-2
+	ap.accessory = randi() % 4           # 0-3
+	ap.shoes_style = randi() % 4         # 补全缺失的鞋子样式
+	ap.shoes_color = Color(0.18, 0.18, 0.18) # 补全缺失的鞋子颜色
+
+	# 4. 调用纹理生成函数（16为纹理尺寸，保持不变）
 	return make_actor_texture(ap, 16)
 
 # ─── Helpers ────────────────────────────────────────────────
-
-static func _draw_shadow(img: Image, sz: int) -> void:
-	var sc := float(sz) / 16.0
-	_fill_img(img, int(4*sc), int(14*sc), int(8*sc), int(2*sc), Color(0, 0, 0, 0.18), sz)
 
 static func _fill_img(img: Image, x: int, y: int, w: int, h: int, col: Color, sz: int) -> void:
 	x = clampi(x, 0, sz); y = clampi(y, 0, sz)

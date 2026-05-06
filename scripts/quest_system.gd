@@ -42,7 +42,8 @@ func _load_quests() -> void:
 	if result != OK:
 		_start_new_day()
 		return
-	var data: Dictionary = json.result
+	# 🔥 核心修复：Godot 3 使用 .data 获取解析数据
+	var data: Dictionary = json.data
 	# Check if it's a new day
 	var saved_date: String = data.get("date", "")
 	var today: String = Time.get_date_string_from_system()
@@ -52,7 +53,7 @@ func _load_quests() -> void:
 	_daily_quests = data.get("quests", [])
 	_completed_ids = data.get("completed", [])
 	_progress = data.get("progress", {})
-
+	
 func _save_quests() -> void:
 	var data: Dictionary = {
 		"date": Time.get_date_string_from_system(),
@@ -62,7 +63,7 @@ func _save_quests() -> void:
 	}
 	# 🔥 修复：Godot 3 不支持 JSON.stringify，改用标准写法
 	var json = JSON.new()
-	var json_str: String = json.to_json(data)
+	var json_str: String = json.stringify(data)
 	
 	var f = FileAccess.open(QUEST_FILE, FileAccess.WRITE)
 	if f == null:

@@ -202,3 +202,9 @@ func _exit_tree() -> void:
 	stop_bgm()
 	if is_instance_valid(_player):
 		_player.stop()
+		
+# 每日签到奖励音效
+func play_bonus() -> void:
+	_queue_tone(784.0, 0.08, 0.25)
+	await get_tree().create_timer(0.1).timeout
+	_queue_tone(988.0, 0.12, 0.30)		
