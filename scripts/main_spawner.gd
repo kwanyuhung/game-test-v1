@@ -5,24 +5,24 @@ extends Node
 const ActorData = preload("res://scripts/actor_data.gd") 
 
 var _main: Node2D = null
-var _config: Node = null
+var _config: MainConfig = null
 var _cell_size: int = 16
 var _npc_count: int = 0
 
-func setup(main: Node2D, config: Node) -> void:
-	# 🔥 强制修复：_main 不能为空！
+func setup(main: Node2D, config: MainConfig) -> void:
+	# 🔥 空值防护
 	if main == null:
 		print("致命错误：setup 传入的 main 节点为空！")
 		return
 	_main = main
 	_config = config
 	
-	# CELL_SIZE is needed for tile→world conversion
+	# CELL_SIZE 瓦片坐标转换
 	var FloorConfig = preload("res://scripts/floor_config.gd")
 	_cell_size = FloorConfig.CELL_SIZE
 	
 	if _config == null:
-		print("警告：未传入配置节点，部分生成功能将受限")
+		print("警告：未传入 MainConfig 配置节点，NPC生成功能将受限")
 
 func get_npc_count() -> int:
 	return _npc_count
@@ -138,6 +138,7 @@ func spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void
 		elif leader != null: 
 			npc.set_group_leader(leader)
 			var leader_actor: ActorData.Actor = leader.get_actor()
+			# 🔥 直接使用（无需判断，属性已存在）
 			leader_actor.group_members.append(npc)
 		_npc_count += 1
 
@@ -193,14 +194,20 @@ func build_npcs() -> void:
 			for i in range(count):
 				var floor_i: int
 				if floor_range.size() >= 2:
-					floor_i = floor_range[0] + (i % (floor_range[1] - floor_range[0] + 1))
+					# 🔥 核心修复：强制转为整数，楼层不可能是小数
+					var floor_min = int(floor_range[0])
+					var floor_max = int(floor_range[1])
+					floor_i = floor_min + (i % (floor_max - floor_min + 1))
 				else:
-					floor_i = floor_range[0]
-				var px = (x_range[0] + randi() % (x_range[1] - x_range[0])) as float
-				var py = (y_range[0] + randi() % (y_range[1] - y_range[0])) as float
+					floor_i = int(floor_range[0])
+				# 🔥 同步修复坐标的类型问题（完整兼容）
+				var x_diff = int(x_range[1] - x_range[0])
+				var y_diff = int(y_range[1] - y_range[0])
+				var px = float(x_range[0] + randi() % x_diff)
+				var py = float(y_range[0] + randi() % y_diff)
 				spawn_customer(gtype, floor_i, Vector2(px, py))
 		else:
-			var floor_idx: int = spawn_data.get("floor", 0)
+			var floor_idx: int = int(spawn_data.get("floor", 0))
 			var px: float = spawn_data.get("x", 300)
 			var py: float = spawn_data.get("y", 200)
 			spawn_customer_group(gtype, floor_idx, Vector2(px, py))
@@ -329,7 +336,7 @@ func spawn_player() -> void:
 	player.set_world(_main)
 	player.cart_updated.connect(_main._on_cart_updated)
 	player.interact_requested.connect(_main._on_player_interact)
-	player.tab_pressed.connect(_main._on_tab_pressed)
+	#player.tab_pressed.connect(_main._on_tab_pressed)
 	_main.set("_player", player)
 
 # ── Test helpers ───────────────────────────────────────────────────────────────

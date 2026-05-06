@@ -14,12 +14,18 @@ func init_all() -> void:
 	m.add_to_group("main")
 	m.set("_telegram_bot", m.get_node_or_null("/root/Main/TelegramBot"))
 
+	var config = preload("res://scripts/main_config.gd").new()
+	m.add_child(config)
+	
 	# ── Core world builder ──────────────────────────────────────────────────────
 	m.set("_main_panels", preload("res://scripts/main_panels.gd").new())
 	m.get("_main_panels").setup(m)
 
 	m.set("_main_spawner", preload("res://scripts/main_spawner.gd").new())
 	m.add_child(m.get("_main_spawner"))
+	# FIX: Call setup() on main_spawner so _main reference is set
+	m.get("_main_spawner").setup(m, config)
+
 
 	# Build ground floor first
 	m.set("_current_floor_idx", 0)

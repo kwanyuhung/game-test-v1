@@ -41,8 +41,12 @@ func _ready() -> void:
 	_build_sprite()
 
 func configure_humanoid(staff_role: ActorData.StaffRole, start_pos: Vector2) -> void:
+	# 🔥 核心修复：先实例化 _actor 对象（必须！）
+	_actor = ActorData.Actor.new()
+	
 	_is_humanoid = true
 	_assigned_staff_role = staff_role
+	# 现在 _actor 是有效对象，可以正常赋值
 	_actor.role = ActorData.Role.ROBOT
 	_actor.robot_type = ActorData.RobotType.HUMANOID
 	_actor.robot_role = ActorData.RobotRole.SHELF_ROBOT
@@ -58,6 +62,8 @@ func configure_humanoid(staff_role: ActorData.StaffRole, start_pos: Vector2) -> 
 	_build_patrol_for_humanoid()
 
 func configure_single_function(rrole: ActorData.RobotRole, start_pos: Vector2) -> void:
+		# 🔥 同样初始化 _actor
+	_actor = ActorData.Actor.new()
 	_is_humanoid = false
 	_actor.role = ActorData.Role.ROBOT
 	_actor.robot_type = ActorData.RobotType.SINGLE_FUNCTION

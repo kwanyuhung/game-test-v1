@@ -69,8 +69,8 @@ func _check_for_npc_chats() -> void:
 				break  # one chat per tick max
 
 func _are_valid_for_chat(npc_a: Node, npc_b: Node) -> bool:
-	# Must both have brains
-	if not npc_a.has("get_actor") or not npc_b.has("get_actor"):
+	# Must both have brains (检查是否拥有 get_actor 方法)
+	if not npc_a.has_method("get_actor") or not npc_b.has_method("get_actor"):
 		return false
 	var actor_a: ActorData.Actor = npc_a.get_actor()
 	var actor_b: ActorData.Actor = npc_b.get_actor()
@@ -78,8 +78,16 @@ func _are_valid_for_chat(npc_a: Node, npc_b: Node) -> bool:
 	return actor_a != null and actor_b != null and actor_a.is_active and actor_b.is_active
 
 func _start_npc_chat(npc_a: Node, npc_b: Node) -> void:
-	var brain_a: AIChatBrain = npc_a.get("chat_brain") if npc_a.has("chat_brain") else null
-	var brain_b: AIChatBrain = npc_b.get("chat_brain") if npc_b.has("chat_brain") else null
+	# 双重安全校验：实例有效 + 拥有获取大脑的方法
+	var brain_a: AIChatBrain = null
+	if is_instance_valid(npc_a) && npc_a.has_method("get_chat_brain"):
+		brain_a = npc_a.get_chat_brain()
+
+	var brain_b: AIChatBrain = null
+	if is_instance_valid(npc_b) && npc_b.has_method("get_chat_brain"):
+		brain_b = npc_b.get_chat_brain()
+	
+	# 任意一个大脑为空，直接退出
 	if brain_a == null or brain_b == null:
 		return
 
@@ -90,20 +98,22 @@ func _start_npc_chat(npc_a: Node, npc_b: Node) -> void:
 	var greeting := brain_a.trigger_autonomous_chat()
 	_show_npc_bubble(npc_a, greeting)
 
-	# NPC B responds after delay
+	# NPC B 延迟回复
 	await get_tree().create_timer(1.5).timeout
 	if not is_instance_valid(npc_a) or not is_instance_valid(npc_b):
 		return
 	var response := brain_b.generate_response(greeting)
 	_show_npc_bubble(npc_b, response)
 
-	# One more exchange sometimes
+	# 随机追加对话
 	if randf() < 0.5:
 		await get_tree().create_timer(2.0).timeout
 		if not is_instance_valid(npc_a) or not is_instance_valid(npc_b):
 			return
 		var reply := brain_a.generate_response(response)
 		_show_npc_bubble(npc_a, reply)
+
+	await get_tree().create_timer(1.5).timeout
 
 func _pick_npc_topic(npc_a: Node, npc_b: Node) -> String:
 	var topics := ["hello", "food", "arcade", "products", "family", "weather"]

@@ -1582,6 +1582,33 @@ func _make_lantern() -> Texture2D:
 				img.set_pixel(x, y, Color(red.r * brightness, red.g * brightness, red.b * brightness, red.a))
 	return ImageTexture.create_from_image(img)
 
+# ───────────────────────────────────────────────────────────────────────────
+# 新增： proximity 检测专用 - 检查位置是否在指定类型的区域附近
+# ───────────────────────────────────────────────────────────────────────────
+func is_near_zone_type(zone_type: int, world_pos: Vector2) -> bool:
+	# 遍历当前楼层所有区域
+	for zone in _floor_def.zones:
+		# 🔥 修复：强制转为字符串比较，解决类型冲突
+		if str(zone.type) != str(zone_type):
+			continue
+		
+		# 将格子坐标 → 世界坐标矩形
+		var zone_world_rect = Rect2(
+			zone.x * CELL_SIZE,
+			zone.y * CELL_SIZE,
+			zone.w * CELL_SIZE,
+			zone.h * CELL_SIZE
+		)
+		
+		# 扩大检测范围（2格距离，提升交互手感）
+		var detect_rect = zone_world_rect.grow(CELL_SIZE * 2)
+		# 判断玩家位置是否在区域内
+		if detect_rect.has_point(world_pos):
+			return true
+	
+	# 未找到匹配区域
+	return false
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # GETTERS
 # ═══════════════════════════════════════════════════════════════════════════════

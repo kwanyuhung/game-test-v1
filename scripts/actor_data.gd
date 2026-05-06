@@ -263,6 +263,7 @@ class Actor:
 	var current_task: StaffTask  # null if no task
 	var target_floor: int
 	var is_active: bool
+	var group_members: Array = []
 
 	func _init() -> void:
 		role = Role.CUSTOMER

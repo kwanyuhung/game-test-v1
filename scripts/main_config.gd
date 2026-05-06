@@ -1,4 +1,5 @@
 # main_config.gd
+class_name MainConfig
 # Loads main_config.json and provides typed access to all game config data.
 extends Node
 
