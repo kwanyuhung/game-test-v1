@@ -418,9 +418,9 @@ func _start_idle(duration: float) -> void:
 		_body_sprite.flip_h = false
 
 func _start_wander() -> void:
-	var bounds = _get_floor_bounds(_actor.current_floor)
-	var x := randf_range(bounds["min"].x, bounds["max"].x)
-	var y := randf_range(bounds["min"].y, bounds["max"].y)
+	var base_y := 64.0 + _actor.current_floor * 800.0
+	var x := randf_range(64.0, 1248.0)
+	var y := randf_range(base_y, base_y + 752.0)
 	_target_pos = Vector2(x, y)
 	_state = BehaviorState.WALKING_TO_TARGET
 	_state_timer = randf_range(8.0, 15.0)
@@ -693,9 +693,34 @@ func _start_shopping_section() -> void:
 		return
 	var entry: Dictionary = _actor.shopping_list[_shopping_list_idx]
 	var section_id: String = entry["section_id"]
-	var section_floor: int = _get_floor_for_section(section_id)
-	# Set target position to section location
-	_target_pos = _get_section_world_pos(section_id, section_floor)
+	# Inline _get_floor_for_section + _get_section_world_pos
+	var section_floors := {
+		"produce": 1, "dairy": 1, "bakery": 1, "meat": 1,
+		"pantry": 2, "spices": 2,
+		"drinks": 3, "coffee": 3,
+		"snacks": 4, "candy": 4,
+		"frozen": 5,
+		"clean": 6, "paper": 6,
+		"pharm": 7, "beauty": 7,
+		"toys": 8,
+		"cafe": 10,
+		"pet": 11,
+	}
+	var section_floor: int = section_floors.get(section_id, 1)
+	var floor_base_y := 64.0 + section_floor * 800.0
+	var section_x_map := {
+		"produce": 300.0, "dairy": 100.0, "bakery": 700.0, "meat": 350.0,
+		"pantry": 700.0, "spices": 100.0,
+		"drinks": 950.0, "coffee": 700.0,
+		"snacks": 100.0, "candy": 350.0,
+		"frozen": 950.0,
+		"clean": 700.0, "paper": 950.0,
+		"pharm": 100.0, "beauty": 350.0,
+		"toys": 450.0,
+		"cafe": 700.0,
+		"pet": 200.0,
+	}
+	_target_pos = Vector2(section_x_map.get(section_id, 400.0), floor_base_y + 100.0)
 	_actor.target_floor = section_floor
 	_state = BehaviorState.SHOPPING_SECTION
 	_state_timer = randf_range(4.0, 8.0)  # time to "browse"
@@ -847,22 +872,6 @@ func _hide_speech_bubble() -> void:
 	if _speech_bubble != null:
 		_speech_bubble.text = ""
 
-func _get_floor_for_section(section_id: String) -> int:
-	var section_floors := {
-		"produce": 1, "dairy": 1, "bakery": 1, "meat": 1,
-		"pantry": 2, "spices": 2,
-		"drinks": 3, "coffee": 3,
-		"snacks": 4, "candy": 4,
-		"frozen": 5,
-		"clean": 6, "paper": 6,
-		"pharm": 7, "beauty": 7,
-		"toys": 8,
-		"cafe": 10,
-		"pet": 11,
-	}
-	return section_floors.get(section_id, 1)
-
-# ??? Age-based floor preference ???????????????????????????????
 # Returns preferred floors for the NPC's life stage
 func _get_preferred_floors() -> Array:
 	match _actor.life_stage:
@@ -877,40 +886,6 @@ func _get_preferred_floors() -> Array:
 		_:
 			return [0, 1, 4, 8]
 
-func _get_age_preferred_section() -> String:
-	"""Returns the section_id most appropriate for this age on their target floor."""
-	match _actor.life_stage:
-		ActorData.LifeStage.CHILD:
-			var opts := ["toys", "candy", "snacks", "produce"]
-			return opts[randi() % opts.size()]
-		ActorData.LifeStage.TEEN:
-			var opts := ["snacks", "drinks", "candy", "frozen", "toys"]
-			return opts[randi() % opts.size()]
-		ActorData.LifeStage.SENIOR:
-			var opts := ["produce", "bakery", "dairy", "meat", "pharm", "cafe"]
-			return opts[randi() % opts.size()]
-		_:
-			return ""
-
-func _get_section_world_pos(section_id: String, floor: int) -> Vector2:
-	# Returns world position for a section on a given floor
-	# Each floor is 800px tall in world space
-	var floor_base_y := 64.0 + floor * 800.0
-	# Rough section positions
-	var section_x_map := {
-		"produce": 300.0, "dairy": 100.0, "bakery": 700.0, "meat": 350.0,
-		"pantry": 700.0, "spices": 100.0,
-		"drinks": 950.0, "coffee": 700.0,
-		"snacks": 100.0, "candy": 350.0,
-		"frozen": 950.0,
-		"clean": 700.0, "paper": 950.0,
-		"pharm": 100.0, "beauty": 350.0,
-		"toys": 450.0,
-		"cafe": 700.0,
-		"pet": 200.0,
-	}
-	var x := section_x_map.get(section_id, 400.0)
-	return Vector2(x, floor_base_y + 100.0)
 
 # ??? Helpers ????????????????????????????????????????????????
 
@@ -925,14 +900,6 @@ func _get_speed() -> float:
 		return SPEED_CHILD
 	return SPEED_CUSTOMER
 
-func _get_floor_bounds(floor_idx: int) -> Dictionary:
-	var base_y := 64.0 + floor_idx * 800.0
-	return {
-		"min": Vector2(64.0, base_y),
-		"max": Vector2(1248.0, base_y + 752.0)
-	}
-
-func _apply_movement(delta: float) -> void:
 	# Walking bob animation
 	if _state == BehaviorState.WALKING_TO_TARGET or _state == BehaviorState.STAFF_PATROLLING:
 		var t := Time.get_ticks_msec() / 1000.0
