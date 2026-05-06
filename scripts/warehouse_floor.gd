@@ -296,17 +296,20 @@ class SecurityRobot:
 		_patrol_index = (_patrol_index + 1) % _patrol_route.size()
 
 # ─── Delivery robot ────────────────────────────────────────────────
-
+# 🔥 修复：添加仓库父类引用，解决信号访问报错
 class DeliveryRobot:
 	extends Node
 	var _cargo: Array = []
 	var _destination: Vector2 = Vector2.ZERO
 	var _state: String = "idle"  # idle, going_to_warehouse, loading, delivering, returning
+	var _warehouse: WarehouseFloor = null  # 新增：存储外部仓库类引用
 
-	func start_delivery(from: Vector2, to: Vector2, items: Array) -> void:
+	# 修复：传入仓库引用，绑定信号
+	func start_delivery(from: Vector2, to: Vector2, items: Array, warehouse_ref: WarehouseFloor) -> void:
 		_cargo = items
 		_destination = to
 		_state = "going_to_warehouse"
+		_warehouse = warehouse_ref  # 绑定父类
 
 	func _process(delta: float) -> void:
 		match _state:
@@ -314,10 +317,12 @@ class DeliveryRobot:
 				_state = "loading"
 			"loading":
 				if _cargo.is_empty():
+					# 修复：通过父类引用发射信号
+					if _warehouse:
+						_warehouse.truck_delivered.emit(5)
 					_state = "returning"
 				else:
 					await Engine.get_main_loop().create_timer(1.0).timeout
 					_cargo.pop_back()
 			"returning":
 				_state = "idle"
-				truck_delivered.emit(_cargo.size())

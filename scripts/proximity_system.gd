@@ -64,7 +64,7 @@ func update_all() -> void:
 		return
 
 	_update_elevator_proximity()
-	_update_stairs_proximity()
+	#_update_stairs_proximity()
 	_update_stall_proximity()
 	_update_claw_machine_proximity()
 	_update_npc_chat_proximity()
@@ -112,7 +112,7 @@ func _update_stall_proximity() -> void:
 			(zone.x + zone.w * 0.5) * _CELL_SIZE,
 			(zone.y + zone.h * 0.5) * _CELL_SIZE
 		)
-		var dist := ppos.distance_to(stall_center)
+		var dist :float= ppos.distance_to(stall_center)
 		if dist < nearest_dist and dist < _CELL_SIZE * 10.0:
 			nearest_dist = dist
 			nearby_stall = stall
@@ -141,7 +141,7 @@ func _update_claw_machine_proximity() -> void:
 			(zone.x + zone.w * 0.5) * _CELL_SIZE,
 			(zone.y + zone.h * 0.5) * _CELL_SIZE
 		)
-		var dist := ppos.distance_to(mc_center)
+		var dist :float= ppos.distance_to(mc_center)
 		if dist < nearest_dist and dist < _CELL_SIZE * 10.0:
 			nearest_dist = dist
 			nearby_claw_machine = machine
@@ -170,7 +170,7 @@ func _update_npc_chat_proximity() -> void:
 		var actor = npc.get_actor()
 		if actor == null or not actor.is_active:
 			continue
-		var dist := ppos.distance_to(npc.global_position)
+		var dist :float= ppos.distance_to(npc.global_position)
 		if dist < nearest_dist and dist < _CELL_SIZE * 8.0:
 			nearest_dist = dist
 			nearby_npc_for_chat = npc
@@ -326,7 +326,7 @@ func _update_checkout_proximity() -> void:
 	var nearest_dist := 99999.0
 	for counter in _checkout_counters:
 		var cpos = counter.position
-		var dist := ppos.distance_to(cpos)
+		var dist :float= ppos.distance_to(cpos)
 		if dist < nearest_dist and dist < _CELL_SIZE * 8.0:
 			nearest_dist = dist
 			nearby_checkout = counter

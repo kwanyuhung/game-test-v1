@@ -19,11 +19,12 @@ signal new_contract_signed(supplier_id: String)
 func get_suppliers() -> Array:
 	return _suppliers
 
-func get_supplier_by_id(sid: String):
+# 🔥 修复：显式声明返回值类型
+func get_supplier_by_id(sid: String) -> Dictionary:
 	for s in _suppliers:
 		if s["id"] == sid:
 			return s
-	return null
+	return {}  # 不返回null，返回空字典，彻底杜绝null
 
 func sign_contract(supplier_id: String) -> bool:
 	if _contracts.has(supplier_id):
@@ -35,8 +36,8 @@ func sign_contract(supplier_id: String) -> bool:
 func upgrade_contract(supplier_id: String) -> bool:
 	if not _contracts.has(supplier_id):
 		return false
-	var c = _contracts[supplier_id]
-	var lvl = c["level"] as int
+	var c: Dictionary = _contracts[supplier_id]
+	var lvl: int = c["level"]
 	if lvl >= 3:
 		return false
 	c["level"] = lvl + 1
@@ -51,41 +52,72 @@ func get_favor(supplier_id: String) -> float:
 	return _contracts.get(supplier_id, {}).get("favor", 0.5)
 
 func get_contract_cost(supplier_id: String) -> int:
-	var lvl = get_contract_level(supplier_id)
+	var lvl: int = get_contract_level(supplier_id)
 	if lvl == 0: return 500
 	if lvl == 1: return 1000
 	return 2000
 
 func get_cost_multiplier(supplier_id: String) -> float:
-	var sup = get_supplier_by_id(supplier_id)
-	if sup == null:
-		return 1.0
-	var base = sup.get("base_cost_mult", 1.0)
-	var lvl_disc = 1.0 - (get_contract_level(supplier_id) * 0.05)
-	var favor_disc = 1.0 - (get_favor(supplier_id) * 0.10)
+	var sup: Dictionary = get_supplier_by_id(supplier_id)
+	var base: float = sup.get("base_cost_mult", 1.0)
+	var lvl_disc: float = 1.0 - (get_contract_level(supplier_id) * 0.05)
+	var favor_disc: float = 1.0 - (get_favor(supplier_id) * 0.10)
 	return maxf(base * lvl_disc * favor_disc, 0.6)
 
 func order_stock(supplier_id: String, section_id: String, quantity: int, cost_per_unit: float) -> bool:
-	var sup = get_supplier_by_id(supplier_id)
-	if sup == null or not _contracts.has(supplier_id):
+	var sup: Dictionary = get_supplier_by_id(supplier_id)
+	if not _contracts.has(supplier_id):
 		return false
-	var mult = get_cost_multiplier(supplier_id)
-	var total_cost = cost_per_unit * quantity * mult
-	var reliability = sup.get("reliability", 0.9)
-	var days = 2 if reliability >= 0.95 else 3
-	_pending_orders.append({"supplier_id": supplier_id, "section_id": section_id, "quantity": quantity, "cost": total_cost, "days": days, "rel": reliability})
+	var mult: float = get_cost_multiplier(supplier_id)
+	var total_cost: float = cost_per_unit * quantity * mult
+	var reliability: float = sup.get("reliability", 0.9)
+	var days: int = 2 if reliability >= 0.95 else 3
+	_pending_orders.append({
+		"supplier_id": supplier_id, 
+		"section_id": section_id, 
+		"quantity": quantity, 
+		"cost": total_cost, 
+		"days": days, 
+		"rel": reliability
+	})
 	return true
 
+# 🔥 终极修复：全类型声明 + 无null + 全安全访问
 func process_orders() -> void:
-	var arrived = []
+	var arrived: Array = []
+	var remaining_orders: Array = []
+	
+	# 遍历订单，强制声明类型为Dictionary，永远不会是null
 	for o in _pending_orders:
-		o["days"] -= 1
-		if o["days"] <= 0 and randf() <= o["rel"]:
+		# 跳过无效数据
+		if not o is Dictionary:
+			continue
+		
+		# 安全递减天数
+		var days_left: int = o.get("days", 0)
+		days_left -= 1
+		o["days"] = days_left
+		
+		# 安全判断送达条件
+		var rel: float = o.get("rel", 0.0)
+		if days_left <= 0 and randf() <= rel:
 			arrived.append(o)
-	_pending_orders = _pending_orders.filter(func(o): return o not in arrived)
+		else:
+			remaining_orders.append(o)
+	
+	# 更新待处理订单
+	_pending_orders = remaining_orders
+	
+	# 处理已送达订单，全安全访问
 	for o in arrived:
-		var sup = get_supplier_by_id(o["supplier_id"])
-		supplier_order_arrived.emit(sup["name"] if sup else "??")
+		if not o is Dictionary:
+			continue
+		# 安全获取供应商ID
+		var sup_id: String = o.get("supplier_id", "")
+		var sup: Dictionary = get_supplier_by_id(sup_id)
+		# 安全获取名称
+		var sup_name: String = sup.get("name", "??")
+		supplier_order_arrived.emit(sup_name)
 
 func get_pending_orders() -> Array:
 	return _pending_orders

@@ -62,7 +62,7 @@ func _build_ui() -> void:
 	title.position = Vector2(pan_x + 50, pan_y + 8)
 	title.add_theme_color_override("font_color", Color(0.90, 0.90, 0.95))
 	title.add_theme_font_size_override("font_size", 14)
-	title.add_theme_font_style_override("font_style", Label.TEXT_SERVER_SETTINGS_FONT_BOLD)
+	title.bold = true
 	add_child(title)
 
 	var hint := Label.new()

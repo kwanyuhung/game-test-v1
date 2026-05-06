@@ -4,9 +4,9 @@ extends Node
 
 var _main: Node2D = null
 var _robot_panel: Control = null
-var _player_stats = null
-var _toasts = null
-var _player = null
+var _player_stats: Node = null
+var _toasts: Node = null
+var _player: Node = null
 
 func setup(main: Node2D) -> void:
 	_main = main
@@ -110,22 +110,23 @@ func _on_close_pressed() -> void:
 func _on_robot_humanoid_pressed(staff_role: int, cost: int) -> void:
 	if _player_stats == null:
 		return
-	var stats = _player_stats
+	var stats: Node = _player_stats
 	if not stats.can_use_humanoid_robots():
-		var next_xp := stats.get_staff_xp_for_next_rank()
-		var msg = "Humanoid robots unlock at Senior rank! %d more Staff XP needed." % max(0, next_xp)
+		# 🔥 修复第115行：显式声明int类型
+		var next_xp: int = stats.get_staff_xp_for_next_rank()
+		var msg: String = "Humanoid robots unlock at Senior rank! %d more Staff XP needed." % max(0, next_xp)
 		if _toasts: _toasts.toast_warning(msg)
 		return
 	if stats.get_xp() < cost:
-		var msg = "Not enough XP! Need %d XP to deploy." % cost
+		var msg: String = "Not enough XP! Need %d XP to deploy." % cost
 		if _toasts: _toasts.toast_warning(msg)
 		return
 	stats.spend_xp(cost)
 	stats.complete_staff_task()
 	# Tell main to spawn the robot
 	_main.spawn_robot_humanoid(staff_role)
-	var role_names = {0:"Cashier",1:"Stocker",2:"Cleaner",3:"Greeter",4:"Security",5:"Manager",6:"FloorStaff",7:"ScanGo"}
-	var rname = role_names.get(staff_role, "Robot")
+	var role_names: Dictionary = {0:"Cashier",1:"Stocker",2:"Cleaner",3:"Greeter",4:"Security",5:"Manager",6:"FloorStaff",7:"ScanGo"}
+	var rname: String = role_names.get(staff_role, "Robot")
 	if _toasts: _toasts.toast_success("Deployed HUMANOID %s! -%d XP" % [rname, cost])
 	# Update the active count label
 	_update_robot_panel()
@@ -133,30 +134,31 @@ func _on_robot_humanoid_pressed(staff_role: int, cost: int) -> void:
 func _on_robot_single_pressed(rrole: int, cost: int) -> void:
 	if _player_stats == null:
 		return
-	var stats = _player_stats
+	var stats: Node = _player_stats
 	if not stats.can_use_single_function_robots():
-		var next_xp := stats.get_staff_xp_for_next_rank()
-		var msg = "Single-function robots unlock at Worker rank! %d more Staff XP needed." % max(0, next_xp)
+		# 🔥 修复第138行：显式声明int类型
+		var next_xp: int = stats.get_staff_xp_for_next_rank()
+		var msg: String = "Single-function robots unlock at Worker rank! %d more Staff XP needed." % max(0, next_xp)
 		if _toasts: _toasts.toast_warning(msg)
 		return
 	if stats.get_xp() < cost:
-		var msg = "Not enough XP! Need %d XP to deploy." % cost
+		var msg: String = "Not enough XP! Need %d XP to deploy." % cost
 		if _toasts: _toasts.toast_warning(msg)
 		return
 	stats.spend_xp(cost)
 	stats.complete_staff_task()
 	# Tell main to spawn the robot
 	_main.spawn_robot_single(rrole)
-	var role_names = {0:"CleanerBot",1:"GuideBot",2:"ShelfBot",3:"SecurityBot",4:"DeliveryBot"}
-	var rname = role_names.get(rrole, "Robot")
+	var role_names: Dictionary = {0:"CleanerBot",1:"GuideBot",2:"ShelfBot",3:"SecurityBot",4:"DeliveryBot"}
+	var rname: String = role_names.get(rrole, "Robot")
 	if _toasts: _toasts.toast_success("Deployed %s! -%d XP" % [rname, cost])
 	_update_robot_panel()
 
 func _update_robot_panel() -> void:
 	if _robot_panel == null:
 		return
-	var active_count = 0
-	var robots = _main.get("_robots")
+	var active_count: int = 0
+	var robots: Array = _main.get("_robots")
 	if robots != null:
 		active_count = robots.size()
 	for child in _robot_panel.get_children():

@@ -1,4 +1,5 @@
 # price_override.gd
+class_name PriceOverride
 # Singleton that stores price overrides set via the staff terminal.
 # Products reference this FIRST, then fall back to store_data.gd.
 # Signal: price_changed(product_id, new_price)
@@ -12,14 +13,20 @@ var _overrides: Dictionary = {}
 signal price_changed(product_id: String, new_price: float)
 signal price_overrides_updated()  # broadcast when batch update happens
 
+# 单例全局实例（关键修复）
+static var singleton: PriceOverride = null
+
 func _ready() -> void:
-	# Make sure this is a singleton (add to tree once)
+	# 设置全局单例实例
+	singleton = self
 	add_to_group("price_override")
 
 # Get the effective price for a product (override or original)
-func get_price(product_id: String) -> float:
-	if _overrides.has(product_id):
-		return _overrides[product_id]
+static func get_price(product_id: String) -> float:
+	if not is_instance_valid(singleton):
+		return 0.0
+	if singleton._overrides.has(product_id):
+		return singleton._overrides[product_id]
 	# Fall back to store data
 	for p in StoreData.CATALOG:
 		if p.id == product_id:
@@ -27,35 +34,45 @@ func get_price(product_id: String) -> float:
 	return 0.0
 
 # Set an override price
-func set_price(product_id: String, price: float) -> void:
+static func set_price(product_id: String, price: float) -> void:
+	if not is_instance_valid(singleton):
+		return
 	if price <= 0.0:
 		# Remove override (revert to original)
-		if _overrides.has(product_id):
-			_overrides.erase(product_id)
+		if singleton._overrides.has(product_id):
+			singleton._overrides.erase(product_id)
 	else:
-		_overrides[product_id] = price
-	price_changed.emit(product_id, price)
+		singleton._overrides[product_id] = price
+	singleton.price_changed.emit(product_id, price)
 
 # Clear all overrides
-func clear_all() -> void:
-	_overrides.clear()
-	price_overrides_updated.emit()
+static func clear_all() -> void:
+	if not is_instance_valid(singleton):
+		return
+	singleton._overrides.clear()
+	singleton.price_overrides_updated.emit()
 
 # Check if a product has an override
-func has_override(product_id: String) -> bool:
-	return _overrides.has(product_id)
+static func has_override(product_id: String) -> bool:
+	if not is_instance_valid(singleton):
+		return false
+	return singleton._overrides.has(product_id)
 
 # Get all overrides as dict
-func get_all_overrides() -> Dictionary:
-	return _overrides.duplicate()
+static func get_all_overrides() -> Dictionary:
+	if not is_instance_valid(singleton):
+		return {}
+	return singleton._overrides.duplicate()
 
 # Apply a batch of overrides (for loading saves)
-func apply_batch(overrides: Dictionary) -> void:
-	_overrides = overrides.duplicate()
-	price_overrides_updated.emit()
+static func apply_batch(overrides: Dictionary) -> void:
+	if not is_instance_valid(singleton):
+		return
+	singleton._overrides = overrides.duplicate()
+	singleton.price_overrides_updated.emit()
 
 # Get the original price from store_data (ignoring overrides)
-func get_original_price(product_id: String) -> float:
+static func get_original_price(product_id: String) -> float:
 	for p in StoreData.CATALOG:
 		if p.id == product_id:
 			return p.price
@@ -63,7 +80,7 @@ func get_original_price(product_id: String) -> float:
 
 # Get product object with effective price (returns a dict-like object)
 # For use in UI displays
-func get_product_display(product) -> Dictionary:
+static func get_product_display(product) -> Dictionary:
 	return {
 		"id": product.id,
 		"name": product.name,

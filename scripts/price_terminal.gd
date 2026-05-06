@@ -5,7 +5,6 @@ class_name PriceTerminal
 extends CanvasLayer
 
 const StoreData = preload("res://scripts/store_data.gd")
-const PriceOverride = preload("res://scripts/price_override.gd")
 
 signal closed()
 signal price_saved(product_id: String, new_price: float)
@@ -38,7 +37,6 @@ func _ready() -> void:
 	visible = false
 
 func open() -> void:
-	# Build product list from catalog
 	_build_product_list()
 	_active_section_filter = "ALL"
 	_filtered = _products.duplicate()
@@ -84,27 +82,23 @@ func _build() -> void:
 	var pan_x := (320.0 - PANEL_W) * 0.5
 	var pan_y := (180.0 - PANEL_H) * 0.5
 
-	# Background overlay
 	var ov := ColorRect.new()
 	ov.set_anchors_preset(Control.PRESET_FULL_RECT)
 	ov.color = Color(0.03, 0.05, 0.08, 0.92)
 	add_child(ov)
 
-	# Main panel
 	var panel := ColorRect.new()
 	panel.position = Vector2(pan_x, pan_y)
 	panel.size = Vector2(PANEL_W, PANEL_H)
 	panel.color = Color(0.07, 0.10, 0.14, 1.0)
 	add_child(panel)
 
-	# Border
 	var border := ColorRect.new()
 	border.position = Vector2(pan_x, pan_y)
 	border.size = Vector2(PANEL_W, 1)
 	border.color = Color(0.50, 0.85, 1.00, 0.8)
 	add_child(border)
 
-	# Header
 	var hdr := ColorRect.new()
 	hdr.position = Vector2(pan_x, pan_y)
 	hdr.size = Vector2(PANEL_W, 14.0)
@@ -125,7 +119,6 @@ func _build() -> void:
 	close_lbl.add_theme_font_size_override("font_size", 7)
 	add_child(close_lbl)
 
-	# Search / filter bar
 	var filter_y := pan_y + 14.0
 	var filter_bg := ColorRect.new()
 	filter_bg.position = Vector2(pan_x, filter_y)
@@ -147,7 +140,6 @@ func _build() -> void:
 	_search_filter_lbl.add_theme_font_size_override("font_size", 6)
 	add_child(_search_filter_lbl)
 
-	# Grid area
 	var grid_y := filter_y + 12.0
 	var grid_h := PANEL_H - 14.0 - 12.0 - 28.0
 	var grid_bottom := grid_y + grid_h
@@ -160,7 +152,6 @@ func _build() -> void:
 
 	_build_grid(pan_x, grid_y, PANEL_W, grid_h)
 
-	# Detail panel at bottom
 	var det_y := grid_bottom + 1
 	var det := ColorRect.new()
 	det.position = Vector2(pan_x, det_y)
@@ -201,7 +192,6 @@ func _build() -> void:
 	_update_detail()
 	_update_hint()
 
-	# Keyboard handler
 	var kb := InputEventHandler.new()
 	kb.action_pressed.connect(_on_key_action)
 	add_child(kb)
@@ -219,7 +209,7 @@ func _build_grid(pan_x: float, grid_y: float, grid_w: float, grid_h: float) -> v
 	var vis_count := vis_rows * GRID_COLS
 	var start_idx := _scroll_offset * GRID_COLS
 
-	for i in range(start_idx, mini(start_idx + vis_count, _filtered.size())):
+	for i in range(start_idx, min(start_idx + vis_count, _filtered.size())):
 		var ix := pan_x + col * item_w + 2.0
 		var iy := start_y + row * ITEM_H
 
@@ -286,8 +276,8 @@ func _update_detail() -> void:
 		return
 	var entry = _filtered[_selected]
 	_name_lbl.text = entry["name"]
-	var effective := PriceOverride.get_price(entry["id"])
-	var original := entry["original_price"]
+	var effective: float = PriceOverride.get_price(entry["id"])
+	var original: float = entry["original_price"]
 	_price_lbl.text = "Price: $%.2f" % effective
 	if entry["has_override"] or effective != original:
 		_override_lbl.text = "[MODIFIED from $%.2f]" % original
@@ -304,12 +294,12 @@ func _update_hint() -> void:
 func _on_key_action(action: String) -> void:
 	match action:
 		"ui_up":
-			_selected = maxi(0, _selected - GRID_COLS)
+			_selected = max(0, _selected - GRID_COLS)
 			_scroll_if_needed()
 			_refresh_grid()
 			_update_detail()
 		"ui_down":
-			_selected = mini(_filtered.size() - 1, _selected + GRID_COLS)
+			_selected = min(_filtered.size() - 1, _selected + GRID_COLS)
 			_scroll_if_needed()
 			_refresh_grid()
 			_update_detail()
@@ -334,12 +324,12 @@ func _on_key_action(action: String) -> void:
 			if _edit_mode:
 				_adjust_edit_price(-0.10)
 		"page_up":
-			_scroll_offset = maxi(0, _scroll_offset - 3)
+			_scroll_offset = max(0, _scroll_offset - 3)
 			_refresh_grid()
 		"page_down":
 			var vis_rows := 8
-			var max_scroll := maxi(0, ceili(_filtered.size() / float(GRID_COLS)) - vis_rows)
-			_scroll_offset = mini(max_scroll, _scroll_offset + 3)
+			var max_scroll := int(max(0, ceil(_filtered.size() / float(GRID_COLS)) - vis_rows))
+			_scroll_offset = min(max_scroll, _scroll_offset + 3)
 			_refresh_grid()
 		_:
 			if action.begins_with("num_"):
@@ -395,7 +385,7 @@ func _start_edit() -> void:
 
 func _adjust_edit_price(delta: float) -> void:
 	var v := _edit_new_price_str.to_float() + delta
-	v = maxf(0.01, v)
+	v = max(0.01, v)
 	_edit_new_price_str = "%.2f" % v
 	_hint_lbl.text = "New price: $%s  [Enter]Save [Esc]Cancel" % _edit_new_price_str
 
@@ -406,14 +396,12 @@ func _save_edit() -> void:
 	var new_price: float = _edit_new_price_str.to_float()
 	if new_price > 0.0:
 		PriceOverride.set_price(_edit_product_id, new_price)
-		# Refresh display
 		for i in range(_products.size()):
 			if _products[i]["id"] == _edit_product_id:
 				_products[i]["price"] = new_price
 				_products[i]["has_override"] = PriceOverride.has_override(_edit_product_id)
 		_filter_by_section()
-		# Clamp selected
-		_selected = mini(_selected, _filtered.size() - 1)
+		_selected = min(_selected, _filtered.size() - 1)
 		_refresh_grid()
 		_update_detail()
 		price_saved.emit(_edit_product_id, new_price)

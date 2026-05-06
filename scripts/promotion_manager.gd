@@ -5,7 +5,7 @@ extends Node
 
 enum LoyaltyTier { BRONZE, SILVER, GOLD, PLATINUM }
 
-var _loyalty_tier := LoyaltyTier.BRONZE
+var _loyalty_tier: LoyaltyTier = LoyaltyTier.BRONZE
 var _loyalty_points: int = 0
 var _active_promotions: Array = []  # [{type, product_id, bonus, expires_in_hours}]
 var _double_xp_event: bool = false
@@ -63,7 +63,7 @@ func get_tier_point_multiplier() -> float:
 	return 1.0
 
 func _check_tier_upgrade() -> void:
-	var old := _loyalty_tier
+	var old: LoyaltyTier = _loyalty_tier
 	if _loyalty_points >= 5000:
 		_loyalty_tier = LoyaltyTier.PLATINUM
 	elif _loyalty_points >= 2000:
@@ -93,15 +93,15 @@ func activate_double_points(hours: int = 24) -> void:
 # ── Checkout Integration ─────────────────────────────────────────
 func get_checkout_xp_multiplier() -> float:
 	# Base 1.0 + satisfaction bonus + event bonus
-	var m := 1.0
+	var m: float = 1.0
 	if _double_xp_event:
 		m *= 2.0
 	return m
 
 func get_checkout_point_bonus(total_spent: float) -> int:
 	# Earn 1 pt per $1, multiplied by tier and event
-	var base := int(total_spent)
-	var mult := get_tier_point_multiplier()
+	var base: int = int(total_spent)
+	var mult: float = get_tier_point_multiplier()
 	if _double_points_event:
 		mult *= 2.0
 	return int(base * mult)
@@ -111,16 +111,18 @@ func get_loyalty_discount(subtotal: float) -> float:
 
 func get_tier_progress() -> Dictionary:
 	# Returns {current, next, threshold} for progress bar
-	var thresholds := [0, 500, 2000, 5000]
-	var tier_idx := _loyalty_tier as int
-	var current_pts := _loyalty_points
+	var thresholds: Array = [0, 500, 2000, 5000]
+	var tier_idx: int = _loyalty_tier as int
+	var current_pts: int = _loyalty_points
 	var next_thresh: int
 	if tier_idx >= thresholds.size() - 1:
 		next_thresh = thresholds[-1]
 	else:
 		next_thresh = thresholds[tier_idx + 1]
-	var prev_thresh := thresholds[clampi(tier_idx, 0, thresholds.size()-1)]
-	var progress := (float(current_pts - prev_thresh) / max(1, next_thresh - prev_thresh)) if next_thresh > prev_thresh else 1.0
+	# 🔥 修复第122行：显式声明 int 类型
+	var prev_thresh: int = thresholds[clampi(tier_idx, 0, thresholds.size()-1)]
+	# 🔥 修复第123行：显式声明 float 类型
+	var progress: float = (float(current_pts - prev_thresh) / max(1, next_thresh - prev_thresh)) if next_thresh > prev_thresh else 1.0
 	return {"current": current_pts, "next": next_thresh, "threshold": next_thresh, "progress": clampf(progress, 0.0, 1.0)}
 
 # ── Promotions ──────────────────────────────────────────────────
@@ -128,7 +130,7 @@ func get_active_promotions() -> Array:
 	return _active_promotions
 
 func get_xp_multiplier_for_product(product_id: String) -> float:
-	var mult := 1.0
+	var mult: float = 1.0
 	for promo in _active_promotions:
 		if promo.get("product_id", "") == product_id and promo.get("type", "") == "xp_boost":
 			mult = max(mult, promo.get("bonus", 1.0))

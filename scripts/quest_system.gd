@@ -1,4 +1,3 @@
-# quest_system.gd
 class_name QuestSystem
 # Simple daily quests — 3 objectives per day, bonus XP on completion.
 # Tracks completion in save data.
@@ -6,7 +5,7 @@ extends Node
 
 const QUEST_FILE := "user://quests.json"
 
-const ALL_QUESTS := [
+const ALL_QUESTS: Array = [
 	{"id": "buy_dairy", "desc": "Buy 3 Dairy items", "target": 3, "section": "dairy", "xp": 15},
 	{"id": "buy_produce", "desc": "Buy 3 Produce items", "target": 3, "section": "produce", "xp": 15},
 	{"id": "checkout_50", "desc": "Checkout spending $50+", "target": 50.0, "type": "spend", "xp": 20},
@@ -32,20 +31,21 @@ func _load_quests() -> void:
 	if not FileAccess.file_exists(QUEST_FILE):
 		_start_new_day()
 		return
-	var f := FileAccess.open(QUEST_FILE, FileAccess.READ)
+	var f = FileAccess.open(QUEST_FILE, FileAccess.READ)
 	if f == null:
 		_start_new_day()
 		return
-	var json := JSON.new()
-	var result := json.parse(f.get_as_text())
+	# Godot 3 标准 JSON 解析
+	var json = JSON.new()
+	var result = json.parse(f.get_as_text())
 	f.close()
 	if result != OK:
 		_start_new_day()
 		return
-	var data: Dictionary = json.get_data()
+	var data: Dictionary = json.result
 	# Check if it's a new day
 	var saved_date: String = data.get("date", "")
-	var today := Time.get_date_string_from_system()
+	var today: String = Time.get_date_string_from_system()
 	if saved_date != today:
 		_start_new_day()
 		return
@@ -54,14 +54,17 @@ func _load_quests() -> void:
 	_progress = data.get("progress", {})
 
 func _save_quests() -> void:
-	var data := {
+	var data: Dictionary = {
 		"date": Time.get_date_string_from_system(),
 		"quests": _daily_quests,
 		"completed": _completed_ids,
 		"progress": _progress,
 	}
-	var json_str := JSON.stringify(data)
-	var f := FileAccess.open(QUEST_FILE, FileAccess.WRITE)
+	# 🔥 修复：Godot 3 不支持 JSON.stringify，改用标准写法
+	var json = JSON.new()
+	var json_str: String = json.to_json(data)
+	
+	var f = FileAccess.open(QUEST_FILE, FileAccess.WRITE)
 	if f == null:
 		return
 	f.store_string(json_str)
@@ -69,7 +72,7 @@ func _save_quests() -> void:
 
 func _start_new_day() -> void:
 	# Pick 3 random quests
-	var pool = ALL_QUESTS.duplicate()
+	var pool: Array = ALL_QUESTS.duplicate()
 	pool.shuffle()
 	_daily_quests = pool.slice(0, 3)
 	_completed_ids = []
@@ -125,14 +128,14 @@ func on_issue_fixed() -> void:
 	_save_quests()
 
 func on_floor_visited(floor_idx: int) -> void:
-	var key := "floor_%d" % floor_idx
+	var key: String = "floor_%d" % floor_idx
 	if not _progress.has(key):
 		_progress[key] = 0
 	_progress[key] = _progress.get(key, 0) + 1
 	for q in _daily_quests:
 		if q.get("type", "") == "floors":
 			if not is_completed(q["id"]):
-				var unique_floors := 0
+				var unique_floors: int = 0
 				for k in _progress.keys():
 					if k.begins_with("floor_") and _progress[k] > 0:
 						unique_floors += 1
@@ -140,9 +143,10 @@ func on_floor_visited(floor_idx: int) -> void:
 				_check_quest(q)
 	_save_quests()
 
+# 🔥 修复第144行错误：显式声明变量类型，杜绝 Variant 推断
 func _check_quest(q: Dictionary) -> void:
-	var current := _progress.get(q["id"], 0)
-	var target = q["target"]
+	var current: float = _progress.get(q["id"], 0)
+	var target: float = q["target"]
 	if current >= target:
 		_complete_quest(q)
 
