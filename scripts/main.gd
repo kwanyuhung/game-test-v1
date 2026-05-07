@@ -867,7 +867,7 @@ func _on_section_exited(section_id: String) -> void:
 
 # ── Player E-key interact ───────────────────────────────────────
 func _on_player_interact() -> void:
-	# Priority: UI panels > checkout > section > elevator > ATM > stall > claw
+	# Priority: UI panels > checkout > elevator > section > ATM > stall > claw
 	if _current_section_browse != null and _current_section_browse.visible:
 		return
 	if _checkout_receipt_visible:
@@ -885,14 +885,14 @@ func _on_player_interact() -> void:
 		_checkout_system.do_checkout(_nearby_checkout)
 		return
 
+	# Elevator (check first - most important for navigation)
+	if _nearby_elevator and _elevator != null:
+		_elevator.open_panel(_player.position, _player)
+		return
+
 	# Section browse
 	if _nearby_section != null:
 		_open_section_browse(_nearby_section)
-		return
-
-	# Elevator
-	if _nearby_elevator and _elevator != null:
-		_elevator.open_panel(_player.position, _player)
 		return
 
 	# ATM

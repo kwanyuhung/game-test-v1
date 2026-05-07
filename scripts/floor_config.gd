@@ -168,7 +168,8 @@ class FloorDef:
 		is_staff_only = p_staff; is_rooftop = p_rooftop
 
 	func elevator_tile() -> Vector2i:
-		return Vector2i(80, 15)
+		# Must match SHAFT_X in elevator.gd (tile 6)
+		return Vector2i(6, 15)
 
 	func stairs_tile() -> Vector2i:
 		return Vector2i(84, 15)

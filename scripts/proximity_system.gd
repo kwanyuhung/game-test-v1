@@ -75,6 +75,8 @@ func update_all() -> void:
 	_update_terminal_proximity()
 	_update_checkout_proximity()
 	_update_phase3_proximity()
+	# Update the unified interaction hint showing all available [E] actions
+	_update_interaction_hint()
 
 func _update_elevator_proximity() -> void:
 	var _elevator = _main.get("_elevator")
@@ -82,23 +84,91 @@ func _update_elevator_proximity() -> void:
 	if _player == null or _elevator == null:
 		return
 	nearby_elevator = _elevator.is_nearby(_player.position)
-	nearby_stairs = false
-	nearby_parking = false
 
+# ── Build unified interaction hint showing all available [E] interactions ──────────
+func _update_interaction_hint() -> void:
 	var prompt_bg = _main.get_node_or_null("PromptBg")
 	var prompt_lbl = _main.get_node_or_null("PromptLbl")
+	if prompt_lbl == null:
+		return
+	
+	# Collect all available interactions
+	var hints: Array = []
+	
 	if nearby_elevator:
-		if prompt_lbl != null:
-			prompt_lbl.text = "[E] Elevator"
-			prompt_lbl.visible = true
+		hints.append("[E] Elevator")
+	if nearby_section != null:
+		var sec_name = "Section"
+		if nearby_section.has_method("get_def"):
+			var def = nearby_section.get_def()
+			if def.has("name"):
+				sec_name = def.name
+		hints.append("[E] Browse " + sec_name)
+	if nearby_checkout != null:
+		var checkout_type = "Checkout"
+		if nearby_checkout.has_method("get_checkout_type"):
+			var ctype = nearby_checkout.get_checkout_type()
+			if ctype == 1: checkout_type = "Self-Checkout"
+			elif ctype == 0: checkout_type = "Express Lane"
+		hints.append("[E] " + checkout_type)
+	if nearby_stall != null:
+		hints.append("[E] Food Stall")
+	if nearby_claw_machine != null:
+		hints.append("[E] Claw Machine")
+	if nearby_atm:
+		hints.append("[E] ATM")
+	if nearby_terminal:
+		hints.append("[E] Price Terminal")
+	if nearby_monitor:
+		hints.append("[E] Monitor")
+	if nearby_npc_for_chat != null:
+		hints.append("[E] Talk to NPC")
+	if nearby_issue != null:
+		hints.append("[E] Fix Issue")
+	if nearby_loyalty:
+		hints.append("[E] Loyalty")
+	if nearby_gift_wrap:
+		hints.append("[E] Gift Wrap")
+	if nearby_digital_kiosk:
+		hints.append("[E] Directory")
+	if nearby_info_desk:
+		hints.append("[E] Info Desk")
+	if nearby_cafe:
+		hints.append("[E] Cafe")
+	if nearby_vending:
+		hints.append("[E] Vending")
+	if nearby_promo_booth:
+		hints.append("[E] Daily Deals")
+	if nearby_lost_found:
+		hints.append("[E] Lost & Found")
+	if nearby_store_news:
+		hints.append("[E] Store News")
+	if nearby_karaoke:
+		hints.append("[E] Karaoke")
+	if nearby_pool_table:
+		hints.append("[E] Pool")
+	if nearby_darts_board:
+		hints.append("[E] Darts")
+	if nearby_warehouse_dock:
+		hints.append("[E] Truck Dock")
+	if nearby_warehouse:
+		hints.append("[E] Warehouse")
+	if nearby_parking:
+		hints.append("[E] Parking")
+	
+	# Show all hints combined, or hide prompt if nothing nearby
+	if hints.size() > 0:
+		prompt_lbl.text = " | ".join(hints)
+		prompt_lbl.visible = true
 		if prompt_bg != null:
 			prompt_bg.visible = true
-		if _checkout_counter_label != null:
-			_checkout_counter_label.visible = false
-
+	else:
+		prompt_lbl.visible = false
+		if prompt_bg != null:
+			prompt_bg.visible = false
+	
+	# Sync to main.gd
 	_main.set("_nearby_elevator", nearby_elevator)
-	_main.set("_nearby_stairs", nearby_stairs)
-	_main.set("_nearby_parking", nearby_parking)
 
 func _update_stall_proximity() -> void:
 	nearby_stall = null

@@ -9,7 +9,8 @@ const CELL_SIZE := 16
 
 # Elevator shaft anchor positions in world pixels
 # x = same for all floors, y per floor
-const SHAFT_X := 80 * CELL_SIZE
+# NOTE: Must match shaft_x in floor_builder.gd (currently tile 6)
+const SHAFT_X := 6 * CELL_SIZE
 const FLOOR_Y := {
 	0: 32 * CELL_SIZE,   # Ground
 	1: 22 * CELL_SIZE,   # Floor 1
@@ -159,7 +160,8 @@ func get_car_world_y() -> float:
 
 func is_nearby(world_pos: Vector2) -> bool:
 	var car_center := Vector2(SHAFT_X + CAR_W * 0.5, _car.position.y + CAR_H * 0.5)
-	return world_pos.distance_to(car_center) < CELL_SIZE * 5.0
+	# Increased detection radius to cover larger area including areas outside the bounding box
+	return world_pos.distance_to(car_center) < CELL_SIZE * 15.0
 
 func is_traveling() -> bool:
 	return _is_traveling
