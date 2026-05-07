@@ -359,7 +359,7 @@ func _build_zone_food_stall(zone: Dictionary) -> void:
 	_floor_nodes.append(counter_top)
 
 	var wall_h: int = zone.h - 3
-	var wc: Color = fd.get("color", Color(0.85, 0.70, 0.50)).darkened(0.3) 
+	var wc: Color = fd.get("color", Color(0.85, 0.70, 0.50)).darkened(0.3)
 
 	var bw_bg := ColorRect.new()
 	bw_bg.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
@@ -392,9 +392,9 @@ func _build_zone_food_stall(zone: Dictionary) -> void:
 	_parent.add_child(bot_wall); _floor_nodes.append(bot_wall)
 
 	var board_x:int = (zone.x + 1) * CELL_SIZE
-	var board_y:int= (zone.y + 1) * CELL_SIZE
-	var board_w:int= (zone.w - 2) * CELL_SIZE
-	var board_h:int= (wall_h - 2) * CELL_SIZE
+	var board_y:int = (zone.y + 1) * CELL_SIZE
+	var board_w:int = (zone.w - 2) * CELL_SIZE
+	var board_h:int = (wall_h - 2) * CELL_SIZE
 	if board_w > 0 and board_h > 0:
 		var board := ColorRect.new()
 		board.position = Vector2(board_x, board_y)
@@ -1630,7 +1630,6 @@ func get_floor_nodes() -> Array:
 
 # Get center position of office desk zone (for price terminal proximity)
 func get_office_desk_zone_center() -> Vector2:
-	var ppos = _player.position if _player != null else Vector2.ZERO
 	var zone = _find_zone_by_type(FloorConfig.ZONE_OFFICE_DESK)
 	if zone == null:
 		return Vector2(-1, -1)  # Invalid position
@@ -1644,4 +1643,4 @@ func _find_zone_by_type(ztype: String) -> Dictionary:
 	for zone in _floor_def.zones:
 		if zone.type == ztype:
 			return zone
-	return null
+	return {}  # 🔥 修复：返回空字典而不是 null

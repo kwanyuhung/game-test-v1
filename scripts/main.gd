@@ -313,9 +313,9 @@ func _build_parking() -> void:
 
 func player_board_elevator(player, floor_idx: int) -> void:
 	_in_elevator = true
-	# Teleport player into elevator car
+	# Teleport player into elevator car (near tile 6)
 	var car_y: float = _elevator.get_car_world_y()
-	_player.position = Vector2(80 * CELL_SIZE + 7 * CELL_SIZE, car_y + 5 * CELL_SIZE)
+	_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, car_y + 5 * CELL_SIZE)
 
 func get_elevator():
 	return _elevator
@@ -332,7 +332,7 @@ func _on_elevator_travel_finished() -> void:
 		await get_tree().create_timer(0.25).timeout
 	_rebuild_floor(_current_floor_idx)
 	if _player != null:
-		_player.position = Vector2(80 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
+		_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
 	if _fade != null:
 		_fade.fade_in(0.3)
 	if _minimap != null:
@@ -650,7 +650,7 @@ func _navigate_to_floor(floor_idx: int) -> void:
 	_current_floor_idx = floor_idx
 	_rebuild_floor(floor_idx)
 	if _player:
-		_player.position = Vector2(80 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
+		_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
 	if _minimap:
 		_minimap.set_floor(floor_idx)
 	if _toasts:

@@ -3,11 +3,16 @@
 extends Node
 
 const ActorData = preload("res://scripts/actor_data.gd") 
+const ElevatorScript = preload("res://scripts/elevator.gd")
 
 var _main: Node2D = null
 var _config: MainConfig = null
 var _cell_size: int = 16
 var _npc_count: int = 0
+
+# Helper to get world Y position for a floor
+func _get_floor_world_y(floor_idx: int) -> float:
+	return ElevatorScript.FLOOR_Y.get(floor_idx, 32 * _cell_size)
 
 func setup(main: Node2D, config: MainConfig) -> void:
 	# 🔥 空值防护
@@ -146,6 +151,13 @@ func spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void
 func build_npcs() -> void:
 	# 🔥 空值防护
 	if _main == null || _config == null: return
+	
+	# Get current floor
+	var current_floor: int = 0
+	var fi_var = _main.get("_current_floor_idx")
+	if fi_var != null:
+		current_floor = int(fi_var)
+	
 	var staff_spawns: Dictionary = _config.get_staff_spawns()
 	var staff_roles_arr: Array = _config.get_staff_roles()
 
@@ -159,14 +171,20 @@ func build_npcs() -> void:
 		"FLOOR_STAFF": ActorData.StaffRole.FLOOR_STAFF,
 	}
 
+	# Spawn staff only for current floor
 	for role_name in staff_roles_arr:
 		var role = role_map.get(role_name, ActorData.StaffRole.CASHIER)
 		var count := 2 if role == ActorData.StaffRole.SHELF_STOCKER else 1
 		for c in range(count):
 			var floor_idx := c % 5
+			# Only spawn if floor matches current floor
+			if floor_idx != current_floor:
+				continue
 			var spawns = staff_spawns.get(str(floor_idx), {"x": [30], "y": [10]})
 			var sx = spawns["x"][c % spawns["x"].size()] * _cell_size
-			var sy = spawns["y"][c % spawns["y"].size()] * _cell_size
+			# Convert relative Y to absolute world Y based on floor
+			var rel_y = spawns["y"][c % spawns["y"].size()]
+			var sy = _get_floor_world_y(floor_idx) + rel_y * _cell_size
 			spawn_npc_staff(role, floor_idx, Vector2(sx, sy))
 
 	var customer_spawns: Array = _config.get_customer_spawns()
@@ -186,11 +204,28 @@ func build_npcs() -> void:
 		var gtype_str = spawn_data.get("type", "SOLO")
 		var gtype = group_type_map.get(gtype_str, ActorData.CustomerGroupType.SOLO)
 
+		# Check if this spawn is for the current floor
+		var spawn_floor: int = int(spawn_data.get("floor", 0))
+		var has_count: bool = spawn_data.has("count")
+		var floor_range: Array = spawn_data.get("floor_range", [0, 4])
+		
+		# Check if this spawn config matches current floor
+		var spawns_on_current_floor := false
+		if has_count:
+			var fmin := int(floor_range[0])
+			var fmax := int(floor_range[1])
+			spawns_on_current_floor = (current_floor >= fmin and current_floor <= fmax)
+		else:
+			spawns_on_current_floor = (spawn_floor == current_floor)
+		
+		if not spawns_on_current_floor:
+			continue
+
 		if spawn_data.has("count"):
 			var count: int = spawn_data.get("count", 1)
 			var x_range = spawn_data.get("x_range", [100, 500])
 			var y_range = spawn_data.get("y_range", [100, 400])
-			var floor_range = spawn_data.get("floor_range", [0, 4])
+			# 🔥 已删除重复的 var floor_range 定义
 			for i in range(count):
 				var floor_i: int
 				if floor_range.size() >= 2:
@@ -211,7 +246,7 @@ func build_npcs() -> void:
 			var px: float = spawn_data.get("x", 300)
 			var py: float = spawn_data.get("y", 200)
 			spawn_customer_group(gtype, floor_idx, Vector2(px, py))
-
+			
 # ── Humanoid robot ───────────────────────────────────────────────────────────
 func spawn_robot_humanoid(staff_role: ActorData.StaffRole) -> void:
 	# 🔥 空值防护
@@ -258,6 +293,13 @@ func spawn_robots() -> void:
 	if _config == null:
 		print("警告：配置节点未初始化，跳过机器人生成")
 		return
+	
+	# Get current floor
+	var current_floor: int = 0
+	var fi_var = _main.get("_current_floor_idx")
+	if fi_var != null:
+		current_floor = int(fi_var)
+	
 	var humanoid_roles: Array = []
 	var single_roles: Array = []
 	
@@ -275,13 +317,18 @@ func spawn_robots() -> void:
 		"GUIDANCE_ROBOT": ActorData.RobotRole.GUIDANCE_ROBOT,
 	}
 	
+	# Spawn robots only on appropriate floors (ground floor for most)
 	for rname in humanoid_roles:
 		var r = humanoid_map.get(rname, ActorData.StaffRole.GREETER)
-		spawn_robot_humanoid(r)
+		# Only spawn on ground floor for now
+		if current_floor == 0:
+			spawn_robot_humanoid(r)
 	
 	for rname in single_roles:
 		var r = single_map.get(rname, ActorData.RobotRole.CLEANING_ROBOT)
-		spawn_robot_single(r)
+		# Only spawn on ground floor for now
+		if current_floor == 0:
+			spawn_robot_single(r)
 
 # ── Scan & Go companion ───────────────────────────────────────────────────────
 # ── Scan & Go companion ───────────────────────────────────────────────────────
@@ -331,7 +378,8 @@ func spawn_player() -> void:
 	# 🔥 空值防护
 	if _main == null: return
 	var player: Node2D = preload("res://scripts/player.gd").new()
-	player.position = Vector2(12 * 16, 4 * 16)
+	# Spawn near elevator (tile 6, mid-floor y)
+	player.position = Vector2(6 * _cell_size + 7 * _cell_size, 20 * _cell_size)
 	_main.add_child(player)
 	player.set_world(_main)
 	player.cart_updated.connect(_main._on_cart_updated)
