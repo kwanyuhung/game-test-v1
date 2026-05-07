@@ -1627,3 +1627,21 @@ func get_checkout_counters() -> Array:
 
 func get_floor_nodes() -> Array:
 	return _floor_nodes
+
+# Get center position of office desk zone (for price terminal proximity)
+func get_office_desk_zone_center() -> Vector2:
+	var ppos = _player.position if _player != null else Vector2.ZERO
+	var zone = _find_zone_by_type(FloorConfig.ZONE_OFFICE_DESK)
+	if zone == null:
+		return Vector2(-1, -1)  # Invalid position
+	return Vector2(
+		(zone.x + zone.w * 0.5) * CELL_SIZE,
+		(zone.y + zone.h * 0.5) * CELL_SIZE
+	)
+
+# Find a zone by its type
+func _find_zone_by_type(ztype: String) -> Dictionary:
+	for zone in _floor_def.zones:
+		if zone.type == ztype:
+			return zone
+	return null

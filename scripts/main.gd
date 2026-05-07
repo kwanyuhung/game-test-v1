@@ -416,6 +416,18 @@ func _spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> voi
 	return
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
+		# DEBUG: Number keys 0-9 to quickly jump to floors (dev mode only)
+		if DEV_MODE:
+			var floor_keys := {
+				KEY_0: 0, KEY_1: 1, KEY_2: 2, KEY_3: 3,
+				KEY_4: 4, KEY_5: 5, KEY_6: 6, KEY_7: 7,
+				KEY_8: 8, KEY_9: 9, KEY_MINUS: 10
+			}
+			if event.keycode in floor_keys and not (event.shift_pressed or event.ctrl_pressed or event.alt_pressed):
+				var floor_idx: int = floor_keys[event.keycode]
+				_jump_to_floor(floor_idx)
+				return
+		
 		match event.keycode:
 			# F5 ── Quick Save
 			KEY_F5:
@@ -644,6 +656,27 @@ func _navigate_to_floor(floor_idx: int) -> void:
 	if _toasts:
 		var fname = "Ground" if floor_idx == 0 else "Floor " + str(floor_idx)
 		_toasts.toast_info("Moved to " + fname)
+
+# DEBUG: Quick jump to any floor (dev mode only)
+func _jump_to_floor(floor_idx: int) -> void:
+	var max_floors := FloorConfig.floor_count()
+	if floor_idx < 0 or floor_idx >= max_floors:
+		if _toasts:
+			_toasts.toast_warning("Invalid floor! Range: 0-%d" % (max_floors - 1))
+		return
+	
+	_current_floor_idx = floor_idx
+	_rebuild_floor(floor_idx)
+	if _player:
+		# Position player near elevator (tile 6)
+		_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
+	if _minimap:
+		_minimap.set_floor(floor_idx)
+	if _map_panel:
+		_map_panel.set_floor(floor_idx)
+	if _toasts:
+		var fname = "Ground" if floor_idx == 0 else ("Floor " + str(floor_idx))
+		_toasts.toast_success("[DEBUG] Jumped to " + fname)
 
 func _on_issue_created(issue) -> void:
 	if is_instance_valid(_maintenance_visual):
