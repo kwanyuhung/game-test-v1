@@ -12,7 +12,6 @@ func setup(main: Node2D) -> void:
 func init_all() -> void:
 	var m = _main
 	m.add_to_group("main")
-	m.set("_telegram_bot", m.get_node_or_null("/root/Main/TelegramBot"))
 
 	var config = preload("res://scripts/main_config.gd").new()
 	m.add_child(config)
@@ -164,16 +163,9 @@ func init_all() -> void:
 
 	# ── Save System load ───────────────────────────────────────────────────────
 	var save_sys = preload("res://scripts/save_system.gd")
-	var telegram_bot = m.get("_telegram_bot")
 	if save_sys.load_game(m):
 		m._show_save_hint("Save loaded!")
-		# 🔥 修复：判断机器人存在且有方法才调用
-		if telegram_bot && telegram_bot.has_method("notify_telegram"):
-			telegram_bot.notify_telegram("📁 *Save loaded* — resuming game")
 	else:
-		# 🔥 修复：判断机器人存在且有方法才调用
-		if telegram_bot && telegram_bot.has_method("notify_telegram"):
-			telegram_bot.notify_telegram("📋 *New game* — no save found")
 		var tutorial_overlay = preload("res://scripts/tutorial_overlay.gd").new()
 		m.add_child(tutorial_overlay)
 		tutorial_overlay.dismissed.connect(m._on_tutorial_dismissed)
@@ -281,8 +273,3 @@ func init_all() -> void:
 		dev_tools.position = Vector2(100.0, 100.0)
 		dev_tools.z_index = 1000
 		m.add_child(dev_tools)
-		m.set("_dev_tools", dev_tools)
-
-	# ── Telegram notification ─────────────────────────────────────────────────
-	#if telegram_bot:
-		#telegram_bot.notify_telegram("🟢 *Game Loaded*\n10-floor supermarket — Ground (G) ready\nUse [E] near elevator to change floors")

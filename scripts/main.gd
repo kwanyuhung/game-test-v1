@@ -8,7 +8,6 @@ const FloorConfig = preload("res://scripts/floor_config.gd")
 const FloorBuilderScript = preload("res://scripts/floor_builder.gd")
 const SectionBrowseScript = preload("res://scripts/section_browse.gd")
 const StoreData = preload("res://scripts/store_data.gd")
-const TelegramBot = preload("res://scripts/telegram_bot.gd")
 const ElevatorScript = preload("res://scripts/elevator.gd")
 const FoodStallBrowseScript = preload("res://scripts/food_stall_browse.gd")
 const ClawMachine = preload("res://scripts/claw_machine.gd")
@@ -45,6 +44,7 @@ const SettingsPanelScript = preload("res://scripts/settings_panel.gd")
 const PauseMenuScript = preload("res://scripts/pause_menu.gd")
 const StatsDashboardScript = preload("res://scripts/stats_dashboard.gd")
 const MiniMapScript = preload("res://scripts/mini_map.gd")
+const MapPanelScript = preload("res://scripts/map_panel.gd")
 const ToastManagerScript = preload("res://scripts/toast_manager.gd")
 const FloatingTextScript = preload("res://scripts/floating_text.gd")
 const FadeTransitionScript = preload("res://scripts/fade_transition.gd")
@@ -103,6 +103,7 @@ var _audio: AudioManager = null
 var _save_hint_label: Label = null
 var _tutorial_overlay: TutorialOverlay = null
 var _minimap: MiniMap = null
+var _map_panel: MapPanel = null
 var _toasts: ToastManager = null
 var _minimap_visible: bool = false
 var _time_label: Label = null
@@ -169,7 +170,6 @@ var _temp_order_items: Array = []
 
 var _world_bg: ColorRect = null
 var _aisle_labels: Array = []
-var _telegram_bot: Node = null
 var _elevator: ElevatorScript
 var _main_panels: Node = null
 var _main_spawner: Node = null
@@ -337,6 +337,8 @@ func _on_elevator_travel_finished() -> void:
 		_fade.fade_in(0.3)
 	if _minimap != null:
 		_minimap.set_floor(_current_floor_idx)
+	if _map_panel != null:
+		_map_panel.set_floor(_current_floor_idx)
 	if _toasts != null:
 		var fname := "Ground" if _current_floor_idx == 0 else ("Floor " + str(_current_floor_idx))
 		_toasts.toast_info("Entered: " + fname)
@@ -366,16 +368,18 @@ func _rebuild_floor(idx: int) -> void:
 
 # ???????????????????????????????????????????????????????????????????????????????????????????????# CAMERA & HUD
 # ???????????????????????????????????????????????????????????????????????????????????????????????
+var _camera: Camera2D = null
+
 func _setup_camera() -> void:
-	var cam := Camera2D.new()
-	cam.zoom = Vector2(3.0, 3.0)
-	cam.limit_left = 0
-	cam.limit_top = 0
-	cam.limit_right = WORLD_W * CELL_SIZE
-	cam.limit_bottom = WORLD_H * CELL_SIZE
-	cam.position_smoothing_speed = 3.0
-	add_child(cam)
-	cam.make_current()
+	_camera = Camera2D.new()
+	_camera.zoom = Vector2(3.0, 3.0)
+	_camera.limit_left = 0
+	_camera.limit_top = 0
+	_camera.limit_right = WORLD_W * CELL_SIZE
+	_camera.limit_bottom = WORLD_H * CELL_SIZE
+	_camera.position_smoothing_speed = 5.0
+	add_child(_camera)
+	_camera.make_current()
 
 func _build_hud() -> void:
 	pass  # HUD built by main_hud.gd in _ready()
@@ -430,9 +434,9 @@ func _input(event: InputEvent) -> void:
 			# L ── Shopping List
 			KEY_L:
 				_toggle_shopping_list()
-			# M ── Loyalty Panel
+			# M ── Map Panel
 			KEY_M:
-				_food_court_system.toggle_loyalty_panel()
+				_toggle_map_panel()
 			# X ── Renovate nearby section (staff mode)
 			KEY_X:
 				_renovate_nearby_section()
@@ -506,6 +510,10 @@ func _input(event: InputEvent) -> void:
 				return
 
 func _process(_delta: float) -> void:
+	# Camera follow player
+	if _camera != null and _player != null:
+		_camera.global_position = _player.global_position
+	
 	if _current_section_browse != null and _current_section_browse.visible:
 		return
 	if _checkout_receipt_visible:
@@ -523,7 +531,6 @@ func _process(_delta: float) -> void:
 func _on_warehouse_delivery_arrived(contents: Dictionary) -> void:
 	# Spawn truck at dock on Floor G
 	_truck_dock_system.spawn_truck()
-	notify_telegram("Delivery arrived! Truck at dock — press [E] to unload for bonus XP!" % contents.size())
 
 func _on_warehouse_low_stock(section_id: String) -> void:
 	var section_name := section_id.to_upper()
@@ -649,9 +656,6 @@ func _on_issue_resolved(issue, by_player: bool) -> void:
 		var prompt_lbl = get_node_or_null("PromptLbl")
 		if prompt_lbl != null:
 			prompt_lbl.text = "Issue resolved! +10 XP"
-		# Notify telegram
-		notify_telegram("? Maintenance issue fixed on Floor %d!
-Type: %s" % [issue.floor, issue.label])
 	if issue == _target_issue:
 		_target_issue = null
 	if by_player and _player_stats != null:
@@ -679,14 +683,12 @@ func _on_staff_rank_up(new_rank: PlayerStats.StaffRank) -> void:
 	if _toasts:
 		_toasts.toast_success("STAFF RANK UP to %s!" % rank_name)
 	_update_staff_rank_hud()
-	notify_telegram("Staff rank up! Now: %s" % rank_name)
 
 func _update_staff_rank_hud() -> void:
 	if _main_panels != null:
 		_main_panels.update_staff_rank_hud()
 
 func _on_player_level_up(new_level: int) -> void:
-	notify_telegram("LEVEL UP! You are now Level %d!" % new_level)
 	var prompt_lbl = get_node_or_null("PromptLbl")
 	if prompt_lbl != null:
 		prompt_lbl.text = "LEVEL UP! You are now Level %d!" % new_level
@@ -711,12 +713,8 @@ func _on_hour_changed(hour: int) -> void:
 		var t := _game_clock.game_time_string()
 		var period := _game_clock.period_name()
 		if hour == 6:  # Store opens
-			notify_telegram("Store Open - 6AM!")
 			if _toasts != null: _toasts.toast_success("Store Open! 6:00 AM")
-		if hour == 22:  # 10pm getting quiet
-			notify_telegram("Evening hours")
 		if hour == 23:  # 11pm closing soon
-			notify_telegram("Store closing soon - last call!")
 			if _toasts != null: _toasts.toast_warn("Store Closing - 11:00 PM")
 
 # ── Phase M: Staff Management — Day/Shift handlers ─────────────
@@ -728,8 +726,6 @@ func _on_day_changed() -> void:
 			var remaining := _player_stats.pay_staff_wages(_player_stats.get_cash())
 			if _toasts:
 				_toasts.toast_info("Daily wages paid: $%.2f" % wages)
-			# 修改这一行：
-			notify_telegram("Wages paid: $%.2f for %d staff" % [wages, _player_stats.get_staff_count()])
 	else:
 		if _toasts:
 			_toasts.toast_warn("Could not pay staff wages!")
@@ -742,7 +738,6 @@ func _on_shift_report() -> void:
 		var active := roster.size()
 		if _toasts:
 			_toasts.toast_success("Shift complete! %d staff on duty. +30 Staff XP" % active)
-		notify_telegram("Shift report: %d staff active" % active)
 
 func _show_tutorial_overlay() -> void:
 	if _tutorial_overlay != null:
@@ -776,13 +771,19 @@ func _on_quest_completed(quest_id: String, desc: String, xp: int) -> void:
 		_toasts.toast_success("Quest Done! +%d XP" % xp)
 	if _player_stats != null:
 		_player_stats.add_xp(xp, "Daily Quest: %s" % desc)
-	notify_telegram("🎯 *Daily Quest Complete!* %s +%d XP" % [desc, xp])
-	SaveSystem.save_game(self)
+		SaveSystem.save_game(self)
+
+func _on_cart_dropped() -> void:
+	if _toasts != null:
+		_toasts.toast_info("Cart dropped. Press [G] to grab it back.")
+
+func _on_cart_grabbed() -> void:
+	if _toasts != null:
+		_toasts.toast_info("Cart grabbed!")
 
 func _on_all_quests_complete() -> void:
 	if _toasts != null:
 		_toasts.toast_xp("All Daily Quests Done! Epic Bonus!")
-	notify_telegram("🏅 *All Daily Quests Done!* Epic bonus incoming!")
 	if _player_stats != null:
 		_player_stats.add_xp(50, "All Quests Bonus")
 
@@ -803,10 +804,7 @@ func _on_setting_changed(key: String, value) -> void:
 			if _audio != null: _audio.set_sfx_volume(value)
 		"notif_toasts":
 			# Toasts are always on, just a flag
-			pass  # 添加这行
-		"notif_telegram":
-			# Telegram handled by flag in telegram_bot
-			pass  # 添加这行
+			pass
 
 func _toggle_pause() -> void:
 	if _current_section_browse != null and _current_section_browse.visible: return
@@ -893,9 +891,9 @@ func _on_player_interact() -> void:
 		return
 
 	# Elevator
-	#if _nearby_elevator:
-		#_elevator.open_panel(_current_floor_idx, _player)
-		#return
+	if _nearby_elevator and _elevator != null:
+		_elevator.open_panel(_player.position, _player)
+		return
 
 	# ATM
 	if _nearby_atm:
@@ -1053,7 +1051,6 @@ func _attempt_catch_thief() -> void:
 	if _player_stats != null:
 		_player_stats.add_xp(reward["xp"], "Caught shoplifter")
 		_player_stats.add_cash(reward["cash"])
-	notify_telegram("Thief caught! +%d XP, $%.2f" % [reward["xp"], reward["cash"]])
 
 func _renovate_nearby_section() -> void:
 	if _nearby_section == null or _store_expansion == null:
@@ -1074,7 +1071,6 @@ func _renovate_nearby_section() -> void:
 	_store_expansion.renovate_section(sec_id)
 	if _toasts:
 		_toasts.toast_success("Section renovated! +1 Rep")
-	notify_telegram("Section renovated: %s for $%d" % [_nearby_section.get_def().name, cost])
 
 func _restock_nearby_section() -> void:
 	if _nearby_section == null or _warehouse == null:
@@ -1097,7 +1093,6 @@ func _restock_nearby_section() -> void:
 			_player_stats.add_staff_xp(8, "Restocked %s" % sec_def.name)
 		if _toasts:
 			_toasts.toast_success("Restocked %s with %d units! +8 Staff XP" % [sec_def.name, top_up])
-		notify_telegram("Restocked: %s +%d units" % [sec_def.name, top_up])
 
 func _open_section_browse(section) -> void:
 	if _section_browse == null:
@@ -1117,14 +1112,12 @@ func on_staff_mode_toggled(is_staff: bool) -> void:
 	if is_staff:
 		_staff_blocked_floor = -1  # can access all floors when staff
 		if _toasts != null: _toasts.toast_success("[STAFF MODE] Clocked in!")
-		notify_telegram("Henry clocked IN to staff mode — Price Terminal available on Floor 9")
 		# 30% chance to spawn a Scan & Go companion on Floor G
 		if _current_floor_idx == 0 and randf() < 0.30:
 			_spawn_scan_go_companion()
 	else:
 		_staff_blocked_floor = 9  # lock floor 9 again
 		if _toasts != null: _toasts.toast_info("[STAFF MODE] Clocked out.")
-		notify_telegram("Henry clocked OUT of staff mode")
 		# Remove scan & go companion if active
 		_remove_scan_go_companion()
 
@@ -1211,14 +1204,6 @@ func get_game_clock() -> Node:
 func _spawn_truck_at_dock() -> void:
 	_truck_dock_system.spawn_truck()
 	return
-func notify_telegram(text: String) -> void:
-	if _telegram_bot != null:
-		_telegram_bot.queue_report(text)
-	else:
-		TelegramBot.send_message(text)
-
-func notify_telegram_npc(count: int) -> void:
-	notify_telegram("NPCs in store: %d" % count)
 
 # ── Store news bulletin board ───────────────────────────────────────────────
 func _toggle_stats_dashboard() -> void:
@@ -1226,6 +1211,15 @@ func _toggle_stats_dashboard() -> void:
 	_stats_dashboard.toggle()
 	if _stats_dashboard.visible:
 		_stats_dashboard.refresh_from_stats(_player_stats)
+
+# ── Map Panel (M key) ──────────────────────────────────────────────
+func _toggle_map_panel() -> void:
+	if _map_panel == null:
+		_map_panel = MapPanelScript.new()
+		add_child(_map_panel)
+		_map_panel.set_player(_player)
+		_map_panel.set_floor(_current_floor_idx)
+	_map_panel.toggle()
 		
 # 每日签到奖励信号处理函数
 func _on_streak_reward(days: int, bonus_xp: int) -> void:

@@ -99,13 +99,6 @@ func do_unload() -> void:
 				_player_stats.add_cash(bonus_cash)
 			if _toasts:
 				_toasts.toast_success("Truck unloaded! +%d XP + $%.2f bonus!" % [bonus_xp, bonus_cash])
-			var telegram_bot = _main.get("_telegram_bot")
-			var text = "🚚 Truck unloaded! +%d XP + $%.2f bonus!" % [bonus_xp, bonus_cash]
-			if telegram_bot != null:
-				telegram_bot.queue_report(text)
-			else:
-				var TelegramBot = load("res://scripts/telegram_bot.gd")
-				TelegramBot.send_message(text)
 		else:
 			_warehouse.receive_delivery(pending)
 			if _toasts:

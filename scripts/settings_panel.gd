@@ -1,6 +1,6 @@
 # settings_panel.gd
 class_name SettingsPanel
-# Game settings panel — audio volume, game speed, notification toggles.
+# Game settings panel — audio volume, game speed, notification toggles, and controls help.
 # Press O to toggle.
 extends CanvasLayer
 
@@ -12,7 +12,6 @@ var _settings: Dictionary = {
 	"sfx_volume": 0.8,
 	"game_speed": 1.0,
 	"notif_toasts": true,
-	"notif_telegram": true,
 }
 
 var _option_rows: Array = []
@@ -20,6 +19,26 @@ var _selected_idx := 0
 var _music_slider_val := 0.8
 var _sfx_slider_val := 0.8
 var _speed_val := 1.0
+
+# Controls help data
+var _controls := [
+	{"key": "W/A/S/D", "desc": "Move player"},
+	{"key": "E", "desc": "Interact / Confirm"},
+	{"key": "G", "desc": "Drop/grab cart"},
+	{"key": "K", "desc": "Toggle staff mode"},
+	{"key": "M", "desc": "Toggle map panel"},
+	{"key": "L", "desc": "Shopping list"},
+	{"key": "J", "desc": "Quest journal"},
+	{"key": "O", "desc": "Settings"},
+	{"key": "P / SPACE", "desc": "Pause game"},
+	{"key": "F5", "desc": "Quick save"},
+	{"key": "F9", "desc": "Quick load"},
+	{"key": "R", "desc": "Robot panel / Restock"},
+	{"key": "X", "desc": "Renovate section"},
+	{"key": "B", "desc": "Brand portal"},
+	{"key": "Shift+B", "desc": "Business mode"},
+	{"key": "F", "desc": "Catch thief"},
+]
 
 func _ready() -> void:
 	visible = false
@@ -52,10 +71,11 @@ func _build_ui() -> void:
 	ov.gui_input.connect(_on_input)
 	add_child(ov)
 
-	var pan_x := 60.0
-	var pan_y := 30.0
-	var pan_w := 200.0
-	var pan_h := 120.0
+	# Settings panel (left side)
+	var pan_x := 80.0
+	var pan_y := 40.0
+	var pan_w := 360.0
+	var pan_h := 260.0
 
 	var pan := ColorRect.new()
 	pan.position = Vector2(pan_x, pan_y)
@@ -65,9 +85,9 @@ func _build_ui() -> void:
 
 	var title := Label.new()
 	title.text = "SETTINGS"
-	title.position = Vector2(pan_x + 6, pan_y + 4)
+	title.position = Vector2(pan_x + 10, pan_y + 8)
 	title.add_theme_color_override("font_color", Color(0.85, 0.85, 0.95))
-	title.add_theme_font_size_override("font_size", 9)
+	title.add_theme_font_size_override("font_size", 18)
 	add_child(title)
 
 	var options := [
@@ -75,23 +95,69 @@ func _build_ui() -> void:
 		{"label": "SFX Volume", "type": "slider", "key": "sfx", "val": _settings["sfx_volume"]},
 		{"label": "Game Speed", "type": "slider", "key": "speed", "val": _settings["game_speed"]},
 		{"label": "Toasts", "type": "toggle", "key": "notif_toasts", "val": _settings["notif_toasts"]},
-		{"label": "Telegram", "type": "toggle", "key": "notif_telegram", "val": _settings["notif_telegram"]},
 	]
 	_option_rows = options
 
-	var y := pan_y + 20.0
+	var y := pan_y + 36.0
 	for i in range(options.size()):
 		var opt = options[i]
-		_draw_option(opt, i, Vector2(pan_x + 6, y))
-		y += 16.0
+		_draw_option(opt, i, Vector2(pan_x + 10, y))
+		y += 32.0
 
 	# Hint row
 	var hint := Label.new()
 	hint.text = "W/S: select  A/D: adjust  E: confirm  ESC: close"
-	hint.position = Vector2(pan_x + 6, pan_y + pan_h - 14)
+	hint.position = Vector2(pan_x + 10, pan_y + pan_h - 24)
 	hint.add_theme_color_override("font_color", Color(0.30, 0.30, 0.35))
-	hint.add_theme_font_size_override("font_size", 7)
+	hint.add_theme_font_size_override("font_size", 14)
 	add_child(hint)
+
+	# Controls panel (right side)
+	var ctrl_x := 480.0
+	var ctrl_y := 40.0
+	var ctrl_w := 440.0
+	var ctrl_h := float(_controls.size()) * 36.0 + 100.0
+
+	var ctrl_pan := ColorRect.new()
+	ctrl_pan.position = Vector2(ctrl_x, ctrl_y)
+	ctrl_pan.size = Vector2(ctrl_w, ctrl_h)
+	ctrl_pan.color = Color(0.09, 0.09, 0.13, 0.95)
+	add_child(ctrl_pan)
+
+	var ctrl_title := Label.new()
+	ctrl_title.text = "CONTROLS"
+	ctrl_title.position = Vector2(ctrl_x + 10, ctrl_y + 8)
+	ctrl_title.add_theme_color_override("font_color", Color(0.85, 0.85, 0.95))
+	ctrl_title.add_theme_font_size_override("font_size", 18)
+	add_child(ctrl_title)
+
+	var ctrl_y_pos := ctrl_y + 36.0
+	for ctrl in _controls:
+		# Key label
+		var key_lbl := Label.new()
+		key_lbl.text = "[%s]" % ctrl["key"]
+		key_lbl.position = Vector2(ctrl_x + 10, ctrl_y_pos)
+		key_lbl.add_theme_color_override("font_color", Color(0.72, 0.88, 0.98))
+		key_lbl.add_theme_font_size_override("font_size", 14)
+		add_child(key_lbl)
+
+		# Description label
+		var desc_lbl := Label.new()
+		desc_lbl.text = ctrl["desc"]
+		desc_lbl.position = Vector2(ctrl_x + 160, ctrl_y_pos)
+		desc_lbl.add_theme_color_override("font_color", Color(0.60, 0.60, 0.65))
+		desc_lbl.add_theme_font_size_override("font_size", 14)
+		add_child(desc_lbl)
+
+		ctrl_y_pos += 32.0
+
+	# Controls hint
+	var ctrl_hint := Label.new()
+	ctrl_hint.text = "Press O to close"
+	ctrl_hint.position = Vector2(ctrl_x + 10, ctrl_y_pos + 8)
+	ctrl_hint.add_theme_color_override("font_color", Color(0.30, 0.30, 0.35))
+	ctrl_hint.add_theme_font_size_override("font_size", 14)
+	add_child(ctrl_hint)
 
 	_update_selection()
 
@@ -104,7 +170,7 @@ func _draw_option(opt: Dictionary, idx: int, pos: Vector2) -> void:
 	lbl.text = prefix + opt["label"]
 	lbl.position = pos
 	lbl.add_theme_color_override("font_color", col)
-	lbl.add_theme_font_size_override("font_size", 8)
+	lbl.add_theme_font_size_override("font_size", 16)
 	lbl.name = "opt_%d" % idx
 	add_child(lbl)
 
@@ -116,9 +182,14 @@ func _draw_option(opt: Dictionary, idx: int, pos: Vector2) -> void:
 	elif opt["type"] == "toggle":
 		val_text = "ON" if opt["val"] else "OFF"
 	val_lbl.text = val_text
-	val_lbl.position = Vector2(pos.x + 120, pos.y)
-	val_lbl.add_theme_color_override("font_color", Color(0.60, 0.85, 0.60) if opt["val"] else Color(0.85, 0.50, 0.50))
-	val_lbl.add_theme_font_size_override("font_size", 8)
+	val_lbl.position = Vector2(pos.x + 240, pos.y)
+	var toggle_color: Color
+	if opt["type"] == "toggle":
+		toggle_color = Color(0.60, 0.85, 0.60) if opt["val"] else Color(0.85, 0.50, 0.50)
+	else:
+		toggle_color = Color(0.60, 0.60, 0.65)
+	val_lbl.add_theme_color_override("font_color", toggle_color)
+	val_lbl.add_theme_font_size_override("font_size", 16)
 	add_child(val_lbl)
 
 func _update_selection() -> void:
@@ -189,4 +260,5 @@ func _update_val_label(idx: int) -> void:
 		lbl.text = "%.1f" % opt["val"]
 	elif opt["type"] == "toggle":
 		lbl.text = "ON" if opt["val"] else "OFF"
-		lbl.add_theme_color_override("font_color", Color(0.60, 0.85, 0.60) if opt["val"] else Color(0.85, 0.50, 0.50))
+		var toggle_color: Color = Color(0.60, 0.85, 0.60) if opt["val"] else Color(0.85, 0.50, 0.50)
+		lbl.add_theme_color_override("font_color", toggle_color)

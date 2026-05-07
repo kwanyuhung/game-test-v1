@@ -149,13 +149,6 @@ func play_karaoke() -> void:
 		_player_stats.add_xp(bonus_xp)
 	if _toasts != null:
 		_toasts.toast_success("Karaoke! +%d XP - You are a star!" % bonus_xp)
-	var telegram_bot = _main.get("_telegram_bot")
-	var text = "Karaoke performed! +%d XP earned!" % bonus_xp
-	if telegram_bot != null:
-		telegram_bot.queue_report(text)
-	else:
-		var TelegramBot = load("res://scripts/telegram_bot.gd")
-		TelegramBot.send_message(text)
 
 func play_pool() -> void:
 	var bonus_xp = 15 + randi() % 20
@@ -172,13 +165,6 @@ func play_darts() -> void:
 		_player_stats.add_cash(bonus_cash)
 	if _toasts != null:
 		_toasts.toast_success("Bullseye! +%d XP + $%.2f prize money!" % [bonus_xp, bonus_cash])
-	var telegram_bot = _main.get("_telegram_bot")
-	var text = "Darts champion! +%d XP + $%.2f prize!" % [bonus_xp, bonus_cash]
-	if telegram_bot != null:
-		telegram_bot.queue_report(text)
-	else:
-		var TelegramBot = load("res://scripts/telegram_bot.gd")
-		TelegramBot.send_message(text)
 
 # ── Promo Booth ──────────────────────────────────────────────────
 func open_promo_booth() -> void:

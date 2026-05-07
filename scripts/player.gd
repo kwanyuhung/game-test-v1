@@ -15,12 +15,17 @@ var _sprite: Sprite2D
 var _staff_mode: bool = false
 var _staff_badge: Label = null
 var _staff_sprite_normal: bool = true  # true = normal, false = uniform
+var _has_cart: bool = true  # true = cart is with player, false = cart is left behind
+var _dropped_cart_pos: Vector2 = Vector2.ZERO  # Where cart was dropped
+var _cart_sprite_anchor: Node2D = null  # Anchor for dropped cart sprite
 
 signal cart_updated(count: int)
 signal zone_changed(zone_name: String)
 signal interact_requested
 signal tab_pressed
 signal staff_mode_changed(is_staff: bool)
+signal cart_grabbed
+signal cart_dropped
 
 func _init() -> void:
 	_cart = ShoppingCart.new()
@@ -184,14 +189,14 @@ func _physics_process(delta: float) -> void:
 	
 	if Input.is_action_just_pressed("interact"):
 		interact_requested.emit()
-	if Input.is_action_just_pressed("staff_toggle"):
-		_toggle_staff_mode_input()
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
 		tab_pressed.emit()
 	if event is InputEventKey and event.pressed and event.keycode == KEY_K:
 		_toggle_staff_mode_input()
+	if event is InputEventKey and event.pressed and event.keycode == KEY_G:
+		toggle_cart()
 
 func _toggle_staff_mode_input() -> void:
 	# Only allow toggling on floor 9 or near staff area
@@ -224,3 +229,59 @@ func get_cart():
 
 func get_current_zone() -> String:
 	return _current_zone
+
+# ── Cart Drop / Grab (G key) ─────────────────────────────────────────
+func has_cart() -> bool:
+	return _has_cart
+
+func drop_cart() -> void:
+	if not _has_cart:
+		return
+	# Remember where we dropped the cart
+	_dropped_cart_pos = global_position + _cart_offset
+	
+	# Hide cart sprite attached to player
+	if _cart_sprite != null:
+		_cart_sprite.visible = false
+	
+	# Create a standalone cart sprite where we dropped it
+	_drop_cart_sprite()
+	
+	_has_cart = false
+	cart_dropped.emit()
+
+func grab_cart() -> void:
+	if _has_cart:
+		return
+	
+	# Remove the dropped cart sprite
+	if _cart_sprite_anchor != null:
+		_cart_sprite_anchor.queue_free()
+		_cart_sprite_anchor = null
+	
+	# Show cart sprite attached to player
+	if _cart_sprite != null:
+		_cart_sprite.visible = true
+	
+	_has_cart = true
+	cart_grabbed.emit()
+
+func _drop_cart_sprite() -> void:
+	# Create a Node2D to hold the dropped cart sprite
+	_cart_sprite_anchor = Node2D.new()
+	_cart_sprite_anchor.name = "DroppedCart"
+	_cart_sprite_anchor.global_position = _dropped_cart_pos
+	get_parent().add_child(_cart_sprite_anchor)
+	
+	# Add cart sprite to anchor
+	var dropped_sprite := Sprite2D.new()
+	dropped_sprite.texture = _make_cart_tex()
+	dropped_sprite.position = Vector2.ZERO
+	dropped_sprite.z_index = -1  # Below player
+	_cart_sprite_anchor.add_child(dropped_sprite)
+
+func toggle_cart() -> void:
+	if _has_cart:
+		drop_cart()
+	else:
+		grab_cart()

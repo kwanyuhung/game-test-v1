@@ -2,6 +2,8 @@
 # Robot management UI panel — all building and signal handling.
 extends Node
 
+const ActorData = preload("res://scripts/actor_data.gd")
+
 var _main: Node2D = null
 var _robot_panel: Control = null
 var _player_stats: Node = null
@@ -44,7 +46,7 @@ func build_robot_panel() -> Control:
 	var scroll := ScrollContainer.new()
 	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
 	scroll.position = Vector2(0, 30)
-	scroll.size = Vector2(300, 340)
+	scroll.size = Vector2(300, 320)  # Reduced height to make room for close button
 	_robot_panel.add_child(scroll)
 
 	var list := VBoxContainer.new()
@@ -96,7 +98,9 @@ func build_robot_panel() -> Control:
 
 	var close_btn := Button.new()
 	close_btn.text = "[R] Close"
-	close_btn.position = Vector2(0, 375)
+	close_btn.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	close_btn.position = Vector2(0, 360)
+	close_btn.size = Vector2(300, 35)
 	close_btn.connect("pressed", _on_close_pressed)
 	_robot_panel.add_child(close_btn)
 
@@ -123,8 +127,8 @@ func _on_robot_humanoid_pressed(staff_role: int, cost: int) -> void:
 		return
 	stats.spend_xp(cost)
 	stats.complete_staff_task()
-	# Tell main to spawn the robot
-	_main.spawn_robot_humanoid(staff_role)
+	# Tell main to spawn the robot - cast int to proper StaffRole enum
+	_main.spawn_robot_humanoid(staff_role as ActorData.StaffRole)
 	var role_names: Dictionary = {0:"Cashier",1:"Stocker",2:"Cleaner",3:"Greeter",4:"Security",5:"Manager",6:"FloorStaff",7:"ScanGo"}
 	var rname: String = role_names.get(staff_role, "Robot")
 	if _toasts: _toasts.toast_success("Deployed HUMANOID %s! -%d XP" % [rname, cost])
@@ -147,8 +151,8 @@ func _on_robot_single_pressed(rrole: int, cost: int) -> void:
 		return
 	stats.spend_xp(cost)
 	stats.complete_staff_task()
-	# Tell main to spawn the robot
-	_main.spawn_robot_single(rrole)
+	# Tell main to spawn the robot - cast int to proper RobotRole enum
+	_main.spawn_robot_single(rrole as ActorData.RobotRole)
 	var role_names: Dictionary = {0:"CleanerBot",1:"GuideBot",2:"ShelfBot",3:"SecurityBot",4:"DeliveryBot"}
 	var rname: String = role_names.get(rrole, "Robot")
 	if _toasts: _toasts.toast_success("Deployed %s! -%d XP" % [rname, cost])

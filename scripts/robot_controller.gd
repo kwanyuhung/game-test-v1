@@ -147,56 +147,108 @@ func _build_machine_sprite(rrole: ActorData.RobotRole) -> void:
 	add_child(_eye_glow)
 
 func _make_humanoid_texture() -> ImageTexture:
-	# Robot that looks like a human but with synthetic skin and LED eyes
+	# Robot with clearly robotic appearance - metallic chrome body with glowing elements
 	var img: Image = Image.create(16, 28, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	
-	# Head (human-like but slightly metallic skin)
+	# Head - metallic silver/chrome
 	for x in range(4, 12):
 		for y in range(2, 9):
-			img.set_pixel(x, y, Color(0.82, 0.84, 0.88, 1.0))  # synthetic skin
+			img.set_pixel(x, y, Color(0.75, 0.78, 0.82, 1.0))  # chrome metal
 	
-	# Hair (short robotic style)
-	for x in range(4, 12):
-		img.set_pixel(x, 1, Color(0.30, 0.30, 0.35, 1.0))
+	# Metallic ridge on head (robot detail)
+	for x in range(5, 11):
+		img.set_pixel(x, 2, Color(0.55, 0.58, 0.62, 1.0))
 	
-	# LED eyes (cyan glow)
-	for x in [5, 6]:
-		img.set_pixel(x, 5, Color(0.25, 1.0, 0.80, 1.0))
-	for x in [9, 10]:
-		img.set_pixel(x, 5, Color(0.25, 1.0, 0.80, 1.0))
+	# Large LED eyes (cyan glow) - more prominent
+	for x in [4, 5, 6, 7]:
+		img.set_pixel(x, 4, Color(0.20, 1.0, 0.90, 1.0))
+	for x in [8, 9, 10, 11]:
+		img.set_pixel(x, 4, Color(0.20, 1.0, 0.90, 1.0))
+	# Eye glow effect
+	for x in [5, 6, 9, 10]:
+		img.set_pixel(x, 5, Color(0.40, 1.0, 0.95, 1.0))
 	
-	# Body (robot uniform based on role color)
-	var top_col: Color = _actor.appearance.top_color if _actor.appearance else Color(0.42, 0.42, 0.48)
-	var bot_col: Color = _actor.appearance.bottom_color if _actor.appearance else Color(0.22, 0.22, 0.42)
+	# Robot mouth/grill
+	for x in [5, 6, 7, 8, 9, 10]:
+		img.set_pixel(x, 7, Color(0.30, 0.30, 0.35, 1.0))
+	
+	# Neck joint (chrome)
+	img.set_pixel(6, 8, Color(0.65, 0.68, 0.72, 1.0))
+	img.set_pixel(7, 8, Color(0.65, 0.68, 0.72, 1.0))
+	img.set_pixel(8, 8, Color(0.65, 0.68, 0.72, 1.0))
+	img.set_pixel(9, 8, Color(0.65, 0.68, 0.72, 1.0))
+	
+	# Body - metallic uniform with accent stripe
+	var top_col: Color
+	var bot_col: Color
+	if _actor != null and _actor.appearance != null:
+		top_col = _actor.appearance.top_color
+		bot_col = _actor.appearance.bottom_color
+	else:
+		top_col = Color(0.50, 0.52, 0.58)  # default metallic gray
+		bot_col = Color(0.35, 0.38, 0.45)
 	
 	for x in range(3, 13):
 		for y in range(9, 20):
 			img.set_pixel(x, y, top_col)
 	
+	# Chest panel (darker inset)
+	for x in range(5, 11):
+		for y in range(10, 15):
+			img.set_pixel(x, y, Color(0.30, 0.32, 0.38, 1.0))
+	
+	# LED chest indicator (cyan)
+	img.set_pixel(7, 12, Color(0.20, 1.0, 0.85, 1.0))
+	img.set_pixel(8, 12, Color(0.20, 1.0, 0.85, 1.0))
+	
+	# Shoulder joints (chrome)
+	for y in range(9, 12):
+		img.set_pixel(2, y, Color(0.60, 0.63, 0.68, 1.0))
+		img.set_pixel(13, y, Color(0.60, 0.63, 0.68, 1.0))
+	
+	# Arms - metallic with visible joints
+	for y in range(12, 15):
+		img.set_pixel(2, y, Color(0.70, 0.72, 0.76, 1.0))
+		img.set_pixel(13, y, Color(0.70, 0.72, 0.76, 1.0))
+	for y in range(15, 19):
+		img.set_pixel(2, y, Color(0.55, 0.58, 0.62, 1.0))
+		img.set_pixel(13, y, Color(0.55, 0.58, 0.62, 1.0))
+	
+	# Lower body
 	for x in range(4, 12):
 		for y in range(20, 27):
 			img.set_pixel(x, y, bot_col)
 	
-	# Arms (synthetic skin)
-	for y in range(10, 19):
-		img.set_pixel(2, y, Color(0.80, 0.82, 0.86, 1.0))
-		img.set_pixel(13, y, Color(0.80, 0.82, 0.86, 1.0))
+	# Hip joint (chrome)
+	for x in range(4, 12):
+		img.set_pixel(x, 19, Color(0.60, 0.63, 0.68, 1.0))
 	
-	# Legs
-	for y in range(20, 27):
+	# Legs - metallic with knee joints
+	for y in range(20, 23):
 		img.set_pixel(4, y, bot_col)
 		img.set_pixel(11, y, bot_col)
+	# Knee joints
+	img.set_pixel(4, 23, Color(0.60, 0.63, 0.68, 1.0))
+	img.set_pixel(11, 23, Color(0.60, 0.63, 0.68, 1.0))
+	for y in range(24, 27):
+		img.set_pixel(4, y, Color(0.45, 0.48, 0.52, 1.0))
+		img.set_pixel(11, y, Color(0.45, 0.48, 0.52, 1.0))
 	
-	# Feet - 修复：分别绘制左右脚
-	for x in range(3, 7):  # 左脚
-		img.set_pixel(x, 27, Color(0.20, 0.20, 0.25, 1.0))
+	# Feet - robotic boots (dark metal with cyan sole glow)
+	for x in range(3, 7):
+		img.set_pixel(x, 27, Color(0.25, 0.28, 0.32, 1.0))
+	for x in range(9, 13):
+		img.set_pixel(x, 27, Color(0.25, 0.28, 0.32, 1.0))
+	# Cyan glow on bottom of feet
+	img.set_pixel(4, 27, Color(0.20, 1.0, 0.85, 0.8))
+	img.set_pixel(5, 27, Color(0.20, 1.0, 0.85, 0.8))
+	img.set_pixel(10, 27, Color(0.20, 1.0, 0.85, 0.8))
+	img.set_pixel(11, 27, Color(0.20, 1.0, 0.85, 0.8))
 	
-	for x in range(9, 13):  # 右脚
-		img.set_pixel(x, 27, Color(0.20, 0.20, 0.25, 1.0))
-	
-	# Small antenna on head
-	img.set_pixel(8, 0, Color(0.60, 0.60, 0.65, 1.0))
+	# Antenna on head - more prominent
+	img.set_pixel(8, 1, Color(0.70, 0.72, 0.76, 1.0))  # antenna base
+	img.set_pixel(8, 0, Color(0.30, 0.90, 1.0, 1.0))  # glowing tip
 	
 	return ImageTexture.create_from_image(img)
 
@@ -246,128 +298,255 @@ func _get_machine_texture(rrole: ActorData.RobotRole) -> ImageTexture:
 	return _make_cleaning_machine_texture()
 
 func _make_cleaning_machine_texture() -> ImageTexture:
-	# Disk-shaped cleaning robot (top-down)
+	# Advanced disk-shaped cleaning robot (top-down view)
 	var img := Image.create(22, 22, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
+	
+	# Outer ring - metallic silver
 	for x in range(2, 20):
 		for y in range(2, 20):
 			var dx := x - 11; var dy := y - 11
 			if dx*dx + dy*dy < 88:
 				img.set_pixel(x, y, Color(0.72, 0.74, 0.78, 1.0))
-	for x in range(6, 16):
-		for y in range(6, 16):
+	
+	# Inner disk - darker metallic
+	for x in range(5, 17):
+		for y in range(5, 17):
 			var dx := x - 11; var dy := y - 11
-			if dx*dx + dy*dy < 36:
-				img.set_pixel(x, y, Color(0.55, 0.57, 0.60, 1.0))
-	# LED indicators
-	img.set_pixel(8, 8, Color(0.25, 1.0, 0.80, 1.0))
-	img.set_pixel(13, 8, Color(0.25, 1.0, 0.80, 1.0))
-	img.set_pixel(8, 13, Color(0.25, 1.0, 0.80, 1.0))
-	img.set_pixel(13, 13, Color(0.25, 1.0, 0.80, 1.0))
-	# Top sensor
-	for x in range(9, 13):
-		img.set_pixel(x, 1, Color(0.60, 0.60, 0.65, 1.0))
+			if dx*dx + dy*dy < 30:
+				img.set_pixel(x, y, Color(0.50, 0.52, 0.56, 1.0))
+	
+	# Center brush indicator (cyan)
+	for x in range(8, 14):
+		for y in range(8, 14):
+			var dx := x - 11; var dy := y - 11
+			if dx*dx + dy*dy < 14:
+				img.set_pixel(x, y, Color(0.20, 0.80, 0.70, 1.0))
+	
+	# LED status indicators (4 corners - cyan glow)
+	img.set_pixel(6, 6, Color(0.20, 1.0, 0.85, 1.0))
+	img.set_pixel(15, 6, Color(0.20, 1.0, 0.85, 1.0))
+	img.set_pixel(6, 15, Color(0.20, 1.0, 0.85, 1.0))
+	img.set_pixel(15, 15, Color(0.20, 1.0, 0.85, 1.0))
+	
+	# Top sensor dome (blue)
+	for x in range(8, 14):
+		img.set_pixel(x, 1, Color(0.30, 0.60, 0.90, 1.0))
+		img.set_pixel(x, 2, Color(0.20, 0.50, 0.80, 1.0))
+	
+	# Bumper ring (darker)
+	for x in range(0, 22):
+		img.set_pixel(x, 0, Color(0.40, 0.42, 0.46, 1.0))
+		img.set_pixel(x, 21, Color(0.40, 0.42, 0.46, 1.0))
+	for y in range(0, 22):
+		img.set_pixel(0, y, Color(0.40, 0.42, 0.46, 1.0))
+		img.set_pixel(21, y, Color(0.40, 0.42, 0.46, 1.0))
+	
 	return ImageTexture.create_from_image(img)
 
 func _make_guidance_machine_texture() -> ImageTexture:
-	# Tall kiosk-style guide robot with screen
+	# Tall kiosk-style guide robot with large LED display
 	var img := Image.create(18, 30, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	# Base
-	for x in range(4, 14):
-		for y in range(24, 29):
-			img.set_pixel(x, y, Color(0.55, 0.58, 0.45, 1.0))
-	# Body (kiosk)
+	
+	# Base (heavy stable bottom)
 	for x in range(3, 15):
-		for y in range(10, 25):
-			img.set_pixel(x, y, Color(0.68, 0.70, 0.58, 1.0))
-	# Screen (green = active)
-	for x in range(5, 13):
-		for y in range(3, 10):
-			img.set_pixel(x, y, Color(0.25, 0.90, 0.40, 1.0))
-	# Screen face
-	img.set_pixel(7, 6, Color(1.0, 1.0, 1.0, 1.0))
-	img.set_pixel(10, 6, Color(1.0, 1.0, 1.0, 1.0))
+		for y in range(26, 30):
+			img.set_pixel(x, y, Color(0.45, 0.48, 0.52, 1.0))
+	
+	# Body (metallic kiosk)
+	for x in range(2, 16):
+		for y in range(10, 26):
+			img.set_pixel(x, y, Color(0.60, 0.62, 0.68, 1.0))
+	
+	# Dark panel inset on body
+	for x in range(4, 14):
+		for y in range(16, 24):
+			img.set_pixel(x, y, Color(0.35, 0.38, 0.42, 1.0))
+	
+	# Large LED display screen (bright cyan = active)
+	for x in range(3, 15):
+		for y in range(2, 10):
+			img.set_pixel(x, y, Color(0.15, 0.85, 0.75, 1.0))
+	
+	# Robot face on screen (white LED eyes)
+	img.set_pixel(6, 5, Color(1.0, 1.0, 1.0, 1.0))
+	img.set_pixel(11, 5, Color(1.0, 1.0, 1.0, 1.0))
+	# Smile
+	img.set_pixel(6, 7, Color(1.0, 1.0, 1.0, 1.0))
 	img.set_pixel(7, 8, Color(1.0, 1.0, 1.0, 1.0))
-	img.set_pixel(10, 8, Color(1.0, 1.0, 1.0, 1.0))
+	img.set_pixel(8, 8, Color(1.0, 1.0, 1.0, 1.0))
+	img.set_pixel(9, 8, Color(1.0, 1.0, 1.0, 1.0))
+	img.set_pixel(10, 7, Color(1.0, 1.0, 1.0, 1.0))
+	
+	# Status LEDs on body (cyan)
+	img.set_pixel(5, 14, Color(0.20, 1.0, 0.85, 1.0))
+	img.set_pixel(12, 14, Color(0.20, 1.0, 0.85, 1.0))
+	
+	# Antenna on top (glowing)
+	img.set_pixel(9, 0, Color(0.50, 0.52, 0.58, 1.0))
+	img.set_pixel(9, 1, Color(0.30, 0.90, 1.0, 1.0))
+	
 	return ImageTexture.create_from_image(img)
 
 func _make_delivery_machine_texture() -> ImageTexture:
-	# Boxy cargo robot
+	# Boxy cargo robot with cargo bay and LED display
 	var img := Image.create(24, 22, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	# Body
+	
+	# Main cargo body (metallic blue-gray)
 	for x in range(2, 22):
 		for y in range(8, 20):
-			img.set_pixel(x, y, Color(0.60, 0.50, 0.30, 1.0))
-	# Cargo tray on top
+			img.set_pixel(x, y, Color(0.50, 0.55, 0.65, 1.0))
+	
+	# Darker cargo bay door
+	for x in range(4, 10):
+		for y in range(9, 15):
+			img.set_pixel(x, y, Color(0.35, 0.38, 0.45, 1.0))
+	
+	# Cargo tray on top (open box style)
 	for x in range(3, 21):
 		for y in range(5, 9):
-			img.set_pixel(x, y, Color(0.50, 0.40, 0.22, 1.0))
-	# Head/screen
-	for x in range(8, 16):
-		for y in range(2, 6):
-			img.set_pixel(x, y, Color(0.55, 0.55, 0.62, 1.0))
-	# Screen (orange = delivering)
-	for x in range(9, 15):
+			img.set_pixel(x, y, Color(0.40, 0.42, 0.48, 1.0))
+	# Tray sides
+	for y in range(3, 9):
+		img.set_pixel(3, y, Color(0.50, 0.52, 0.58, 1.0))
+		img.set_pixel(20, y, Color(0.50, 0.52, 0.58, 1.0))
+	
+	# Robot head/screen (bright orange = delivering)
+	for x in range(10, 16):
 		for y in range(2, 5):
-			img.set_pixel(x, y, Color(1.0, 0.55, 0.10, 1.0))
-	# Wheels
-	for x in [3, 20]:
-		img.set_pixel(x, 19, Color(0.25, 0.25, 0.30, 1.0))
+			img.set_pixel(x, y, Color(0.55, 0.55, 0.62, 1.0))
+	for x in range(11, 15):
+		for y in range(2, 5):
+			img.set_pixel(x, y, Color(1.0, 0.50, 0.10, 1.0))
+	
+	# LED indicator eyes
+	img.set_pixel(12, 2, Color(1.0, 1.0, 1.0, 1.0))
+	img.set_pixel(13, 2, Color(1.0, 1.0, 1.0, 1.0))
+	
+	# Status panel on front (cyan)
+	img.set_pixel(12, 16, Color(0.20, 1.0, 0.85, 1.0))
+	img.set_pixel(13, 16, Color(0.20, 1.0, 0.85, 1.0))
+	
+	# Wheels (dark metal with treads)
+	for x in range(1, 5):
+		img.set_pixel(x, 19, Color(0.25, 0.28, 0.32, 1.0))
+		img.set_pixel(x, 20, Color(0.20, 0.22, 0.25, 1.0))
+	for x in range(19, 23):
+		img.set_pixel(x, 19, Color(0.25, 0.28, 0.32, 1.0))
+		img.set_pixel(x, 20, Color(0.20, 0.22, 0.25, 1.0))
+	
+	# Bumpers
+	img.set_pixel(0, 12, Color(0.35, 0.38, 0.42, 1.0))
+	img.set_pixel(23, 12, Color(0.35, 0.38, 0.42, 1.0))
+	
 	return ImageTexture.create_from_image(img)
 
 func _make_security_machine_texture() -> ImageTexture:
-	# Dark patrol robot with red scanner
+	# Dark tactical patrol robot with red scanner eye
 	var img := Image.create(20, 24, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	# Body
-	for x in range(3, 17):
+	
+	# Body (dark armored metal)
+	for x in range(2, 18):
 		for y in range(8, 22):
-			img.set_pixel(x, y, Color(0.28, 0.28, 0.33, 1.0))
-	# Head
-	for x in range(5, 15):
+			img.set_pixel(x, y, Color(0.25, 0.27, 0.32, 1.0))
+	
+	# Armor plates
+	for x in range(4, 16):
+		img.set_pixel(x, 8, Color(0.30, 0.32, 0.38, 1.0))
+		img.set_pixel(x, 21, Color(0.30, 0.32, 0.38, 1.0))
+	
+	# Head unit (darker)
+	for x in range(4, 16):
 		for y in range(2, 9):
-			img.set_pixel(x, y, Color(0.22, 0.22, 0.27, 1.0))
-	# Red scanner eye
+			img.set_pixel(x, y, Color(0.20, 0.22, 0.28, 1.0))
+	
+	# RED scanner eye (dangerous looking)
+	for x in range(5, 15):
+		for y in range(3, 7):
+			img.set_pixel(x, y, Color(0.90, 0.15, 0.10, 1.0))
+	# Eye glow center
 	for x in range(7, 13):
-		for y in range(4, 7):
-			img.set_pixel(x, y, Color(1.0, 0.20, 0.15, 1.0))
-	# Shoulder lights (blue)
-	for x in [3, 16]:
-		img.set_pixel(x, 9, Color(0.20, 0.60, 1.0, 1.0))
-	# Antenna
-	img.set_pixel(10, 0, Color(0.70, 0.70, 0.75, 1.0))
-	img.set_pixel(10, 1, Color(0.70, 0.70, 0.75, 1.0))
-	# Base
-	for x in range(3, 17):
-		img.set_pixel(x, 22, Color(0.18, 0.18, 0.22, 1.0))
+		img.set_pixel(x, 4, Color(1.0, 0.30, 0.20, 1.0))
+		img.set_pixel(x, 5, Color(1.0, 0.30, 0.20, 1.0))
+	
+	# Shoulder warning lights (blue flash)
+	for x in [2, 17]:
+		img.set_pixel(x, 9, Color(0.15, 0.50, 1.0, 1.0))
+		img.set_pixel(x, 10, Color(0.15, 0.50, 1.0, 1.0))
+	
+	# Status indicators on chest (red)
+	img.set_pixel(5, 14, Color(1.0, 0.20, 0.15, 1.0))
+	img.set_pixel(6, 14, Color(1.0, 0.20, 0.15, 1.0))
+	img.set_pixel(13, 14, Color(1.0, 0.20, 0.15, 1.0))
+	img.set_pixel(14, 14, Color(1.0, 0.20, 0.15, 1.0))
+	
+	# Antenna (tall threat detector)
+	img.set_pixel(10, 0, Color(0.40, 0.42, 0.48, 1.0))
+	img.set_pixel(10, 1, Color(0.50, 0.52, 0.58, 1.0))
+	img.set_pixel(10, 0, Color(1.0, 0.20, 0.15, 1.0))  # red tip
+	
+	# Heavy base/treads
+	for x in range(2, 18):
+		img.set_pixel(x, 22, Color(0.18, 0.20, 0.25, 1.0))
+		img.set_pixel(x, 23, Color(0.15, 0.17, 0.22, 1.0))
+	
 	return ImageTexture.create_from_image(img)
 
 func _make_shelf_machine_texture() -> ImageTexture:
-	# Tall thin shelf-scanning robot
+	# Tall thin shelf-scanning robot with scanning arm
 	var img := Image.create(16, 30, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	# Body
-	for x in range(4, 12):
+	
+	# Body (metallic white/gray)
+	for x in range(3, 13):
 		for y in range(10, 26):
-			img.set_pixel(x, y, Color(0.50, 0.55, 0.65, 1.0))
-	# Head
+			img.set_pixel(x, y, Color(0.70, 0.72, 0.78, 1.0))
+	
+	# Darker panel inset
 	for x in range(5, 11):
+		for y in range(14, 22):
+			img.set_pixel(x, y, Color(0.50, 0.52, 0.58, 1.0))
+	
+	# Head unit (scanner dome)
+	for x in range(4, 12):
 		for y in range(2, 10):
-			img.set_pixel(x, y, Color(0.48, 0.52, 0.62, 1.0))
-	# Green scanning eye
+			img.set_pixel(x, y, Color(0.60, 0.62, 0.68, 1.0))
+	
+	# GREEN scanning laser eye
+	for x in range(5, 11):
+		for y in range(3, 8):
+			img.set_pixel(x, y, Color(0.15, 0.85, 0.40, 1.0))
+	# Bright center
 	for x in range(6, 10):
-		for y in range(4, 8):
-			img.set_pixel(x, y, Color(0.20, 0.90, 0.40, 1.0))
-	# Scan arm
-	for y in range(12, 22):
-		img.set_pixel(13, y, Color(0.60, 0.60, 0.70, 1.0))
-	img.set_pixel(15, 20, Color(0.70, 0.70, 0.80, 1.0))
-	img.set_pixel(16, 21, Color(0.70, 0.70, 0.80, 1.0))
-	# Wheels
-	img.set_pixel(4, 27, Color(0.30, 0.30, 0.35, 1.0))
-	img.set_pixel(11, 27, Color(0.30, 0.30, 0.35, 1.0))
+		img.set_pixel(x, 5, Color(0.30, 1.0, 0.60, 1.0))
+		img.set_pixel(x, 6, Color(0.30, 1.0, 0.60, 1.0))
+	
+	# Scanner arm (side-mounted)
+	for y in range(12, 24):
+		img.set_pixel(12, y, Color(0.50, 0.52, 0.58, 1.0))
+	# Arm sensor head
+	img.set_pixel(12, 22, Color(0.30, 0.32, 0.38, 1.0))
+	img.set_pixel(13, 22, Color(0.40, 0.90, 0.50, 1.0))  # green sensor
+	img.set_pixel(14, 23, Color(0.40, 0.90, 0.50, 1.0))
+	img.set_pixel(15, 24, Color(0.40, 0.90, 0.50, 1.0))
+	
+	# Status LEDs (green = scanning)
+	img.set_pixel(5, 12, Color(0.20, 1.0, 0.50, 1.0))
+	img.set_pixel(10, 12, Color(0.20, 1.0, 0.50, 1.0))
+	
+	# Antenna
+	img.set_pixel(8, 0, Color(0.55, 0.57, 0.62, 1.0))
+	img.set_pixel(8, 1, Color(0.20, 0.90, 0.50, 1.0))  # green tip
+	
+	# Wheels/base
+	img.set_pixel(3, 27, Color(0.40, 0.42, 0.48, 1.0))
+	img.set_pixel(4, 27, Color(0.35, 0.37, 0.42, 1.0))
+	img.set_pixel(11, 27, Color(0.40, 0.42, 0.48, 1.0))
+	img.set_pixel(12, 27, Color(0.35, 0.37, 0.42, 1.0))
+	
 	return ImageTexture.create_from_image(img)
 
 func _make_robot_eye_texture() -> ImageTexture:
@@ -599,10 +778,24 @@ func _do_security_machine(delta: float) -> void:
 		if _state_timer >= 2.0:
 			_state_timer = 0.0
 			_patrol_index = (_patrol_index + 1) % _patrol_points.size()
-			# Alert flash on patrol point
-			_eye_glow.modulate = Color(1.0, 0.2, 0.15, 1.0)
-			await Engine.get_main_loop().create_timer(0.4).timeout
-			_eye_glow.modulate = Color(0.25, 1.0, 0.80, 0.90)
+			# Alert flash on patrol point (use timer-based approach to avoid await issues)
+			_flash_eye_alert()
+			_show_speech_bubble_text("Area secure.")
+
+func _flash_eye_alert() -> void:
+	# First flash red
+	_eye_glow.modulate = Color(1.0, 0.2, 0.15, 1.0)
+	# Schedule return to normal color
+	var t := Timer.new()
+	t.timeout.connect(_restore_eye_color)
+	t.wait_time = 0.4
+	t.one_shot = true
+	add_child(t)
+	t.start()
+
+func _restore_eye_color() -> void:
+	if _eye_glow != null:
+		_eye_glow.modulate = Color(0.25, 1.0, 0.80, 0.90)
 
 func _do_delivery_machine(delta: float) -> void:
 	match _state:

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bm3kv5dpvmhg6"]
+
+[ext_resource type="Script" uid="uid://iko41fhoo3mm" path="res://addons/agent_tools/headless/driver.gd" id="1"]
+
+[node name="HeadlessDriver" type="Node" unique_id=281793619]
+script = ExtResource("1")

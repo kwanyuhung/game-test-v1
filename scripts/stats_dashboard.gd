@@ -76,9 +76,10 @@ func refresh_from_stats(stats) -> void:
 
 	var y :float= pan.position.y + 20.0
 
+	var xp_next: int = stats.xp_to_next_level if stats.xp_to_next_level > 0 else 1
 	var rows := [
 		{"label": "Level", "value": "%d" % stats.level},
-		{"label": "XP", "value": "%d / %d" % [stats.xp, stats.xp_to_next_level]},
+		{"label": "XP", "value": "%d / %d" % [stats.xp, xp_next]},
 		{"label": "Total $", "value": "$%.2f" % stats.total_spent},
 		{"label": "Checkouts", "value": "%d" % stats.total_checkouts},
 		{"label": "Items Bought", "value": "%d" % stats.total_items_bought},

@@ -193,8 +193,8 @@ func _interact_with_nearby() -> void:
 
 func notify(msg: String) -> void:
 	var world = get_parent()
-	if world != null and world.has_method("notify_telegram"):
-		world.notify_telegram("[DEV] " + msg)
+	if world != null and world.has_method("notify"):
+		world.notify("[DEV] " + msg)
 
 func set_god_mode(enabled: bool) -> void:
 	_is_god_mode = enabled

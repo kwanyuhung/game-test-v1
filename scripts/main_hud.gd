@@ -124,31 +124,31 @@ func _build_checkout_receipt_panel(owner: Node2D) -> void:
 
 	var cart_bg := ColorRect.new()
 	cart_bg.name = "CartBg"
-	cart_bg.position = Vector2(80.0, 20.0)
-	cart_bg.size = Vector2(140.0, 120.0)
+	cart_bg.position = Vector2(60.0, 20.0)
+	cart_bg.size = Vector2(200.0, 180.0)  # Larger cart panel
 	cart_bg.color = Color(0.07, 0.07, 0.10, 0.92)
 	_cart_panel.add_child(cart_bg)
 
 	var cart_title := Label.new()
 	cart_title.name = "CartTitle"
 	cart_title.text = "Shopping Cart"
-	cart_title.position = Vector2(84.0, 24.0)
+	cart_title.position = Vector2(64.0, 24.0)
 	cart_title.add_theme_color_override("font_color", Color(0.88, 0.82, 0.55))
-	cart_title.add_theme_font_size_override("font_size", 8)
+	cart_title.add_theme_font_size_override("font_size", 11)  # Larger font
 	_cart_panel.add_child(cart_title)
 
 	_cart_items_lbl = Label.new()
 	_cart_items_lbl.name = "CartItems"
 	_cart_items_lbl.text = ""
-	_cart_items_lbl.position = Vector2(84.0, 38.0)
+	_cart_items_lbl.position = Vector2(64.0, 42.0)
 	_cart_items_lbl.add_theme_color_override("font_color", Color(0.68, 0.68, 0.56))
-	_cart_items_lbl.add_theme_font_size_override("font_size", 7)
+	_cart_items_lbl.add_theme_font_size_override("font_size", 9)  # Larger font
 	_cart_panel.add_child(_cart_items_lbl)
 
 	_cart_total_lbl = Label.new()
 	_cart_total_lbl.name = "CartTotal"
 	_cart_total_lbl.text = "Total: $0.00"
-	_cart_total_lbl.position = Vector2(84.0, 110.0)
+	_cart_total_lbl.position = Vector2(64.0, 165.0)
 	_cart_total_lbl.add_theme_color_override("font_color", Color(0.88, 0.82, 0.55))
-	_cart_total_lbl.add_theme_font_size_override("font_size", 8)
+	_cart_total_lbl.add_theme_font_size_override("font_size", 11)  # Larger font
 	_cart_panel.add_child(_cart_total_lbl)

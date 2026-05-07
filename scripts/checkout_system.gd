@@ -200,12 +200,6 @@ func _finish_checkout(nearby_checkout) -> void:
 	_show_checkout_receipt(items, subtotal, tax, total, brand_bonus_xp, loyalty_credit)
 
 	# Notify
-	var telegram_bot: Node = _main.get("_telegram_bot")
-	if telegram_bot != null:
-		telegram_bot.queue_report("Checkout complete! $%.2f spent. Cart cleared." % total)
-	else:
-		var TelegramBot = load("res://scripts/telegram_bot.gd")
-		TelegramBot.send_message("Checkout complete! $%.2f spent. Cart cleared." % total)
 	if _toasts != null:
 		_toasts.toast_success("Checkout complete! -$%.2f" % total)
 

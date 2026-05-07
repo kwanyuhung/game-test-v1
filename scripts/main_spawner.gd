@@ -336,6 +336,8 @@ func spawn_player() -> void:
 	player.set_world(_main)
 	player.cart_updated.connect(_main._on_cart_updated)
 	player.interact_requested.connect(_main._on_player_interact)
+	player.cart_dropped.connect(_main._on_cart_dropped)
+	player.cart_grabbed.connect(_main._on_cart_grabbed)
 	#player.tab_pressed.connect(_main._on_tab_pressed)
 	_main.set("_player", player)
 
