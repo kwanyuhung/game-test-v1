@@ -24,6 +24,7 @@ var _food_stalls: Array = []
 var _claw_machines: Array = []
 var _checkout_counters: Array = []
 var _aisle_labels: Array = []
+var _stairs_system = null  # Reference to stairs system for registering stairs zones
 
 signal section_interacted(section_id: String)
 signal stall_interacted(stall_id: String)
@@ -32,10 +33,11 @@ func _init() -> void:
 	pass
 
 # Entry point — build an entire floor.
-func build(floor_def: FloorConfig.FloorDef, parent: Node, floor_idx: int = 0) -> void:
+func build(floor_def: FloorConfig.FloorDef, parent: Node, floor_idx: int = 0, stairs_system = null) -> void:
 	_floor_def = floor_def
 	_parent = parent
 	_floor_idx = floor_idx
+	_stairs_system = stairs_system
 	_floor_nodes.clear()
 	_sections.clear()
 	_food_stalls.clear()
@@ -552,6 +554,13 @@ func _build_zone_stairs(zone: Dictionary) -> void:
 	lbl.add_theme_color_override("font_color", Color(0.60, 0.60, 0.70))
 	lbl.add_theme_font_size_override("font_size", 7)
 	_parent.add_child(lbl); _floor_nodes.append(lbl)
+
+	# Register this stairs zone with the stairs system for open-world floor navigation
+	if _stairs_system != null and _stairs_system.has_method("register_stairs_zone"):
+		var direction: int = 1  # Default: stairs go UP to next floor
+		if zone.has("meta") and zone.meta.has("direction"):
+			direction = zone.meta.direction
+		_stairs_system.register_stairs_zone(_floor_idx, zone, direction)
 
 func _build_zone_decor(zone: Dictionary) -> void:
 	var decor_type: String = zone.meta.get("decor_type", "dining_table")

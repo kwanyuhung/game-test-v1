@@ -28,13 +28,14 @@ func init_all() -> void:
 
 	# Build ground floor first
 	m.set("_current_floor_idx", 0)
+	# Spawn player first so NPCs can reference it
+	m._spawn_player()
 	m._build_floor(0)
 	m._setup_camera()
 	m._build_hud()
 	m.get("_main_panels").build_elevator()
 	m.get("_main_panels").build_stairs()
-	m._spawn_player()
-	m._build_npcs()
+	# NPCs are now built inside _build_floor() for each floor
 	m.get("_main_panels").update_floor_hud()
 
 	# ── Game Clock ──────────────────────────────────────────────────────────────
@@ -148,6 +149,12 @@ func init_all() -> void:
 	truck_dock_system.setup(m)
 	m.set("_truck_dock_system", truck_dock_system)
 
+	# ── Stairs System (open-world floor navigation) ─────────────────────────────────
+	var stairs_system = preload("res://scripts/stairs_system.gd").new()
+	m.add_child(stairs_system)
+	stairs_system.setup(m)
+	m.set("_stairs_system", stairs_system)
+
 	# ── Audio Manager (singleton) ─────────────────────────────────────────────
 	m.set("_audio", m.get_node_or_null("/root/Main/AudioManager"))
 
@@ -248,6 +255,21 @@ func init_all() -> void:
 	m.add_child(stats_dashboard)
 	stats_dashboard.visible = false
 	m.set("_stats_dashboard", stats_dashboard)
+
+	# ── Interaction Bubble ─────────────────────────────────────────────────────
+	var interaction_bubble = preload("res://scripts/interaction_bubble.gd").new()
+	interaction_bubble.name = "InteractionBubble"
+	m.add_child(interaction_bubble)
+	m.set("_interaction_bubble", interaction_bubble)
+	# Setup bubble with player reference after player is spawned
+	interaction_bubble.setup(m.get("_player"))
+
+	# ── Debug Bounds System ───────────────────────────────────────────────────
+	var debug_bounds = preload("res://scripts/debug_bounds.gd").new()
+	debug_bounds.name = "DebugBounds"
+	m.add_child(debug_bounds)
+	debug_bounds.setup(m)
+	m.set("_debug_bounds", debug_bounds)
 
 	# ── Section Browse ────────────────────────────────────────────────────────
 	var section_browse = preload("res://scripts/section_browse.gd").new()

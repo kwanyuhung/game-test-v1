@@ -60,6 +60,7 @@ const RobotPanelSystemScript = preload("res://scripts/robot_panel_system.gd")
 const PromotionManagerScript = preload("res://scripts/promotion_manager.gd")
 const MainSpawnerScript = preload("res://scripts/main_spawner.gd")
 const MainInitScript = preload("res://scripts/main_init.gd")
+const InteractionBubbleScript = preload("res://scripts/interaction_bubble.gd")
 
 const DEV_MODE := true  # Set to false to disable dev tools
 
@@ -123,6 +124,7 @@ var _quest_journal: QuestJournal = null
 var _settings_panel: SettingsPanel = null
 var _pause_menu: PauseMenu = null
 var _stats_dashboard: StatsDashboard = null
+var _interaction_bubble: InteractionBubbleScript = null
 
 var _nearby_monitor: bool = false
 var _monitor_panel: MonitorPanel = null
@@ -218,7 +220,8 @@ func _build_floor(idx: int) -> void:
 
 	# Use FloorBuilder to render this floor
 	_floor_builder = FloorBuilderScript.new()
-	_floor_builder.build(fd, self)
+	var _stairs_sys = get("_stairs_system")
+	_floor_builder.build(fd, self, idx, _stairs_sys)
 
 	# Collect built nodes and sections
 	_floor_nodes = _floor_builder.get_floor_nodes()
@@ -236,6 +239,9 @@ func _build_floor(idx: int) -> void:
 	_floor_ambient = fd.ambient_color
 	_apply_ambient_shift()
 	_update_floor_hud()
+
+	# Build NPCs for this floor (clears old NPCs and spawns new ones for current floor)
+	_build_npcs()
 
 	# Wire stall signals
 	for stall in _floor_builder.get_food_stalls():
@@ -283,6 +289,16 @@ func _clear_floor_nodes() -> void:
 			to_remove.append(c)
 	for c in to_remove:
 		c.queue_free()
+
+	# Remove all NPC nodes (Staff and Customers) when switching floors
+	var npcs_to_remove: Array = []
+	for c in get_children():
+		var nm := c.name as String
+		if nm.begins_with("Staff_") or nm.begins_with("Customer_") or nm.begins_with("GroupLeader_") or nm.begins_with("Group_"):
+			npcs_to_remove.append(c)
+	for c in npcs_to_remove:
+		c.queue_free()
+	_npcs.clear()
 
 # ?????? Ambient Color ????????????????????????????????????????????????????????????????????????????????????????????
 
@@ -428,7 +444,26 @@ func _input(event: InputEvent) -> void:
 				_jump_to_floor(floor_idx)
 				return
 		
+		# Stairs W/S ── Open-world floor navigation via stairs
+		var _stairs_sys = get("_stairs_system")
+		if _stairs_sys != null and _stairs_sys.has_method("check_stairs_proximity") and _player != null:
+			var proximity_result: Dictionary = _stairs_sys.check_stairs_proximity(_player.position, _current_floor_idx)
+			if proximity_result.get("in_zone", false):
+				if event.keycode == KEY_W or event.keycode == KEY_UP:
+					var can_go_up: bool = proximity_result.get("can_go_up", false)
+					if can_go_up and not _stairs_sys.is_transitioning():
+						_stairs_sys.start_stairs_transition(1)  # +1 = up
+					return
+				elif event.keycode == KEY_S or event.keycode == KEY_DOWN:
+					var can_go_down: bool = proximity_result.get("can_go_down", false)
+					if can_go_down and not _stairs_sys.is_transitioning():
+						_stairs_sys.start_stairs_transition(-1)  # -1 = down
+					return
+		
 		match event.keycode:
+			# C ── Chat with nearby NPC
+			KEY_C:
+				_open_npc_chat()
 			# F5 ── Quick Save
 			KEY_F5:
 				SaveSystem.save_game(self)
@@ -963,6 +998,11 @@ func _on_player_interact() -> void:
 		_handle_facility_interact()
 		return
 
+	# Parking (Ground floor)
+	if _nearby_parking:
+		_handle_parking_interact()
+		return
+
 # ── Facility interactions (loyalty, gift wrap, kiosk, cafe, etc.) ──
 func _handle_facility_interact() -> void:
 	if _nearby_loyalty:
@@ -1018,6 +1058,20 @@ func _handle_facility_interact() -> void:
 		_food_court_system.play_darts()
 		return
 
+# ── Parking interaction ─────────────────────────────────────────
+func _handle_parking_interact() -> void:
+	if _parking_lot == null:
+		return
+	var slot_idx = _parking_lot.get_nearby_slot(_player.position) if _parking_lot.has_method("get_nearby_slot") else -1
+	if slot_idx >= 0:
+		var slot_info = _parking_lot.get_slot_info(slot_idx)
+		if slot_info.get("occupied", false):
+			if _toasts: _toasts.toast_info("Parking slot %d is occupied!" % (slot_idx + 1))
+		else:
+			if _toasts: _toasts.toast_info("Parking slot %d is free!" % (slot_idx + 1))
+	else:
+		if _toasts: _toasts.toast_info("You are in the parking lot area.")
+
 # ── Food stall interaction ──────────────────────────────────────
 func _on_stall_interact_requested(stall_id: String) -> void:
 	if _floor_builder == null:
@@ -1030,7 +1084,9 @@ func _on_stall_interact_requested(stall_id: String) -> void:
 func _open_stall_browse(stall) -> void:
 	if _food_stall_browse != null and _food_stall_browse.visible:
 		return
-	#_food_stall_browse.open(stall)
+	var stall_def = stall.get_stall_def()
+	var cart = _player.get_cart()
+	_food_stall_browse.open(stall_def, cart)
 
 func _handle_warehouse_interact() -> void:
 	if _warehouse_mode:
@@ -1045,6 +1101,31 @@ func _handle_warehouse_interact() -> void:
 			if _toasts: _toasts.toast_success("Warehouse Control Mode — use WASD/Q/E/F to operate equipment!")
 		else:
 			if _toasts: _toasts.toast_warning("Staff mode required for warehouse control. Press [K] to enter staff mode.")
+
+# ── NPC Chat interaction ─────────────────────────────────────────────
+func _open_npc_chat() -> void:
+	var npc = _proximity_system.get_nearby_npc_for_chat()
+	if npc == null:
+		return
+	if _chat_panel == null:
+		_chat_panel = ChatPanelScript.new()
+		add_child(_chat_panel)
+		_chat_panel.closed.connect(_on_chat_panel_closed)
+	if _chat_panel._is_open:
+		return
+	var actor = npc.get_actor()
+	if actor == null:
+		return
+	# Get or create AI chat brain for this NPC
+	var brain = npc.get("ai_brain")
+	if brain == null:
+		brain = AIChatBrain.new()
+		npc.set("ai_brain", brain)
+	_chat_panel.open(npc, actor, brain)
+
+func _on_chat_panel_closed() -> void:
+	# Chat panel closed, do any cleanup if needed
+	pass
 
 # ── Claw machine interaction ──────────────────────────────────────
 func _on_claw_interact_requested() -> void:

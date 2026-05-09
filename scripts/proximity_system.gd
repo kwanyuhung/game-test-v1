@@ -55,6 +55,97 @@ func setup(main: Node2D) -> void:
 	var fc = main.get_node_or_null("/root/Main/FloorConfig")
 	if fc != null:
 		_CELL_SIZE = fc.CELL_SIZE if fc.has_method("get") else 16
+	# Register all interactive objects with debug system
+	_register_debug_objects()
+	# Listen for proximity changes to update debug visuals
+
+func _register_debug_objects() -> void:
+	var debug_bounds = _main.get("_debug_bounds")
+	if debug_bounds == null:
+		return
+	
+	# Register elevator
+	var elevator = _main.get("_elevator")
+	if elevator:
+		debug_bounds.track_elevator(elevator)
+	
+	# Register checkout counters
+	for counter in _checkout_counters:
+		debug_bounds.track_checkout(counter)
+	
+	# Register sections
+	if _floor_builder and _floor_builder.has_method("get_sections"):
+		for section in _floor_builder.get_sections():
+			debug_bounds.track_section(section)
+	
+	# Register food stalls
+	if _floor_builder and _floor_builder.has_method("get_food_stalls"):
+		for stall in _floor_builder.get_food_stalls():
+			debug_bounds.track_stall(stall)
+	
+	# Register NPCs
+	for npc in _npcs:
+		if is_instance_valid(npc):
+			debug_bounds.track_npc(npc)
+
+func _update_interaction_bubble() -> void:
+	var bubble = _main.get("_interaction_bubble")
+	if bubble == null:
+		return
+	
+	# Priority order for bubble display
+	if nearby_elevator:
+		bubble.show_interaction(_main.get("_elevator"), "Elevator", "elevator")
+	elif nearby_checkout != null:
+		var ctype = nearby_checkout.get_checkout_type() if nearby_checkout.has_method("get_checkout_type") else -1
+		var label = "Checkout"
+		if ctype == 1: label = "Self-Checkout"
+		elif ctype == 0: label = "Express"
+		bubble.show_interaction(nearby_checkout, label, "checkout")
+	elif nearby_section != null:
+		var sec_name = "Section"
+		if nearby_section.has_method("get_def"):
+			var def = nearby_section.get_def()
+			if def.has("name"):
+				sec_name = def.name
+		bubble.show_interaction(nearby_section, sec_name, "section")
+	elif nearby_stall != null:
+		var stall_name = "Food Stall"
+		if nearby_stall.has_method("get_stall_def"):
+			var fd = nearby_stall.get_stall_def()
+			stall_name = fd.get("name", "Food Stall")
+		bubble.show_interaction(nearby_stall, stall_name, "stall")
+	elif nearby_npc_for_chat != null:
+		var npc_name = "NPC"
+		if nearby_npc_for_chat.has_method("get_actor"):
+			var actor = nearby_npc_for_chat.get_actor()
+			if actor != null:
+				npc_name = actor.display_name
+		bubble.show_interaction(nearby_npc_for_chat, npc_name, "npc")
+	elif nearby_claw_machine != null:
+		var mid = nearby_claw_machine.get_machine_id() if nearby_claw_machine.has_method("get_machine_id") else "1"
+		bubble.show_interaction(nearby_claw_machine, "Claw #" + mid.replace("claw_", ""), "claw")
+	elif nearby_loyalty or nearby_gift_wrap or nearby_digital_kiosk or nearby_info_desk or nearby_cafe or nearby_vending or nearby_promo_booth or nearby_lost_found or nearby_store_news:
+		var label = "Facility"
+		var ftype = "facility"
+		if nearby_loyalty: label = "Loyalty"
+		elif nearby_gift_wrap: label = "Gift Wrap"
+		elif nearby_digital_kiosk: label = "Directory"
+		elif nearby_info_desk: label = "Info Desk"
+		elif nearby_cafe: label = "Cafe"
+		elif nearby_vending: label = "Vending"
+		elif nearby_promo_booth: label = "Deals"
+		elif nearby_lost_found: label = "Lost & Found"
+		elif nearby_store_news: label = "News"
+		bubble.show_interaction(null, label, ftype)
+	elif nearby_atm:
+		bubble.show_interaction(null, "ATM", "facility")
+	elif nearby_warehouse_dock:
+		bubble.show_interaction(null, "Truck Dock", "facility")
+	elif nearby_warehouse:
+		bubble.show_interaction(null, "Warehouse", "facility")
+	else:
+		bubble.hide_interaction()
 
 func _get_cell_size() -> int:
 	return _CELL_SIZE
@@ -64,7 +155,7 @@ func update_all() -> void:
 		return
 
 	_update_elevator_proximity()
-	#_update_stairs_proximity()
+	_update_stairs_proximity()
 	_update_stall_proximity()
 	_update_claw_machine_proximity()
 	_update_npc_chat_proximity()
@@ -74,9 +165,12 @@ func update_all() -> void:
 	_update_monitor_proximity()
 	_update_terminal_proximity()
 	_update_checkout_proximity()
+	_update_parking_proximity()
 	_update_phase3_proximity()
 	# Update the unified interaction hint showing all available [E] actions
 	_update_interaction_hint()
+	# Update the interaction bubble above the player
+	_update_interaction_bubble()
 
 func _update_elevator_proximity() -> void:
 	var _elevator = _main.get("_elevator")
@@ -340,6 +434,56 @@ func _update_warehouse_proximity() -> void:
 			prompt_bg.visible = true
 
 	_main.set("_nearby_warehouse", nearby_warehouse)
+
+func _update_parking_proximity() -> void:
+	nearby_parking = false
+	var _current_floor_idx = _main.get("_current_floor_idx")
+	if _player == null:
+		return
+	# Parking is only on ground floor (floor 0)
+	if _current_floor_idx != 0:
+		return
+	var parking_lot = _main.get("_parking_lot")
+	if parking_lot == null:
+		return
+	if parking_lot.has_method("is_player_near"):
+		if parking_lot.is_player_near(_player.position):
+			nearby_parking = true
+
+	_main.set("_nearby_parking", nearby_parking)
+
+func _update_stairs_proximity() -> void:
+	nearby_stairs = false
+	var _current_floor_idx = _main.get("_current_floor_idx")
+	if _player == null:
+		return
+	var _stairs_system = _main.get("_stairs_system")
+	if _stairs_system == null:
+		return
+	if not _stairs_system.has_method("check_stairs_proximity"):
+		return
+	var result: Dictionary = _stairs_system.check_stairs_proximity(_player.position, _current_floor_idx)
+	nearby_stairs = result.get("in_zone", false)
+	
+	# Update prompt label if stairs zone is nearby
+	var prompt_lbl = _main.get_node_or_null("PromptLbl")
+	var prompt_bg = _main.get_node_or_null("PromptBg")
+	if nearby_stairs and not nearby_elevator:
+		var can_go_up: bool = result.get("can_go_up", false)
+		var can_go_down: bool = result.get("can_go_down", false)
+		var prompt_text := ""
+		if can_go_up and can_go_down:
+			prompt_text = "[W] Go Up  [S] Go Down"
+		elif can_go_up:
+			prompt_text = "[W] Go Up"
+		elif can_go_down:
+			prompt_text = "[S] Go Down"
+		if prompt_lbl != null and prompt_text != "":
+			prompt_lbl.text = prompt_text
+			prompt_lbl.visible = true
+		if prompt_bg != null:
+			prompt_bg.visible = true
+	_main.set("_nearby_stairs", nearby_stairs)
 
 func _update_monitor_proximity() -> void:
 	nearby_monitor = false
