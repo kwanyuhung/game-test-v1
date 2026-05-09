@@ -253,6 +253,9 @@ func _build_floor(idx: int) -> void:
 			machine.interact_requested.connect(_on_claw_interact_requested)
 		if machine.has_signal("played"):
 			machine.played.connect(_on_claw_played.bind(machine))
+	# Setup escalators for this floor
+	for esc in _floor_builder.get_escalators():
+		esc.setup(self)
 
 	# Initialize warehouse floor controller (Floor 11)
 	_warehouse_floor = WarehouseFloorScript.new()
@@ -285,7 +288,7 @@ func _clear_floor_nodes() -> void:
 	var to_remove: Array = []
 	for c in get_children():
 		var nm := c.name as String
-		if nm.begins_with("Section_") or nm.begins_with("Counter_") or nm.begins_with("Stall_") or nm.begins_with("Floor_") or nm.begins_with("Claw_"):
+		if nm.begins_with("Section_") or nm.begins_with("Counter_") or nm.begins_with("Stall_") or nm.begins_with("Floor_") or nm.begins_with("Claw_") or nm.begins_with("Escalator_"):
 			to_remove.append(c)
 	for c in to_remove:
 		c.queue_free()
@@ -299,6 +302,11 @@ func _clear_floor_nodes() -> void:
 	for c in npcs_to_remove:
 		c.queue_free()
 	_npcs.clear()
+	
+	# Clear debug bounds tracking to prevent overlap from previous floors
+	var debug_bounds = get("_debug_bounds")
+	if debug_bounds != null and debug_bounds.has_method("clear_all"):
+		debug_bounds.clear_all()
 
 # ?????? Ambient Color ????????????????????????????????????????????????????????????????????????????????????????????
 

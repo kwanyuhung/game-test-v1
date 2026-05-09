@@ -11,14 +11,15 @@ var _f3_was_pressed: bool = false
 
 # Color palette for different object types
 const COLORS = {
-	"elevator": Color(0.2, 1.0, 0.2, 0.6),    # Green
-	"section": Color(0.2, 0.5, 1.0, 0.6),      # Blue
-	"stall": Color(1.0, 0.6, 0.2, 0.6),         # Orange
-	"checkout": Color(0.2, 1.0, 0.5, 0.6),      # Cyan
-	"npc": Color(1.0, 0.4, 1.0, 0.6),           # Magenta
-	"facility": Color(1.0, 1.0, 0.2, 0.6),     # Yellow
-	"zone": Color(0.6, 0.6, 0.8, 0.4),         # Light purple
-	"spawn": Color(1.0, 0.3, 0.3, 0.6),         # Red
+	"elevator": Color(0.2, 1.0, 0.2, 0.3),    # Green
+	"escalator": Color(1.0, 0.5, 0.1, 0.3),    # Orange
+	"section": Color(0.2, 0.5, 1.0, 0.3),      # Blue
+	"stall": Color(1.0, 0.6, 0.2, 0.3),         # Orange
+	"checkout": Color(0.2, 1.0, 0.5, 0.3),      # Cyan
+	"npc": Color(1.0, 0.4, 1.0, 0.3),           # Magenta
+	"facility": Color(1.0, 1.0, 0.2, 0.3),     # Yellow
+	"zone": Color(0.6, 0.6, 0.8, 0.2),         # Light purple
+	"spawn": Color(1.0, 0.3, 0.3, 0.3),         # Red
 }
 
 # Track all debug bounds
@@ -90,6 +91,17 @@ func track_elevator(elevator) -> void:
 	var size = Vector2(48, 64)  # Default elevator size
 	var rect = Rect2(pos - Vector2(24, 0), size)
 	track_object(elevator, rect, "elevator", "Elevator")
+
+func track_escalator(escalator) -> void:
+	if escalator == null:
+		return
+	var zone = escalator.get_zone() if escalator.has_method("get_zone") else null
+	if zone == null:
+		return
+	var rect = Rect2(zone.x * 16, zone.y * 16, zone.w * 16, zone.h * 16)
+	var info = escalator.get_escalator_info() if escalator.has_method("get_escalator_info") else {}
+	var label = "Escalator %s" % info.get("id", "unknown")
+	track_object(escalator, rect, "escalator", label)
 
 func track_section(section) -> void:
 	if section == null:

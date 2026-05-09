@@ -22,6 +22,7 @@ var _floor_nodes: Array = []
 var _sections: Array = []
 var _food_stalls: Array = []
 var _claw_machines: Array = []
+var _escalators: Array = []
 var _checkout_counters: Array = []
 var _aisle_labels: Array = []
 var _stairs_system = null  # Reference to stairs system for registering stairs zones
@@ -42,6 +43,7 @@ func build(floor_def: FloorConfig.FloorDef, parent: Node, floor_idx: int = 0, st
 	_sections.clear()
 	_food_stalls.clear()
 	_claw_machines.clear()
+	_escalators.clear()
 	_checkout_counters.clear()
 	_aisle_labels.clear()
 
@@ -80,6 +82,7 @@ func _build_zone(zone: Dictionary) -> void:
 		FloorConfig.ZONE_ROOFTOP:      _build_zone_rooftop(zone)
 		FloorConfig.ZONE_ELEVATOR:     _build_zone_shaft(zone)
 		FloorConfig.ZONE_STAIRS:       _build_zone_stairs(zone)
+		FloorConfig.ZONE_ESCALATOR:     _build_zone_escalator(zone)
 		FloorConfig.ZONE_DECOR:        _build_zone_decor(zone)
 		FloorConfig.ZONE_CLAW_MACHINE: _build_zone_claw_machine(zone)
 		FloorConfig.ZONE_PET_ADOPTION: _build_zone_pet_adoption(zone)
@@ -561,6 +564,16 @@ func _build_zone_stairs(zone: Dictionary) -> void:
 		if zone.has("meta") and zone.meta.has("direction"):
 			direction = zone.meta.direction
 		_stairs_system.register_stairs_zone(_floor_idx, zone, direction)
+
+func _build_zone_escalator(zone: Dictionary) -> void:
+	var escalator_id: String = zone.meta.get("escalator_id", "escalator_%d" % _floor_idx)
+	
+	var esc := preload("res://scripts/escalator.gd").new()
+	esc.configure(zone, escalator_id, _floor_idx)
+	esc.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
+	esc.name = "Escalator_%s" % escalator_id
+	_parent.add_child(esc)
+	_escalators.append(esc)
 
 func _build_zone_decor(zone: Dictionary) -> void:
 	var decor_type: String = zone.meta.get("decor_type", "dining_table")
@@ -1631,6 +1644,9 @@ func is_near_zone_type(zone_type: int, world_pos: Vector2) -> bool:
 func get_sections() -> Array:
 	return _sections
 
+func get_escalators() -> Array:
+	return _escalators
+
 func get_food_stalls() -> Array:
 	return _food_stalls
 
@@ -1646,7 +1662,7 @@ func get_floor_nodes() -> Array:
 # Get center position of office desk zone (for price terminal proximity)
 func get_office_desk_zone_center() -> Vector2:
 	var zone = _find_zone_by_type(FloorConfig.ZONE_OFFICE_DESK)
-	if zone == null:
+	if zone.is_empty() or zone.has("empty"):
 		return Vector2(-1, -1)  # Invalid position
 	return Vector2(
 		(zone.x + zone.w * 0.5) * CELL_SIZE,
@@ -1658,4 +1674,4 @@ func _find_zone_by_type(ztype: String) -> Dictionary:
 	for zone in _floor_def.zones:
 		if zone.type == ztype:
 			return zone
-	return {}  # 🔥 修复：返回空字典而不是 null
+	return {"empty": true}  # Return a marker dict instead of null

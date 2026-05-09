@@ -87,6 +87,11 @@ func _register_debug_objects() -> void:
 	for npc in _npcs:
 		if is_instance_valid(npc):
 			debug_bounds.track_npc(npc)
+	
+	# Register escalators
+	if _floor_builder and _floor_builder.has_method("get_escalators"):
+		for esc in _floor_builder.get_escalators():
+			debug_bounds.track_escalator(esc)
 
 func _update_interaction_bubble() -> void:
 	var bubble = _main.get("_interaction_bubble")

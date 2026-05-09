@@ -344,6 +344,17 @@
                           "h":  47
                       },
                       {
+                          "type":  "ZONE_ESCALATOR",
+                          "x":  26,
+                          "y":  2,
+                          "w":  6,
+                          "h":  47,
+                          "meta":  {
+                              "escalator_id":  "esc_main",
+                              "direction":  1
+                          }
+                      },
+                      {
                           "type":  "ZONE_DECOR",
                           "x":  16,
                           "y":  11,
