@@ -63,6 +63,13 @@ func get_stock(section_id: String) -> int:
 		return 0
 	return int(_stock[section_id]["qty"])
 
+# Returns all stock as a dictionary {section_id: quantity}
+func get_all_stock() -> Dictionary:
+	var result := {}
+	for sec_id in _stock.keys():
+		result[sec_id] = int(_stock[sec_id]["qty"])
+	return result
+
 func get_capacity(section_id: String) -> int:
 	if not _stock.has(section_id):
 		return 0

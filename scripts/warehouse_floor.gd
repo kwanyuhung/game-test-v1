@@ -75,14 +75,14 @@ func _build_sprites() -> void:
 	_truck_sprite = Sprite2D.new()
 	_truck_sprite.texture = _make_truck_texture()
 	_truck_sprite.position = Vector2(_truck_pos.x * CELL_SIZE, _truck_pos.y * CELL_SIZE)
-	_truck_sprite.hframes = 4
+	_truck_sprite.hframes = 1
 	add_child(_truck_sprite)
 
 	# Forklift sprite
 	_forklift_sprite = Sprite2D.new()
 	_forklift_sprite.texture = _make_forklift_texture()
 	_forklift_sprite.position = Vector2(_forklift_pos.x * CELL_SIZE, _forklift_pos.y * CELL_SIZE)
-	_forklift_sprite.hframes = 4
+	_forklift_sprite.hframes = 1
 	add_child(_forklift_sprite)
 
 func _build_factory_robots() -> void:
@@ -273,7 +273,7 @@ class FactoryRobot1 extends Node2D:
 	func _build_sprite() -> void:
 		_sprite = Sprite2D.new()
 		_sprite.texture = _make_counter_robot_texture()
-		_sprite.hframes = 4
+		_sprite.hframes = 1
 		add_child(_sprite)
 
 	func _make_counter_robot_texture() -> ImageTexture:
@@ -345,7 +345,7 @@ class FactoryRobot2 extends Node2D:
 	func _build_sprite() -> void:
 		_sprite = Sprite2D.new()
 		_sprite.texture = _make_shelf_robot_texture()
-		_sprite.hframes = 4
+		_sprite.hframes = 1
 		add_child(_sprite)
 
 	func _make_shelf_robot_texture() -> ImageTexture:
@@ -440,7 +440,7 @@ class FactoryRobot3 extends Node2D:
 				_sprite.texture = _make_security_robot_texture()
 			RobotMode.DELIVERY:
 				_sprite.texture = _make_delivery_robot_texture()
-		_sprite.hframes = 4
+		_sprite.hframes = 1
 		add_child(_sprite)
 
 	func _make_cleaning_robot_texture() -> ImageTexture:

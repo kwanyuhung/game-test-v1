@@ -1,10 +1,10 @@
-﻿# pixel_art_generator.gd
+class_name PixelArtGenerator
+extends Node
+# pixel_art_generator.gd
 # Generates pixel art textures programmatically — no external assets needed.
 const StoreData = preload("res://scripts/store_data.gd")
 # All sprites are 16×16 or 8×8 depending on usage.
 
-class_name PixelArtGenerator
-extends Node
 
 const SIZE := 16  # Main sprite size
 const HALF := SIZE / 2
@@ -24,6 +24,17 @@ static func make_product(tex_size: int, product: StoreData.MarketProduct) -> Tex
 	elif tex_size == 8:
 		_draw_product_8(img, col, shape)
 	
+	var tex := ImageTexture.create_from_image(img)
+	return tex
+
+# Convenience method for generating product sprites without a MarketProduct object
+static func make_product_texture(col: Color, shape: int, tex_size: int = 16) -> Texture2D:
+	var img := Image.create(tex_size, tex_size, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	if tex_size == 16:
+		_draw_product_16(img, col, shape)
+	elif tex_size == 8:
+		_draw_product_8(img, col, shape)
 	var tex := ImageTexture.create_from_image(img)
 	return tex
 
@@ -254,6 +265,167 @@ static func make_wall() -> Texture2D:
 	_fill_rect(img, 0, 0, 16, 2, hi)
 	_fill_rect(img, 0, 14, 16, 2, sh)
 	return ImageTexture.create_from_image(img)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SHOE SPRITES (16x16)
+# ─────────────────────────────────────────────────────────────────────────────
+static func make_shoe(col: Color, style: int = 0) -> Texture2D:
+	# style: 0=sneaker, 1=formal, 2=sandal, 3=boot
+	var img := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	match style:
+		0: _draw_sneaker(img, col)      # Sneaker
+		1: _draw_formal_shoe(img, col)  # Formal shoe
+		2: _draw_sandal(img, col)       # Sandal
+		3: _draw_boot(img, col)         # Boot
+		_: _draw_sneaker(img, col)
+	return ImageTexture.create_from_image(img)
+
+static func _draw_sneaker(img: Image, col: Color) -> void:
+	var dark := col.darkened(0.3)
+	var light := col.lightened(0.2)
+	_fill_rect(img, 2, 10, 12, 4, dark)       # sole
+	_fill_rect(img, 2, 12, 12, 2, Color(0.15, 0.15, 0.15))  # outsole
+	_fill_rect(img, 3, 6, 10, 5, col)         # upper
+	_fill_rect(img, 4, 7, 8, 3, light)        # tongue
+	_fill_rect(img, 2, 6, 2, 4, dark)         # toe cap
+	_fill_rect(img, 11, 6, 3, 3, dark)        # heel
+	_set_pixel(img, 5, 8, Color.WHITE)         # lace
+
+static func _draw_formal_shoe(img: Image, col: Color) -> void:
+	var dark := col.darkened(0.4)
+	_fill_rect(img, 2, 11, 12, 3, dark)      # sole
+	_fill_rect(img, 2, 13, 12, 1, Color(0.1, 0.1, 0.1))  # outsole
+	_fill_rect(img, 3, 7, 10, 5, col)         # upper
+	_fill_rect(img, 2, 9, 12, 2, dark)        # seam
+	_fill_rect(img, 4, 6, 8, 2, col.lightened(0.15))  # vamp
+
+static func _draw_sandal(img: Image, col: Color) -> void:
+	var dark := col.darkened(0.3)
+	_fill_rect(img, 3, 12, 10, 2, Color(0.12, 0.10, 0.08))  # sole
+	_fill_rect(img, 4, 8, 8, 1, dark)        # strap
+	_fill_rect(img, 5, 6, 2, 4, dark)        # left post
+	_fill_rect(img, 9, 6, 2, 4, dark)        # right post
+	_fill_rect(img, 4, 11, 8, 2, col)         # footbed
+
+static func _draw_boot(img: Image, col: Color) -> void:
+	var dark := col.darkened(0.35)
+	var light := col.lightened(0.15)
+	_fill_rect(img, 3, 12, 10, 2, Color(0.1, 0.08, 0.06))  # outsole
+	_fill_rect(img, 2, 8, 12, 5, dark)       # boot body
+	_fill_rect(img, 3, 4, 10, 5, col)        # upper boot
+	_fill_rect(img, 4, 5, 8, 3, light)       # shaft highlight
+	_fill_rect(img, 3, 3, 10, 2, dark)       # boot top rim
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CLOTHING SPRITES (16x16)
+# ─────────────────────────────────────────────────────────────────────────────
+static func make_clothing(col: Color, style: int = 0) -> Texture2D:
+	# style: 0=dress, 1=tshirt, 2=pants, 3=jacket
+	var img := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	match style:
+		0: _draw_dress(img, col)      # Dress
+		1: _draw_tshirt(img, col)     # T-shirt
+		2: _draw_pants(img, col)      # Pants
+		3: _draw_jacket(img, col)     # Jacket
+		_: _draw_tshirt(img, col)
+	return ImageTexture.create_from_image(img)
+
+static func _draw_dress(img: Image, col: Color) -> void:
+	var dark := col.darkened(0.2)
+	var light := col.lightened(0.2)
+	_fill_rect(img, 5, 2, 6, 2, col)         # shoulders/top
+	_fill_rect(img, 4, 4, 8, 2, col)         # bodice
+	_fill_rect(img, 3, 6, 10, 6, col)         # skirt start
+	_fill_rect(img, 2, 10, 12, 4, dark)      # skirt bottom
+	_set_pixel(img, 7, 3, light)              # neckline detail
+
+static func _draw_tshirt(img: Image, col: Color) -> void:
+	var dark := col.darkened(0.15)
+	var light := col.lightened(0.2)
+	_fill_rect(img, 5, 2, 6, 2, col)         # neck
+	_fill_rect(img, 4, 4, 8, 8, col)         # torso
+	_fill_rect(img, 1, 4, 3, 5, col)         # left sleeve
+	_fill_rect(img, 12, 4, 3, 5, col)         # right sleeve
+	_fill_rect(img, 5, 2, 6, 1, dark)         # collar
+	_fill_rect(img, 6, 6, 4, 1, light)       # chest stripe
+
+static func _draw_pants(img: Image, col: Color) -> void:
+	var dark := col.darkened(0.2)
+	_fill_rect(img, 4, 2, 8, 3, col)         # waistband
+	_fill_rect(img, 4, 5, 3, 7, col)          # left leg
+	_fill_rect(img, 9, 5, 3, 7, col)          # right leg
+	_fill_rect(img, 4, 5, 8, 1, dark)          # waistband shadow
+	_fill_rect(img, 4, 11, 3, 1, dark)        # left hem
+	_fill_rect(img, 9, 11, 3, 1, dark)        # right hem
+
+static func _draw_jacket(img: Image, col: Color) -> void:
+	var dark := col.darkened(0.25)
+	var light := col.lightened(0.15)
+	_fill_rect(img, 4, 2, 8, 10, col)         # body
+	_fill_rect(img, 1, 3, 3, 6, col)          # left sleeve
+	_fill_rect(img, 12, 3, 3, 6, col)         # right sleeve
+	_fill_rect(img, 5, 2, 2, 10, dark)        # left front panel
+	_fill_rect(img, 9, 2, 2, 10, dark)        # right front panel
+	_fill_rect(img, 6, 4, 1, 6, Color(0.6, 0.6, 0.65))  # zipper
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SPORTS EQUIPMENT SPRITES (16x16)
+# ─────────────────────────────────────────────────────────────────────────────
+static func make_sports_equipment(col: Color, style: int = 0) -> Texture2D:
+	# style: 0=dumbbell, 1=ball, 2=yogamat, 3=racket
+	var img := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	match style:
+		0: _draw_dumbbell(img, col)     # Dumbbell
+		1: _draw_ball(img, col)         # Sports ball
+		2: _draw_yogamat(img, col)      # Yoga mat roll
+		3: _draw_racket(img, col)       # Tennis racket
+		4: _draw_bicycle_helmet(img, col)  # Helmet
+		_: _draw_dumbbell(img, col)
+	return ImageTexture.create_from_image(img)
+
+static func _draw_dumbbell(img: Image, col: Color) -> void:
+	var dark := col.darkened(0.3)
+	var light := col.lightened(0.2)
+	_fill_rect(img, 1, 6, 3, 4, dark)         # left weight
+	_fill_rect(img, 12, 6, 3, 4, dark)         # right weight
+	_fill_rect(img, 4, 7, 8, 2, Color(0.5, 0.5, 0.52))  # bar
+	_fill_rect(img, 2, 5, 2, 6, light)        # left cap
+	_fill_rect(img, 12, 5, 2, 6, light)       # right cap
+
+static func _draw_ball(img: Image, col: Color) -> void:
+	var dark := col.darkened(0.2)
+	var light := col.lightened(0.3)
+	_fill_rect(img, 5, 5, 6, 6, col)
+	_fill_rect(img, 4, 6, 8, 4, col)
+	_fill_rect(img, 6, 4, 4, 8, col)
+	_fill_rect(img, 5, 5, 2, 2, light)
+	_fill_rect(img, 6, 6, 1, 1, dark)         # seam
+
+static func _draw_yogamat(img: Image, col: Color) -> void:
+	var dark := col.darkened(0.25)
+	var light := col.lightened(0.15)
+	_fill_rect(img, 2, 8, 12, 5, col)         # main roll
+	_fill_rect(img, 2, 8, 12, 2, light)       # top highlight
+	_fill_rect(img, 2, 12, 12, 1, dark)       # bottom shadow
+	_fill_rect(img, 13, 9, 2, 3, col.darkened(0.1))  # roll end
+
+static func _draw_racket(img: Image, col: Color) -> void:
+	var dark := Color(0.6, 0.55, 0.5)
+	_fill_rect(img, 6, 2, 4, 8, col)          # frame oval
+	_fill_rect(img, 7, 3, 2, 6, Color(0.9, 0.9, 0.9))  # strings
+	_fill_rect(img, 7, 10, 2, 5, dark)         # handle
+	_fill_rect(img, 6, 14, 4, 1, dark)         # grip
+
+static func _draw_bicycle_helmet(img: Image, col: Color) -> void:
+	var dark := col.darkened(0.3)
+	var light := col.lightened(0.2)
+	_fill_rect(img, 3, 5, 10, 7, col)         # dome
+	_fill_rect(img, 2, 8, 12, 4, col)          # rim
+	_fill_rect(img, 4, 4, 8, 2, light)         # top highlight
+	_fill_rect(img, 2, 10, 12, 2, dark)        # bottom rim
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helper drawing primitives

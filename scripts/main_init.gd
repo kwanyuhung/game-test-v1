@@ -295,3 +295,16 @@ func init_all() -> void:
 		dev_tools.position = Vector2(100.0, 100.0)
 		dev_tools.z_index = 1000
 		m.add_child(dev_tools)
+
+	# ── Debug Sprite Viewer ──────────────────────────────────────────────────
+	var debug_viewer = preload("res://scripts/debug_sprite_viewer.gd").new()
+	debug_viewer.layer = 3000
+	m.add_child(debug_viewer)
+	m.set("_debug_viewer", debug_viewer)
+
+	# ── Shelf Panel ─────────────────────────────────────────────────────────
+	var shelf_panel = preload("res://scripts/shelf_panel.gd").new()
+	shelf_panel.layer = 2500
+	shelf_panel.visible = false
+	m.add_child(shelf_panel)
+	m.set("_shelf_panel", shelf_panel)

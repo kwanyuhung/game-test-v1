@@ -989,6 +989,15 @@ func _build_zone_shoes_rack(zone: Dictionary) -> void:
 	title_lbl.add_theme_font_size_override("font_size", 10)
 	_parent.add_child(title_lbl); _floor_nodes.append(title_lbl)
 
+	# Shoe styles: 0=sneaker, 1=formal, 2=sandal, 3=boot
+	var shoe_styles := [0, 1, 2, 3]
+	var shoe_colors := [
+		zone_color.lightened(0.2),
+		zone_color,
+		zone_color.darkened(0.15),
+		Color(0.35, 0.28, 0.22)  # brown for boots
+	]
+
 	for row in range(4):
 		var shelf_y := cy + 8 + row * (ch * 0.22)
 		var plank := ColorRect.new()
@@ -998,11 +1007,12 @@ func _build_zone_shoes_rack(zone: Dictionary) -> void:
 		_parent.add_child(plank); _floor_nodes.append(plank)
 		for col in range(6):
 			var box_x := cx + 8 + col * ((cw - 16) / 6.0)
-			var box := ColorRect.new()
-			box.position = Vector2(box_x, shelf_y - 8)
-			box.size = Vector2((cw - 16) / 6.5, 10)
-			box.color = zone_color.darkened(0.2) if (col % 2 == 0) else zone_color.lightened(0.15)
-			_parent.add_child(box); _floor_nodes.append(box)
+			# Create shoe sprite instead of abstract box
+			var shoe_sprite := Sprite2D.new()
+			shoe_sprite.texture = PixelArtGenerator.make_shoe(shoe_colors[row % shoe_colors.size()], shoe_styles[row % shoe_styles.size()])
+			shoe_sprite.position = Vector2(box_x + (cw - 16) / 12.0, shelf_y - 6)
+			shoe_sprite.scale = Vector2(1.0, 1.0)
+			_parent.add_child(shoe_sprite); _floor_nodes.append(shoe_sprite)
 
 func _build_zone_dress_rack(zone: Dictionary) -> void:
 	var name: String = zone.meta.get("name", "DRESSES")
@@ -1024,6 +1034,15 @@ func _build_zone_dress_rack(zone: Dictionary) -> void:
 	title_lbl.add_theme_font_size_override("font_size", 10)
 	_parent.add_child(title_lbl); _floor_nodes.append(title_lbl)
 
+	# Clothing styles: 0=dress, 1=tshirt, 2=pants, 3=jacket
+	var clothing_styles := [0, 1, 2, 3]
+	var clothing_colors := [
+		zone_color.lightened(0.15),
+		zone_color,
+		zone_color.darkened(0.2),
+		zone_color.darkened(0.1)
+	]
+
 	var num_racks := 3
 	for rack in range(num_racks):
 		var rack_y := cy + 16 + rack * (ch * 0.28)
@@ -1034,12 +1053,13 @@ func _build_zone_dress_rack(zone: Dictionary) -> void:
 		_parent.add_child(pole); _floor_nodes.append(pole)
 		for h in range(7):
 			var hanger_x := cx + 10 + h * ((cw - 20) / 7.0)
-			var garment_h := 20 + (rack % 2) * 8
-			var garment := ColorRect.new()
-			garment.position = Vector2(hanger_x, rack_y - garment_h)
-			garment.size = Vector2(14, garment_h)
-			garment.color = zone_color.lightened(0.1) if (h % 2 == 0) else zone_color.darkened(0.1)
-			_parent.add_child(garment); _floor_nodes.append(garment)
+			# Create clothing sprite instead of abstract rectangle
+			var cloth_sprite := Sprite2D.new()
+			var style_idx := (rack + h) % clothing_styles.size()
+			cloth_sprite.texture = PixelArtGenerator.make_clothing(clothing_colors[style_idx], clothing_styles[style_idx])
+			cloth_sprite.position = Vector2(hanger_x + 7, rack_y - 10)
+			cloth_sprite.scale = Vector2(1.2, 1.2)
+			_parent.add_child(cloth_sprite); _floor_nodes.append(cloth_sprite)
 
 func _build_zone_sport_area(zone: Dictionary) -> void:
 	var name: String = zone.meta.get("name", "SPORT")
@@ -1061,6 +1081,16 @@ func _build_zone_sport_area(zone: Dictionary) -> void:
 	title_lbl.add_theme_font_size_override("font_size", 10)
 	_parent.add_child(title_lbl); _floor_nodes.append(title_lbl)
 
+	# Sports equipment styles: 0=dumbbell, 1=ball, 2=yogamat, 3=racket, 4=helmet
+	var equipment_styles := [0, 1, 2, 3, 4]
+	var equip_colors := [
+		Color(0.45, 0.58, 0.68),
+		Color(0.80, 0.45, 0.45),  # red ball
+		Color(0.55, 0.78, 0.68),  # green mat
+		Color(0.90, 0.85, 0.40),   # yellow racket
+		Color(0.35, 0.45, 0.65)    # blue helmet
+	]
+
 	var shelf_colors := [Color(0.45, 0.58, 0.68), Color(0.58, 0.52, 0.62), Color(0.52, 0.68, 0.58)]
 	for row in range(3):
 		var shelf_y := cy + 12 + row * (ch * 0.28)
@@ -1069,6 +1099,15 @@ func _build_zone_sport_area(zone: Dictionary) -> void:
 		plank.size = Vector2(cw - 8, 2)
 		plank.color = shelf_colors[row % 3].darkened(0.3)
 		_parent.add_child(plank); _floor_nodes.append(plank)
+		# Place sports equipment on shelf
+		for col in range(5):
+			var equip_x := cx + 10 + col * ((cw - 20) / 5.0)
+			var equip_sprite := Sprite2D.new()
+			var style_idx := (row + col) % equipment_styles.size()
+			equip_sprite.texture = PixelArtGenerator.make_sports_equipment(equip_colors[style_idx], equipment_styles[style_idx])
+			equip_sprite.position = Vector2(equip_x + 8, shelf_y - 8)
+			equip_sprite.scale = Vector2(1.0, 1.0)
+			_parent.add_child(equip_sprite); _floor_nodes.append(equip_sprite)
 
 func _build_zone_entertainment(zone: Dictionary) -> void:
 	var bg := ColorRect.new()

@@ -104,6 +104,8 @@ var _audio: AudioManager = null
 var _save_hint_label: Label = null
 var _tutorial_overlay: TutorialOverlay = null
 var _minimap: MiniMap = null
+var _debug_viewer: CanvasLayer = null
+var _shelf_panel: CanvasLayer = null
 var _map_panel: MapPanel = null
 var _toasts: ToastManager = null
 var _minimap_visible: bool = false
@@ -511,10 +513,13 @@ func _input(event: InputEvent) -> void:
 			KEY_F5:
 				SaveSystem.save_game(self)
 				if _toasts != null: _toasts.toast_success("Game Saved!")
-			# F9 ── Quick Load
+			# F9 ── Debug Sprite Viewer (if DEV_MODE) or Quick Load
 			KEY_F9:
-				SaveSystem.load_game(self)
-				if _toasts != null: _toasts.toast_info("Game Loaded!")
+				if DEV_MODE and _debug_viewer != null:
+					_debug_viewer.toggle()
+				else:
+					SaveSystem.load_game(self)
+					if _toasts != null: _toasts.toast_info("Game Loaded!")
 			# N ── Mini-map
 			#KEY_N:
 				#_toggle_minimap()
@@ -598,6 +603,10 @@ func _input(event: InputEvent) -> void:
 			if event.keycode == KEY_SPACE:
 				_warehouse_floor.stop_truck()
 				return
+		
+		# H ── Toggle Shelf Panel (warehouse/storage view)
+			if event.keycode == KEY_H:
+				_toggle_shelf_panel()
 
 func _process(_delta: float) -> void:
 	# Camera follow player
@@ -1431,3 +1440,9 @@ func _on_item_added_to_cart(item_data: Dictionary, count: int = 1) -> void:
 func _on_browse_closed() -> void:
 	# 面板关闭时可执行逻辑（无逻辑留空即可）
 	pass
+
+# ── Shelf Panel (H key - warehouse storage view) ────────────────────
+func _toggle_shelf_panel() -> void:
+	if _shelf_panel == null:
+		return
+	_shelf_panel.toggle()
