@@ -2,7 +2,7 @@
 # Product catalog and section layout data.
 # Accessed via: const StoreData = preload("res://scripts/store_data.gd")
 
-enum SectionStyle { FRIDGE, PRODUCE, BAKERY, SHELF, DELI, FREEZER }
+enum SectionStyle { FRIDGE, PRODUCE, BAKERY, SHELF, DELI, FREEZER, SHOES_RACK, DRESS_RACK, SPORT_AREA }
 
 class SectionDef:
 	var id: String
@@ -39,18 +39,26 @@ static var CHECKOUT_LANES: Array = []
 
 static func _static_init() -> void:
 	SECTIONS = [
-		# Floor 1 — Fresh Market
-		SectionDef.new("dairy",   "DAIRY",      2,  3, 16, 14, SectionStyle.FRIDGE,   Color(0.70, 0.88, 1.00),  "D",  1),
-		SectionDef.new("produce", "PRODUCE",   20,  3, 20, 14, SectionStyle.PRODUCE,  Color(0.72, 0.92, 0.56),  "P",  1),
-		SectionDef.new("bakery",  "BAKERY",    42,  3, 16, 14, SectionStyle.BAKERY,   Color(0.98, 0.82, 0.52),  "B",  1),
-		SectionDef.new("meat",    "MEAT/DELI", 20, 19, 20, 14, SectionStyle.DELI,     Color(0.95, 0.72, 0.68),  "M",  1),
-		# Floor 2 — Pantry
-		SectionDef.new("pantry", "PANTRY",    42, 19, 16, 14, SectionStyle.SHELF,    Color(0.90, 0.85, 0.75),  "T",  2),
-		SectionDef.new("spices",  "SPICES",     2, 19, 16, 14, SectionStyle.SHELF,    Color(0.88, 0.72, 0.55),  "S",  2),
-		# Floor 3 — Beverages
-		SectionDef.new("drinks",  "DRINKS",    60,  3, 18, 14, SectionStyle.FRIDGE,   Color(0.60, 0.82, 1.00),  "R",  3),
-		SectionDef.new("coffee",  "COFFEE",    42,  3, 16, 14, SectionStyle.FRIDGE,   Color(0.55, 0.42, 0.32),  "C",  3),
-		# Floor 4 — Snacks & Candy
+		# Floor 0 — Ground Floor Fresh Market (ORIGINAL)
+		SectionDef.new("dairy",   "DAIRY",      2,  3, 16, 14, SectionStyle.FRIDGE,   Color(0.70, 0.88, 1.00),  "D",  0),
+		SectionDef.new("produce", "PRODUCE",   20,  3, 20, 14, SectionStyle.PRODUCE,  Color(0.72, 0.92, 0.56),  "P",  0),
+		SectionDef.new("bakery",  "BAKERY",    42,  3, 16, 14, SectionStyle.BAKERY,   Color(0.98, 0.82, 0.52),  "B",  0),
+		SectionDef.new("meat",    "MEAT/DELI", 20, 19, 20, 14, SectionStyle.DELI,     Color(0.95, 0.72, 0.68),  "M",  0),
+		# Floor 1 — Shoes (Ladies, Mens, Kids, Sport, Sandals)
+		SectionDef.new("shoes_ladies", "LADIES SHOES",  2,  3, 24, 16, SectionStyle.SHOES_RACK, Color(0.82, 0.55, 0.65),  "L",  1),
+		SectionDef.new("shoes_mens",   "MENS SHOES",   28,  3, 24, 16, SectionStyle.SHOES_RACK, Color(0.55, 0.60, 0.80),  "M",  1),
+		SectionDef.new("shoes_kids",   "KIDS SHOES",   54,  3, 24, 16, SectionStyle.SHOES_RACK, Color(0.70, 0.75, 0.90),  "K",  1),
+		SectionDef.new("shoes_sport",  "SPORT SHOES",   2, 21, 38, 16, SectionStyle.SHOES_RACK, Color(0.55, 0.80, 0.65),  "S",  1),
+		SectionDef.new("shoes_sandals","SANDALS",       42, 21, 36, 16, SectionStyle.SHOES_RACK, Color(0.85, 0.72, 0.52),  "A",  1),
+		# Floor 2 — Fashion (Ladies, Mens, Kids Wear)
+		SectionDef.new("ladies_wear", "LADIES WEAR",  2,  3, 26, 18, SectionStyle.DRESS_RACK, Color(0.88, 0.58, 0.72),  "L",  2),
+		SectionDef.new("mens_wear",   "MENS WEAR",   30,  3, 26, 18, SectionStyle.DRESS_RACK, Color(0.60, 0.68, 0.88),  "M",  2),
+		SectionDef.new("kids_wear",   "KIDS WEAR",   58,  3, 22, 18, SectionStyle.DRESS_RACK, Color(0.72, 0.78, 0.90),  "K",  2),
+		# Floor 3 — Sport & Active
+		SectionDef.new("gym",          "GYM EQUIPMENT",  2,  3, 24, 16, SectionStyle.SPORT_AREA, Color(0.55, 0.75, 0.65),  "G",  3),
+		SectionDef.new("sports_gear",   "SPORTS GEAR",   28,  3, 24, 16, SectionStyle.SPORT_AREA, Color(0.45, 0.65, 0.85),  "S",  3),
+		SectionDef.new("activewear",    "ACTIVEWEAR",      2, 21, 38, 16, SectionStyle.SPORT_AREA, Color(0.75, 0.55, 0.65),  "A",  3),
+		# Floor 4 — Outdoor (Snacks & Candy kept for compatibility)
 		SectionDef.new("snacks",  "SNACKS",     2, 19, 16, 14, SectionStyle.SHELF,    Color(0.95, 0.90, 0.80),  "S",  4),
 		SectionDef.new("candy",   "CANDY",     20, 19, 16, 14, SectionStyle.SHELF,    Color(0.88, 0.60, 0.80),  "A",  4),
 		# Floor 5 — Frozen
@@ -345,6 +353,75 @@ static func _static_init() -> void:
 		MarketProduct.new("pet_food_bin",   "Pet Food Storage Bin",   12.00, Color(0.55, 0.48, 0.38), 3, "pet", "Pet Toys",     "Airtight container. Keeps food fresh. 10kg cap."),
 		MarketProduct.new("pet_wipes",      "Pet Grooming Wipes 100ct", 7.50, Color(0.72, 0.82, 0.90), 0, "pet", "Pet Toys",     "Fragrance-free grooming wipes. Safe for paws."),
 		MarketProduct.new("poop_bags",      "Poop Bags 120ct",          5.00, Color(0.60, 0.52, 0.48), 0, "pet", "Pet Toys",     "Biodegradable waste bags with dispenser."),
+		# ═══════════════════ SHOES — LADIES ═══════════════════
+		MarketProduct.new("shoe_heels_black",  "Heels Black Size 6",      45.00, Color(0.20, 0.20, 0.22), 3, "shoes_ladies", "Heels",        "Classic black pumps. Comfortable 3-inch heel."),
+		MarketProduct.new("shoe_heels_red",   "Heels Red Size 6",        48.00, Color(0.80, 0.15, 0.20), 3, "shoes_ladies", "Heels",        "Bold red stilettos. Party perfect."),
+		MarketProduct.new("shoe_flats_black", "Flats Black Size 6",      28.00, Color(0.22, 0.22, 0.25), 2, "shoes_ladies", "Flats",        "Simple black ballet flats. Cushioned insole."),
+		MarketProduct.new("shoe_sandals_beige","Sandals Beige Size 6",   32.00, Color(0.85, 0.78, 0.62), 2, "shoes_ladies", "Sandals",      "Ankle-strap wedges. Vegan leather."),
+		MarketProduct.new("shoe_boots_black", "Boots Black Size 6",      65.00, Color(0.18, 0.18, 0.20), 4, "shoes_ladies", "Boots",        "Knee-high boots. Faux leather."),
+		MarketProduct.new("shoe_sneakers_white","Sneakers White Size 6", 55.00, Color(0.92, 0.92, 0.90), 3, "shoes_ladies", "Sneakers",     "Classic white trainers. Lace-up."),
+		# ═══════════════════ SHOES — MENS ═══════════════════
+		MarketProduct.new("shoe_oxford_brown", "Oxford Brown Size 10",   72.00, Color(0.45, 0.30, 0.18), 4, "shoes_mens", "Dress",        "Classic leather oxfords. Goodyear welt."),
+		MarketProduct.new("shoe_oxford_black", "Oxford Black Size 10",   70.00, Color(0.18, 0.18, 0.20), 4, "shoes_mens", "Dress",        "Polished leather shoes. Business ready."),
+		MarketProduct.new("shoe_loafers_tan", "Loafers Tan Size 10",    55.00, Color(0.72, 0.55, 0.35), 3, "shoes_mens", "Casual",       "Penny loafers. Flexible sole."),
+		MarketProduct.new("shoe_sneakers_black","Sneakers Black Size 10", 58.00, Color(0.20, 0.20, 0.22), 3, "shoes_mens", "Sneakers",     "Running-style sneakers. Memory foam."),
+		MarketProduct.new("shoe_sandals_brown", "Sandals Brown Size 10", 35.00, Color(0.55, 0.40, 0.25), 2, "shoes_mens", "Sandals",      "Slide-on sandals. Cork footbed."),
+		MarketProduct.new("shoe_boots_chelsea", "Chelsea Boots Size 10", 85.00, Color(0.25, 0.20, 0.18), 4, "shoes_mens", "Boots",        "Pull-on boots. Elastic side panels."),
+		# ═══════════════════ SHOES — KIDS ═══════════════════
+		MarketProduct.new("shoe_kids_sneaker_red", "Sneakers Red Size 3",  28.00, Color(0.85, 0.20, 0.25), 2, "shoes_kids", "Sneakers",     "Velcro closure. LED lights in sole."),
+		MarketProduct.new("shoe_kids_sneaker_blue","Sneakers Blue Size 3", 28.00, Color(0.30, 0.50, 0.90), 2, "shoes_kids", "Sneakers",     "Sporty style. Padded ankle."),
+		MarketProduct.new("shoe_kids_sandal_pink", "Sandals Pink Size 3",  22.00, Color(0.92, 0.65, 0.75), 2, "shoes_kids", "Sandals",      "Gladiator style. Secure strap."),
+		MarketProduct.new("shoe_kids_boots_purple","Boots Purple Size 3", 38.00, Color(0.55, 0.35, 0.75), 3, "shoes_kids", "Boots",        "Rain boots. Jelly material."),
+		MarketProduct.new("shoe_kids_flat_black", "Flats Black Size 3",   18.00, Color(0.20, 0.20, 0.22), 2, "shoes_kids", "Flats",        "School-ready. Patent leather."),
+		# ═══════════════════ SHOES — SPORT ═══════════════════
+		MarketProduct.new("shoe_running_red", "Running Shoes Red Size 9", 95.00, Color(0.85, 0.25, 0.30), 4, "shoes_sport", "Running",      "Lightweight mesh. Responsive bounce."),
+		MarketProduct.new("shoe_running_blue", "Running Shoes Blue Size 9", 95.00, Color(0.25, 0.45, 0.85), 4, "shoes_sport", "Running",      "Cushioned midsole. Breathable."),
+		MarketProduct.new("shoe_basketball_red","Basketball Shoes Red Sz 10", 120.00, Color(0.80, 0.20, 0.25), 5, "shoes_sport", "Basketball",   "High-top. Ankle support. Grip sole."),
+		MarketProduct.new("shoe_basketball_blue","Basketball Shoes Blue Sz 10", 120.00, Color(0.20, 0.40, 0.80), 5, "shoes_sport", "Basketball",   "Foam cushioning. Durable construction."),
+		MarketProduct.new("shoe_training_black","Training Shoes Black Sz 9", 75.00, Color(0.20, 0.20, 0.22), 3, "shoes_sport", "Training",     "Cross-training. Flexible. Versatile."),
+		MarketProduct.new("shoe_hiking_brown", "Hiking Boots Brown Size 9", 110.00, Color(0.50, 0.35, 0.22), 5, "shoes_sport", "Hiking",       "Waterproof. Rugged grip. Ankle protection."),
+		# ═══════════════════ FASHION — LADIES WEAR ═══════════════════
+		MarketProduct.new("dress_summer",   "Summer Dress S",        48.00, Color(0.92, 0.55, 0.65), 3, "ladies_wear", "Dresses",     "Flowy midi dress. V-neck. Machine washable."),
+		MarketProduct.new("dress_evening",  "Evening Gown M",        128.00, Color(0.20, 0.20, 0.35), 5, "ladies_wear", "Dresses",     "Elegant floor-length. Sequined bodice."),
+		MarketProduct.new("blouse_white",   "Silk Blouse White S",   35.00, Color(0.95, 0.95, 0.90), 2, "ladies_wear", "Tops",        "100% mulberry silk. Pearl buttons."),
+		MarketProduct.new("blouse_blue",    "Cotton Blouse Blue M",   28.00, Color(0.55, 0.70, 0.90), 2, "ladies_wear", "Tops",        "Lightweight cotton. Relaxed fit."),
+		MarketProduct.new("skirt_pleated",  "Pleated Skirt Navy S",   38.00, Color(0.25, 0.30, 0.50), 2, "ladies_wear", "Bottoms",     "Tennis skirt style. Built-in shorts."),
+		MarketProduct.new("pants_wide",     "Wide Leg Pants Black M", 42.00, Color(0.18, 0.18, 0.22), 3, "ladies_wear", "Bottoms",     "High-waisted. Flowing silhouette."),
+		# ═══════════════════ FASHION — MENS WEAR ═══════════════════
+		MarketProduct.new("suit_navy",      "Navy Suit 40R",         185.00, Color(0.22, 0.28, 0.45), 5, "mens_wear", "Suits",       "Two-piece. Notch lapel. Poly-wool."),
+		MarketProduct.new("suit_gray",      "Gray Suit 40R",         175.00, Color(0.48, 0.48, 0.52), 5, "mens_wear", "Suits",       "Three-piece available. Slim fit."),
+		MarketProduct.new("shirt_dress_blue","Dress Shirt Blue M",    32.00, Color(0.50, 0.65, 0.90), 2, "mens_wear", "Shirts",      "Oxford cloth. Button-down collar."),
+		MarketProduct.new("shirt_casual_white","Casual Shirt White L", 28.00, Color(0.95, 0.95, 0.90), 2, "mens_wear", "Shirts",      "Linen blend. Roll sleeves. Relaxed fit."),
+		MarketProduct.new("jeans_indigo",   "Indigo Jeans 32x30",     48.00, Color(0.25, 0.35, 0.60), 2, "mens_wear", "Pants",       "Classic 5-pocket. Slight stretch."),
+		MarketProduct.new("shorts_khaki",  "Khaki Shorts 34",        28.00, Color(0.72, 0.65, 0.50), 2, "mens_wear", "Pants",       "Cargo style. Multi-pocket."),
+		# ═══════════════════ FASHION — KIDS WEAR ═══════════════════
+		MarketProduct.new("kids_tshirt_pokemon","Pokemon Tee Size 8",   15.00, Color(0.85, 0.40, 0.45), 1, "kids_wear", "Tops",        "Cotton. Screen-printed character."),
+		MarketProduct.new("kids_tshirt_unicorn","Unicorn Tee Size 10",  15.00, Color(0.88, 0.65, 0.88), 1, "kids_wear", "Tops",        "Glitter print. Stretch cotton."),
+		MarketProduct.new("kids_jeans_blue", "Kids Jeans Blue Size 8", 25.00, Color(0.35, 0.50, 0.75), 2, "kids_wear", "Pants",       "Adjustable waist. Reinforced knees."),
+		MarketProduct.new("kids_shorts_navy","Kids Shorts Navy Size 10", 18.00, Color(0.25, 0.30, 0.45), 2, "kids_wear", "Pants",       "Pull-on style. Elastic waist."),
+		MarketProduct.new("kids_dress_pink","Floral Dress Size 7",     28.00, Color(0.92, 0.70, 0.78), 2, "kids_wear", "Dresses",     "A-line. Petticoat underskirt."),
+		MarketProduct.new("kids_jumpsuit","Kids Jumpsuit Size 9",     32.00, Color(0.55, 0.75, 0.60), 2, "kids_wear", "Dresses",     "Denim look. Snap buttons."),
+		# ═══════════════════ SPORT — GYM EQUIPMENT ═══════════════════
+		MarketProduct.new("dumbbell_5kg",   "Dumbbell 5kg Pair",      35.00, Color(0.35, 0.35, 0.40), 3, "gym", "Weights",     "Hex rubber-coated. Hexagonal."),
+		MarketProduct.new("dumbbell_10kg",  "Dumbbell 10kg Pair",     55.00, Color(0.35, 0.35, 0.40), 4, "gym", "Weights",     "Adjustable. Quick-change collars."),
+		MarketProduct.new("kettlebell_8kg", "Kettlebell 8kg",          42.00, Color(0.40, 0.40, 0.45), 3, "gym", "Weights",     "Cast iron. Wide handle."),
+		MarketProduct.new("yoga_mat_purple","Yoga Mat 6mm Purple",   28.00, Color(0.55, 0.40, 0.70), 2, "gym", "Fitness",     "Non-slip surface. Carrying strap."),
+		MarketProduct.new("resistance_band","Resistance Band Set",     18.00, Color(0.30, 0.75, 0.65), 1, "gym", "Fitness",     "5 levels of resistance. Loop design."),
+		MarketProduct.new("jump_rope",      "Speed Jump Rope",         12.00, Color(0.85, 0.30, 0.35), 1, "gym", "Cardio",      "Ball bearings. Adjustable length."),
+		# ═══════════════════ SPORT — SPORTS GEAR ═══════════════════
+		MarketProduct.new("basketball",      "Basketball Size 7",       25.00, Color(0.90, 0.55, 0.25), 2, "sports_gear", "Basketball", "Official size. Indoor/outdoor."),
+		MarketProduct.new("football",       "Football NFL",             28.00, Color(0.20, 0.35, 0.25), 2, "sports_gear", "Football",   "Synthetic leather. Official specs."),
+		MarketProduct.new("soccer_ball",   "Soccer Ball Size 5",      22.00, Color(0.95, 0.95, 0.95), 2, "sports_gear", "Soccer",     "Machine-stitched. Butyl bladder."),
+		MarketProduct.new("tennis_racket",  "Tennis Racket Junior",    45.00, Color(0.20, 0.60, 0.85), 3, "sports_gear", "Tennis",     "Graphite. Pre-strung. Cover included."),
+		MarketProduct.new("golf_balls",    "Golf Balls 12-Pack",      35.00, Color(0.95, 0.95, 0.95), 2, "sports_gear", "Golf",       "Distance balls. 2-piece construction."),
+		MarketProduct.new("swim_goggles",   "Swim Goggles Anti-Fog",   15.00, Color(0.20, 0.60, 0.80), 1, "sports_gear", "Swimming",   "UV protection. Adjustable strap."),
+		# ═══════════════════ SPORT — ACTIVEWEAR ═══════════════════
+		MarketProduct.new("sports_top_woman","Sports Bra Size M",       22.00, Color(0.85, 0.40, 0.60), 2, "activewear", "Women",      "High impact. Moisture-wicking."),
+		MarketProduct.new("sports_top_man", "Sports Tee Size L",       18.00, Color(0.25, 0.50, 0.85), 2, "activewear", "Men",        "Dri-fit material. V-neck."),
+		MarketProduct.new("sports_tights",  "Running Tights Size S",   28.00, Color(0.18, 0.18, 0.22), 2, "activewear", "Women",      "Compression fit. Hidden pocket."),
+		MarketProduct.new("sports_shorts_m","Sports Shorts Size M",   20.00, Color(0.20, 0.45, 0.60), 2, "activewear", "Men",        "Mesh panels. Drawstring waist."),
+		MarketProduct.new("sports_leggings","Yoga Leggings Size S",    32.00, Color(0.35, 0.25, 0.50), 2, "activewear", "Women",      "High-waisted. Squat-proof."),
+		MarketProduct.new("tracksuit",      "Track Suit Size M",       55.00, Color(0.20, 0.25, 0.40), 3, "activewear", "Unisex",     "Full zip. Polyester. 2-piece."),
 	]
 
 static func get_section_def(sid: String) -> SectionDef:

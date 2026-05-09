@@ -1,2547 +1,2569 @@
 [
-	{
-		"id": 0,
-		"label": "G",
-		"theme": "lobby",
-		"ambient_color": [
-			0.42,
-			0.44,
-			0.4
-		],
-		"zones": [
-			{
-				"type": "ZONE_LOBBY",
-				"x": 0,
-				"y": 2,
-				"w": 80,
-				"h": 13
-			},
-			{
-				"type": "ZONE_INFO_DESK",
-				"x": 40,
-				"y": 3,
-				"w": 16,
-				"h": 7
-			},
-			{
-				"type": "ZONE_WC",
-				"x": 68,
-				"y": 3,
-				"w": 12,
-				"h": 7
-			},
-			{
-				"type": "ZONE_AD",
-				"x": 56,
-				"y": 3,
-				"w": 4,
-				"h": 5,
-				"meta": {
-					"color": [
-						1.0,
-						0.4,
-						0.2
-					],
-					"name": "ad_color"
-				}
-			},
-			{
-				"type": "ZONE_AD",
-				"x": 56,
-				"y": 9,
-				"w": 4,
-				"h": 5,
-				"meta": {
-					"color": [
-						0.2,
-						0.6,
-						1.0
-					],
-					"name": "ad_color"
-				}
-			},
-			{
-				"type": "ZONE_ATM",
-				"x": 58,
-				"y": 4,
-				"w": 4,
-				"h": 5
-			},
-			{
-				"type": "ZONE_ATM",
-				"x": 58,
-				"y": 28,
-				"w": 4,
-				"h": 5
-			},
-			{
-				"type": "ZONE_CUSTOMER_SERVICE",
-				"x": 8,
-				"y": 3,
-				"w": 16,
-				"h": 7,
-				"meta": {
-					"color": [
-						0.5,
-						0.55,
-						0.7
-					],
-					"name": "CUSTOMER SERVICE"
-				}
-			},
-			{
-				"type": "ZONE_LOYALTY_KIOSK",
-				"x": 26,
-				"y": 3,
-				"w": 14,
-				"h": 7,
-				"meta": {
-					"color": [
-						0.6,
-						0.5,
-						0.75
-					],
-					"name": "LOYALTY CENTER"
-				}
-			},
-			{
-				"type": "ZONE_GIFT_WRAP",
-				"x": 42,
-				"y": 3,
-				"w": 14,
-				"h": 7,
-				"meta": {
-					"color": [
-						0.72,
-						0.55,
-						0.7
-					],
-					"name": "GIFT WRAPPING"
-				}
-			},
-			{
-				"type": "ZONE_DIGITAL_KIOSK",
-				"x": 58,
-				"y": 11,
-				"w": 8,
-				"h": 7,
-				"meta": {
-					"color": [
-						0.4,
-						0.65,
-						0.8
-					],
-					"name": "INFO KIOSK"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 2,
-				"y": 3,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "jp_ramen"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 18,
-				"y": 3,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "jp_sushi"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 34,
-				"y": 3,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "jp_takoyaki"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 50,
-				"y": 3,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "thai"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 66,
-				"y": 3,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "indian"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 2,
-				"y": 15,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "chinese"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 18,
-				"y": 15,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "korean"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 34,
-				"y": 15,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "turkish"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 50,
-				"y": 15,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "vietnamese"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 66,
-				"y": 15,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "italian"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 2,
-				"y": 25,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "mexican"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 18,
-				"y": 25,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "drinks"
-				}
-			},
-			{
-				"type": "ZONE_WAREHOUSE",
-				"x": 0,
-				"y": 35,
-				"w": 120,
-				"h": 14,
-				"meta": {
-					"color": [
-						0.55,
-						0.45,
-						0.38
-					],
-					"name": "WAREHOUSE FLOOR"
-				}
-			},
-			{
-				"type": "ZONE_TRUCK_DOCK",
-				"x": 0,
-				"y": 35,
-				"w": 22,
-				"h": 14,
-				"meta": {
-					"color": [
-						0.5,
-						0.4,
-						0.3
-					],
-					"name": "TRUCK DOCK"
-				}
-			},
-			{
-				"type": "ZONE_FORKLIFT",
-				"x": 0,
-				"y": 42,
-				"w": 22,
-				"h": 7,
-				"meta": {
-					"color": [
-						0.8,
-						0.6,
-						0.2
-					],
-					"name": "FORKLIFT ZONE"
-				}
-			},
-			{
-				"type": "ZONE_CONVEYOR",
-				"x": 22,
-				"y": 38,
-				"w": 50,
-				"h": 8,
-				"meta": {
-					"color": [
-						0.6,
-						0.6,
-						0.65
-					],
-					"name": "CONVEYOR BELT"
-				}
-			},
-			{
-				"type": "ZONE_STORAGE_SHELF",
-				"x": 75,
-				"y": 35,
-				"w": 45,
-				"h": 14,
-				"meta": {
-					"color": [
-						0.6,
-						0.5,
-						0.4
-					],
-					"name": "STORAGE"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 47
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 84,
-				"y": 2,
-				"w": 6,
-				"h": 47
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 16,
-				"y": 11,
-				"w": 4,
-				"h": 4,
-				"meta": {
-					"name": "dining_table"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 34,
-				"y": 11,
-				"w": 4,
-				"h": 4,
-				"meta": {
-					"name": "dining_table"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 52,
-				"y": 11,
-				"w": 4,
-				"h": 4,
-				"meta": {
-					"name": "dining_table"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 70,
-				"y": 11,
-				"w": 4,
-				"h": 4,
-				"meta": {
-					"name": "dining_table"
-				}
-			},
-			{
-				"type": "ZONE_VENDING_MACHINE",
-				"x": 70,
-				"y": 3,
-				"w": 10,
-				"h": 10,
-				"meta": {
-					"name": "Energy Drink $3.00"
-				}
-			},
-			{
-				"type": "ZONE_VENDING_MACHINE",
-				"x": 70,
-				"y": 20,
-				"w": 10,
-				"h": 10,
-				"meta": {
-					"name": "Energy Drink $3.00"
-				}
-			},
-			{
-				"type": "ZONE_PROMO_BOOTH",
-				"x": 3,
-				"y": 3,
-				"w": 12,
-				"h": 8,
-				"meta": {
-					"color": [
-						0.8,
-						0.55,
-						0.2
-					],
-					"name": "DAILY DEALS"
-				}
-			},
-			{
-				"type": "ZONE_WAREHOUSE_STOCK_VIEW",
-				"x": 116,
-				"y": 35,
-				"w": 10,
-				"h": 12,
-				"meta": {
-					"color": [
-						0.45,
-						0.6,
-						0.45
-					],
-					"name": "STOCK STATUS"
-				}
-			},
-			{
-				"type": "ZONE_LOST_FOUND",
-				"x": 22,
-				"y": 3,
-				"w": 12,
-				"h": 7,
-				"meta": {
-					"color": [
-						0.6,
-						0.5,
-						0.65
-					],
-					"name": "LOST & FOUND"
-				}
-			},
-			{
-				"type": "ZONE_STORE_NEWS",
-				"x": 36,
-				"y": 3,
-				"w": 12,
-				"h": 7,
-				"meta": {
-					"color": [
-						0.45,
-						0.65,
-						0.8
-					],
-					"name": "STORE NEWS"
-				}
-			}
-		],
-		"sections": [],
-		"has_shopping": false,
-		"has_checkout": false,
-		"has_elevator": true,
-		"has_stairs": true,
-		"is_staff_only": false,
-		"is_rooftop": false
-	},
-	{
-		"id": 1,
-		"label": "1",
-		"theme": "shoes",
-		"ambient_color": [
-			0.52,
-			0.45,
-			0.4
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_SHOES_RACK",
-				"x": 2,
-				"y": 3,
-				"w": 24,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.82,
-						0.55,
-						0.65
-					],
-					"name": "LADIES SHOES"
-				}
-			},
-			{
-				"type": "ZONE_SHOES_RACK",
-				"x": 28,
-				"y": 3,
-				"w": 24,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.55,
-						0.6,
-						0.8
-					],
-					"name": "MENS SHOES"
-				}
-			},
-			{
-				"type": "ZONE_SHOES_RACK",
-				"x": 54,
-				"y": 3,
-				"w": 24,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.7,
-						0.75,
-						0.9
-					],
-					"name": "KIDS SHOES"
-				}
-			},
-			{
-				"type": "ZONE_SHOES_RACK",
-				"x": 2,
-				"y": 21,
-				"w": 38,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.55,
-						0.8,
-						0.65
-					],
-					"name": "SPORT SHOES"
-				}
-			},
-			{
-				"type": "ZONE_SHOES_RACK",
-				"x": 42,
-				"y": 21,
-				"w": 36,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.85,
-						0.72,
-						0.52
-					],
-					"name": "SANDALS"
-				}
-			},
-			{
-				"type": "ZONE_AD",
-				"x": 66,
-				"y": 4,
-				"w": 4,
-				"h": 6,
-				"meta": {
-					"color": [
-						0.2,
-						0.8,
-						0.5
-					],
-					"name": "ad_color"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 84,
-				"y": 2,
-				"w": 6,
-				"h": 40
-			}
-		],
-		"sections": [
-			{
-				"id": "shoes_ladies",
-				"x": 2,
-				"y": 3,
-				"w": 24,
-				"h": 16
-			},
-			{
-				"id": "shoes_mens",
-				"x": 28,
-				"y": 3,
-				"w": 24,
-				"h": 16
-			},
-			{
-				"id": "shoes_kids",
-				"x": 54,
-				"y": 3,
-				"w": 24,
-				"h": 16
-			}
-		],
-		"has_shopping": true,
-		"has_checkout": true,
-		"has_elevator": true,
-		"has_stairs": true,
-		"is_staff_only": false,
-		"is_rooftop": false
-	},
-	{
-		"id": 2,
-		"label": "2",
-		"theme": "fashion",
-		"ambient_color": [
-			0.55,
-			0.42,
-			0.52
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_DRESS_RACK",
-				"x": 2,
-				"y": 3,
-				"w": 26,
-				"h": 18,
-				"meta": {
-					"color": [
-						0.88,
-						0.58,
-						0.72
-					],
-					"name": "LADIES WEAR"
-				}
-			},
-			{
-				"type": "ZONE_DRESS_RACK",
-				"x": 30,
-				"y": 3,
-				"w": 26,
-				"h": 18,
-				"meta": {
-					"color": [
-						0.6,
-						0.68,
-						0.88
-					],
-					"name": "MENS WEAR"
-				}
-			},
-			{
-				"type": "ZONE_DRESS_RACK",
-				"x": 58,
-				"y": 3,
-				"w": 20,
-				"h": 18,
-				"meta": {
-					"color": [
-						0.72,
-						0.8,
-						0.95
-					],
-					"name": "KIDS WEAR"
-				}
-			},
-			{
-				"type": "ZONE_DRESS_RACK",
-				"x": 2,
-				"y": 23,
-				"w": 38,
-				"h": 14,
-				"meta": {
-					"color": [
-						0.55,
-						0.82,
-						0.72
-					],
-					"name": "ACTIVEWEAR"
-				}
-			},
-			{
-				"type": "ZONE_DRESS_RACK",
-				"x": 42,
-				"y": 23,
-				"w": 36,
-				"h": 14,
-				"meta": {
-					"color": [
-						0.5,
-						0.5,
-						0.6
-					],
-					"name": "FORMAL WEAR"
-				}
-			},
-			{
-				"type": "ZONE_AD",
-				"x": 68,
-				"y": 4,
-				"w": 4,
-				"h": 6,
-				"meta": {
-					"color": [
-						0.95,
-						0.4,
-						0.8
-					],
-					"name": "ad_color"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 84,
-				"y": 2,
-				"w": 6,
-				"h": 40
-			}
-		],
-		"sections": [
-			{
-				"id": "ladies_wear",
-				"x": 2,
-				"y": 3,
-				"w": 26,
-				"h": 18
-			},
-			{
-				"id": "mens_wear",
-				"x": 30,
-				"y": 3,
-				"w": 26,
-				"h": 18
-			},
-			{
-				"id": "kids_wear",
-				"x": 58,
-				"y": 3,
-				"w": 20,
-				"h": 18
-			}
-		],
-		"has_shopping": true,
-		"has_checkout": true,
-		"has_elevator": true,
-		"has_stairs": true,
-		"is_staff_only": false,
-		"is_rooftop": false
-	},
-	{
-		"id": 3,
-		"label": "3",
-		"theme": "sport",
-		"ambient_color": [
-			0.4,
-			0.5,
-			0.55
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_SPORT_AREA",
-				"x": 2,
-				"y": 3,
-				"w": 24,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.55,
-						0.7,
-						0.8
-					],
-					"name": "GYM EQUIPMENT"
-				}
-			},
-			{
-				"type": "ZONE_SPORT_AREA",
-				"x": 28,
-				"y": 3,
-				"w": 24,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.65,
-						0.6,
-						0.55
-					],
-					"name": "SPORTS GEAR"
-				}
-			},
-			{
-				"type": "ZONE_SPORT_AREA",
-				"x": 54,
-				"y": 3,
-				"w": 24,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.7,
-						0.55,
-						0.55
-					],
-					"name": "TEAM SPORTS"
-				}
-			},
-			{
-				"type": "ZONE_SPORT_AREA",
-				"x": 2,
-				"y": 21,
-				"w": 38,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.55,
-						0.78,
-						0.68
-					],
-					"name": "ACTIVEWEAR"
-				}
-			},
-			{
-				"type": "ZONE_SPORT_AREA",
-				"x": 42,
-				"y": 21,
-				"w": 36,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.6,
-						0.75,
-						0.82
-					],
-					"name": "FITNESS"
-				}
-			},
-			{
-				"type": "ZONE_AD",
-				"x": 70,
-				"y": 4,
-				"w": 4,
-				"h": 6,
-				"meta": {
-					"color": [
-						0.2,
-						0.7,
-						0.9
-					],
-					"name": "ad_color"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 84,
-				"y": 2,
-				"w": 6,
-				"h": 40
-			}
-		],
-		"sections": [
-			{
-				"id": "gym",
-				"x": 2,
-				"y": 3,
-				"w": 24,
-				"h": 16
-			},
-			{
-				"id": "sports_gear",
-				"x": 28,
-				"y": 3,
-				"w": 24,
-				"h": 16
-			},
-			{
-				"id": "activewear",
-				"x": 2,
-				"y": 21,
-				"w": 38,
-				"h": 16
-			}
-		],
-		"has_shopping": true,
-		"has_checkout": true,
-		"has_elevator": true,
-		"has_stairs": true,
-		"is_staff_only": false,
-		"is_rooftop": false
-	},
-	{
-		"id": 4,
-		"label": "4",
-		"theme": "outdoor",
-		"ambient_color": [
-			0.42,
-			0.55,
-			0.45
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_OUTDOOR_AREA",
-				"x": 2,
-				"y": 3,
-				"w": 24,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.52,
-						0.7,
-						0.85
-					],
-					"name": "FISHING"
-				}
-			},
-			{
-				"type": "ZONE_OUTDOOR_AREA",
-				"x": 28,
-				"y": 3,
-				"w": 24,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.6,
-						0.75,
-						0.55
-					],
-					"name": "HIKING"
-				}
-			},
-			{
-				"type": "ZONE_OUTDOOR_AREA",
-				"x": 54,
-				"y": 3,
-				"w": 24,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.85,
-						0.6,
-						0.5
-					],
-					"name": "RUNNING"
-				}
-			},
-			{
-				"type": "ZONE_OUTDOOR_AREA",
-				"x": 2,
-				"y": 21,
-				"w": 38,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.68,
-						0.6,
-						0.48
-					],
-					"name": "CAMPING"
-				}
-			},
-			{
-				"type": "ZONE_OUTDOOR_AREA",
-				"x": 42,
-				"y": 21,
-				"w": 36,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.55,
-						0.65,
-						0.72
-					],
-					"name": "CYCLING"
-				}
-			},
-			{
-				"type": "ZONE_AD",
-				"x": 70,
-				"y": 4,
-				"w": 4,
-				"h": 6,
-				"meta": {
-					"color": [
-						0.4,
-						0.8,
-						0.45
-					],
-					"name": "ad_color"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 84,
-				"y": 2,
-				"w": 6,
-				"h": 40
-			}
-		],
-		"sections": [
-			{
-				"id": "fishing",
-				"x": 2,
-				"y": 3,
-				"w": 24,
-				"h": 16
-			},
-			{
-				"id": "hiking",
-				"x": 28,
-				"y": 3,
-				"w": 24,
-				"h": 16
-			},
-			{
-				"id": "running",
-				"x": 54,
-				"y": 3,
-				"w": 24,
-				"h": 16
-			}
-		],
-		"has_shopping": true,
-		"has_checkout": true,
-		"has_elevator": true,
-		"has_stairs": true,
-		"is_staff_only": false,
-		"is_rooftop": false
-	},
-	{
-		"id": 5,
-		"label": "5",
-		"theme": "stationery",
-		"ambient_color": [
-			0.48,
-			0.55,
-			0.45
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_STATIONERY",
-				"x": 2,
-				"y": 3,
-				"w": 36,
-				"h": 18,
-				"meta": {
-					"color": [
-						0.75,
-						0.78,
-						0.9
-					],
-					"name": "STATIONERY"
-				}
-			},
-			{
-				"type": "ZONE_STATIONERY",
-				"x": 40,
-				"y": 3,
-				"w": 38,
-				"h": 18,
-				"meta": {
-					"color": [
-						0.7,
-						0.75,
-						0.82
-					],
-					"name": "OFFICE SUPPLIES"
-				}
-			},
-			{
-				"type": "ZONE_PLANTS_AREA",
-				"x": 2,
-				"y": 23,
-				"w": 38,
-				"h": 14,
-				"meta": {
-					"color": [
-						0.55,
-						0.82,
-						0.6
-					],
-					"name": "INDOOR PLANTS"
-				}
-			},
-			{
-				"type": "ZONE_PLANTS_AREA",
-				"x": 42,
-				"y": 23,
-				"w": 36,
-				"h": 14,
-				"meta": {
-					"color": [
-						0.68,
-						0.82,
-						0.52
-					],
-					"name": "GARDEN PLANTS"
-				}
-			},
-			{
-				"type": "ZONE_AD",
-				"x": 72,
-				"y": 4,
-				"w": 4,
-				"h": 6,
-				"meta": {
-					"color": [
-						0.6,
-						0.75,
-						1.0
-					],
-					"name": "ad_color"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 84,
-				"y": 2,
-				"w": 6,
-				"h": 40
-			}
-		],
-		"sections": [
-			{
-				"id": "stationery",
-				"x": 2,
-				"y": 3,
-				"w": 36,
-				"h": 18
-			},
-			{
-				"id": "plants",
-				"x": 2,
-				"y": 23,
-				"w": 38,
-				"h": 14
-			}
-		],
-		"has_shopping": true,
-		"has_checkout": true,
-		"has_elevator": true,
-		"has_stairs": true,
-		"is_staff_only": false,
-		"is_rooftop": false
-	},
-	{
-		"id": 6,
-		"label": "6",
-		"theme": "staff_area",
-		"ambient_color": [
-			0.38,
-			0.38,
-			0.4
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_LOCKER",
-				"x": 2,
-				"y": 3,
-				"w": 30,
-				"h": 20,
-				"meta": {
-					"color": [
-						0.45,
-						0.45,
-						0.5
-					],
-					"name": "LOCKER ROOM"
-				}
-			},
-			{
-				"type": "ZONE_STAFF_LOUNGE",
-				"x": 34,
-				"y": 3,
-				"w": 30,
-				"h": 20,
-				"meta": {
-					"color": [
-						0.52,
-						0.48,
-						0.44
-					],
-					"name": "STAFF LOUNGE"
-				}
-			},
-			{
-				"type": "ZONE_TRAINING",
-				"x": 2,
-				"y": 25,
-				"w": 50,
-				"h": 14,
-				"meta": {
-					"color": [
-						0.4,
-						0.48,
-						0.55
-					],
-					"name": "TRAINING ROOM"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 84,
-				"y": 2,
-				"w": 6,
-				"h": 40
-			}
-		],
-		"sections": [],
-		"has_shopping": false,
-		"has_checkout": false,
-		"has_elevator": true,
-		"has_stairs": true,
-		"is_staff_only": true,
-		"is_rooftop": false
-	},
-	{
-		"id": 7,
-		"label": "7",
-		"theme": "back_office",
-		"ambient_color": [
-			0.4,
-			0.42,
-			0.45
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_OFFICE_DESK",
-				"x": 2,
-				"y": 3,
-				"w": 38,
-				"h": 18,
-				"meta": {
-					"color": [
-						0.48,
-						0.52,
-						0.58
-					],
-					"name": "ADMIN OFFICE"
-				}
-			},
-			{
-				"type": "ZONE_OFFICE_DESK",
-				"x": 42,
-				"y": 3,
-				"w": 36,
-				"h": 18,
-				"meta": {
-					"color": [
-						0.55,
-						0.5,
-						0.58
-					],
-					"name": "HR DEPARTMENT"
-				}
-			},
-			{
-				"type": "ZONE_OFFICE_DESK",
-				"x": 2,
-				"y": 23,
-				"w": 78,
-				"h": 14,
-				"meta": {
-					"color": [
-						0.45,
-						0.5,
-						0.55
-					],
-					"name": "OPEN OFFICE"
-				}
-			},
-			{
-				"type": "ZONE_MONITOR_ROOM",
-				"x": 66,
-				"y": 3,
-				"w": 12,
-				"h": 35,
-				"meta": {
-					"color": [
-						0.2,
-						0.25,
-						0.3
-					],
-					"name": "MONITORING ROOM"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 84,
-				"y": 2,
-				"w": 6,
-				"h": 40
-			}
-		],
-		"sections": [],
-		"has_shopping": false,
-		"has_checkout": false,
-		"has_elevator": true,
-		"has_stairs": true,
-		"is_staff_only": true,
-		"is_rooftop": false
-	},
-	{
-		"id": 8,
-		"label": "8",
-		"theme": "arcade",
-		"ambient_color": [
-			0.22,
-			0.18,
-			0.38
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_KIDS_PLAY",
-				"x": 10,
-				"y": 3,
-				"w": 30,
-				"h": 20,
-				"meta": {
-					"color": [
-						0.4,
-						0.55,
-						0.8
-					],
-					"name": "PLAY ZONE"
-				}
-			},
-			{
-				"type": "ZONE_CLAW_MACHINE",
-				"x": 2,
-				"y": 3,
-				"w": 10,
-				"h": 14,
-				"meta": {
-					"name": "prize_pool"
-				}
-			},
-			{
-				"type": "ZONE_CLAW_MACHINE",
-				"x": 14,
-				"y": 3,
-				"w": 10,
-				"h": 14,
-				"meta": {
-					"name": "prize_pool"
-				}
-			},
-			{
-				"type": "ZONE_CLAW_MACHINE",
-				"x": 2,
-				"y": 20,
-				"w": 10,
-				"h": 14,
-				"meta": {
-					"name": "prize_pool"
-				}
-			},
-			{
-				"type": "ZONE_CLAW_MACHINE",
-				"x": 14,
-				"y": 20,
-				"w": 10,
-				"h": 14,
-				"meta": {
-					"name": "prize_pool"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 84,
-				"y": 2,
-				"w": 6,
-				"h": 40
-			}
-		],
-		"sections": [],
-		"has_shopping": false,
-		"has_checkout": false,
-		"has_elevator": true,
-		"has_stairs": true,
-		"is_staff_only": true,
-		"is_rooftop": false
-	},
-	{
-		"id": 9,
-		"label": "9",
-		"theme": "staff_room",
-		"ambient_color": [
-			0.38,
-			0.42,
-			0.5
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_OFFICE_DESK",
-				"x": 10,
-				"y": 3,
-				"w": 30,
-				"h": 20,
-				"meta": {
-					"color": [
-						0.4,
-						0.55,
-						0.65
-					],
-					"name": "terminal"
-				}
-			},
-			{
-				"type": "ZONE_STAFF_LOUNGE",
-				"x": 42,
-				"y": 3,
-				"w": 34,
-				"h": 20,
-				"meta": {
-					"color": [
-						0.45,
-						0.45,
-						0.5
-					],
-					"name": "STAFF AREA"
-				}
-			},
-			{
-				"type": "ZONE_TRAINING",
-				"x": 2,
-				"y": 25,
-				"w": 78,
-				"h": 14,
-				"meta": {
-					"color": [
-						0.38,
-						0.48,
-						0.55
-					],
-					"name": "OPERATIONS CENTER"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			}
-		],
-		"sections": [],
-		"has_shopping": false,
-		"has_checkout": false,
-		"has_elevator": true,
-		"has_stairs": true,
-		"is_staff_only": true,
-		"is_rooftop": true
-	},
-	{
-		"id": 10,
-		"label": "10",
-		"theme": "rooftop",
-		"ambient_color": [
-			0.6,
-			0.55,
-			0.45
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_CAFE_COUNTER",
-				"x": 10,
-				"y": 3,
-				"w": 20,
-				"h": 14,
-				"meta": {
-					"name": "Smoothie $5.50"
-				}
-			},
-			{
-				"type": "ZONE_AD",
-				"x": 72,
-				"y": 4,
-				"w": 4,
-				"h": 6,
-				"meta": {
-					"color": [
-						0.8,
-						0.6,
-						0.3
-					],
-					"name": "ad_color"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 84,
-				"y": 2,
-				"w": 6,
-				"h": 40
-			}
-		],
-		"sections": [],
-		"has_shopping": true,
-		"has_checkout": false,
-		"has_elevator": true,
-		"has_stairs": true,
-		"is_staff_only": false,
-		"is_rooftop": false
-	},
-	{
-		"id": 11,
-		"label": "11",
-		"theme": "warehouse",
-		"ambient_color": [
-			0.55,
-			0.45,
-			0.38
-		],
-		"zones": [
-			{
-				"type": "ZONE_WAREHOUSE",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_TRUCK_DOCK",
-				"x": 2,
-				"y": 3,
-				"w": 20,
-				"h": 14,
-				"meta": {
-					"color": [
-						0.5,
-						0.4,
-						0.3
-					],
-					"name": "TRUCK DOCK"
-				}
-			},
-			{
-				"type": "ZONE_FORKLIFT",
-				"x": 2,
-				"y": 19,
-				"w": 20,
-				"h": 12,
-				"meta": {
-					"color": [
-						0.8,
-						0.6,
-						0.2
-					],
-					"name": "FORKLIFT"
-				}
-			},
-			{
-				"type": "ZONE_CONVEYOR",
-				"x": 24,
-				"y": 3,
-				"w": 30,
-				"h": 12,
-				"meta": {
-					"color": [
-						0.6,
-						0.6,
-						0.65
-					],
-					"name": "CONVEYOR BELT"
-				}
-			},
-			{
-				"type": "ZONE_PACKING_STATION",
-				"x": 24,
-				"y": 19,
-				"w": 30,
-				"h": 12,
-				"meta": {
-					"color": [
-						0.4,
-						0.7,
-						0.5
-					],
-					"name": "PACKING STATION"
-				}
-			},
-			{
-				"type": "ZONE_AD",
-				"x": 60,
-				"y": 4,
-				"w": 4,
-				"h": 6,
-				"meta": {
-					"color": [
-						0.9,
-						0.7,
-						0.2
-					],
-					"name": "ad_color"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			}
-		],
-		"sections": [],
-		"has_shopping": false,
-		"has_checkout": false,
-		"has_elevator": true,
-		"has_stairs": false,
-		"is_staff_only": false,
-		"is_rooftop": false
-	},
-	{
-		"id": 12,
-		"label": "12",
-		"theme": "juice_bar",
-		"ambient_color": [
-			0.55,
-			0.72,
-			0.58
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_JUICE_BAR",
-				"x": 2,
-				"y": 3,
-				"w": 30,
-				"h": 20,
-				"meta": {
-					"color": [
-						1.0,
-						0.75,
-						0.3
-					],
-					"name": "JUICE BAR"
-				}
-			},
-			{
-				"type": "ZONE_HEALTH_FOOD",
-				"x": 34,
-				"y": 3,
-				"w": 30,
-				"h": 20,
-				"meta": {
-					"color": [
-						0.55,
-						0.82,
-						0.58
-					],
-					"name": "HEALTH FOODS"
-				}
-			},
-			{
-				"type": "ZONE_SMOOTHIE",
-				"x": 2,
-				"y": 25,
-				"w": 30,
-				"h": 14,
-				"meta": {
-					"color": [
-						0.8,
-						0.55,
-						0.8
-					],
-					"name": "SMOOTHIE STATION"
-				}
-			},
-			{
-				"type": "ZONE_SALAD_BAR",
-				"x": 34,
-				"y": 25,
-				"w": 30,
-				"h": 14,
-				"meta": {
-					"color": [
-						0.6,
-						0.85,
-						0.6
-					],
-					"name": "SALAD BAR"
-				}
-			},
-			{
-				"type": "ZONE_AD",
-				"x": 66,
-				"y": 4,
-				"w": 4,
-				"h": 6,
-				"meta": {
-					"color": [
-						0.4,
-						0.9,
-						0.5
-					],
-					"name": "ad_color"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 84,
-				"y": 2,
-				"w": 6,
-				"h": 40
-			}
-		],
-		"sections": [
-			{
-				"id": "juice",
-				"x": 2,
-				"y": 3,
-				"w": 30,
-				"h": 20
-			},
-			{
-				"id": "health",
-				"x": 34,
-				"y": 3,
-				"w": 30,
-				"h": 20
-			}
-		],
-		"has_shopping": true,
-		"has_checkout": false,
-		"has_elevator": true,
-		"has_stairs": true,
-		"is_staff_only": false,
-		"is_rooftop": false
-	},
-	{
-		"id": 13,
-		"label": "13",
-		"theme": "kids_kingdom",
-		"ambient_color": [
-			0.72,
-			0.58,
-			0.8
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_KIDS_PLAY",
-				"x": 2,
-				"y": 3,
-				"w": 28,
-				"h": 20,
-				"meta": {
-					"color": [
-						0.6,
-						0.8,
-						0.9
-					],
-					"name": "PLAY ZONE"
-				}
-			},
-			{
-				"type": "ZONE_KIDS_CLUB",
-				"x": 32,
-				"y": 3,
-				"w": 24,
-				"h": 20,
-				"meta": {
-					"color": [
-						0.9,
-						0.6,
-						0.8
-					],
-					"name": "KIDS CLUB"
-				}
-			},
-			{
-				"type": "ZONE_NURSING_ROOM",
-				"x": 58,
-				"y": 3,
-				"w": 20,
-				"h": 12,
-				"meta": {
-					"color": [
-						0.85,
-						0.75,
-						0.9
-					],
-					"name": "NURSERY"
-				}
-			},
-			{
-				"type": "ZONE_WC",
-				"x": 58,
-				"y": 17,
-				"w": 20,
-				"h": 12,
-				"meta": {
-					"color": [
-						0.7,
-						0.65,
-						0.8
-					],
-					"name": "FAMILY WC"
-				}
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 78,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 83,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			}
-		],
-		"sections": [
-			{
-				"id": "toys",
-				"x": 2,
-				"y": 3,
-				"w": 28,
-				"h": 20
-			}
-		],
-		"has_shopping": true,
-		"has_checkout": true,
-		"has_elevator": true,
-		"has_stairs": true,
-		"is_staff_only": false,
-		"is_rooftop": false
-	},
-	{
-		"id": 14,
-		"label": "14",
-		"theme": "electronics",
-		"ambient_color": [
-			0.35,
-			0.45,
-			0.65
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_PHONE_GADGETS",
-				"x": 2,
-				"y": 3,
-				"w": 30,
-				"h": 18,
-				"meta": {
-					"color": [
-						0.35,
-						0.55,
-						0.8
-					],
-					"name": "PHONES & GADGETS"
-				}
-			},
-			{
-				"type": "ZONE_SMART_HOME",
-				"x": 34,
-				"y": 3,
-				"w": 30,
-				"h": 18,
-				"meta": {
-					"color": [
-						0.4,
-						0.6,
-						0.7
-					],
-					"name": "SMART HOME"
-				}
-			},
-			{
-				"type": "ZONE_ELECTRONICS",
-				"x": 2,
-				"y": 23,
-				"w": 38,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.45,
-						0.5,
-						0.65
-					],
-					"name": "ELECTRONICS"
-				}
-			},
-			{
-				"type": "ZONE_REPAIR_COUNTER",
-				"x": 42,
-				"y": 23,
-				"w": 36,
-				"h": 16,
-				"meta": {
-					"color": [
-						0.6,
-						0.45,
-						0.4
-					],
-					"name": "REPAIR COUNTER"
-				}
-			},
-			{
-				"type": "ZONE_AD",
-				"x": 66,
-				"y": 4,
-				"w": 4,
-				"h": 6,
-				"meta": {
-					"color": [
-						0.3,
-						0.6,
-						1.0
-					],
-					"name": "ad_color"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 84,
-				"y": 2,
-				"w": 6,
-				"h": 40
-			}
-		],
-		"sections": [],
-		"has_shopping": true,
-		"has_checkout": true,
-		"has_elevator": true,
-		"has_stairs": false,
-		"is_staff_only": true,
-		"is_rooftop": true
-	},
-	{
-		"id": 15,
-		"label": "15",
-		"theme": "canteen",
-		"ambient_color": [
-			0.55,
-			0.5,
-			0.42
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_CANTEEN",
-				"x": 2,
-				"y": 3,
-				"w": 76,
-				"h": 8,
-				"meta": {
-					"color": [
-						0.7,
-						0.65,
-						0.55
-					],
-					"name": "CANTEEN COUNTER"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 2,
-				"y": 3,
-				"w": 12,
-				"h": 8,
-				"meta": {
-					"name": "canteen_rice"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 16,
-				"y": 3,
-				"w": 12,
-				"h": 8,
-				"meta": {
-					"name": "canteen_noodle"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 30,
-				"y": 3,
-				"w": 12,
-				"h": 8,
-				"meta": {
-					"name": "canteen_meat"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 44,
-				"y": 3,
-				"w": 12,
-				"h": 8,
-				"meta": {
-					"name": "canteen_veg"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 58,
-				"y": 3,
-				"w": 12,
-				"h": 8,
-				"meta": {
-					"name": "canteen_drinks"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 70,
-				"y": 3,
-				"w": 8,
-				"h": 8,
-				"meta": {
-					"name": "canteen_fruit"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 4,
-				"y": 14,
-				"w": 72,
-				"h": 22,
-				"meta": {
-					"name": "canteen_tables"
-				}
-			},
-			{
-				"type": "ZONE_ENTRY_GATE",
-				"x": 38,
-				"y": 3,
-				"w": 6,
-				"h": 5,
-				"meta": {
-					"color": [
-						0.8,
-						0.7,
-						0.3
-					],
-					"name": "CANTEEN ENTRANCE"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 84,
-				"y": 2,
-				"w": 6,
-				"h": 40
-			}
-		],
-		"sections": [],
-		"has_shopping": true,
-		"has_checkout": false,
-		"has_elevator": true,
-		"has_stairs": false,
-		"is_staff_only": false,
-		"is_rooftop": false
-	},
-	{
-		"id": 16,
-		"label": "16",
-		"theme": "food_court",
-		"ambient_color": [
-			0.58,
-			0.45,
-			0.35
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 2,
-				"y": 3,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "burger_king_style"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 18,
-				"y": 3,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "pizza_hut_style"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 34,
-				"y": 3,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "fried_chicken_style"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 50,
-				"y": 3,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "hot_dog_style"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 66,
-				"y": 3,
-				"w": 14,
-				"h": 8,
-				"meta": {
-					"name": "ice_cream_style"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_COURT",
-				"x": 2,
-				"y": 14,
-				"w": 76,
-				"h": 22,
-				"meta": {
-					"color": [
-						0.6,
-						0.5,
-						0.4
-					],
-					"name": "FOOD COURT SEATING"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 6,
-				"y": 14,
-				"w": 4,
-				"h": 4,
-				"meta": {
-					"name": "trash_bin"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 30,
-				"y": 14,
-				"w": 4,
-				"h": 4,
-				"meta": {
-					"name": "trash_bin"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 54,
-				"y": 14,
-				"w": 4,
-				"h": 4,
-				"meta": {
-					"name": "trash_bin"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 72,
-				"y": 14,
-				"w": 4,
-				"h": 4,
-				"meta": {
-					"name": "trash_bin"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 84,
-				"y": 2,
-				"w": 6,
-				"h": 40
-			}
-		],
-		"sections": [],
-		"has_shopping": true,
-		"has_checkout": false,
-		"has_elevator": true,
-		"has_stairs": false,
-		"is_staff_only": false,
-		"is_rooftop": false
-	},
-	{
-		"id": 17,
-		"label": "17",
-		"theme": "entertainment",
-		"ambient_color": [
-			0.35,
-			0.25,
-			0.5
-		],
-		"zones": [
-			{
-				"type": "ZONE_COMMON",
-				"x": 2,
-				"y": 3,
-				"w": 78,
-				"h": 38
-			},
-			{
-				"type": "ZONE_KARAOKE",
-				"x": 2,
-				"y": 3,
-				"w": 28,
-				"h": 20,
-				"meta": {
-					"color": [
-						0.25,
-						0.18,
-						0.38
-					],
-					"name": "KARAOKE ROOMS"
-				}
-			},
-			{
-				"type": "ZONE_POOL_TABLE",
-				"x": 32,
-				"y": 3,
-				"w": 20,
-				"h": 10,
-				"meta": {
-					"color": [
-						0.28,
-						0.52,
-						0.38
-					],
-					"name": "POOL AREA"
-				}
-			},
-			{
-				"type": "ZONE_DARTS_BOARD",
-				"x": 32,
-				"y": 16,
-				"w": 10,
-				"h": 10,
-				"meta": {
-					"color": [
-						0.3,
-						0.32,
-						0.25
-					],
-					"name": "DARTS"
-				}
-			},
-			{
-				"type": "ZONE_CLAW_MACHINE",
-				"x": 54,
-				"y": 3,
-				"w": 8,
-				"h": 8,
-				"meta": {
-					"color": [
-						0.5,
-						0.3,
-						0.7
-					],
-					"name": "CLAW MACHINE 1"
-				}
-			},
-			{
-				"type": "ZONE_CLAW_MACHINE",
-				"x": 54,
-				"y": 13,
-				"w": 8,
-				"h": 8,
-				"meta": {
-					"color": [
-						0.4,
-						0.5,
-						0.7
-					],
-					"name": "CLAW MACHINE 2"
-				}
-			},
-			{
-				"type": "ZONE_CLAW_MACHINE",
-				"x": 54,
-				"y": 23,
-				"w": 8,
-				"h": 8,
-				"meta": {
-					"color": [
-						0.7,
-						0.4,
-						0.5
-					],
-					"name": "CLAW MACHINE 3"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 64,
-				"y": 3,
-				"w": 14,
-				"h": 14,
-				"meta": {
-					"name": "arcade_machines"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 64,
-				"y": 19,
-				"w": 14,
-				"h": 18,
-				"meta": {
-					"name": "lounge_seating"
-				}
-			},
-			{
-				"type": "ZONE_AD",
-				"x": 64,
-				"y": 3,
-				"w": 4,
-				"h": 5,
-				"meta": {
-					"color": [
-						0.8,
-						0.2,
-						0.8
-					],
-					"name": "ad_color"
-				}
-			},
-			{
-				"type": "ZONE_ELEVATOR",
-				"x": 80,
-				"y": 2,
-				"w": 4,
-				"h": 40
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 84,
-				"y": 2,
-				"w": 6,
-				"h": 40
-			}
-		],
-		"sections": [],
-		"has_shopping": true,
-		"has_checkout": false,
-		"has_elevator": true,
-		"has_stairs": false,
-		"is_staff_only": false,
-		"is_rooftop": false
-	}
+    {
+        "id":  0,
+        "label":  "G",
+        "theme":  "lobby",
+        "ambient_color":  [
+                              0.42,
+                              0.44,
+                              0.4
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_LOBBY",
+                          "x":  0,
+                          "y":  2,
+                          "w":  80,
+                          "h":  13
+                      },
+                      {
+                          "type":  "ZONE_INFO_DESK",
+                          "x":  40,
+                          "y":  3,
+                          "w":  16,
+                          "h":  7
+                      },
+                      {
+                          "type":  "ZONE_WC",
+                          "x":  68,
+                          "y":  3,
+                          "w":  12,
+                          "h":  7
+                      },
+                      {
+                          "type":  "ZONE_AD",
+                          "x":  56,
+                          "y":  3,
+                          "w":  4,
+                          "h":  5,
+                          "meta":  {
+                                       "color":  [
+                                                     1.0,
+                                                     0.4,
+                                                     0.2
+                                                 ],
+                                       "name":  "ad_color"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_AD",
+                          "x":  56,
+                          "y":  9,
+                          "w":  4,
+                          "h":  5,
+                          "meta":  {
+                                       "color":  [
+                                                     0.2,
+                                                     0.6,
+                                                     1.0
+                                                 ],
+                                       "name":  "ad_color"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ATM",
+                          "x":  58,
+                          "y":  4,
+                          "w":  4,
+                          "h":  5
+                      },
+                      {
+                          "type":  "ZONE_ATM",
+                          "x":  58,
+                          "y":  28,
+                          "w":  4,
+                          "h":  5
+                      },
+                      {
+                          "type":  "ZONE_CUSTOMER_SERVICE",
+                          "x":  8,
+                          "y":  3,
+                          "w":  16,
+                          "h":  7,
+                          "meta":  {
+                                       "color":  [
+                                                     0.5,
+                                                     0.55,
+                                                     0.7
+                                                 ],
+                                       "name":  "CUSTOMER SERVICE"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_LOYALTY_KIOSK",
+                          "x":  26,
+                          "y":  3,
+                          "w":  14,
+                          "h":  7,
+                          "meta":  {
+                                       "color":  [
+                                                     0.6,
+                                                     0.5,
+                                                     0.75
+                                                 ],
+                                       "name":  "LOYALTY CENTER"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_GIFT_WRAP",
+                          "x":  42,
+                          "y":  3,
+                          "w":  14,
+                          "h":  7,
+                          "meta":  {
+                                       "color":  [
+                                                     0.72,
+                                                     0.55,
+                                                     0.7
+                                                 ],
+                                       "name":  "GIFT WRAPPING"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DIGITAL_KIOSK",
+                          "x":  58,
+                          "y":  11,
+                          "w":  8,
+                          "h":  7,
+                          "meta":  {
+                                       "color":  [
+                                                     0.4,
+                                                     0.65,
+                                                     0.8
+                                                 ],
+                                       "name":  "INFO KIOSK"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  2,
+                          "y":  3,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "jp_ramen"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  18,
+                          "y":  3,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "jp_sushi"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  34,
+                          "y":  3,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "jp_takoyaki"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  50,
+                          "y":  3,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "thai"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  66,
+                          "y":  3,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "indian"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  2,
+                          "y":  15,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "chinese"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  18,
+                          "y":  15,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "korean"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  34,
+                          "y":  15,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "turkish"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  50,
+                          "y":  15,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "vietnamese"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  66,
+                          "y":  15,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "italian"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  2,
+                          "y":  25,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "mexican"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  18,
+                          "y":  25,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "drinks"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_WAREHOUSE",
+                          "x":  0,
+                          "y":  35,
+                          "w":  120,
+                          "h":  14,
+                          "meta":  {
+                                       "color":  [
+                                                     0.55,
+                                                     0.45,
+                                                     0.38
+                                                 ],
+                                       "name":  "WAREHOUSE FLOOR"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_TRUCK_DOCK",
+                          "x":  0,
+                          "y":  35,
+                          "w":  22,
+                          "h":  14,
+                          "meta":  {
+                                       "color":  [
+                                                     0.5,
+                                                     0.4,
+                                                     0.3
+                                                 ],
+                                       "name":  "TRUCK DOCK"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FORKLIFT",
+                          "x":  0,
+                          "y":  42,
+                          "w":  22,
+                          "h":  7,
+                          "meta":  {
+                                       "color":  [
+                                                     0.8,
+                                                     0.6,
+                                                     0.2
+                                                 ],
+                                       "name":  "FORKLIFT ZONE"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_CONVEYOR",
+                          "x":  22,
+                          "y":  38,
+                          "w":  50,
+                          "h":  8,
+                          "meta":  {
+                                       "color":  [
+                                                     0.6,
+                                                     0.6,
+                                                     0.65
+                                                 ],
+                                       "name":  "CONVEYOR BELT"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_STORAGE_SHELF",
+                          "x":  75,
+                          "y":  35,
+                          "w":  45,
+                          "h":  14,
+                          "meta":  {
+                                       "color":  [
+                                                     0.6,
+                                                     0.5,
+                                                     0.4
+                                                 ],
+                                       "name":  "STORAGE"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  6,
+                          "y":  2,
+                          "w":  14,
+                          "h":  47
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  20,
+                          "y":  2,
+                          "w":  6,
+                          "h":  47
+                      },
+                      {
+                          "type":  "ZONE_DECOR",
+                          "x":  16,
+                          "y":  11,
+                          "w":  4,
+                          "h":  4,
+                          "meta":  {
+                                       "name":  "dining_table"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DECOR",
+                          "x":  34,
+                          "y":  11,
+                          "w":  4,
+                          "h":  4,
+                          "meta":  {
+                                       "name":  "dining_table"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DECOR",
+                          "x":  52,
+                          "y":  11,
+                          "w":  4,
+                          "h":  4,
+                          "meta":  {
+                                       "name":  "dining_table"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DECOR",
+                          "x":  70,
+                          "y":  11,
+                          "w":  4,
+                          "h":  4,
+                          "meta":  {
+                                       "name":  "dining_table"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_VENDING_MACHINE",
+                          "x":  70,
+                          "y":  3,
+                          "w":  10,
+                          "h":  10,
+                          "meta":  {
+                                       "name":  "Energy Drink $3.00"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_VENDING_MACHINE",
+                          "x":  70,
+                          "y":  20,
+                          "w":  10,
+                          "h":  10,
+                          "meta":  {
+                                       "name":  "Energy Drink $3.00"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_PROMO_BOOTH",
+                          "x":  3,
+                          "y":  3,
+                          "w":  12,
+                          "h":  8,
+                          "meta":  {
+                                       "color":  [
+                                                     0.8,
+                                                     0.55,
+                                                     0.2
+                                                 ],
+                                       "name":  "DAILY DEALS"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_WAREHOUSE_STOCK_VIEW",
+                          "x":  116,
+                          "y":  35,
+                          "w":  10,
+                          "h":  12,
+                          "meta":  {
+                                       "color":  [
+                                                     0.45,
+                                                     0.6,
+                                                     0.45
+                                                 ],
+                                       "name":  "STOCK STATUS"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_LOST_FOUND",
+                          "x":  22,
+                          "y":  3,
+                          "w":  12,
+                          "h":  7,
+                          "meta":  {
+                                       "color":  [
+                                                     0.6,
+                                                     0.5,
+                                                     0.65
+                                                 ],
+                                       "name":  "LOST \u0026 FOUND"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_STORE_NEWS",
+                          "x":  36,
+                          "y":  3,
+                          "w":  12,
+                          "h":  7,
+                          "meta":  {
+                                       "color":  [
+                                                     0.45,
+                                                     0.65,
+                                                     0.8
+                                                 ],
+                                       "name":  "STORE NEWS"
+                                   }
+                      }
+                  ],
+        "sections":  [
+
+                     ],
+        "has_shopping":  false,
+        "has_checkout":  false,
+        "has_elevator":  true,
+        "has_stairs":  true,
+        "is_staff_only":  false,
+        "is_rooftop":  false
+    },
+    {
+        "id":  1,
+        "label":  "1",
+        "theme":  "shoes",
+        "ambient_color":  [
+                              0.52,
+                              0.45,
+                              0.4
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_SHOES_RACK",
+                          "x":  2,
+                          "y":  3,
+                          "w":  24,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.82,
+                                                     0.55,
+                                                     0.65
+                                                 ],
+                                       "name":  "LADIES SHOES"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_SHOES_RACK",
+                          "x":  28,
+                          "y":  3,
+                          "w":  24,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.55,
+                                                     0.6,
+                                                     0.8
+                                                 ],
+                                       "name":  "MENS SHOES"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_SHOES_RACK",
+                          "x":  54,
+                          "y":  3,
+                          "w":  24,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.7,
+                                                     0.75,
+                                                     0.9
+                                                 ],
+                                       "name":  "KIDS SHOES"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_SHOES_RACK",
+                          "x":  2,
+                          "y":  21,
+                          "w":  38,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.55,
+                                                     0.8,
+                                                     0.65
+                                                 ],
+                                       "name":  "SPORT SHOES"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_SHOES_RACK",
+                          "x":  42,
+                          "y":  21,
+                          "w":  36,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.85,
+                                                     0.72,
+                                                     0.52
+                                                 ],
+                                       "name":  "SANDALS"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_AD",
+                          "x":  66,
+                          "y":  4,
+                          "w":  4,
+                          "h":  6,
+                          "meta":  {
+                                       "color":  [
+                                                     0.2,
+                                                     0.8,
+                                                     0.5
+                                                 ],
+                                       "name":  "ad_color"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  6,
+                          "y":  2,
+                          "w":  14,
+                          "h":  40
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  20,
+                          "y":  2,
+                          "w":  6,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+                         {
+                             "id":  "shoes_ladies",
+                             "x":  2,
+                             "y":  3,
+                             "w":  24,
+                             "h":  16
+                         },
+                         {
+                             "id":  "shoes_mens",
+                             "x":  28,
+                             "y":  3,
+                             "w":  24,
+                             "h":  16
+                         },
+                         {
+                             "id":  "shoes_kids",
+                             "x":  54,
+                             "y":  3,
+                             "w":  24,
+                             "h":  16
+                         }
+                     ],
+        "has_shopping":  true,
+        "has_checkout":  true,
+        "has_elevator":  true,
+        "has_stairs":  true,
+        "is_staff_only":  false,
+        "is_rooftop":  false
+    },
+    {
+        "id":  2,
+        "label":  "2",
+        "theme":  "fashion",
+        "ambient_color":  [
+                              0.55,
+                              0.42,
+                              0.52
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_DRESS_RACK",
+                          "x":  2,
+                          "y":  3,
+                          "w":  26,
+                          "h":  18,
+                          "meta":  {
+                                       "color":  [
+                                                     0.88,
+                                                     0.58,
+                                                     0.72
+                                                 ],
+                                       "name":  "LADIES WEAR"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DRESS_RACK",
+                          "x":  30,
+                          "y":  3,
+                          "w":  26,
+                          "h":  18,
+                          "meta":  {
+                                       "color":  [
+                                                     0.6,
+                                                     0.68,
+                                                     0.88
+                                                 ],
+                                       "name":  "MENS WEAR"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DRESS_RACK",
+                          "x":  58,
+                          "y":  3,
+                          "w":  20,
+                          "h":  18,
+                          "meta":  {
+                                       "color":  [
+                                                     0.72,
+                                                     0.8,
+                                                     0.95
+                                                 ],
+                                       "name":  "KIDS WEAR"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DRESS_RACK",
+                          "x":  2,
+                          "y":  23,
+                          "w":  38,
+                          "h":  14,
+                          "meta":  {
+                                       "color":  [
+                                                     0.55,
+                                                     0.82,
+                                                     0.72
+                                                 ],
+                                       "name":  "ACTIVEWEAR"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DRESS_RACK",
+                          "x":  42,
+                          "y":  23,
+                          "w":  36,
+                          "h":  14,
+                          "meta":  {
+                                       "color":  [
+                                                     0.5,
+                                                     0.5,
+                                                     0.6
+                                                 ],
+                                       "name":  "FORMAL WEAR"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_AD",
+                          "x":  68,
+                          "y":  4,
+                          "w":  4,
+                          "h":  6,
+                          "meta":  {
+                                       "color":  [
+                                                     0.95,
+                                                     0.4,
+                                                     0.8
+                                                 ],
+                                       "name":  "ad_color"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  6,
+                          "y":  2,
+                          "w":  14,
+                          "h":  40
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  20,
+                          "y":  2,
+                          "w":  6,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+                         {
+                             "id":  "ladies_wear",
+                             "x":  2,
+                             "y":  3,
+                             "w":  26,
+                             "h":  18
+                         },
+                         {
+                             "id":  "mens_wear",
+                             "x":  30,
+                             "y":  3,
+                             "w":  26,
+                             "h":  18
+                         },
+                         {
+                             "id":  "kids_wear",
+                             "x":  58,
+                             "y":  3,
+                             "w":  20,
+                             "h":  18
+                         }
+                     ],
+        "has_shopping":  true,
+        "has_checkout":  true,
+        "has_elevator":  true,
+        "has_stairs":  true,
+        "is_staff_only":  false,
+        "is_rooftop":  false
+    },
+    {
+        "id":  3,
+        "label":  "3",
+        "theme":  "sport",
+        "ambient_color":  [
+                              0.4,
+                              0.5,
+                              0.55
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_SPORT_AREA",
+                          "x":  2,
+                          "y":  3,
+                          "w":  24,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.55,
+                                                     0.7,
+                                                     0.8
+                                                 ],
+                                       "name":  "GYM EQUIPMENT"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_SPORT_AREA",
+                          "x":  28,
+                          "y":  3,
+                          "w":  24,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.65,
+                                                     0.6,
+                                                     0.55
+                                                 ],
+                                       "name":  "SPORTS GEAR"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_SPORT_AREA",
+                          "x":  54,
+                          "y":  3,
+                          "w":  24,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.7,
+                                                     0.55,
+                                                     0.55
+                                                 ],
+                                       "name":  "TEAM SPORTS"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_SPORT_AREA",
+                          "x":  2,
+                          "y":  21,
+                          "w":  38,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.55,
+                                                     0.78,
+                                                     0.68
+                                                 ],
+                                       "name":  "ACTIVEWEAR"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_SPORT_AREA",
+                          "x":  42,
+                          "y":  21,
+                          "w":  36,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.6,
+                                                     0.75,
+                                                     0.82
+                                                 ],
+                                       "name":  "FITNESS"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_AD",
+                          "x":  70,
+                          "y":  4,
+                          "w":  4,
+                          "h":  6,
+                          "meta":  {
+                                       "color":  [
+                                                     0.2,
+                                                     0.7,
+                                                     0.9
+                                                 ],
+                                       "name":  "ad_color"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  6,
+                          "y":  2,
+                          "w":  14,
+                          "h":  40
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  20,
+                          "y":  2,
+                          "w":  6,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+                         {
+                             "id":  "gym",
+                             "x":  2,
+                             "y":  3,
+                             "w":  24,
+                             "h":  16
+                         },
+                         {
+                             "id":  "sports_gear",
+                             "x":  28,
+                             "y":  3,
+                             "w":  24,
+                             "h":  16
+                         },
+                         {
+                             "id":  "activewear",
+                             "x":  2,
+                             "y":  21,
+                             "w":  38,
+                             "h":  16
+                         }
+                     ],
+        "has_shopping":  true,
+        "has_checkout":  true,
+        "has_elevator":  true,
+        "has_stairs":  true,
+        "is_staff_only":  false,
+        "is_rooftop":  false
+    },
+    {
+        "id":  4,
+        "label":  "4",
+        "theme":  "outdoor",
+        "ambient_color":  [
+                              0.42,
+                              0.55,
+                              0.45
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_OUTDOOR_AREA",
+                          "x":  2,
+                          "y":  3,
+                          "w":  24,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.52,
+                                                     0.7,
+                                                     0.85
+                                                 ],
+                                       "name":  "FISHING"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_OUTDOOR_AREA",
+                          "x":  28,
+                          "y":  3,
+                          "w":  24,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.6,
+                                                     0.75,
+                                                     0.55
+                                                 ],
+                                       "name":  "HIKING"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_OUTDOOR_AREA",
+                          "x":  54,
+                          "y":  3,
+                          "w":  24,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.85,
+                                                     0.6,
+                                                     0.5
+                                                 ],
+                                       "name":  "RUNNING"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_OUTDOOR_AREA",
+                          "x":  2,
+                          "y":  21,
+                          "w":  38,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.68,
+                                                     0.6,
+                                                     0.48
+                                                 ],
+                                       "name":  "CAMPING"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_OUTDOOR_AREA",
+                          "x":  42,
+                          "y":  21,
+                          "w":  36,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.55,
+                                                     0.65,
+                                                     0.72
+                                                 ],
+                                       "name":  "CYCLING"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_AD",
+                          "x":  70,
+                          "y":  4,
+                          "w":  4,
+                          "h":  6,
+                          "meta":  {
+                                       "color":  [
+                                                     0.4,
+                                                     0.8,
+                                                     0.45
+                                                 ],
+                                       "name":  "ad_color"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  80,
+                          "y":  2,
+                          "w":  4,
+                          "h":  40
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  84,
+                          "y":  2,
+                          "w":  6,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+                         {
+                             "id":  "fishing",
+                             "x":  2,
+                             "y":  3,
+                             "w":  24,
+                             "h":  16
+                         },
+                         {
+                             "id":  "hiking",
+                             "x":  28,
+                             "y":  3,
+                             "w":  24,
+                             "h":  16
+                         },
+                         {
+                             "id":  "running",
+                             "x":  54,
+                             "y":  3,
+                             "w":  24,
+                             "h":  16
+                         }
+                     ],
+        "has_shopping":  true,
+        "has_checkout":  true,
+        "has_elevator":  true,
+        "has_stairs":  true,
+        "is_staff_only":  false,
+        "is_rooftop":  false
+    },
+    {
+        "id":  5,
+        "label":  "5",
+        "theme":  "stationery",
+        "ambient_color":  [
+                              0.48,
+                              0.55,
+                              0.45
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_STATIONERY",
+                          "x":  2,
+                          "y":  3,
+                          "w":  36,
+                          "h":  18,
+                          "meta":  {
+                                       "color":  [
+                                                     0.75,
+                                                     0.78,
+                                                     0.9
+                                                 ],
+                                       "name":  "STATIONERY"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_STATIONERY",
+                          "x":  40,
+                          "y":  3,
+                          "w":  38,
+                          "h":  18,
+                          "meta":  {
+                                       "color":  [
+                                                     0.7,
+                                                     0.75,
+                                                     0.82
+                                                 ],
+                                       "name":  "OFFICE SUPPLIES"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_PLANTS_AREA",
+                          "x":  2,
+                          "y":  23,
+                          "w":  38,
+                          "h":  14,
+                          "meta":  {
+                                       "color":  [
+                                                     0.55,
+                                                     0.82,
+                                                     0.6
+                                                 ],
+                                       "name":  "INDOOR PLANTS"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_PLANTS_AREA",
+                          "x":  42,
+                          "y":  23,
+                          "w":  36,
+                          "h":  14,
+                          "meta":  {
+                                       "color":  [
+                                                     0.68,
+                                                     0.82,
+                                                     0.52
+                                                 ],
+                                       "name":  "GARDEN PLANTS"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_AD",
+                          "x":  72,
+                          "y":  4,
+                          "w":  4,
+                          "h":  6,
+                          "meta":  {
+                                       "color":  [
+                                                     0.6,
+                                                     0.75,
+                                                     1.0
+                                                 ],
+                                       "name":  "ad_color"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  80,
+                          "y":  2,
+                          "w":  4,
+                          "h":  40
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  84,
+                          "y":  2,
+                          "w":  6,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+                         {
+                             "id":  "stationery",
+                             "x":  2,
+                             "y":  3,
+                             "w":  36,
+                             "h":  18
+                         },
+                         {
+                             "id":  "plants",
+                             "x":  2,
+                             "y":  23,
+                             "w":  38,
+                             "h":  14
+                         }
+                     ],
+        "has_shopping":  true,
+        "has_checkout":  true,
+        "has_elevator":  true,
+        "has_stairs":  true,
+        "is_staff_only":  false,
+        "is_rooftop":  false
+    },
+    {
+        "id":  6,
+        "label":  "6",
+        "theme":  "staff_area",
+        "ambient_color":  [
+                              0.38,
+                              0.38,
+                              0.4
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_LOCKER",
+                          "x":  2,
+                          "y":  3,
+                          "w":  30,
+                          "h":  20,
+                          "meta":  {
+                                       "color":  [
+                                                     0.45,
+                                                     0.45,
+                                                     0.5
+                                                 ],
+                                       "name":  "LOCKER ROOM"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_STAFF_LOUNGE",
+                          "x":  34,
+                          "y":  3,
+                          "w":  30,
+                          "h":  20,
+                          "meta":  {
+                                       "color":  [
+                                                     0.52,
+                                                     0.48,
+                                                     0.44
+                                                 ],
+                                       "name":  "STAFF LOUNGE"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_TRAINING",
+                          "x":  2,
+                          "y":  25,
+                          "w":  50,
+                          "h":  14,
+                          "meta":  {
+                                       "color":  [
+                                                     0.4,
+                                                     0.48,
+                                                     0.55
+                                                 ],
+                                       "name":  "TRAINING ROOM"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  80,
+                          "y":  2,
+                          "w":  4,
+                          "h":  40
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  84,
+                          "y":  2,
+                          "w":  6,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+
+                     ],
+        "has_shopping":  false,
+        "has_checkout":  false,
+        "has_elevator":  true,
+        "has_stairs":  true,
+        "is_staff_only":  true,
+        "is_rooftop":  false
+    },
+    {
+        "id":  7,
+        "label":  "7",
+        "theme":  "back_office",
+        "ambient_color":  [
+                              0.4,
+                              0.42,
+                              0.45
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_OFFICE_DESK",
+                          "x":  2,
+                          "y":  3,
+                          "w":  38,
+                          "h":  18,
+                          "meta":  {
+                                       "color":  [
+                                                     0.48,
+                                                     0.52,
+                                                     0.58
+                                                 ],
+                                       "name":  "ADMIN OFFICE"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_OFFICE_DESK",
+                          "x":  42,
+                          "y":  3,
+                          "w":  36,
+                          "h":  18,
+                          "meta":  {
+                                       "color":  [
+                                                     0.55,
+                                                     0.5,
+                                                     0.58
+                                                 ],
+                                       "name":  "HR DEPARTMENT"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_OFFICE_DESK",
+                          "x":  2,
+                          "y":  23,
+                          "w":  78,
+                          "h":  14,
+                          "meta":  {
+                                       "color":  [
+                                                     0.45,
+                                                     0.5,
+                                                     0.55
+                                                 ],
+                                       "name":  "OPEN OFFICE"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_MONITOR_ROOM",
+                          "x":  66,
+                          "y":  3,
+                          "w":  12,
+                          "h":  35,
+                          "meta":  {
+                                       "color":  [
+                                                     0.2,
+                                                     0.25,
+                                                     0.3
+                                                 ],
+                                       "name":  "MONITORING ROOM"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  80,
+                          "y":  2,
+                          "w":  4,
+                          "h":  40
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  84,
+                          "y":  2,
+                          "w":  6,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+
+                     ],
+        "has_shopping":  false,
+        "has_checkout":  false,
+        "has_elevator":  true,
+        "has_stairs":  true,
+        "is_staff_only":  true,
+        "is_rooftop":  false
+    },
+    {
+        "id":  8,
+        "label":  "8",
+        "theme":  "arcade",
+        "ambient_color":  [
+                              0.22,
+                              0.18,
+                              0.38
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_KIDS_PLAY",
+                          "x":  10,
+                          "y":  3,
+                          "w":  30,
+                          "h":  20,
+                          "meta":  {
+                                       "color":  [
+                                                     0.4,
+                                                     0.55,
+                                                     0.8
+                                                 ],
+                                       "name":  "PLAY ZONE"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_CLAW_MACHINE",
+                          "x":  2,
+                          "y":  3,
+                          "w":  10,
+                          "h":  14,
+                          "meta":  {
+                                       "name":  "prize_pool"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_CLAW_MACHINE",
+                          "x":  14,
+                          "y":  3,
+                          "w":  10,
+                          "h":  14,
+                          "meta":  {
+                                       "name":  "prize_pool"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_CLAW_MACHINE",
+                          "x":  2,
+                          "y":  20,
+                          "w":  10,
+                          "h":  14,
+                          "meta":  {
+                                       "name":  "prize_pool"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_CLAW_MACHINE",
+                          "x":  14,
+                          "y":  20,
+                          "w":  10,
+                          "h":  14,
+                          "meta":  {
+                                       "name":  "prize_pool"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  80,
+                          "y":  2,
+                          "w":  4,
+                          "h":  40
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  84,
+                          "y":  2,
+                          "w":  6,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+
+                     ],
+        "has_shopping":  false,
+        "has_checkout":  false,
+        "has_elevator":  true,
+        "has_stairs":  true,
+        "is_staff_only":  true,
+        "is_rooftop":  false
+    },
+    {
+        "id":  9,
+        "label":  "9",
+        "theme":  "staff_room",
+        "ambient_color":  [
+                              0.38,
+                              0.42,
+                              0.5
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_OFFICE_DESK",
+                          "x":  10,
+                          "y":  3,
+                          "w":  30,
+                          "h":  20,
+                          "meta":  {
+                                       "color":  [
+                                                     0.4,
+                                                     0.55,
+                                                     0.65
+                                                 ],
+                                       "name":  "terminal"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_STAFF_LOUNGE",
+                          "x":  42,
+                          "y":  3,
+                          "w":  34,
+                          "h":  20,
+                          "meta":  {
+                                       "color":  [
+                                                     0.45,
+                                                     0.45,
+                                                     0.5
+                                                 ],
+                                       "name":  "STAFF AREA"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_TRAINING",
+                          "x":  2,
+                          "y":  25,
+                          "w":  78,
+                          "h":  14,
+                          "meta":  {
+                                       "color":  [
+                                                     0.38,
+                                                     0.48,
+                                                     0.55
+                                                 ],
+                                       "name":  "OPERATIONS CENTER"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  80,
+                          "y":  2,
+                          "w":  4,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+
+                     ],
+        "has_shopping":  false,
+        "has_checkout":  false,
+        "has_elevator":  true,
+        "has_stairs":  true,
+        "is_staff_only":  true,
+        "is_rooftop":  true
+    },
+    {
+        "id":  10,
+        "label":  "10",
+        "theme":  "rooftop",
+        "ambient_color":  [
+                              0.6,
+                              0.55,
+                              0.45
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_CAFE_COUNTER",
+                          "x":  10,
+                          "y":  3,
+                          "w":  20,
+                          "h":  14,
+                          "meta":  {
+                                       "name":  "Smoothie $5.50"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_AD",
+                          "x":  72,
+                          "y":  4,
+                          "w":  4,
+                          "h":  6,
+                          "meta":  {
+                                       "color":  [
+                                                     0.8,
+                                                     0.6,
+                                                     0.3
+                                                 ],
+                                       "name":  "ad_color"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  80,
+                          "y":  2,
+                          "w":  4,
+                          "h":  40
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  84,
+                          "y":  2,
+                          "w":  6,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+
+                     ],
+        "has_shopping":  true,
+        "has_checkout":  false,
+        "has_elevator":  true,
+        "has_stairs":  true,
+        "is_staff_only":  false,
+        "is_rooftop":  false
+    },
+    {
+        "id":  11,
+        "label":  "11",
+        "theme":  "warehouse",
+        "ambient_color":  [
+                              0.55,
+                              0.45,
+                              0.38
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_WAREHOUSE",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_TRUCK_DOCK",
+                          "x":  2,
+                          "y":  3,
+                          "w":  20,
+                          "h":  14,
+                          "meta":  {
+                                       "color":  [
+                                                     0.5,
+                                                     0.4,
+                                                     0.3
+                                                 ],
+                                       "name":  "TRUCK DOCK"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FORKLIFT",
+                          "x":  2,
+                          "y":  19,
+                          "w":  20,
+                          "h":  12,
+                          "meta":  {
+                                       "color":  [
+                                                     0.8,
+                                                     0.6,
+                                                     0.2
+                                                 ],
+                                       "name":  "FORKLIFT"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_CONVEYOR",
+                          "x":  24,
+                          "y":  3,
+                          "w":  30,
+                          "h":  12,
+                          "meta":  {
+                                       "color":  [
+                                                     0.6,
+                                                     0.6,
+                                                     0.65
+                                                 ],
+                                       "name":  "CONVEYOR BELT"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_PACKING_STATION",
+                          "x":  24,
+                          "y":  19,
+                          "w":  30,
+                          "h":  12,
+                          "meta":  {
+                                       "color":  [
+                                                     0.4,
+                                                     0.7,
+                                                     0.5
+                                                 ],
+                                       "name":  "PACKING STATION"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_AD",
+                          "x":  60,
+                          "y":  4,
+                          "w":  4,
+                          "h":  6,
+                          "meta":  {
+                                       "color":  [
+                                                     0.9,
+                                                     0.7,
+                                                     0.2
+                                                 ],
+                                       "name":  "ad_color"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  80,
+                          "y":  2,
+                          "w":  4,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+
+                     ],
+        "has_shopping":  false,
+        "has_checkout":  false,
+        "has_elevator":  true,
+        "has_stairs":  false,
+        "is_staff_only":  false,
+        "is_rooftop":  false
+    },
+    {
+        "id":  12,
+        "label":  "12",
+        "theme":  "juice_bar",
+        "ambient_color":  [
+                              0.55,
+                              0.72,
+                              0.58
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_JUICE_BAR",
+                          "x":  2,
+                          "y":  3,
+                          "w":  30,
+                          "h":  20,
+                          "meta":  {
+                                       "color":  [
+                                                     1.0,
+                                                     0.75,
+                                                     0.3
+                                                 ],
+                                       "name":  "JUICE BAR"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_HEALTH_FOOD",
+                          "x":  34,
+                          "y":  3,
+                          "w":  30,
+                          "h":  20,
+                          "meta":  {
+                                       "color":  [
+                                                     0.55,
+                                                     0.82,
+                                                     0.58
+                                                 ],
+                                       "name":  "HEALTH FOODS"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_SMOOTHIE",
+                          "x":  2,
+                          "y":  25,
+                          "w":  30,
+                          "h":  14,
+                          "meta":  {
+                                       "color":  [
+                                                     0.8,
+                                                     0.55,
+                                                     0.8
+                                                 ],
+                                       "name":  "SMOOTHIE STATION"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_SALAD_BAR",
+                          "x":  34,
+                          "y":  25,
+                          "w":  30,
+                          "h":  14,
+                          "meta":  {
+                                       "color":  [
+                                                     0.6,
+                                                     0.85,
+                                                     0.6
+                                                 ],
+                                       "name":  "SALAD BAR"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_AD",
+                          "x":  66,
+                          "y":  4,
+                          "w":  4,
+                          "h":  6,
+                          "meta":  {
+                                       "color":  [
+                                                     0.4,
+                                                     0.9,
+                                                     0.5
+                                                 ],
+                                       "name":  "ad_color"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  80,
+                          "y":  2,
+                          "w":  4,
+                          "h":  40
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  84,
+                          "y":  2,
+                          "w":  6,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+                         {
+                             "id":  "juice",
+                             "x":  2,
+                             "y":  3,
+                             "w":  30,
+                             "h":  20
+                         },
+                         {
+                             "id":  "health",
+                             "x":  34,
+                             "y":  3,
+                             "w":  30,
+                             "h":  20
+                         }
+                     ],
+        "has_shopping":  true,
+        "has_checkout":  false,
+        "has_elevator":  true,
+        "has_stairs":  true,
+        "is_staff_only":  false,
+        "is_rooftop":  false
+    },
+    {
+        "id":  13,
+        "label":  "13",
+        "theme":  "kids_kingdom",
+        "ambient_color":  [
+                              0.72,
+                              0.58,
+                              0.8
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_KIDS_PLAY",
+                          "x":  2,
+                          "y":  3,
+                          "w":  28,
+                          "h":  20,
+                          "meta":  {
+                                       "color":  [
+                                                     0.6,
+                                                     0.8,
+                                                     0.9
+                                                 ],
+                                       "name":  "PLAY ZONE"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_KIDS_CLUB",
+                          "x":  32,
+                          "y":  3,
+                          "w":  24,
+                          "h":  20,
+                          "meta":  {
+                                       "color":  [
+                                                     0.9,
+                                                     0.6,
+                                                     0.8
+                                                 ],
+                                       "name":  "KIDS CLUB"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_NURSING_ROOM",
+                          "x":  58,
+                          "y":  3,
+                          "w":  20,
+                          "h":  12,
+                          "meta":  {
+                                       "color":  [
+                                                     0.85,
+                                                     0.75,
+                                                     0.9
+                                                 ],
+                                       "name":  "NURSERY"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_WC",
+                          "x":  58,
+                          "y":  17,
+                          "w":  20,
+                          "h":  12,
+                          "meta":  {
+                                       "color":  [
+                                                     0.7,
+                                                     0.65,
+                                                     0.8
+                                                 ],
+                                       "name":  "FAMILY WC"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  78,
+                          "y":  2,
+                          "w":  4,
+                          "h":  40
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  83,
+                          "y":  2,
+                          "w":  4,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+                         {
+                             "id":  "toys",
+                             "x":  2,
+                             "y":  3,
+                             "w":  28,
+                             "h":  20
+                         }
+                     ],
+        "has_shopping":  true,
+        "has_checkout":  true,
+        "has_elevator":  true,
+        "has_stairs":  true,
+        "is_staff_only":  false,
+        "is_rooftop":  false
+    },
+    {
+        "id":  14,
+        "label":  "14",
+        "theme":  "electronics",
+        "ambient_color":  [
+                              0.35,
+                              0.45,
+                              0.65
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_PHONE_GADGETS",
+                          "x":  2,
+                          "y":  3,
+                          "w":  30,
+                          "h":  18,
+                          "meta":  {
+                                       "color":  [
+                                                     0.35,
+                                                     0.55,
+                                                     0.8
+                                                 ],
+                                       "name":  "PHONES \u0026 GADGETS"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_SMART_HOME",
+                          "x":  34,
+                          "y":  3,
+                          "w":  30,
+                          "h":  18,
+                          "meta":  {
+                                       "color":  [
+                                                     0.4,
+                                                     0.6,
+                                                     0.7
+                                                 ],
+                                       "name":  "SMART HOME"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELECTRONICS",
+                          "x":  2,
+                          "y":  23,
+                          "w":  38,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.45,
+                                                     0.5,
+                                                     0.65
+                                                 ],
+                                       "name":  "ELECTRONICS"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_REPAIR_COUNTER",
+                          "x":  42,
+                          "y":  23,
+                          "w":  36,
+                          "h":  16,
+                          "meta":  {
+                                       "color":  [
+                                                     0.6,
+                                                     0.45,
+                                                     0.4
+                                                 ],
+                                       "name":  "REPAIR COUNTER"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_AD",
+                          "x":  66,
+                          "y":  4,
+                          "w":  4,
+                          "h":  6,
+                          "meta":  {
+                                       "color":  [
+                                                     0.3,
+                                                     0.6,
+                                                     1.0
+                                                 ],
+                                       "name":  "ad_color"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  80,
+                          "y":  2,
+                          "w":  4,
+                          "h":  40
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  84,
+                          "y":  2,
+                          "w":  6,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+
+                     ],
+        "has_shopping":  true,
+        "has_checkout":  true,
+        "has_elevator":  true,
+        "has_stairs":  false,
+        "is_staff_only":  true,
+        "is_rooftop":  true
+    },
+    {
+        "id":  15,
+        "label":  "15",
+        "theme":  "canteen",
+        "ambient_color":  [
+                              0.55,
+                              0.5,
+                              0.42
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_CANTEEN",
+                          "x":  2,
+                          "y":  3,
+                          "w":  76,
+                          "h":  8,
+                          "meta":  {
+                                       "color":  [
+                                                     0.7,
+                                                     0.65,
+                                                     0.55
+                                                 ],
+                                       "name":  "CANTEEN COUNTER"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  2,
+                          "y":  3,
+                          "w":  12,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "canteen_rice"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  16,
+                          "y":  3,
+                          "w":  12,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "canteen_noodle"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  30,
+                          "y":  3,
+                          "w":  12,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "canteen_meat"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  44,
+                          "y":  3,
+                          "w":  12,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "canteen_veg"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  58,
+                          "y":  3,
+                          "w":  12,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "canteen_drinks"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  70,
+                          "y":  3,
+                          "w":  8,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "canteen_fruit"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DECOR",
+                          "x":  4,
+                          "y":  14,
+                          "w":  72,
+                          "h":  22,
+                          "meta":  {
+                                       "name":  "canteen_tables"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ENTRY_GATE",
+                          "x":  38,
+                          "y":  3,
+                          "w":  6,
+                          "h":  5,
+                          "meta":  {
+                                       "color":  [
+                                                     0.8,
+                                                     0.7,
+                                                     0.3
+                                                 ],
+                                       "name":  "CANTEEN ENTRANCE"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  80,
+                          "y":  2,
+                          "w":  4,
+                          "h":  40
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  84,
+                          "y":  2,
+                          "w":  6,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+
+                     ],
+        "has_shopping":  true,
+        "has_checkout":  false,
+        "has_elevator":  true,
+        "has_stairs":  false,
+        "is_staff_only":  false,
+        "is_rooftop":  false
+    },
+    {
+        "id":  16,
+        "label":  "16",
+        "theme":  "food_court",
+        "ambient_color":  [
+                              0.58,
+                              0.45,
+                              0.35
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  2,
+                          "y":  3,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "burger_king_style"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  18,
+                          "y":  3,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "pizza_hut_style"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  34,
+                          "y":  3,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "fried_chicken_style"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  50,
+                          "y":  3,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "hot_dog_style"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_STALL",
+                          "x":  66,
+                          "y":  3,
+                          "w":  14,
+                          "h":  8,
+                          "meta":  {
+                                       "name":  "ice_cream_style"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_FOOD_COURT",
+                          "x":  2,
+                          "y":  14,
+                          "w":  76,
+                          "h":  22,
+                          "meta":  {
+                                       "color":  [
+                                                     0.6,
+                                                     0.5,
+                                                     0.4
+                                                 ],
+                                       "name":  "FOOD COURT SEATING"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DECOR",
+                          "x":  6,
+                          "y":  14,
+                          "w":  4,
+                          "h":  4,
+                          "meta":  {
+                                       "name":  "trash_bin"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DECOR",
+                          "x":  30,
+                          "y":  14,
+                          "w":  4,
+                          "h":  4,
+                          "meta":  {
+                                       "name":  "trash_bin"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DECOR",
+                          "x":  54,
+                          "y":  14,
+                          "w":  4,
+                          "h":  4,
+                          "meta":  {
+                                       "name":  "trash_bin"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DECOR",
+                          "x":  72,
+                          "y":  14,
+                          "w":  4,
+                          "h":  4,
+                          "meta":  {
+                                       "name":  "trash_bin"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  80,
+                          "y":  2,
+                          "w":  4,
+                          "h":  40
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  84,
+                          "y":  2,
+                          "w":  6,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+
+                     ],
+        "has_shopping":  true,
+        "has_checkout":  false,
+        "has_elevator":  true,
+        "has_stairs":  false,
+        "is_staff_only":  false,
+        "is_rooftop":  false
+    },
+    {
+        "id":  17,
+        "label":  "17",
+        "theme":  "entertainment",
+        "ambient_color":  [
+                              0.35,
+                              0.25,
+                              0.5
+                          ],
+        "zones":  [
+                      {
+                          "type":  "ZONE_COMMON",
+                          "x":  2,
+                          "y":  3,
+                          "w":  78,
+                          "h":  38
+                      },
+                      {
+                          "type":  "ZONE_KARAOKE",
+                          "x":  2,
+                          "y":  3,
+                          "w":  28,
+                          "h":  20,
+                          "meta":  {
+                                       "color":  [
+                                                     0.25,
+                                                     0.18,
+                                                     0.38
+                                                 ],
+                                       "name":  "KARAOKE ROOMS"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_POOL_TABLE",
+                          "x":  32,
+                          "y":  3,
+                          "w":  20,
+                          "h":  10,
+                          "meta":  {
+                                       "color":  [
+                                                     0.28,
+                                                     0.52,
+                                                     0.38
+                                                 ],
+                                       "name":  "POOL AREA"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DARTS_BOARD",
+                          "x":  32,
+                          "y":  16,
+                          "w":  10,
+                          "h":  10,
+                          "meta":  {
+                                       "color":  [
+                                                     0.3,
+                                                     0.32,
+                                                     0.25
+                                                 ],
+                                       "name":  "DARTS"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_CLAW_MACHINE",
+                          "x":  54,
+                          "y":  3,
+                          "w":  8,
+                          "h":  8,
+                          "meta":  {
+                                       "color":  [
+                                                     0.5,
+                                                     0.3,
+                                                     0.7
+                                                 ],
+                                       "name":  "CLAW MACHINE 1"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_CLAW_MACHINE",
+                          "x":  54,
+                          "y":  13,
+                          "w":  8,
+                          "h":  8,
+                          "meta":  {
+                                       "color":  [
+                                                     0.4,
+                                                     0.5,
+                                                     0.7
+                                                 ],
+                                       "name":  "CLAW MACHINE 2"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_CLAW_MACHINE",
+                          "x":  54,
+                          "y":  23,
+                          "w":  8,
+                          "h":  8,
+                          "meta":  {
+                                       "color":  [
+                                                     0.7,
+                                                     0.4,
+                                                     0.5
+                                                 ],
+                                       "name":  "CLAW MACHINE 3"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DECOR",
+                          "x":  64,
+                          "y":  3,
+                          "w":  14,
+                          "h":  14,
+                          "meta":  {
+                                       "name":  "arcade_machines"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_DECOR",
+                          "x":  64,
+                          "y":  19,
+                          "w":  14,
+                          "h":  18,
+                          "meta":  {
+                                       "name":  "lounge_seating"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_AD",
+                          "x":  64,
+                          "y":  3,
+                          "w":  4,
+                          "h":  5,
+                          "meta":  {
+                                       "color":  [
+                                                     0.8,
+                                                     0.2,
+                                                     0.8
+                                                 ],
+                                       "name":  "ad_color"
+                                   }
+                      },
+                      {
+                          "type":  "ZONE_ELEVATOR",
+                          "x":  80,
+                          "y":  2,
+                          "w":  4,
+                          "h":  40
+                      },
+                      {
+                          "type":  "ZONE_STAIRS",
+                          "x":  84,
+                          "y":  2,
+                          "w":  6,
+                          "h":  40
+                      }
+                  ],
+        "sections":  [
+
+                     ],
+        "has_shopping":  true,
+        "has_checkout":  false,
+        "has_elevator":  true,
+        "has_stairs":  false,
+        "is_staff_only":  false,
+        "is_rooftop":  false
+    }
 ]

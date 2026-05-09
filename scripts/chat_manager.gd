@@ -30,7 +30,9 @@ func register_npc(npc: Node) -> void:
 		_chat_cooldowns[id] = 0.0
 
 func unregister_npc(npc: Node) -> void:
+	var id := npc.get_instance_id()
 	_npcs.erase(npc)
+	_chat_cooldowns.erase(id)  # Clean up cooldown for this NPC
 
 func _process(delta: float) -> void:
 	_chat_check_timer -= delta
@@ -45,10 +47,19 @@ func _process(delta: float) -> void:
 
 func _check_for_npc_chats() -> void:
 	# Pick random pairs within range to have a conversation
+	# First, clean up any invalid NPC references from _npcs array
+	var valid_npcs: Array = []
+	for npc in _npcs:
+		if is_instance_valid(npc):
+			valid_npcs.append(npc)
+	_npcs = valid_npcs
+	
 	for i in range(_npcs.size()):
 		for j in range(i + 1, _npcs.size()):
 			var npc_a: Node = _npcs[i]
 			var npc_b: Node = _npcs[j]
+			if not is_instance_valid(npc_a) or not is_instance_valid(npc_b):
+				continue
 			if not _are_valid_for_chat(npc_a, npc_b):
 				continue
 			var id_a := npc_a.get_instance_id()

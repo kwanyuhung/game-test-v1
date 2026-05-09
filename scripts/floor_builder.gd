@@ -1514,6 +1514,9 @@ func _get_section_floor(style: int) -> Color:
 		StoreData.SectionStyle.SHELF:    return Color(0.17, 0.16, 0.15)
 		StoreData.SectionStyle.DELI:     return Color(0.19, 0.13, 0.13)
 		StoreData.SectionStyle.FREEZER:  return Color(0.12, 0.16, 0.22)
+		StoreData.SectionStyle.SHOES_RACK: return Color(0.18, 0.15, 0.14)
+		StoreData.SectionStyle.DRESS_RACK: return Color(0.16, 0.15, 0.18)
+		StoreData.SectionStyle.SPORT_AREA: return Color(0.15, 0.17, 0.16)
 	return Color(0.18, 0.17, 0.16)
 
 func _get_section_wall_color(style: int) -> Color:
@@ -1524,6 +1527,9 @@ func _get_section_wall_color(style: int) -> Color:
 		StoreData.SectionStyle.SHELF:    return Color(0.72, 0.65, 0.55)
 		StoreData.SectionStyle.DELI:     return Color(0.88, 0.55, 0.52)
 		StoreData.SectionStyle.FREEZER:  return Color(0.55, 0.78, 0.95)
+		StoreData.SectionStyle.SHOES_RACK: return Color(0.75, 0.60, 0.55)
+		StoreData.SectionStyle.DRESS_RACK: return Color(0.72, 0.58, 0.68)
+		StoreData.SectionStyle.SPORT_AREA: return Color(0.55, 0.72, 0.65)
 	return Color(0.65, 0.60, 0.50)
 
 func _make_glow(col: Color) -> Texture2D:
