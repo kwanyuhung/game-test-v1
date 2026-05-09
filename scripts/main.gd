@@ -276,6 +276,22 @@ func _build_floor(idx: int) -> void:
 			counter.self_checkout_cleared.connect(_on_self_checkout_cleared)
 
 func _clear_floor_nodes() -> void:
+	# Remove the floor objects container by name pattern
+	var floor_container_name := "FloorObjects_%d" % _current_floor_idx
+	var container: Node = get_node_or_null(floor_container_name)
+	if container != null:
+		container.queue_free()
+
+	# Also try to remove any old containers from previous floors
+	for i in range(20):  # Assume max 20 floors
+		if i == _current_floor_idx:
+			continue
+		var old_container_name := "FloorObjects_%d" % i
+		var old_container: Node = get_node_or_null(old_container_name)
+		if old_container != null:
+			old_container.queue_free()
+
+	# Clear all node lists and queue_free nodes
 	for node in _floor_nodes:
 		if is_instance_valid(node):
 			node.queue_free()
@@ -284,16 +300,7 @@ func _clear_floor_nodes() -> void:
 	_checkout_counters.clear()
 	_aisle_labels.clear()
 
-	# Remove builder-rendered nodes by pattern
-	var to_remove: Array = []
-	for c in get_children():
-		var nm := c.name as String
-		if nm.begins_with("Section_") or nm.begins_with("Counter_") or nm.begins_with("Stall_") or nm.begins_with("Floor_") or nm.begins_with("Claw_") or nm.begins_with("Escalator_"):
-			to_remove.append(c)
-	for c in to_remove:
-		c.queue_free()
-
-	# Remove all NPC nodes (Staff and Customers) when switching floors
+	# Remove all NPC nodes (Staff and Customers) when switching floors by name pattern
 	var npcs_to_remove: Array = []
 	for c in get_children():
 		var nm := c.name as String
@@ -302,11 +309,39 @@ func _clear_floor_nodes() -> void:
 	for c in npcs_to_remove:
 		c.queue_free()
 	_npcs.clear()
-	
+
+	# Remove all robot nodes by name pattern
+	var robots_to_remove: Array = []
+	for c in get_children():
+		var nm := c.name as String
+		if nm.begins_with("Robot_") or nm.begins_with("Robo_"):
+			robots_to_remove.append(c)
+	for c in robots_to_remove:
+		c.queue_free()
+
+	# Remove warehouse floor controller when switching away from floor 11
+	if _warehouse_floor != null:
+		_warehouse_floor.queue_free()
+		_warehouse_floor = null
+
 	# Clear debug bounds tracking to prevent overlap from previous floors
 	var debug_bounds = get("_debug_bounds")
 	if debug_bounds != null and debug_bounds.has_method("clear_all"):
 		debug_bounds.clear_all()
+
+# Get floor information for UI display
+func get_floor_info() -> Dictionary:
+	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(_current_floor_idx)
+	var info := {
+		"index": _current_floor_idx,
+		"name": fd.label if fd else "Unknown",
+		"theme": fd.theme if fd else "unknown",
+		"zone_count": fd.zones.size() if fd else 0,
+		"section_count": _sections.size(),
+		"npc_count": _npcs.size(),
+		"checkout_count": _checkout_counters.size(),
+	}
+	return info
 
 # ?????? Ambient Color ????????????????????????????????????????????????????????????????????????????????????????????
 
@@ -881,6 +916,31 @@ func _on_setting_changed(key: String, value) -> void:
 		"notif_toasts":
 			# Toasts are always on, just a flag
 			pass
+		"draw_factory_robot_1":
+			_apply_factory_robot_settings()
+		"draw_factory_robot_2":
+			_apply_factory_robot_settings()
+		"draw_factory_robot_3":
+			_apply_factory_robot_settings()
+		"draw_interactive":
+			_apply_interactive_settings(value)
+
+func _apply_factory_robot_settings() -> void:
+	if _warehouse_floor == null:
+		return
+	var sp: Node = _settings_panel
+	if sp == null:
+		return
+	var r1: bool = sp.get_setting("draw_factory_robot_1")
+	var r2: bool = sp.get_setting("draw_factory_robot_2")
+	var r3: bool = sp.get_setting("draw_factory_robot_3")
+	_warehouse_floor.set_factory_robot_visibility(r1, r2, r3)
+
+func _apply_interactive_settings(enabled: bool) -> void:
+	# Control interaction bubble visibility
+	var bubble: Node2D = get_node_or_null("_interaction_bubble")
+	if bubble != null and bubble.has_method("set_interaction_visible"):
+		bubble.set_interaction_visible(enabled)
 
 func _toggle_pause() -> void:
 	if _current_section_browse != null and _current_section_browse.visible: return

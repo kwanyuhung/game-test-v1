@@ -9,17 +9,17 @@ var _bounds_layer: Node2D = null
 var _labels_layer: Node2D = null
 var _f3_was_pressed: bool = false
 
-# Color palette for different object types
+# Color palette for different object types (white/light colors for visibility)
 const COLORS = {
-	"elevator": Color(0.2, 1.0, 0.2, 0.3),    # Green
-	"escalator": Color(1.0, 0.5, 0.1, 0.3),    # Orange
-	"section": Color(0.2, 0.5, 1.0, 0.3),      # Blue
-	"stall": Color(1.0, 0.6, 0.2, 0.3),         # Orange
-	"checkout": Color(0.2, 1.0, 0.5, 0.3),      # Cyan
-	"npc": Color(1.0, 0.4, 1.0, 0.3),           # Magenta
-	"facility": Color(1.0, 1.0, 0.2, 0.3),     # Yellow
-	"zone": Color(0.6, 0.6, 0.8, 0.2),         # Light purple
-	"spawn": Color(1.0, 0.3, 0.3, 0.3),         # Red
+	"elevator": Color(1.0, 1.0, 1.0, 0.7),     # White
+	"escalator": Color(1.0, 1.0, 1.0, 0.7),    # White
+	"section": Color(1.0, 1.0, 1.0, 0.7),      # White
+	"stall": Color(1.0, 1.0, 1.0, 0.7),        # White
+	"checkout": Color(1.0, 1.0, 1.0, 0.7),     # White
+	"npc": Color(1.0, 1.0, 1.0, 0.7),          # White
+	"facility": Color(1.0, 1.0, 1.0, 0.7),     # White
+	"zone": Color(1.0, 1.0, 1.0, 0.5),         # White
+	"spawn": Color(1.0, 1.0, 1.0, 0.7),        # White
 }
 
 # Track all debug bounds

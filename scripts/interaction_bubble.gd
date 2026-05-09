@@ -142,3 +142,7 @@ func is_showing() -> bool:
 
 func get_interaction_target() -> Node:
 	return _interaction_target
+
+func set_interaction_visible(visible: bool) -> void:
+	if _bubble != null:
+		_bubble.visible = visible

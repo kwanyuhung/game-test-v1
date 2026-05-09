@@ -12,6 +12,11 @@ var _settings: Dictionary = {
 	"sfx_volume": 0.8,
 	"game_speed": 1.0,
 	"notif_toasts": true,
+	# Draw settings - control what's rendered
+	"draw_factory_robot_1": true,   # Self-checkout counter robot
+	"draw_factory_robot_2": true,   # Shelf scanning robot
+	"draw_factory_robot_3": true,   # Warehouse robots (cleaning/security/delivery)
+	"draw_interactive": true,        # Interaction bubbles and indicators
 }
 
 var _option_rows: Array = []
@@ -95,6 +100,11 @@ func _build_ui() -> void:
 		{"label": "SFX Volume", "type": "slider", "key": "sfx", "val": _settings["sfx_volume"]},
 		{"label": "Game Speed", "type": "slider", "key": "speed", "val": _settings["game_speed"]},
 		{"label": "Toasts", "type": "toggle", "key": "notif_toasts", "val": _settings["notif_toasts"]},
+		{"label": "--- Draw Settings ---", "type": "label", "key": "", "val": 0},
+		{"label": "Factory Robot 1 (Checkout)", "type": "toggle", "key": "draw_factory_robot_1", "val": _settings["draw_factory_robot_1"]},
+		{"label": "Factory Robot 2 (Shelf)", "type": "toggle", "key": "draw_factory_robot_2", "val": _settings["draw_factory_robot_2"]},
+		{"label": "Factory Robot 3 (Warehouse)", "type": "toggle", "key": "draw_factory_robot_3", "val": _settings["draw_factory_robot_3"]},
+		{"label": "Interactive Elements", "type": "toggle", "key": "draw_interactive", "val": _settings["draw_interactive"]},
 	]
 	_option_rows = options
 
@@ -166,6 +176,17 @@ func _draw_option(opt: Dictionary, idx: int, pos: Vector2) -> void:
 	var col := Color(0.85, 0.85, 0.70) if is_sel else Color(0.55, 0.55, 0.60)
 	var prefix := "> " if is_sel else "  "
 
+	# Handle label type (divider/header)
+	if opt["type"] == "label":
+		var lbl := Label.new()
+		lbl.text = opt["label"]
+		lbl.position = pos
+		lbl.add_theme_color_override("font_color", Color(0.50, 0.50, 0.55))
+		lbl.add_theme_font_size_override("font_size", 14)
+		lbl.name = "opt_%d" % idx
+		add_child(lbl)
+		return
+
 	var lbl := Label.new()
 	lbl.text = prefix + opt["label"]
 	lbl.position = pos
@@ -197,6 +218,8 @@ func _update_selection() -> void:
 		var opt = _option_rows[i]
 		var lbl := get_node_or_null("opt_%d" % i)
 		if lbl != null:
+			if opt["type"] == "label":
+				continue  # Skip label rows
 			lbl.text = ("> " if i == _selected_idx else "  ") + opt["label"]
 			lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.70) if i == _selected_idx else Color(0.55, 0.55, 0.60))
 
@@ -211,10 +234,22 @@ func _on_input(event: InputEvent) -> void:
 			KEY_ESCAPE, KEY_TAB:
 				close()
 			KEY_W, KEY_UP:
-				_selected_idx = maxi(0, _selected_idx - 1)
+				# Skip label rows when navigating up
+				var new_idx := _selected_idx
+				while true:
+					new_idx = maxi(0, new_idx - 1)
+					if new_idx == 0 or _option_rows[new_idx]["type"] != "label":
+						break
+				_selected_idx = new_idx
 				_update_selection()
 			KEY_S, KEY_DOWN:
-				_selected_idx = mini(_option_rows.size() - 1, _selected_idx + 1)
+				# Skip label rows when navigating down
+				var new_idx := _selected_idx
+				while true:
+					new_idx = mini(_option_rows.size() - 1, new_idx + 1)
+					if new_idx == _option_rows.size() - 1 or _option_rows[new_idx]["type"] != "label":
+						break
+				_selected_idx = new_idx
 				_update_selection()
 			KEY_A, KEY_LEFT:
 				_adjust_selected(-0.1)
@@ -227,6 +262,9 @@ func _adjust_selected(delta: float) -> void:
 	if _selected_idx < 0 or _selected_idx >= _option_rows.size():
 		return
 	var opt = _option_rows[_selected_idx]
+	# Skip label rows
+	if opt["type"] == "label":
+		return
 	if opt["type"] == "slider":
 		opt["val"] = clampf(opt["val"] + delta, 0.0, 1.0)
 		_settings[opt["key"] + "_volume"] = opt["val"] if opt["key"] in ["bgm", "sfx"] else opt["val"]
@@ -243,6 +281,9 @@ func _toggle_selected() -> void:
 	if _selected_idx < 0 or _selected_idx >= _option_rows.size():
 		return
 	var opt = _option_rows[_selected_idx]
+	# Skip label rows
+	if opt["type"] == "label":
+		return
 	if opt["type"] == "toggle":
 		opt["val"] = not opt["val"]
 		_settings[opt["key"]] = opt["val"]

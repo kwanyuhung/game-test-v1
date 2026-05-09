@@ -30,16 +30,19 @@ const FLOOR_ITEMS := {
 		"loyalty": {"pos": Vector2(30, 35), "label": "Loyalty", "color": Color(0.90, 0.40, 0.70)},
 		"info": {"pos": Vector2(60, 25), "label": "Info Desk", "color": Color(0.60, 0.60, 0.80)},
 	},
-	1: {  # Floor 1 - Fresh/Produce
-		"produce": {"pos": Vector2(20, 15), "label": "Produce", "color": Color(0.40, 0.80, 0.40)},
-		"dairy": {"pos": Vector2(50, 15), "label": "Dairy", "color": Color(0.90, 0.90, 0.90)},
-		"bakery": {"pos": Vector2(80, 15), "label": "Bakery", "color": Color(0.85, 0.65, 0.40)},
+	1: {  # Floor 1 - Shoes
+		"ladies_shoes": {"pos": Vector2(10, 12), "label": "Ladies Shoes", "color": Color(0.82, 0.55, 0.65)},
+		"mens_shoes": {"pos": Vector2(40, 12), "label": "Mens Shoes", "color": Color(0.55, 0.60, 0.80)},
+		"kids_shoes": {"pos": Vector2(70, 12), "label": "Kids Shoes", "color": Color(0.70, 0.75, 0.90)},
+		"sport_shoes": {"pos": Vector2(10, 30), "label": "Sport Shoes", "color": Color(0.55, 0.80, 0.65)},
 		"elevator": {"pos": Vector2(75, 35), "label": "Elevator", "color": Color(0.60, 0.78, 0.95)},
 		"stairs": {"pos": Vector2(85, 35), "label": "Stairs", "color": Color(0.55, 0.45, 0.60)},
 	},
-	2: {  # Floor 2 - Pantry
-		"pantry": {"pos": Vector2(30, 20), "label": "Pantry", "color": Color(0.75, 0.55, 0.35)},
-		"snacks": {"pos": Vector2(60, 20), "label": "Snacks", "color": Color(0.90, 0.70, 0.30)},
+	2: {  # Floor 2 - Fashion/Wear
+		"ladies_wear": {"pos": Vector2(10, 12), "label": "Ladies Wear", "color": Color(0.88, 0.58, 0.72)},
+		"mens_wear": {"pos": Vector2(40, 12), "label": "Mens Wear", "color": Color(0.60, 0.68, 0.88)},
+		"kids_wear": {"pos": Vector2(70, 12), "label": "Kids Wear", "color": Color(0.90, 0.75, 0.60)},
+		"activewear": {"pos": Vector2(10, 30), "label": "Activewear", "color": Color(0.55, 0.80, 0.65)},
 		"elevator": {"pos": Vector2(75, 35), "label": "Elevator", "color": Color(0.60, 0.78, 0.95)},
 		"stairs": {"pos": Vector2(85, 35), "label": "Stairs", "color": Color(0.55, 0.45, 0.60)},
 	},
