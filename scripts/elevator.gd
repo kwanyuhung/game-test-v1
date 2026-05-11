@@ -5,6 +5,7 @@ class_name Elevator
 extends Node2D
 
 const Floors = preload("res://scripts/floors.gd")
+const PixelArt = preload("res://scripts/pixel_art_generator.gd")
 const CELL_SIZE := 16
 
 # Elevator shaft anchor positions in world pixels
@@ -53,45 +54,49 @@ func _ready() -> void:
 	_current_floor = 0
 	_target_floor = 0
 
-	# Shaft track (vertical line behind car)
-	var shaft := ColorRect.new()
-	shaft.position = Vector2(SHAFT_X - 1, 0)
-	shaft.size = Vector2(2, 800)
-	shaft.color = Color(0.28, 0.25, 0.22)
-	add_child(shaft)
+	# Shaft background sprite (vertical track behind car)
+	var shaft_tex := PixelArt.make_elevator_shaft()
+	var shaft_sprite := Sprite2D.new()
+	shaft_sprite.texture = shaft_tex
+	shaft_sprite.position = Vector2(SHAFT_X - 16, 0)
+	shaft_sprite.region_enabled = true
+	shaft_sprite.region_rect = Rect2(0, 0, 32, 800)
+	add_child(shaft_sprite)
 
-	# Car body
-	_car = ColorRect.new()
+	# Car body using pixel art sprite
+	var car_tex := PixelArt.make_elevator_car()
+	_car = ColorRect.new()  # Keep as container for positioning
 	_car.size = Vector2(CAR_W, CAR_H)
-	_car.color = Color(0.48, 0.44, 0.40)
 	add_child(_car)
 
-	# Car inner floor
-	var inner := ColorRect.new()
-	inner.position = Vector2(2, 2)
-	inner.size = Vector2(CAR_W - 4, CAR_H - 4)
-	inner.color = Color(0.60, 0.56, 0.52)
-	_car.add_child(inner)
+	# Add car sprite on top of the ColorRect (for visual)
+	var car_sprite := Sprite2D.new()
+	car_sprite.texture = car_tex
+	car_sprite.position = Vector2(CAR_W * 0.5, CAR_H * 0.5)
+	_car.add_child(car_sprite)
 
-	# Ceiling light strip
-	var light_strip := ColorRect.new()
-	light_strip.position = Vector2(2, 2)
-	light_strip.size = Vector2(CAR_W - 4, 3)
-	light_strip.color = Color(0.95, 0.92, 0.80)
-	_car.add_child(light_strip)
-
-	# Doors
+	# Door sprites (separate for animation)
+	var door_tex := PixelArt.make_elevator_door()
+	
 	_door_left = ColorRect.new()
-	_door_left.position = Vector2(2, 2)
-	_door_left.size = Vector2(DOOR_W, CAR_H - 4)
-	_door_left.color = Color(0.55, 0.52, 0.50)
+	_door_left.position = Vector2(8, 20)
+	_door_left.size = Vector2(96, 116)
 	_car.add_child(_door_left)
+	
+	var left_door_sprite := Sprite2D.new()
+	left_door_sprite.texture = door_tex
+	left_door_sprite.position = Vector2(48, 58)
+	_door_left.add_child(left_door_sprite)
 
 	_door_right = ColorRect.new()
-	_door_right.position = Vector2(CAR_W - DOOR_W - 2, 2)
-	_door_right.size = Vector2(DOOR_W, CAR_H - 4)
-	_door_right.color = Color(0.55, 0.52, 0.50)
+	_door_right.position = Vector2(120, 20)
+	_door_right.size = Vector2(96, 116)
 	_car.add_child(_door_right)
+	
+	var right_door_sprite := Sprite2D.new()
+	right_door_sprite.texture = door_tex
+	right_door_sprite.position = Vector2(48, 58)
+	_door_right.add_child(right_door_sprite)
 
 	# Floor indicator on car
 	_floor_label = Label.new()
@@ -143,9 +148,9 @@ func _ease(x: float, k: float) -> float:
 		return 1.0 - pow(2.0 * (1.0 - x), k) * 0.5
 
 func _update_door_visuals() -> void:
-	var open_offset := _door_t * (DOOR_W * 0.6)
-	_door_left.position.x = 2 + open_offset
-	_door_right.position.x = CAR_W - DOOR_W - 2 - open_offset
+	var open_offset := _door_t * 58.0  # Slide doors open by 58px each
+	_door_left.position.x = 8 + open_offset
+	_door_right.position.x = 120 - open_offset
 
 func _Update_ambient_for_floor(idx: int) -> void:
 	# Tell the main world to shift ambient

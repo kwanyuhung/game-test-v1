@@ -17,6 +17,8 @@ const COLORS = {
 	"stall": Color(1.0, 1.0, 1.0, 0.7),        # White
 	"checkout": Color(1.0, 1.0, 1.0, 0.7),     # White
 	"npc": Color(1.0, 1.0, 1.0, 0.7),          # White
+	"player": Color(0.0, 1.0, 0.5, 0.8),       # Cyan-green
+	"robot": Color(1.0, 0.5, 0.0, 0.8),       # Orange for robots
 	"facility": Color(1.0, 1.0, 1.0, 0.7),     # White
 	"zone": Color(1.0, 1.0, 1.0, 0.5),         # White
 	"spawn": Color(1.0, 1.0, 1.0, 0.7),        # White
@@ -154,6 +156,20 @@ func track_npc(npc) -> void:
 		if actor != null:
 			name = actor.display_name
 	track_object(npc, rect, "npc", name)
+
+func track_player(player) -> void:
+	if player == null:
+		return
+	var pos = player.global_position if player.has_method("global_position") else player.position
+	var rect = Rect2(pos - Vector2(8, 0), Vector2(16, 16))
+	track_object(player, rect, "player", "Player")
+
+func track_robot(robot, name: String = "Robot") -> void:
+	if robot == null:
+		return
+	var pos = robot.global_position if robot.has_method("global_position") else robot.position
+	var rect = Rect2(pos - Vector2(12, 0), Vector2(24, 32))
+	track_object(robot, rect, "robot", name)
 
 func track_spawn_point(pos: Vector2, label: String = "") -> void:
 	var rect = Rect2(pos - Vector2(16, 0), Vector2(32, 32))

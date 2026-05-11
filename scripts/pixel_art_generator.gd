@@ -386,6 +386,123 @@ static func make_sports_equipment(col: Color, style: int = 0) -> Texture2D:
 		_: _draw_dumbbell(img, col)
 	return ImageTexture.create_from_image(img)
 
+# ─────────────────────────────────────────────────────────────────────────────
+# ELEVATOR SPRITES (224x160 = 14x10 cells at 16px each)
+# ─────────────────────────────────────────────────────────────────────────────
+static func make_elevator_car() -> Texture2D:
+	# Elevator car interior without doors (doors are animated separately)
+	var img := Image.create(224, 160, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	
+	# Colors
+	var wall_col := Color(0.48, 0.44, 0.40)      # Main wall color
+	var inner_col := Color(0.60, 0.56, 0.52)     # Inner floor/wall
+	var light_col := Color(0.95, 0.92, 0.80)      # Ceiling light strip
+	var dark_col := Color(0.30, 0.28, 0.25)       # Dark trim
+	var floor_col := Color(0.50, 0.48, 0.45)      # Floor tiles
+	var rail_col := Color(0.70, 0.68, 0.65)       # Hand rails
+	
+	# Outer wall border (4px)
+	_fill_rect(img, 0, 0, 224, 160, wall_col)
+	
+	# Inner area (cut out the outer wall)
+	_fill_rect(img, 4, 4, 216, 152, inner_col)
+	
+	# Floor (bottom 20px of inner area)
+	_fill_rect(img, 4, 136, 216, 20, floor_col)
+	
+	# Floor tile lines
+	for x in range(8, 220, 32):
+		_fill_rect(img, x, 136, 2, 20, dark_col)
+	for y in range(140, 156, 16):
+		_fill_rect(img, 4, y, 216, 2, dark_col)
+	
+	# Ceiling light strip
+	_fill_rect(img, 8, 8, 208, 6, light_col)
+	
+	# Dark ceiling edge above light
+	_fill_rect(img, 4, 4, 216, 4, dark_col)
+	
+	# Door frame (dark opening where doors slide)
+	_fill_rect(img, 8, 20, 208, 116, Color(0.25, 0.22, 0.20))
+	
+	# Wall texture - vertical panels
+	_fill_rect(img, 20, 24, 2, 100, dark_col.lightened(0.05))
+	_fill_rect(img, 200, 24, 2, 100, dark_col.lightened(0.05))
+	
+	# Hand rail on left wall
+	_fill_rect(img, 10, 70, 4, 40, rail_col)
+	_fill_rect(img, 10, 68, 4, 4, Color(0.75, 0.72, 0.70))
+	_fill_rect(img, 10, 108, 4, 4, Color(0.75, 0.72, 0.70))
+	
+	# Hand rail on right wall  
+	_fill_rect(img, 210, 70, 4, 40, rail_col)
+	_fill_rect(img, 210, 68, 4, 4, Color(0.75, 0.72, 0.70))
+	_fill_rect(img, 210, 108, 4, 4, Color(0.75, 0.72, 0.70))
+	
+	# Back wall panel details
+	_fill_rect(img, 100, 24, 24, 100, dark_col.lightened(0.03))
+	_fill_rect(img, 104, 28, 16, 92, Color(0.42, 0.40, 0.38))
+	
+	return ImageTexture.create_from_image(img)
+
+static func make_elevator_door() -> Texture2D:
+	# Single elevator door panel (slides open/closed)
+	var img := Image.create(96, 116, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	
+	var door_col := Color(0.55, 0.52, 0.50)      # Door panels
+	var dark_col := Color(0.30, 0.28, 0.25)       # Dark trim
+	
+	# Main door panel
+	_fill_rect(img, 0, 0, 96, 116, door_col)
+	
+	# Door panels (horizontal lines for decoration)
+	_fill_rect(img, 0, 30, 96, 2, dark_col)
+	_fill_rect(img, 0, 60, 96, 2, dark_col)
+	_fill_rect(img, 0, 90, 96, 2, dark_col)
+	
+	# Door handle
+	_fill_rect(img, 42, 52, 12, 8, dark_col.lightened(0.1))
+	_fill_rect(img, 44, 54, 8, 4, Color(0.60, 0.58, 0.55))
+	
+	# Highlight edge
+	_fill_rect(img, 0, 0, 2, 116, Color(0.62, 0.60, 0.58))
+	_fill_rect(img, 94, 0, 2, 116, dark_col)
+	
+	return ImageTexture.create_from_image(img)
+
+static func make_elevator_shaft() -> Texture2D:
+	# Vertical shaft texture (32px wide, full height)
+	var img := Image.create(32, 512, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	
+	var shaft_col := Color(0.28, 0.25, 0.22)
+	var dark_col := Color(0.20, 0.18, 0.16)
+	var cable_col := Color(0.35, 0.32, 0.30)
+	
+	# Main shaft background
+	_fill_rect(img, 0, 0, 32, 512, shaft_col)
+	
+	# Dark edges (left and right rails)
+	_fill_rect(img, 0, 0, 4, 512, dark_col)
+	_fill_rect(img, 28, 0, 4, 512, dark_col)
+	
+	# Center cable
+	_fill_rect(img, 14, 0, 4, 512, cable_col)
+	
+	# Cable segments (horizontal lines every 64px to simulate cable links)
+	for y in range(0, 512, 64):
+		_fill_rect(img, 12, y, 8, 3, dark_col)
+	
+	# Floor indicators (floor markers at every 160px = 10 cells)
+	for i in range(4):
+		var y := 32 + i * 160
+		# Small indicator light
+		_fill_rect(img, 13, y, 6, 4, Color(0.20, 0.95, 0.50))
+	
+	return ImageTexture.create_from_image(img)
+
 static func _draw_dumbbell(img: Image, col: Color) -> void:
 	var dark := col.darkened(0.3)
 	var light := col.lightened(0.2)

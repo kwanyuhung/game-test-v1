@@ -18,6 +18,12 @@ var _staff_sprite_normal: bool = true  # true = normal, false = uniform
 var _has_cart: bool = true  # true = cart is with player, false = cart is left behind
 var _dropped_cart_pos: Vector2 = Vector2.ZERO  # Where cart was dropped
 var _cart_sprite_anchor: Node2D = null  # Anchor for dropped cart sprite
+var _bounding_box: ColorRect = null  # Debug bounding box
+var _bounding_visible: bool = true  # Toggle via debug system
+var _top_border: ColorRect = null
+var _bottom_border: ColorRect = null
+var _left_border: ColorRect = null
+var _right_border: ColorRect = null
 
 signal cart_updated(count: int)
 signal zone_changed(zone_name: String)
@@ -52,6 +58,45 @@ func _build_sprite() -> void:
 	col.shape = shape
 	col.position = Vector2.ZERO
 	add_child(col)
+	
+	# Bounding box debug visualization (always visible)
+	_bounding_box = ColorRect.new()
+	_bounding_box.size = Vector2(16, 16)
+	_bounding_box.position = Vector2(-8, -8)
+	_bounding_box.color = Color(0.0, 1.0, 0.5, 0.15)  # Green transparent fill
+	_bounding_box.z_index = 100
+	add_child(_bounding_box)
+	
+	# Add border lines around bounding box
+	var border_color := Color(0.0, 1.0, 0.5, 0.8)
+	# Top border
+	_top_border = ColorRect.new()
+	_top_border.size = Vector2(16, 1)
+	_top_border.position = Vector2(-8, -8)
+	_top_border.color = border_color
+	_top_border.z_index = 101
+	add_child(_top_border)
+	# Bottom border
+	_bottom_border = ColorRect.new()
+	_bottom_border.size = Vector2(16, 1)
+	_bottom_border.position = Vector2(-8, 7)
+	_bottom_border.color = border_color
+	_bottom_border.z_index = 101
+	add_child(_bottom_border)
+	# Left border
+	_left_border = ColorRect.new()
+	_left_border.size = Vector2(1, 16)
+	_left_border.position = Vector2(-8, -8)
+	_left_border.color = border_color
+	_left_border.z_index = 101
+	add_child(_left_border)
+	# Right border
+	_right_border = ColorRect.new()
+	_right_border.size = Vector2(1, 16)
+	_right_border.position = Vector2(7, -8)
+	_right_border.color = border_color
+	_right_border.z_index = 101
+	add_child(_right_border)
 
 func _build_cart_sprite() -> void:
 	_cart_sprite = Sprite2D.new()
@@ -101,40 +146,114 @@ func set_staff_mode(val: bool) -> void:
 func _make_player_tex() -> Texture2D:
 	var img = Image.create(16, 16, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	_fill(6, 1, 4, 1, Color(0.96, 0.80, 0.65), img)
-	_fill(5, 2, 6, 3, Color(0.96, 0.80, 0.65), img)
-	_fill(6, 5, 4, 1, Color(0.85, 0.65, 0.50), img)
-	_set_pixel(7, 3, Color(0.15, 0.10, 0.08), img)
-	_set_pixel(9, 3, Color(0.15, 0.10, 0.08), img)
-	_fill(4, 6, 8, 5, Color(0.91, 0.76, 0.44), img)
-	_fill(3, 7, 2, 3, Color(0.91, 0.76, 0.44), img)
-	_fill(11, 7, 2, 3, Color(0.91, 0.76, 0.44), img)
-	_fill(5, 6, 6, 1, Color(0.98, 0.88, 0.58), img)
-	_fill(5, 11, 3, 3, Color(0.25, 0.25, 0.45), img)
-	_fill(8, 11, 3, 3, Color(0.25, 0.25, 0.45), img)
-	_fill(4, 13, 4, 2, Color(0.35, 0.25, 0.20), img)
-	_fill(8, 13, 4, 2, Color(0.35, 0.25, 0.20), img)
-	_fill(4, 15, 8, 1, Color(0, 0, 0, 0.18), img)
+	
+	# Hair (top)
+	_fill(5, 1, 6, 1, Color(0.30, 0.20, 0.15), img)
+	_fill(4, 2, 8, 1, Color(0.30, 0.20, 0.15), img)
+	
+	# Face
+	_fill(5, 2, 6, 4, Color(0.96, 0.80, 0.65), img)
+	_fill(4, 3, 1, 2, Color(0.96, 0.80, 0.65), img)  # left ear
+	_fill(11, 3, 1, 2, Color(0.96, 0.80, 0.65), img)  # right ear
+	
+	# Eyes (with highlights)
+	_set_pixel(6, 3, Color(0.15, 0.10, 0.08), img)  # left eye
+	_set_pixel(6, 3, Color(1.0, 1.0, 1.0, 0.8), img)  # left eye highlight
+	_set_pixel(9, 3, Color(0.15, 0.10, 0.08), img)  # right eye
+	_set_pixel(9, 3, Color(1.0, 1.0, 1.0, 0.8), img)  # right eye highlight
+	
+	# Mouth/smile
+	_set_pixel(7, 5, Color(0.80, 0.50, 0.50), img)
+	_set_pixel(8, 5, Color(0.80, 0.50, 0.50), img)
+	
+	# Neck
+	_fill(7, 6, 2, 1, Color(0.96, 0.80, 0.65), img)
+	
+	# Body/Shirt (yellow t-shirt)
+	_fill(4, 7, 8, 4, Color(0.91, 0.76, 0.44), img)  # main shirt
+	_fill(3, 7, 1, 3, Color(0.91, 0.76, 0.44), img)  # left sleeve
+	_fill(12, 7, 1, 3, Color(0.91, 0.76, 0.44), img)  # right sleeve
+	
+	# Shirt collar detail
+	_fill(6, 7, 4, 1, Color(0.98, 0.88, 0.58), img)
+	
+	# Arms (skin)
+	_fill(3, 9, 1, 2, Color(0.96, 0.80, 0.65), img)
+	_fill(12, 9, 1, 2, Color(0.96, 0.80, 0.65), img)
+	
+	# Pants (blue jeans)
+	_fill(5, 11, 2, 3, Color(0.25, 0.35, 0.60), img)
+	_fill(9, 11, 2, 3, Color(0.25, 0.35, 0.60), img)
+	
+	# Belt
+	_fill(5, 11, 6, 1, Color(0.45, 0.30, 0.20), img)
+	
+	# Shoes (brown)
+	_fill(4, 14, 4, 2, Color(0.40, 0.28, 0.22), img)
+	_fill(8, 14, 4, 2, Color(0.40, 0.28, 0.22), img)
+	
+	# Shoe soles
+	_fill(4, 15, 4, 1, Color(0.25, 0.18, 0.15), img)
+	_fill(8, 15, 4, 1, Color(0.25, 0.18, 0.15), img)
+	
 	return ImageTexture.create_from_image(img)
 
 func _make_staff_tex() -> Texture2D:
-	# Same as player but shirt is blue (uniform)
+	# Same as player but shirt is blue (uniform) and has name badge
 	var img = Image.create(16, 16, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	_fill(6, 1, 4, 1, Color(0.96, 0.80, 0.65), img)
-	_fill(5, 2, 6, 3, Color(0.96, 0.80, 0.65), img)
-	_fill(6, 5, 4, 1, Color(0.85, 0.65, 0.50), img)
-	_set_pixel(7, 3, Color(0.15, 0.10, 0.08), img)
-	_set_pixel(9, 3, Color(0.15, 0.10, 0.08), img)
-	_fill(4, 6, 8, 5, Color(0.40, 0.60, 0.90), img)  # Blue shirt instead of yellow
-	_fill(3, 7, 2, 3, Color(0.40, 0.60, 0.90), img)
-	_fill(11, 7, 2, 3, Color(0.40, 0.60, 0.90), img)
-	_fill(5, 6, 6, 1, Color(0.98, 0.88, 0.58), img)
-	_fill(5, 11, 3, 3, Color(0.25, 0.25, 0.45), img)
-	_fill(8, 11, 3, 3, Color(0.25, 0.25, 0.45), img)
-	_fill(4, 13, 4, 2, Color(0.35, 0.25, 0.20), img)
-	_fill(8, 13, 4, 2, Color(0.35, 0.25, 0.20), img)
-	_fill(4, 15, 8, 1, Color(0, 0, 0, 0.18), img)
+	
+	# Hair (top)
+	_fill(5, 1, 6, 1, Color(0.30, 0.20, 0.15), img)
+	_fill(4, 2, 8, 1, Color(0.30, 0.20, 0.15), img)
+	
+	# Face
+	_fill(5, 2, 6, 4, Color(0.96, 0.80, 0.65), img)
+	_fill(4, 3, 1, 2, Color(0.96, 0.80, 0.65), img)  # left ear
+	_fill(11, 3, 1, 2, Color(0.96, 0.80, 0.65), img)  # right ear
+	
+	# Eyes (with highlights)
+	_set_pixel(6, 3, Color(0.15, 0.10, 0.08), img)  # left eye
+	_set_pixel(9, 3, Color(0.15, 0.10, 0.08), img)  # right eye
+	
+	# Mouth/smile
+	_set_pixel(7, 5, Color(0.80, 0.50, 0.50), img)
+	_set_pixel(8, 5, Color(0.80, 0.50, 0.50), img)
+	
+	# Neck
+	_fill(7, 6, 2, 1, Color(0.96, 0.80, 0.65), img)
+	
+	# Body/Uniform (blue work uniform)
+	_fill(4, 7, 8, 4, Color(0.30, 0.50, 0.80), img)  # main uniform
+	_fill(3, 7, 1, 3, Color(0.30, 0.50, 0.80), img)  # left sleeve
+	_fill(12, 7, 1, 3, Color(0.30, 0.50, 0.80), img)  # right sleeve
+	
+	# Uniform collar
+	_fill(6, 7, 4, 1, Color(0.40, 0.58, 0.85), img)
+	
+	# Name badge on chest
+	_fill(8, 8, 3, 2, Color(0.90, 0.90, 0.85), img)
+	_fill(9, 9, 1, 1, Color(0.30, 0.30, 0.35), img)
+	
+	# Arms (skin)
+	_fill(3, 9, 1, 2, Color(0.96, 0.80, 0.65), img)
+	_fill(12, 9, 1, 2, Color(0.96, 0.80, 0.65), img)
+	
+	# Pants (dark work pants)
+	_fill(5, 11, 2, 3, Color(0.25, 0.25, 0.35), img)
+	_fill(9, 11, 2, 3, Color(0.25, 0.25, 0.35), img)
+	
+	# Belt
+	_fill(5, 11, 6, 1, Color(0.35, 0.25, 0.20), img)
+	
+	# Work boots
+	_fill(4, 14, 4, 2, Color(0.25, 0.20, 0.18), img)
+	_fill(8, 14, 4, 2, Color(0.25, 0.20, 0.18), img)
+	
+	# Boot soles
+	_fill(4, 15, 4, 1, Color(0.15, 0.12, 0.10), img)
+	_fill(8, 15, 4, 1, Color(0.15, 0.12, 0.10), img)
+	
 	return ImageTexture.create_from_image(img)
 
 func _make_cart_tex() -> Texture2D:
@@ -151,18 +270,16 @@ func _make_cart_tex() -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 func _fill(x: int, y: int, w: int, h: int, col: Color, img: Image) -> void:
-	x = clampi(x, 0, 20); y = clampi(y, 0, 14)
-	w = clampi(w, 0, 20 - x); h = clampi(h, 0, 14 - y)
 	if w <= 0 or h <= 0:
 		return
 	for px in range(x, x + w):
 		for py in range(y, y + h):
-			img.set_pixel(px, py, col)
+			if px >= 0 and px < 16 and py >= 0 and py < 16:
+				img.set_pixel(px, py, col)
 
 func _set_pixel(x: int, y: int, col: Color, img: Image) -> void:
-	if x < 0 or x >= 20 or y < 0 or y >= 14:
-		return
-	img.set_pixel(x, y, col)
+	if x >= 0 and x < 16 and y >= 0 and y < 16:
+		img.set_pixel(x, y, col)
 
 func _physics_process(delta: float) -> void:
 	var input_dir = Vector2(
@@ -285,3 +402,16 @@ func toggle_cart() -> void:
 		drop_cart()
 	else:
 		grab_cart()
+
+func set_bounds_visible(visible: bool) -> void:
+	_bounding_visible = visible
+	if _bounding_box != null:
+		_bounding_box.visible = visible
+	if _top_border != null:
+		_top_border.visible = visible
+	if _bottom_border != null:
+		_bottom_border.visible = visible
+	if _left_border != null:
+		_left_border.visible = visible
+	if _right_border != null:
+		_right_border.visible = visible

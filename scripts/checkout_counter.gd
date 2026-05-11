@@ -27,6 +27,13 @@ var _wave_timer: float = 0.0
 var _thought_bubble: ColorRect
 var _thought_label: Label
 
+# Bounding box borders for debug/proximity display
+var _top_border: ColorRect = null
+var _bottom_border: ColorRect = null
+var _left_border: ColorRect = null
+var _right_border: ColorRect = null
+var _bounds_visible: bool = true
+
 signal checkout_interacted(checkout_id: int, checkout_type: CheckoutType)
 signal express_rejected()        # emitted when too many items for express
 signal self_checkout_error()     # emitted on self-checkout error
@@ -53,6 +60,37 @@ func _ready() -> void:
 	col.shape = shape
 	col.position = Vector2(24.0, 12.0)
 	add_child(col)
+	
+	# Bounding box border (checkout counter is 64x24)
+	var border_color := Color(1.0, 1.0, 0.0, 0.7)
+	# Top border
+	_top_border = ColorRect.new()
+	_top_border.size = Vector2(64, 1)
+	_top_border.position = Vector2(-8, -12)
+	_top_border.color = border_color
+	_top_border.z_index = 100
+	add_child(_top_border)
+	# Bottom border
+	_bottom_border = ColorRect.new()
+	_bottom_border.size = Vector2(64, 1)
+	_bottom_border.position = Vector2(-8, 12)
+	_bottom_border.color = border_color
+	_bottom_border.z_index = 100
+	add_child(_bottom_border)
+	# Left border
+	_left_border = ColorRect.new()
+	_left_border.size = Vector2(1, 24)
+	_left_border.position = Vector2(-8, -12)
+	_left_border.color = border_color
+	_left_border.z_index = 100
+	add_child(_left_border)
+	# Right border
+	_right_border = ColorRect.new()
+	_right_border.size = Vector2(1, 24)
+	_right_border.position = Vector2(55, -12)
+	_right_border.color = border_color
+	_right_border.z_index = 100
+	add_child(_right_border)
 
 	body_entered.connect(_on_body_entered)
 
@@ -339,3 +377,14 @@ func show_farewell_bubble() -> void:
 	await _thought_bubble.get_tree().create_timer(2.0).timeout
 	_thought_bubble.visible = false
 	_thought_label.visible = false
+
+func set_bounds_visible(visible: bool) -> void:
+	_bounds_visible = visible
+	if _top_border != null:
+		_top_border.visible = visible
+	if _bottom_border != null:
+		_bottom_border.visible = visible
+	if _left_border != null:
+		_left_border.visible = visible
+	if _right_border != null:
+		_right_border.visible = visible

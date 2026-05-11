@@ -43,6 +43,12 @@ var nearby_parking: bool = false
 var _checkout_counter_label = null
 var _CELL_SIZE: int = 16
 
+# Track previously nearby objects for bounds visibility
+var _prev_nearby_checkout: Node = null
+var _prev_nearby_section: Node = null
+var _prev_nearby_stall: Node = null
+var _prev_nearby_npc: Node = null
+
 func setup(main: Node2D) -> void:
 	_main = main
 	_floor_builder = main.get("_floor_builder")
@@ -152,6 +158,50 @@ func _update_interaction_bubble() -> void:
 	else:
 		bubble.hide_interaction()
 
+# Update bounding box visibility based on proximity
+func _update_bounds_visibility() -> void:
+	# Handle checkout counters
+	if nearby_checkout != _prev_nearby_checkout:
+		# Hide previous checkout bounds
+		if _prev_nearby_checkout != null and is_instance_valid(_prev_nearby_checkout):
+			if _prev_nearby_checkout.has_method("set_bounds_visible"):
+				_prev_nearby_checkout.set_bounds_visible(false)
+		# Show new checkout bounds
+		if nearby_checkout != null and is_instance_valid(nearby_checkout):
+			if nearby_checkout.has_method("set_bounds_visible"):
+				nearby_checkout.set_bounds_visible(true)
+		_prev_nearby_checkout = nearby_checkout
+	
+	# Handle sections
+	if nearby_section != _prev_nearby_section:
+		if _prev_nearby_section != null and is_instance_valid(_prev_nearby_section):
+			if _prev_nearby_section.has_method("set_bounds_visible"):
+				_prev_nearby_section.set_bounds_visible(false)
+		if nearby_section != null and is_instance_valid(nearby_section):
+			if nearby_section.has_method("set_bounds_visible"):
+				nearby_section.set_bounds_visible(true)
+		_prev_nearby_section = nearby_section
+	
+	# Handle food stalls
+	if nearby_stall != _prev_nearby_stall:
+		if _prev_nearby_stall != null and is_instance_valid(_prev_nearby_stall):
+			if _prev_nearby_stall.has_method("set_bounds_visible"):
+				_prev_nearby_stall.set_bounds_visible(false)
+		if nearby_stall != null and is_instance_valid(nearby_stall):
+			if nearby_stall.has_method("set_bounds_visible"):
+				nearby_stall.set_bounds_visible(true)
+		_prev_nearby_stall = nearby_stall
+	
+	# Handle NPCs for chat
+	if nearby_npc_for_chat != _prev_nearby_npc:
+		if _prev_nearby_npc != null and is_instance_valid(_prev_nearby_npc):
+			if _prev_nearby_npc.has_method("set_bounds_visible"):
+				_prev_nearby_npc.set_bounds_visible(false)
+		if nearby_npc_for_chat != null and is_instance_valid(nearby_npc_for_chat):
+			if nearby_npc_for_chat.has_method("set_bounds_visible"):
+				nearby_npc_for_chat.set_bounds_visible(true)
+		_prev_nearby_npc = nearby_npc_for_chat
+
 func _get_cell_size() -> int:
 	return _CELL_SIZE
 
@@ -176,6 +226,8 @@ func update_all() -> void:
 	_update_interaction_hint()
 	# Update the interaction bubble above the player
 	_update_interaction_bubble()
+	# Update bounding box visibility based on proximity
+	_update_bounds_visibility()
 
 func _update_elevator_proximity() -> void:
 	var _elevator = _main.get("_elevator")

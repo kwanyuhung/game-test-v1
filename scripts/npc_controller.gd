@@ -125,6 +125,13 @@ var _shadow_sprite: Sprite2D
 # 🔥 修复2：声明缺失的 _player_reference 变量（Scan&Go助手用）
 var _player_reference: Node2D = null
 
+# Bounding box borders for debug/proximity display
+var _top_border: ColorRect = null
+var _bottom_border: ColorRect = null
+var _left_border: ColorRect = null
+var _right_border: ColorRect = null
+var _bounds_visible: bool = true
+
 # Initialization
 func configure(actor: ActorData.Actor) -> void:
 	_actor = actor
@@ -173,6 +180,37 @@ func configure(actor: ActorData.Actor) -> void:
 	col.shape = shape
 	col.position = Vector2.ZERO
 	add_child(col)
+
+	# Bounding box debug visualization (always visible)
+	var border_color := Color(1.0, 1.0, 1.0, 0.6)
+	# Top border
+	_top_border = ColorRect.new()
+	_top_border.size = Vector2(16, 1)
+	_top_border.position = Vector2(-8, -8)
+	_top_border.color = border_color
+	_top_border.z_index = 100
+	add_child(_top_border)
+	# Bottom border
+	_bottom_border = ColorRect.new()
+	_bottom_border.size = Vector2(16, 1)
+	_bottom_border.position = Vector2(-8, 7)
+	_bottom_border.color = border_color
+	_bottom_border.z_index = 100
+	add_child(_bottom_border)
+	# Left border
+	_left_border = ColorRect.new()
+	_left_border.size = Vector2(1, 16)
+	_left_border.position = Vector2(-8, -8)
+	_left_border.color = border_color
+	_left_border.z_index = 100
+	add_child(_left_border)
+	# Right border
+	_right_border = ColorRect.new()
+	_right_border.size = Vector2(1, 16)
+	_right_border.position = Vector2(7, -8)
+	_right_border.color = border_color
+	_right_border.z_index = 100
+	add_child(_right_border)
 
 	_start_idle(randf_range(1.0, 3.0))
 
@@ -1028,3 +1066,14 @@ func _do_scan_go_companion(delta: float) -> void:
 			_state_timer = 2.0
 			_state = BehaviorState.IDLE
 			return
+
+func set_bounds_visible(visible: bool) -> void:
+	_bounds_visible = visible
+	if _top_border != null:
+		_top_border.visible = visible
+	if _bottom_border != null:
+		_bottom_border.visible = visible
+	if _left_border != null:
+		_left_border.visible = visible
+	if _right_border != null:
+		_right_border.visible = visible

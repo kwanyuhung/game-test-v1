@@ -34,6 +34,13 @@ var _bob_offset: float = 0.0
 var _is_humanoid: bool = false
 var _assigned_staff_role: ActorData.StaffRole = ActorData.StaffRole.FLOOR_STAFF
 
+# Bounding box borders for debug/proximity display
+var _top_border: ColorRect = null
+var _bottom_border: ColorRect = null
+var _left_border: ColorRect = null
+var _right_border: ColorRect = null
+var _bounds_visible: bool = true
+
 # Signals
 signal robot_work_done(role: String, pos: Vector2)
 
@@ -121,6 +128,36 @@ func _build_shadow() -> void:
 	_shadow.modulate.a = 0.3
 	add_child(_shadow)
 
+func _add_bounding_box_border(border_color: Color) -> void:
+	# Top border
+	_top_border = ColorRect.new()
+	_top_border.size = Vector2(24, 1)
+	_top_border.position = Vector2(-12, -12)
+	_top_border.color = border_color
+	_top_border.z_index = 100
+	add_child(_top_border)
+	# Bottom border
+	_bottom_border = ColorRect.new()
+	_bottom_border.size = Vector2(24, 1)
+	_bottom_border.position = Vector2(-12, 11)
+	_bottom_border.color = border_color
+	_bottom_border.z_index = 100
+	add_child(_bottom_border)
+	# Left border
+	_left_border = ColorRect.new()
+	_left_border.size = Vector2(1, 24)
+	_left_border.position = Vector2(-12, -12)
+	_left_border.color = border_color
+	_left_border.z_index = 100
+	add_child(_left_border)
+	# Right border
+	_right_border = ColorRect.new()
+	_right_border.size = Vector2(1, 24)
+	_right_border.position = Vector2(11, -12)
+	_right_border.color = border_color
+	_right_border.z_index = 100
+	add_child(_right_border)
+
 func _build_humanoid_sprite() -> void:
 	if _sprite:
 		_sprite.queue_free()
@@ -141,6 +178,9 @@ func _build_humanoid_sprite() -> void:
 	_tool_sprite.position = Vector2(8, 0)
 	_tool_sprite.visible = false
 	add_child(_tool_sprite)
+	
+	# Add bounding box border for humanoid robot
+	_add_bounding_box_border(Color(1.0, 0.5, 0.0, 0.8))
 
 func _build_machine_sprite(rrole: ActorData.RobotRole) -> void:
 	if _sprite:
@@ -155,6 +195,9 @@ func _build_machine_sprite(rrole: ActorData.RobotRole) -> void:
 	_eye_glow.texture = _make_robot_eye_texture()
 	_eye_glow.position = Vector2(0, -6)
 	add_child(_eye_glow)
+	
+	# Add bounding box border for machine robot
+	_add_bounding_box_border(Color(1.0, 0.5, 0.0, 0.8))
 
 # ─── HUMANOID Robot Texture (16x24) ──────────────────────────────
 
@@ -752,3 +795,14 @@ func _update_sprite() -> void:
 		_sprite.position.y = sin(_anim_timer * 3.0) * 1.0
 		if _state == "moving":
 			_sprite.frame = int(_anim_timer * 4) % 4
+
+func set_bounds_visible(visible: bool) -> void:
+	_bounds_visible = visible
+	if _top_border != null:
+		_top_border.visible = visible
+	if _bottom_border != null:
+		_bottom_border.visible = visible
+	if _left_border != null:
+		_left_border.visible = visible
+	if _right_border != null:
+		_right_border.visible = visible

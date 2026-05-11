@@ -19,6 +19,13 @@ var _light_sprite: Sprite2D
 var _prod_sprites = []
 var _empty_slots = []
 
+# Bounding box borders for debug/proximity display
+var _top_border: ColorRect = null
+var _bottom_border: ColorRect = null
+var _left_border: ColorRect = null
+var _right_border: ColorRect = null
+var _bounds_visible: bool = true
+
 func _init() -> void:
 	pass
 
@@ -55,6 +62,39 @@ func _build_visuals() -> void:
 	_interaction_area.body_entered.connect(_on_body_entered)
 	_interaction_area.body_exited.connect(_on_body_exited)
 	add_child(_interaction_area)
+	
+	# Bounding box border for section
+	var border_color := Color(1.0, 1.0, 1.0, 0.5)
+	var sec_w: float = _def.ww * CELL_SIZE
+	var sec_h: float = _def.wh * CELL_SIZE
+	# Top border
+	_top_border = ColorRect.new()
+	_top_border.size = Vector2(sec_w, 1)
+	_top_border.position = Vector2(0, 0)
+	_top_border.color = border_color
+	_top_border.z_index = 100
+	add_child(_top_border)
+	# Bottom border
+	_bottom_border = ColorRect.new()
+	_bottom_border.size = Vector2(sec_w, 1)
+	_bottom_border.position = Vector2(0, sec_h - 1)
+	_bottom_border.color = border_color
+	_bottom_border.z_index = 100
+	add_child(_bottom_border)
+	# Left border
+	_left_border = ColorRect.new()
+	_left_border.size = Vector2(1, sec_h)
+	_left_border.position = Vector2(0, 0)
+	_left_border.color = border_color
+	_left_border.z_index = 100
+	add_child(_left_border)
+	# Right border
+	_right_border = ColorRect.new()
+	_right_border.size = Vector2(1, sec_h)
+	_right_border.position = Vector2(sec_w - 1, 0)
+	_right_border.color = border_color
+	_right_border.z_index = 100
+	add_child(_right_border)
 
 func _get_section_floor_color():
 	if _def.style == StoreData.SectionStyle.FRIDGE:
@@ -259,3 +299,14 @@ func pickup_random_product():
 	if spr != null:
 		spr.visible = false
 	return slot["product"]
+
+func set_bounds_visible(visible: bool) -> void:
+	_bounds_visible = visible
+	if _top_border != null:
+		_top_border.visible = visible
+	if _bottom_border != null:
+		_bottom_border.visible = visible
+	if _left_border != null:
+		_left_border.visible = visible
+	if _right_border != null:
+		_right_border.visible = visible
