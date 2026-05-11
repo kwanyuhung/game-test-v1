@@ -2,13 +2,18 @@
 # Robot management UI panel — all building and signal handling.
 extends Node
 
+signal input_blocked(bool)  # Emitted when panel opens/closes to block player input
+
 const ActorData = preload("res://scripts/actor_data.gd")
+
+const PANEL_MARGIN := 60.0
 
 var _main: Node2D = null
 var _robot_panel: Control = null
 var _player_stats: Node = null
 var _toasts: Node = null
 var _player: Node = null
+var _overlay: ColorRect = null
 
 func setup(main: Node2D) -> void:
 	_main = main
@@ -20,33 +25,49 @@ func build_robot_panel() -> Control:
 	if _robot_panel != null:
 		return _robot_panel
 	
+	var viewport_rect: Rect2 = _main.get_viewport_rect()
+	var scr_w: float = viewport_rect.size.x
+	var scr_h: float = viewport_rect.size.y
+	var font_scale: float = scr_h / 360.0
+	
 	_robot_panel = Control.new()
-	_robot_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_robot_panel.size = Vector2(300, 400)
-	_robot_panel.color = Color(0.10, 0.10, 0.15, 0.95)
+	_robot_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_robot_panel.offset_left = PANEL_MARGIN
+	_robot_panel.offset_top = PANEL_MARGIN
+	_robot_panel.offset_right = -PANEL_MARGIN
+	_robot_panel.offset_bottom = -PANEL_MARGIN
+	_robot_panel.color = Color(0.10, 0.10, 0.15, 0.98)
 	_robot_panel.visible = false
 	_main.add_child(_robot_panel)
+
+	# Overlay to catch input
+	_overlay = ColorRect.new()
+	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_overlay.color = Color(0.02, 0.02, 0.06, 0.85)
+	_overlay.gui_input.connect(_on_overlay_input)
+	_robot_panel.add_child(_overlay)
 
 	var title := Label.new()
 	title.text = "ROBOT STAFF PANEL"
 	title.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	title.add_theme_color_override("font_color", Color(0.30, 0.90, 1.0))
-	title.add_theme_font_size_override("font_size", 10)
-	title.position = Vector2(0, 6)
+	title.add_theme_font_size_override("font_size", int(18 * font_scale))
+	title.position = Vector2(0, 10)
 	_robot_panel.add_child(title)
 
 	var subtitle := Label.new()
 	subtitle.text = "Staff mode only  |  [R] close"
 	subtitle.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	subtitle.add_theme_color_override("font_color", Color(0.60, 0.60, 0.70))
-	subtitle.add_theme_font_size_override("font_size", 7)
-	subtitle.position = Vector2(0, 18)
+	subtitle.add_theme_font_size_override("font_size", int(12 * font_scale))
+	subtitle.position = Vector2(0, 36)
 	_robot_panel.add_child(subtitle)
 
 	var scroll := ScrollContainer.new()
 	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
-	scroll.position = Vector2(0, 30)
-	scroll.size = Vector2(300, 320)  # Reduced height to make room for close button
+	scroll.position = Vector2(0, 60)
+	scroll.offset_right = -10
+	scroll.offset_bottom = -50
 	_robot_panel.add_child(scroll)
 
 	var list := VBoxContainer.new()
@@ -56,7 +77,7 @@ func build_robot_panel() -> Control:
 	var h_label := Label.new()
 	h_label.text = "-- HUMANOID (like human, uses tools) --"
 	h_label.add_theme_color_override("font_color", Color(0.30, 0.90, 1.0))
-	h_label.add_theme_font_size_override("font_size", 7)
+	h_label.add_theme_font_size_override("font_size", int(12 * font_scale))
 	list.add_child(h_label)
 
 	var humanoid_types := [
@@ -78,7 +99,7 @@ func build_robot_panel() -> Control:
 	var s_label := Label.new()
 	s_label.text = "-- SINGLE-FUNCTION (automated machine) --"
 	s_label.add_theme_color_override("font_color", Color(0.30, 0.90, 1.0))
-	s_label.add_theme_font_size_override("font_size", 7)
+	s_label.add_theme_font_size_override("font_size", int(12 * font_scale))
 	list.add_child(s_label)
 
 	var single_types := [
@@ -99,24 +120,37 @@ func build_robot_panel() -> Control:
 	var close_btn := Button.new()
 	close_btn.text = "[R] Close"
 	close_btn.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	close_btn.position = Vector2(0, 360)
-	close_btn.size = Vector2(300, 35)
+	close_btn.position = Vector2(0, -45)
+	close_btn.size = Vector2(0, 40)
+	close_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	close_btn.connect("pressed", _on_close_pressed)
 	_robot_panel.add_child(close_btn)
 
 	_main.set("_robot_panel", _robot_panel)
 	return _robot_panel
 
-func _on_close_pressed() -> void:
+func show_panel() -> void:
+	if _robot_panel != null:
+		_robot_panel.visible = true
+		input_blocked.emit(true)
+
+func hide_panel() -> void:
 	if _robot_panel != null:
 		_robot_panel.visible = false
+		input_blocked.emit(false)
+
+func _on_overlay_input(event: InputEvent) -> void:
+	# Consume all input events
+	pass
+
+func _on_close_pressed() -> void:
+	hide_panel()
 
 func _on_robot_humanoid_pressed(staff_role: int, cost: int) -> void:
 	if _player_stats == null:
 		return
 	var stats: Node = _player_stats
 	if not stats.can_use_humanoid_robots():
-		# 🔥 修复第115行：显式声明int类型
 		var next_xp: int = stats.get_staff_xp_for_next_rank()
 		var msg: String = "Humanoid robots unlock at Senior rank! %d more Staff XP needed." % max(0, next_xp)
 		if _toasts: _toasts.toast_warning(msg)
@@ -127,12 +161,10 @@ func _on_robot_humanoid_pressed(staff_role: int, cost: int) -> void:
 		return
 	stats.spend_xp(cost)
 	stats.complete_staff_task()
-	# Tell main to spawn the robot - cast int to proper StaffRole enum
 	_main.spawn_robot_humanoid(staff_role as ActorData.StaffRole)
 	var role_names: Dictionary = {0:"Cashier",1:"Stocker",2:"Cleaner",3:"Greeter",4:"Security",5:"Manager",6:"FloorStaff",7:"ScanGo"}
 	var rname: String = role_names.get(staff_role, "Robot")
 	if _toasts: _toasts.toast_success("Deployed HUMANOID %s! -%d XP" % [rname, cost])
-	# Update the active count label
 	_update_robot_panel()
 
 func _on_robot_single_pressed(rrole: int, cost: int) -> void:
@@ -140,7 +172,6 @@ func _on_robot_single_pressed(rrole: int, cost: int) -> void:
 		return
 	var stats: Node = _player_stats
 	if not stats.can_use_single_function_robots():
-		# 🔥 修复第138行：显式声明int类型
 		var next_xp: int = stats.get_staff_xp_for_next_rank()
 		var msg: String = "Single-function robots unlock at Worker rank! %d more Staff XP needed." % max(0, next_xp)
 		if _toasts: _toasts.toast_warning(msg)
@@ -151,7 +182,6 @@ func _on_robot_single_pressed(rrole: int, cost: int) -> void:
 		return
 	stats.spend_xp(cost)
 	stats.complete_staff_task()
-	# Tell main to spawn the robot - cast int to proper RobotRole enum
 	_main.spawn_robot_single(rrole as ActorData.RobotRole)
 	var role_names: Dictionary = {0:"CleanerBot",1:"GuideBot",2:"ShelfBot",3:"SecurityBot",4:"DeliveryBot"}
 	var rname: String = role_names.get(rrole, "Robot")

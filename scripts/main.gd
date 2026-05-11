@@ -93,6 +93,8 @@ var _game_clock: GameClock = null
 var _maintenance_system: MaintenanceSystem = null
 var _maintenance_visual: MaintenanceVisual = null
 var _maintenance_panel: MaintenancePanel = null
+var _maintenance_panel_blocking: bool = false
+var _input_blocking_panels: int = 0  # Counter for panels blocking input
 var _nearby_issue: bool = false
 var _target_issue: Object = null  # Issue the player is heading to resolve
 var _player_stats: PlayerStats = null
@@ -476,6 +478,9 @@ func _spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> voi
 	_main_spawner.spawn_customer_group(group_type, floor_idx, pos)
 	return
 func _input(event: InputEvent) -> void:
+	# Block all input when maintenance panel is open
+	if _maintenance_panel_blocking:
+		return
 	if event is InputEventKey and event.pressed:
 		# DEBUG: Number keys 0-9 to quickly jump to floors (dev mode only)
 		if DEV_MODE:
@@ -721,9 +726,27 @@ func _toggle_maintenance_panel() -> void:
 	_maintenance_panel.open(_maintenance_system)
 	_maintenance_panel.closed.connect(_on_maintenance_panel_closed)
 	_maintenance_panel.issue_selected.connect(_on_maintenance_issue_selected)
+	_maintenance_panel.input_blocked.connect(_on_maintenance_panel_input_blocked)
 
 func _on_maintenance_panel_closed() -> void:
 	_maintenance_panel = null
+
+func _on_maintenance_panel_input_blocked(blocking: bool) -> void:
+	if blocking:
+		_input_blocking_panels += 1
+	else:
+		_input_blocking_panels = max(0, _input_blocking_panels - 1)
+	_maintenance_panel_blocking = _input_blocking_panels > 0
+
+func _on_chat_panel_input_blocked(blocking: bool) -> void:
+	if blocking:
+		_input_blocking_panels += 1
+	else:
+		_input_blocking_panels = max(0, _input_blocking_panels - 1)
+	_maintenance_panel_blocking = _input_blocking_panels > 0
+
+func is_input_blocked() -> bool:
+	return _input_blocking_panels > 0
 
 func _on_maintenance_issue_selected(issue) -> void:
 	_target_issue = issue
@@ -1188,6 +1211,7 @@ func _open_npc_chat() -> void:
 		_chat_panel = ChatPanelScript.new()
 		add_child(_chat_panel)
 		_chat_panel.closed.connect(_on_chat_panel_closed)
+		_chat_panel.input_blocked.connect(_on_chat_panel_input_blocked)
 	if _chat_panel._is_open:
 		return
 	var actor = npc.get_actor()
@@ -1365,15 +1389,23 @@ func _toggle_robot_panel() -> void:
 	if _robot_panel == null:
 		_robot_panel_system.build_robot_panel()
 		_robot_panel = _robot_panel_system.get_robot_panel()
+		_robot_panel_system.input_blocked.connect(_on_robot_panel_input_blocked)
 	if _robot_panel != null and _robot_panel.visible:
-		_robot_panel.visible = false
+		_robot_panel_system.hide_panel()
 	else:
 		if _player != null and not _player.is_in_staff_mode():
 			if _toasts: _toasts.toast_warning("Staff mode required for robot management. Press [K].")
 			return
 		if _robot_panel != null:
-			_robot_panel.visible = true
+			_robot_panel_system.show_panel()
 		_robot_panel_system._update_robot_panel()
+
+func _on_robot_panel_input_blocked(blocking: bool) -> void:
+	if blocking:
+		_input_blocking_panels += 1
+	else:
+		_input_blocking_panels = max(0, _input_blocking_panels - 1)
+	_maintenance_panel_blocking = _input_blocking_panels > 0
 
 func _spawn_robot_humanoid(staff_role: ActorData.StaffRole) -> void:
 	_main_spawner.spawn_robot_humanoid(staff_role)

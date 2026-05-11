@@ -282,6 +282,11 @@ func _set_pixel(x: int, y: int, col: Color, img: Image) -> void:
 		img.set_pixel(x, y, col)
 
 func _physics_process(delta: float) -> void:
+	# Check if input is blocked by a panel
+	if _world_ref != null and _world_ref.has_method("is_input_blocked"):
+		if _world_ref.is_input_blocked():
+			return
+	
 	var input_dir = Vector2(
 		Input.get_axis("move_left", "move_right"),
 		Input.get_axis("move_up", "move_down")

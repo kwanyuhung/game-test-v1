@@ -8,13 +8,14 @@ extends CanvasLayer
 
 signal closed()
 signal issue_selected(issue)
+signal input_blocked(bool)  # Emitted when panel opens/closes to block player input
 
 const MaintenanceSystem = preload("res://scripts/maintenance_system.gd")
 const Issue = MaintenanceSystem.Issue
 
-const PANEL_W := 280.0
-const PANEL_H := 160.0
-const LINE_H := 16.0
+const LINE_H := 36.0
+const MAX_VISIBLE := 15
+const PANEL_MARGIN := 10.0  # Minimal margin from screen edges
 
 var _system: MaintenanceSystem
 var _visible_issues: Array[Issue] = []
@@ -28,8 +29,7 @@ var _issue_labels: Array = []
 var _sel_marker: ColorRect
 var _hint_lbl: Label
 var _scroll_offset: int = 0
-
-const MAX_VISIBLE := 7
+var _overlay: ColorRect = null
 
 func _ready() -> void:
 	visible = false
@@ -42,69 +42,91 @@ func open(system: MaintenanceSystem) -> void:
 	_scroll_offset = 0
 	_build_ui()
 	visible = true
+	input_blocked.emit(true)
 
 func close() -> void:
 	_is_open = false
 	visible = false
 	_clear_ui()
+	input_blocked.emit(false)
 	closed.emit()
 
 func _build_ui() -> void:
 	_clear_ui()
 
-	var scr_w := 320.0
-	var scr_h := 180.0
-	var pan_x := scr_w - PANEL_W - 4
-	var pan_y := (scr_h - PANEL_H) * 0.5
+	var viewport_rect: Rect2 = get_viewport().get_visible_rect()
+	var scr_w: float = viewport_rect.size.x
+	var scr_h: float = viewport_rect.size.y
+	
+	# Calculate panel size (full screen with margin)
+	var pan_w: float = scr_w - PANEL_MARGIN * 2
+	var pan_h: float = scr_h - PANEL_MARGIN * 2
+	var pan_x: float = PANEL_MARGIN
+	var pan_y: float = PANEL_MARGIN
+	
+	# Calculate font scale based on screen height
+	var font_scale: float = scr_h / 360.0  # Base resolution is 360px height
+	
+	# Full-screen overlay that catches all input
+	_overlay = ColorRect.new()
+	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_overlay.color = Color(0.02, 0.02, 0.06, 0.85)
+	_overlay.gui_input.connect(_on_overlay_input)
+	add_child(_overlay)
 
-	# Background
+	# Main panel background
 	_bg = ColorRect.new()
 	_bg.position = Vector2(pan_x, pan_y)
-	_bg.size = Vector2(PANEL_W, PANEL_H)
-	_bg.color = Color(0.04, 0.04, 0.08, 0.96)
+	_bg.size = Vector2(pan_w, pan_h)
+	_bg.color = Color(0.08, 0.08, 0.12, 0.98)
 	add_child(_bg)
 
 	# Header bar
 	var hdr := ColorRect.new()
 	hdr.position = Vector2(pan_x, pan_y)
-	hdr.size = Vector2(PANEL_W, 16)
-	hdr.color = Color(0.12, 0.12, 0.18)
+	hdr.size = Vector2(pan_w, 32)
+	hdr.color = Color(0.12, 0.12, 0.20)
 	add_child(hdr)
 
 	_header_lbl = Label.new()
-	_header_lbl.text = "  MAINTENANCE"
-	_header_lbl.position = Vector2(pan_x + 2, pan_y + 2)
-	_header_lbl.add_theme_color_override("font_color", Color(0.90, 0.75, 0.30))
-	_header_lbl.add_theme_font_size_override("font_size", 8)
+	_header_lbl.text = "  MAINTENANCE ISSUES"
+	_header_lbl.position = Vector2(pan_x + 12, pan_y + 8)
+	_header_lbl.add_theme_color_override("font_color", Color(0.95, 0.80, 0.30))
+	_header_lbl.add_theme_font_size_override("font_size", int(20 * font_scale))
 	add_child(_header_lbl)
 
 	_time_lbl = Label.new()
-	_time_lbl.text = ""
-	_time_lbl.position = Vector2(pan_x + PANEL_W - 80, pan_y + 2)
+	_time_lbl.text = "Press M or ESC to close"
+	_time_lbl.position = Vector2(pan_x + pan_w - 280, pan_y + 10)
 	_time_lbl.add_theme_color_override("font_color", Color(0.65, 0.65, 0.75))
-	_time_lbl.add_theme_font_size_override("font_size", 6)
+	_time_lbl.add_theme_font_size_override("font_size", int(14 * font_scale))
 	add_child(_time_lbl)
 
 	# Issue list area
-	var list_y := pan_y + 18
+	var list_y := pan_y + 44
+	var list_h := pan_h - 80
 	var list_bg := ColorRect.new()
-	list_bg.position = Vector2(pan_x + 2, list_y)
-	list_bg.size = Vector2(PANEL_W - 4, MAX_VISIBLE * LINE_H + 4)
-	list_bg.color = Color(0.02, 0.02, 0.04)
+	list_bg.position = Vector2(pan_x + 8, list_y)
+	list_bg.size = Vector2(pan_w - 16, list_h)
+	list_bg.color = Color(0.02, 0.02, 0.06, 0.80)
 	add_child(list_bg)
 
-	_build_issue_list(pan_x, list_y)
+	_build_issue_list(pan_x, list_y, pan_w, font_scale)
 
 	# Hint bar
-	var hint_y := pan_y + PANEL_H - 14
+	var hint_y := pan_y + pan_h - 36
 	_hint_lbl = Label.new()
-	_hint_lbl.text = "W/S: Navigate  |  E: Fix Issue  |  ESC: Close"
-	_hint_lbl.position = Vector2(pan_x + 2, hint_y)
-	_hint_lbl.add_theme_color_override("font_color", Color(0.40, 0.40, 0.50))
-	_hint_lbl.add_theme_font_size_override("font_size", 5)
+	_hint_lbl.text = "W/S or Arrow Keys: Navigate  |  E or Enter: Select Issue  |  ESC: Close Panel"
+	_hint_lbl.position = Vector2(pan_x + 20, hint_y)
+	_hint_lbl.add_theme_color_override("font_color", Color(0.50, 0.50, 0.60))
+	_hint_lbl.add_theme_font_size_override("font_size", int(16 * font_scale))
 	add_child(_hint_lbl)
 
-func _build_issue_list(pan_x: float, list_y: float) -> void:
+func _on_overlay_input(event: InputEvent) -> void:
+	# Consume all input events to prevent them from reaching the player
+	pass
+
+func _build_issue_list(pan_x: float, list_y: float, pan_w: float, font_scale: float) -> void:
 	for lbl in _issue_labels:
 		if is_instance_valid(lbl):
 			lbl.queue_free()
@@ -113,31 +135,32 @@ func _build_issue_list(pan_x: float, list_y: float) -> void:
 	if _sel_marker != null and is_instance_valid(_sel_marker):
 		_sel_marker.queue_free()
 
-	var visible := _visible_issues.slice(_scroll_offset, _scroll_offset + MAX_VISIBLE)
+	var visible_list := _visible_issues.slice(_scroll_offset, _scroll_offset + MAX_VISIBLE)
+	var row_height := LINE_H
 
-	for i in range(visible.size()):
-		var issue: Issue = visible[i]
+	for i in range(visible_list.size()):
+		var issue: Issue = visible_list[i]
 		var global_i := _scroll_offset + i
 
 		var row_bg: ColorRect
 		if global_i == _selected_idx:
 			row_bg = ColorRect.new()
-			row_bg.position = Vector2(pan_x + 2, list_y + 2 + i * LINE_H)
-			row_bg.size = Vector2(PANEL_W - 6, LINE_H - 1)
-			row_bg.color = Color(0.20, 0.20, 0.35)
+			row_bg.position = Vector2(pan_x + 10, list_y + 4 + i * row_height)
+			row_bg.size = Vector2(pan_w - 24, row_height - 2)
+			row_bg.color = Color(0.25, 0.22, 0.40)
 			add_child(row_bg)
 			_sel_marker = row_bg
 
 		var lbl := Label.new()
-		lbl.position = Vector2(pan_x + 4, list_y + 3 + i * LINE_H)
-		lbl.size = Vector2(PANEL_W - 10, LINE_H)
+		lbl.position = Vector2(pan_x + 16, list_y + 6 + i * row_height)
+		lbl.size = Vector2(pan_w - 32, row_height)
 
 		var urgency_col: Color
 		match issue.urgency:
-			1: urgency_col = Color(0.50, 0.85, 0.50)
-			2: urgency_col = Color(0.90, 0.80, 0.30)
-			3: urgency_col = Color(0.90, 0.35, 0.35)
-			_: urgency_col = Color(0.70, 0.70, 0.70)
+			1: urgency_col = Color(0.50, 0.90, 0.50)
+			2: urgency_col = Color(0.95, 0.85, 0.30)
+			3: urgency_col = Color(0.95, 0.35, 0.35)
+			_: urgency_col = Color(0.75, 0.75, 0.75)
 
 		var status_icon := "○"
 		if issue.status == 1:
@@ -150,17 +173,17 @@ func _build_issue_list(pan_x: float, list_y: float) -> void:
 			issue.label
 		]
 		lbl.add_theme_color_override("font_color", urgency_col)
-		lbl.add_theme_font_size_override("font_size", 6)
+		lbl.add_theme_font_size_override("font_size", int(16 * font_scale))
 		add_child(lbl)
 		_issue_labels.append(lbl)
 
 		# Description on second line
 		var desc_lbl := Label.new()
-		desc_lbl.position = Vector2(pan_x + 4, list_y + 3 + i * LINE_H + LINE_H * 0.6)
-		desc_lbl.size = Vector2(PANEL_W - 10, LINE_H)
+		desc_lbl.position = Vector2(pan_x + 16, list_y + 6 + i * row_height + row_height * 0.65)
+		desc_lbl.size = Vector2(pan_w - 32, row_height)
 		desc_lbl.text = "  %s" % issue.description
-		desc_lbl.add_theme_color_override("font_color", Color(0.45, 0.45, 0.55))
-		desc_lbl.add_theme_font_size_override("font_size", 5)
+		desc_lbl.add_theme_color_override("font_color", Color(0.55, 0.55, 0.65))
+		desc_lbl.add_theme_font_size_override("font_size", int(14 * font_scale))
 		if global_i == _selected_idx:
 			add_child(desc_lbl)
 			_issue_labels.append(desc_lbl)
@@ -169,9 +192,9 @@ func _build_issue_list(pan_x: float, list_y: float) -> void:
 	if _visible_issues.is_empty():
 		var empty_lbl := Label.new()
 		empty_lbl.text = "  No open issues!\n  Great job!"
-		empty_lbl.position = Vector2(pan_x + 4, list_y + 10)
-		empty_lbl.add_theme_color_override("font_color", Color(0.50, 0.80, 0.50))
-		empty_lbl.add_theme_font_size_override("font_size", 7)
+		empty_lbl.position = Vector2(pan_x + 20, list_y + 30)
+		empty_lbl.add_theme_color_override("font_color", Color(0.50, 0.90, 0.50))
+		empty_lbl.add_theme_font_size_override("font_size", int(20 * font_scale))
 		add_child(empty_lbl)
 		_issue_labels.append(empty_lbl)
 
@@ -181,6 +204,7 @@ func _clear_ui() -> void:
 			c.queue_free()
 	_issue_labels.clear()
 	_sel_marker = null
+	_overlay = null
 
 func _input(event: InputEvent) -> void:
 	if not _is_open:
@@ -192,15 +216,24 @@ func _input(event: InputEvent) -> void:
 		KEY_W, KEY_UP:
 			_selected_idx = wrapi(_selected_idx - 1, -1, _visible_issues.size())
 			_scroll_offset = clampi(_selected_idx - MAX_VISIBLE + 1, 0, maxi(0, _visible_issues.size() - MAX_VISIBLE))
-			_build_issue_list(320.0 - PANEL_W - 4, 180.0 - PANEL_H - 4 + 18)
+			_refresh_list()
 		KEY_S, KEY_DOWN:
 			_selected_idx = wrapi(_selected_idx + 1, -1, _visible_issues.size())
 			_scroll_offset = clampi(_selected_idx - MAX_VISIBLE + 1, 0, maxi(0, _visible_issues.size() - MAX_VISIBLE))
-			_build_issue_list(320.0 - PANEL_W - 4, 180.0 - PANEL_H - 4 + 18)
+			_refresh_list()
 		KEY_E, KEY_ENTER:
 			_confirm_selected()
 		KEY_ESCAPE:
 			close()
+
+func _refresh_list() -> void:
+	var viewport_rect: Rect2 = get_viewport().get_visible_rect()
+	var scr_h: float = viewport_rect.size.y
+	var font_scale: float = scr_h / 360.0
+	var pan_w: float = viewport_rect.size.x - PANEL_MARGIN * 2
+	var pan_x: float = PANEL_MARGIN
+	var list_y: float = PANEL_MARGIN + 44
+	_build_issue_list(pan_x, list_y, pan_w, font_scale)
 
 func _confirm_selected() -> void:
 	if _selected_idx < 0 or _selected_idx >= _visible_issues.size():

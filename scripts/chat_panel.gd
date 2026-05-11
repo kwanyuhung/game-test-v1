@@ -11,14 +11,14 @@ class_name ChatPanel
 extends CanvasLayer
 
 signal closed()
+signal input_blocked(bool)  # Emitted when panel opens/closes to block player input
 
 const ActorData = preload("res://scripts/actor_data.gd")
 const ChatBubble = preload("res://scripts/chat_bubble.gd")
 
-const PANEL_W := 260.0
-const PANEL_H := 140.0
-const LINE_H  := 14.0
-const MAX_LINES := 6
+const LINE_H := 24.0
+const MAX_LINES := 8
+const PANEL_MARGIN := 60.0
 
 var _target_npc: Node = null
 var _target_actor: ActorData.Actor = null
@@ -31,6 +31,11 @@ var _name_label: Label
 var _history_bg: ColorRect
 var _npc_bubble: ChatBubble = null
 var _is_open: bool = false
+var _overlay: ColorRect = null
+var _panel_w: float = 0.0
+var _panel_h: float = 0.0
+var _pan_x: float = 0.0
+var _pan_y: float = 0.0
 
 func _ready() -> void:
 	visible = false
@@ -43,6 +48,7 @@ func open(npc: Node, actor: ActorData.Actor, brain: AIChatBrain) -> void:
 	_is_open = true
 	_build_ui()
 	visible = true
+	input_blocked.emit(true)
 
 	# NPC greeting
 	var greeting := _target_brain.generate_response("hello")
@@ -55,65 +61,80 @@ func close() -> void:
 	_target_actor = null
 	_target_brain = null
 	_clear_children()
+	input_blocked.emit(false)
 	closed.emit()
 
 func _build_ui() -> void:
 	_clear_children()
 	_history_labels.clear()
 
-	var scr_w := 320.0
-	var scr_h := 180.0
-	var pan_x := (scr_w - PANEL_W) * 0.5
-	var pan_y := scr_h - PANEL_H - 6
+	var viewport_rect: Rect2 = get_viewport().get_visible_rect()
+	var scr_w: float = viewport_rect.size.x
+	var scr_h: float = viewport_rect.size.y
+	
+	_panel_w = scr_w - PANEL_MARGIN * 2
+	_panel_h = scr_h - PANEL_MARGIN * 2
+	_pan_x = PANEL_MARGIN
+	_pan_y = PANEL_MARGIN
+	
+	var font_scale: float = scr_h / 360.0
+
+	# Full-screen overlay that catches all input
+	_overlay = ColorRect.new()
+	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_overlay.color = Color(0.02, 0.02, 0.06, 0.85)
+	add_child(_overlay)
 
 	# Main panel
 	_panel_bg = ColorRect.new()
-	_panel_bg.position = Vector2(pan_x, pan_y)
-	_panel_bg.size = Vector2(PANEL_W, PANEL_H)
-	_panel_bg.color = Color(0.04, 0.04, 0.08, 0.95)
+	_panel_bg.position = Vector2(_pan_x, _pan_y)
+	_panel_bg.size = Vector2(_panel_w, _panel_h)
+	_panel_bg.color = Color(0.04, 0.04, 0.08, 0.98)
 	add_child(_panel_bg)
 
 	# Header bar
 	var hdr := ColorRect.new()
-	hdr.position = Vector2(pan_x, pan_y)
-	hdr.size = Vector2(PANEL_W, 16)
+	hdr.position = Vector2(_pan_x, _pan_y)
+	hdr.size = Vector2(_panel_w, 36)
 	hdr.color = Color(0.12, 0.12, 0.20, 1.0)
 	add_child(hdr)
 
 	# NPC name in header
 	_name_label = Label.new()
 	_name_label.text = "  %s" % (_target_actor.display_name if _target_actor != null else "NPC")
-	_name_label.position = Vector2(pan_x + 2, pan_y + 2)
+	_name_label.position = Vector2(_pan_x + 8, _pan_y + 8)
 	_name_label.add_theme_color_override("font_color", Color(0.70, 0.90, 1.0))
-	_name_label.add_theme_font_size_override("font_size", 8)
+	_name_label.add_theme_font_size_override("font_size", int(16 * font_scale))
 	add_child(_name_label)
 
 	# Close hint
 	var close_lbl := Label.new()
-	close_lbl.text = "ESC close"
-	close_lbl.position = Vector2(pan_x + PANEL_W - 52, pan_y + 3)
+	close_lbl.text = "ESC to close"
+	close_lbl.position = Vector2(_pan_x + _panel_w - 120, _pan_y + 10)
 	close_lbl.add_theme_color_override("font_color", Color(0.45, 0.45, 0.55))
-	close_lbl.add_theme_font_size_override("font_size", 6)
+	close_lbl.add_theme_font_size_override("font_size", int(12 * font_scale))
 	add_child(close_lbl)
 
 	# History scroll area
 	_history_bg = ColorRect.new()
-	_history_bg.position = Vector2(pan_x + 4, pan_y + 20)
-	_history_bg.size = Vector2(PANEL_W - 8, PANEL_H - 36)
+	_history_bg.position = Vector2(_pan_x + 8, _pan_y + 44)
+	_history_bg.size = Vector2(_panel_w - 16, _panel_h - 80)
 	_history_bg.color = Color(0.02, 0.02, 0.05, 0.8)
 	add_child(_history_bg)
 
 	# Input field
 	_input_field = LineEdit.new()
-	_input_field.position = Vector2(pan_x + 4, pan_y + PANEL_H - 14)
-	_input_field.size = Vector2(PANEL_W - 8, 12)
+	_input_field.position = Vector2(_pan_x + 8, _pan_y + _panel_h - 32)
+	_input_field.size = Vector2(_panel_w - 16, 24)
 	_input_field.add_theme_color_override("font_color", Color(0.90, 0.90, 1.0))
-	_input_field.add_theme_color_override("font_size", 8)
+	_input_field.add_theme_font_size_override("font_size", int(14 * font_scale))
 	_input_field.add_theme_color_override("caret_color", Color(0.70, 0.90, 1.0))
 	_input_field.placeholder_text = "Type message... (Enter to send)"
 	_input_field.text_submitted.connect(_on_text_submitted)
 	add_child(_input_field)
 	_input_field.grab_focus()
+
+	_refresh_history()
 
 func _on_text_submitted(text: String) -> void:
 	if text.strip_edges().is_empty():
@@ -143,17 +164,19 @@ func _refresh_history() -> void:
 			lbl.queue_free()
 	_history_labels.clear()
 
-	var start_idx :int= max(0, _chat_history.size() - MAX_LINES)
+	var start_idx: int = max(0, _chat_history.size() - MAX_LINES)
 	var visible_history := _chat_history.slice(start_idx)
 
-	var pan_x := (320.0 - PANEL_W) * 0.5 + 6
-	var pan_y := (180.0 - PANEL_H) * 0.5 + 20
+	var viewport_rect: Rect2 = get_viewport().get_visible_rect()
+	var font_scale: float = viewport_rect.size.y / 360.0
+	var pan_x: float = _pan_x + 10
+	var pan_y: float = _pan_y + 50
 
 	for i in range(visible_history.size()):
 		var entry: Dictionary = visible_history[i]
 		var lbl := Label.new()
 		lbl.position = Vector2(pan_x, pan_y + i * LINE_H)
-		lbl.size = Vector2(PANEL_W - 12, LINE_H)
+		lbl.size = Vector2(_panel_w - 20, LINE_H)
 
 		if entry["role"] == "player":
 			lbl.text = "  You: %s" % entry["text"]
@@ -162,7 +185,7 @@ func _refresh_history() -> void:
 			lbl.text = "  %s: %s" % [_target_actor.display_name, entry["text"]]
 			lbl.add_theme_color_override("font_color", Color(0.80, 0.85, 1.0))
 
-		lbl.add_theme_font_size_override("font_size", 7)
+		lbl.add_theme_font_size_override("font_size", int(12 * font_scale))
 		add_child(lbl)
 		_history_labels.append(lbl)
 
@@ -179,3 +202,14 @@ func _show_npc_bubble(text: String) -> void:
 func _clear_children() -> void:
 	for c in get_children():
 		c.queue_free()
+	_history_labels.clear()
+	_overlay = null
+
+func _input(event: InputEvent) -> void:
+	if not _is_open:
+		return
+	if not event is InputEventKey or not event.pressed:
+		return
+	
+	if event.keycode == KEY_ESCAPE:
+		close()
