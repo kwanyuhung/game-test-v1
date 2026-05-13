@@ -103,7 +103,7 @@ func _create_bubble_content() -> void:
 	var key_bg := ColorRect.new()
 	key_bg.set_anchors_preset(Control.PRESET_LEFT_WIDE)
 	key_bg.position = Vector2(4.0, 3.0)
-	key_bg.size = Vector2(20.0, 18.0)
+	key_bg.set_deferred("size", Vector2(20.0, 18.0))
 	key_bg.color = Color(0.20, 0.20, 0.25, 0.9)
 	_bubble.add_child(key_bg)
 	

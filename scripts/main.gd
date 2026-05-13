@@ -314,7 +314,14 @@ func _clear_floor_nodes() -> void:
 		c.queue_free()
 	_npcs.clear()
 
-	# Remove all robot nodes by name pattern
+	# Remove all robot nodes by reference (more robust than name pattern)
+	# First clear the _robots array references
+	for r in _robots:
+		if is_instance_valid(r):
+			r.queue_free()
+	_robots.clear()
+	
+	# Also remove any robot nodes by name pattern (for robots created before the fix)
 	var robots_to_remove: Array = []
 	for c in get_children():
 		var nm := c.name as String

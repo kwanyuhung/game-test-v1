@@ -264,6 +264,7 @@ func spawn_robot_humanoid(staff_role: ActorData.StaffRole) -> void:
 
 	var robot := preload("res://scripts/robot_controller.gd").new()
 	robot.configure_humanoid(staff_role, spawn_pos)
+	robot.name = "Robot_Humanoid_%s" % _assigned_role_name(staff_role)
 	_main.add_child(robot)
 	var robots: Array = _main.get("_robots")
 	if robots != null:
@@ -283,6 +284,7 @@ func spawn_robot_single(rrole: ActorData.RobotRole) -> void:
 
 	var robot := preload("res://scripts/robot_controller.gd").new()
 	robot.configure_single_function(rrole, spawn_pos)
+	robot.name = "Robot_Single_%s" % _assigned_robot_role_name(rrole)
 	_main.add_child(robot)
 	var robots: Array = _main.get("_robots")
 	if robots != null:
@@ -329,6 +331,28 @@ func spawn_robots() -> void:
 		# Only spawn on ground floor for now
 		if current_floor == 0:
 			spawn_robot_single(r)
+
+# ── Robot role name helpers ───────────────────────────────────────────────────
+func _assigned_role_name(role: ActorData.StaffRole) -> String:
+	match role:
+		ActorData.StaffRole.CASHIER: return "Cashier"
+		ActorData.StaffRole.SHELF_STOCKER: return "Stocker"
+		ActorData.StaffRole.CLEANER: return "Cleaner"
+		ActorData.StaffRole.SECURITY: return "Security"
+		ActorData.StaffRole.GREETER: return "Greeter"
+		ActorData.StaffRole.MANAGER: return "Manager"
+		ActorData.StaffRole.FLOOR_STAFF: return "FloorStaff"
+		ActorData.StaffRole.SCAN_GO: return "ScanGo"
+	return "Unknown"
+
+func _assigned_robot_role_name(rrole: ActorData.RobotRole) -> String:
+	match rrole:
+		ActorData.RobotRole.CLEANING_ROBOT: return "Cleaner"
+		ActorData.RobotRole.GUIDANCE_ROBOT: return "Guide"
+		ActorData.RobotRole.DELIVERY_ROBOT: return "Delivery"
+		ActorData.RobotRole.SECURITY_ROBOT: return "Security"
+		ActorData.RobotRole.SHELF_ROBOT: return "Shelf"
+	return "Unknown"
 
 # ── Scan & Go companion ───────────────────────────────────────────────────────
 # ── Scan & Go companion ───────────────────────────────────────────────────────
