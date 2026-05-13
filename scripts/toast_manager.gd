@@ -5,9 +5,9 @@ extends CanvasLayer
 
 
 const MAX_TOASTS := 4
-const TOAST_H := 20.0
-const TOAST_SPACING := 4.0
-const TOAST_W := 160.0
+const TOAST_H := 32.0
+const TOAST_SPACING := 6.0
+const TOAST_W := 280.0
 const ANIM_DURATION := 0.25
 
 var _toasts: Array = []   # Array of {label: Label, timer: Timer, alpha: float}
@@ -58,10 +58,10 @@ func _build_toast(text: String, color: Color, duration: float) -> void:
 	# Label
 	var lbl := Label.new()
 	lbl.text = text
-	lbl.position = Vector2(pan_x + TOAST_W + 6, pan_y + 3)
+	lbl.position = Vector2(pan_x + TOAST_W + 6, pan_y + 8)
 	lbl.size = Vector2(TOAST_W - 8, TOAST_H - 4)
 	lbl.add_theme_color_override("font_color", Color(0.90, 0.90, 0.85))
-	lbl.add_theme_font_size_override("font_size", 7)
+	lbl.add_theme_font_size_override("font_size", 12)
 	lbl.z_index = 502
 	add_child(lbl)
 
@@ -117,4 +117,4 @@ func _reposition_toasts() -> void:
 		var entry: Dictionary = _toasts[idx]  # 添加这一行
 		var new_y := 4.0 + idx * (TOAST_H + TOAST_SPACING)
 		entry["bar"].position.y = new_y
-		entry["lbl"].position.y = new_y + 3
+		entry["lbl"].position.y = new_y + 8

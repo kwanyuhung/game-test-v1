@@ -132,6 +132,26 @@ var _left_border: ColorRect = null
 var _right_border: ColorRect = null
 var _bounds_visible: bool = true
 
+# Freeze state for FloorManager LOD system
+var _frozen: bool = false
+
+# Freeze/unfreeze for FloorManager LOD system
+func set_frozen(frozen: bool) -> void:
+	_frozen = frozen
+	if frozen:
+		set_physics_process(false)
+		set_process(false)
+		if has_method("pause_behavior"):
+			call("pause_behavior")
+	else:
+		set_physics_process(true)
+		set_process(true)
+		if has_method("resume_behavior"):
+			call("resume_behavior")
+
+func is_frozen() -> bool:
+	return _frozen
+
 # Initialization
 func configure(actor: ActorData.Actor) -> void:
 	_actor = actor

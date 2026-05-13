@@ -155,6 +155,12 @@ func init_all() -> void:
 	stairs_system.setup(m)
 	m.set("_stairs_system", stairs_system)
 
+	# ── Floor Manager (multi-floor LOD system) ────────────────────────────────────
+	var floor_manager = preload("res://scripts/floor_manager.gd").new()
+	m.add_child(floor_manager)
+	floor_manager.setup(m)
+	m.set("_floor_manager", floor_manager)
+
 	# ── Audio Manager (singleton) ─────────────────────────────────────────────
 	m.set("_audio", m.get_node_or_null("/root/Main/AudioManager"))
 

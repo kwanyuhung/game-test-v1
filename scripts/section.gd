@@ -26,6 +26,20 @@ var _left_border: ColorRect = null
 var _right_border: ColorRect = null
 var _bounds_visible: bool = true
 
+# Freeze state for FloorManager LOD system
+var _frozen: bool = false
+
+# Freeze/unfreeze for FloorManager LOD system
+func set_frozen(frozen: bool) -> void:
+	_frozen = frozen
+	if frozen:
+		set_process(false)
+	else:
+		set_process(true)
+
+func is_frozen() -> bool:
+	return _frozen
+
 func _init() -> void:
 	pass
 

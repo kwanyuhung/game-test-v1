@@ -257,8 +257,11 @@ func _complete_transition() -> void:
 	if _main != null:
 		_main.set("_current_floor_idx", _target_floor)
 		
-		# Rebuild floor
-		if _main.has_method("_rebuild_floor"):
+		# Use FloorManager if available
+		var floor_manager = _main.get("_floor_manager")
+		if floor_manager != null:
+			floor_manager.on_travel_completed(_target_floor)
+		elif _main.has_method("_rebuild_floor"):
 			_main._rebuild_floor(_target_floor)
 		
 		# Position player at escalator entrance on new floor

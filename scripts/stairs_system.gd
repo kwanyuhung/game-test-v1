@@ -68,8 +68,13 @@ func _complete_transition() -> void:
 	_main.set("_current_floor_idx", _transition_to_floor)
 	_current_floor_idx = _transition_to_floor
 	
-	# Rebuild the floor
-	_main._rebuild_floor(_transition_to_floor)
+	# Use FloorManager if available for multi-floor system
+	var floor_manager = _main.get("_floor_manager")
+	if floor_manager != null:
+		floor_manager.on_travel_completed(_transition_to_floor)
+	else:
+		# Fallback to old rebuild approach
+		_main._rebuild_floor(_transition_to_floor)
 	
 	# Position player at the stairs entrance on new floor
 	if _player != null:

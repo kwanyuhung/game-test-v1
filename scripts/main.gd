@@ -129,6 +129,7 @@ var _settings_panel: SettingsPanel = null
 var _pause_menu: PauseMenu = null
 var _stats_dashboard: StatsDashboard = null
 var _interaction_bubble: InteractionBubbleScript = null
+var _floor_jump_panel: Control = null
 
 var _nearby_monitor: bool = false
 var _monitor_panel: MonitorPanel = null
@@ -188,6 +189,7 @@ var _supplier_manager = null
 var _dev_tools = null
 var _stairs_node: Node2D = null
 var _parking_lot: Node = null
+var _floor_manager: Node = null
 var _current_floor_idx: int = 0
 var _floor_nodes: Array = []
 var _floor_ambient: Color = Color(0.18, 0.18, 0.16)
@@ -214,6 +216,10 @@ func _ready() -> void:
 	_main_init.init_all()
 	# Note: _build_floor(0) is already called inside init_all()
 func _build_floor(idx: int) -> void:
+	# If FloorManager is active, delegate to it - don't build directly into main
+	if _floor_manager != null:
+		return
+	
 	_clear_floor_nodes()
 	_current_floor_idx = idx
 	if _player_stats != null:
@@ -222,10 +228,15 @@ func _build_floor(idx: int) -> void:
 	_main_panels.build_floor_hud(idx)
 	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(idx)
 
-	# Use FloorBuilder to render this floor
+	# Create a dedicated container for this floor's content
+	var floor_content: Node2D = Node2D.new()
+	floor_content.name = "FloorContent"
+	add_child(floor_content)
+	
+	# Use FloorBuilder to render this floor into the container
 	_floor_builder = FloorBuilderScript.new()
 	var _stairs_sys = get("_stairs_system")
-	_floor_builder.build(fd, self, idx, _stairs_sys)
+	_floor_builder.build(fd, floor_content, idx, _stairs_sys)
 
 	# Collect built nodes and sections
 	_floor_nodes = _floor_builder.get_floor_nodes()
@@ -280,25 +291,21 @@ func _build_floor(idx: int) -> void:
 			counter.self_checkout_cleared.connect(_on_self_checkout_cleared)
 
 func _clear_floor_nodes() -> void:
-	# Remove the floor objects container by name pattern
-	var floor_container_name := "FloorObjects_%d" % _current_floor_idx
-	var container: Node = get_node_or_null(floor_container_name)
-	if container != null:
-		container.queue_free()
-
-	# Also try to remove any old containers from previous floors
+	# Remove the old floor content container completely
+	var floor_content: Node = get_node_or_null("FloorContent")
+	if floor_content != null:
+		remove_child(floor_content)
+		floor_content.queue_free()
+	
+	# Also try to remove any old containers from previous systems
 	for i in range(20):  # Assume max 20 floors
-		if i == _current_floor_idx:
-			continue
 		var old_container_name := "FloorObjects_%d" % i
 		var old_container: Node = get_node_or_null(old_container_name)
 		if old_container != null:
+			remove_child(old_container)
 			old_container.queue_free()
-
-	# Clear all node lists and queue_free nodes
-	for node in _floor_nodes:
-		if is_instance_valid(node):
-			node.queue_free()
+	
+	# Clear all node lists
 	_floor_nodes.clear()
 	_sections.clear()
 	_checkout_counters.clear()
@@ -311,13 +318,15 @@ func _clear_floor_nodes() -> void:
 		if nm.begins_with("Staff_") or nm.begins_with("Customer_") or nm.begins_with("GroupLeader_") or nm.begins_with("Group_"):
 			npcs_to_remove.append(c)
 	for c in npcs_to_remove:
+		remove_child(c)
 		c.queue_free()
 	_npcs.clear()
 
 	# Remove all robot nodes by reference (more robust than name pattern)
-	# First clear the _robots array references
 	for r in _robots:
 		if is_instance_valid(r):
+			if r.get_parent() != null:
+				remove_child(r)
 			r.queue_free()
 	_robots.clear()
 	
@@ -328,10 +337,12 @@ func _clear_floor_nodes() -> void:
 		if nm.begins_with("Robot_") or nm.begins_with("Robo_"):
 			robots_to_remove.append(c)
 	for c in robots_to_remove:
+		remove_child(c)
 		c.queue_free()
 
 	# Remove warehouse floor controller when switching away from floor 11
 	if _warehouse_floor != null:
+		remove_child(_warehouse_floor)
 		_warehouse_floor.queue_free()
 		_warehouse_floor = null
 
@@ -400,9 +411,19 @@ func _on_elevator_travel_finished() -> void:
 	if _fade != null:
 		_fade.fade_out(0.2)
 		await get_tree().create_timer(0.25).timeout
-	_rebuild_floor(_current_floor_idx)
-	if _player != null:
-		_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
+	
+	# Use FloorManager for multi-floor system if available
+	if _floor_manager != null:
+		_floor_manager.on_travel_completed(_current_floor_idx)
+		# Position player near elevator
+		if _player != null:
+			_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
+	else:
+		# Fallback to old rebuild approach
+		_rebuild_floor(_current_floor_idx)
+		if _player != null:
+			_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
+	
 	if _fade != null:
 		_fade.fade_in(0.3)
 	if _minimap != null:
@@ -424,6 +445,11 @@ func _build_checkout_for_current_floor() -> void:
 		_main_panels.build_checkout_for_current_floor()
 
 func _rebuild_floor(idx: int) -> void:
+	# If FloorManager is active, delegate to it instead of full rebuild
+	if _floor_manager != null:
+		_rebuild_floor_with_manager(idx)
+		return
+	
 	_clear_floor_nodes()
 	_world_bg = null
 	_build_floor(idx)
@@ -433,6 +459,31 @@ func _rebuild_floor(idx: int) -> void:
 	_elevator = get_node_or_null("Elevator")
 	if _elevator == null:
 		_build_elevator()
+	_apply_ambient_shift()
+	_update_floor_hud()
+
+func _rebuild_floor_with_manager(idx: int) -> void:
+	# FloorManager handles activation/deactivation - we just update local references
+	# and ensure the current floor's content is properly linked
+	var container = _floor_manager.get_floor_container(idx)
+	if container == null:
+		return
+	
+	# Update our local references to point to nodes in the container
+	_sections.clear()
+	_checkout_counters.clear()
+	_aisle_labels.clear()
+	
+	# Find sections, checkout counters, etc. in the container
+	for child in container.get_children():
+		if child.name.begins_with("Section_"):
+			_sections.append(child)
+		elif child.name.begins_with("Counter_"):
+			_checkout_counters.append(child)
+		elif child is Label:
+			_aisle_labels.append(child)
+	
+	# Update ambient and HUD
 	_apply_ambient_shift()
 	_update_floor_hud()
 
@@ -541,6 +592,9 @@ func _input(event: InputEvent) -> void:
 			# L ── Shopping List
 			KEY_L:
 				_toggle_shopping_list()
+			# T ── Floor Jump Panel (Teleport)
+			KEY_T:
+				_toggle_floor_jump_panel()
 			# M ── Map Panel
 			KEY_M:
 				_toggle_map_panel()
@@ -765,7 +819,13 @@ func _navigate_to_floor(floor_idx: int) -> void:
 	if floor_idx == _current_floor_idx:
 		return
 	_current_floor_idx = floor_idx
-	_rebuild_floor(floor_idx)
+	
+	# Use FloorManager for multi-floor system if available
+	if _floor_manager != null:
+		_floor_manager.on_floor_changed(floor_idx)
+	else:
+		_rebuild_floor(floor_idx)
+	
 	if _player:
 		_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
 	if _minimap:
@@ -783,7 +843,13 @@ func _jump_to_floor(floor_idx: int) -> void:
 		return
 	
 	_current_floor_idx = floor_idx
-	_rebuild_floor(floor_idx)
+	
+	# Use FloorManager for multi-floor system if available
+	if _floor_manager != null:
+		_floor_manager.on_floor_changed(floor_idx)
+	else:
+		_rebuild_floor(floor_idx)
+	
 	if _player:
 		# Position player near elevator (tile 6)
 		_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
@@ -1450,6 +1516,91 @@ func _toggle_map_panel() -> void:
 		_map_panel.set_player(_player)
 		_map_panel.set_floor(_current_floor_idx)
 	_map_panel.toggle()
+
+# ── Floor Jump Panel (T key - Teleport) ──────────────────────────────────────────────
+func _toggle_floor_jump_panel() -> void:
+	if _floor_jump_panel != null and _floor_jump_panel.visible:
+		_close_floor_jump_panel()
+		return
+	
+	# Create the panel
+	_floor_jump_panel = Control.new()
+	_floor_jump_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_floor_jump_panel.position = Vector2(-150.0, -180.0)
+	_floor_jump_panel.size = Vector2(300.0, 360.0)
+	_floor_jump_panel.gui_input.connect(_on_floor_jump_panel_input)
+	add_child(_floor_jump_panel)
+	
+	# Dark background
+	var bg := ColorRect.new()
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color(0.05, 0.05, 0.08, 0.95)
+	_floor_jump_panel.add_child(bg)
+	
+	# Header
+	var hdr := Label.new()
+	hdr.text = "=== FLOOR JUMP ==="
+	hdr.position = Vector2(70.0, 10.0)
+	hdr.add_theme_color_override("font_color", Color(0.88, 0.82, 0.60))
+	hdr.add_theme_font_size_override("font_size", 12)
+	_floor_jump_panel.add_child(hdr)
+	
+	# Floor buttons - 5 columns x 3 rows for 15 floors (0-14)
+	var floor_count := FloorConfig.floor_count()
+	var cols := 5
+	var btn_w := 50.0
+	var btn_h := 30.0
+	var start_x := 15.0
+	var start_y := 40.0
+	var gap_x := 5.0
+	var gap_y := 5.0
+	
+	for i in range(floor_count):
+		var col := i % cols
+		var row := i / cols
+		var bx := start_x + col * (btn_w + gap_x)
+		var by := start_y + row * (btn_h + gap_y)
+		
+		var fd = FloorConfig.get_floor(i)
+		var floor_label := "G" if i == 0 else str(i)
+		
+		var btn := ColorRect.new()
+		btn.position = Vector2(bx, by)
+		btn.size = Vector2(btn_w, btn_h)
+		var is_current := (i == _current_floor_idx)
+		btn.color = Color(0.18, 0.40, 0.25) if is_current else Color(0.22, 0.20, 0.28)
+		_floor_jump_panel.add_child(btn)
+		
+		var lbl := Label.new()
+		lbl.text = "Floor %s" % floor_label
+		lbl.position = Vector2(bx + 4, by + 8)
+		var lbl_color := Color(0.50, 0.95, 0.60) if is_current else Color(0.90, 0.88, 0.80)
+		lbl.add_theme_color_override("font_color", lbl_color)
+		lbl.add_theme_font_size_override("font_size", 10)
+		_floor_jump_panel.add_child(lbl)
+		
+		# Store floor idx for button press
+		btn.set_meta("floor_idx", i)
+		btn.gui_input.connect(_on_floor_jump_btn_input)
+
+func _on_floor_jump_panel_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed:
+		var k := event as InputEventKey
+		if k.keycode == KEY_ESCAPE or k.keycode == KEY_T:
+			_close_floor_jump_panel()
+
+func _on_floor_jump_btn_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
+		var btn := event.get_parent() as Control
+		if btn != null and btn.has_meta("floor_idx"):
+			var idx: int = btn.get_meta("floor_idx")
+			_close_floor_jump_panel()
+			_jump_to_floor(idx)
+
+func _close_floor_jump_panel() -> void:
+	if _floor_jump_panel != null:
+		_floor_jump_panel.queue_free()
+		_floor_jump_panel = null
 		
 # 每日签到奖励信号处理函数
 func _on_streak_reward(days: int, bonus_xp: int) -> void:
