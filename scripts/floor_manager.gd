@@ -4,6 +4,7 @@
 extends Node
 
 const FloorConfig = preload("res://scripts/floor_config.gd")
+const DebugConfig = preload("res://scripts/debug_config.gd")
 const CELL_SIZE := 16
 
 # How many floors around the current one should be fully active
@@ -25,6 +26,7 @@ var _built_floors: Dictionary = {}     # floor_idx -> bool (has been built)
 var _npcs_spawned: Dictionary = {}    # floor_idx -> bool (NPCs spawned)
 var _robots_spawned: Dictionary = {}    # floor_idx -> bool (robots spawned)
 var _player: Node = null
+var _debug_config: Node = null  # Reference to debug config for floor restrictions
 
 signal floor_activated(floor_idx: int)
 signal floor_deactivated(floor_idx: int)
@@ -83,6 +85,22 @@ func mark_initial_spawn_complete() -> void:
 func get_current_floor_container() -> Node2D:
 	return _floor_containers.get(_current_floor_idx)
 
+# Check if NPCs/robots should be spawned on a floor based on debug_config
+func _is_spawning_allowed_for_floor(floor_idx: int) -> bool:
+	# Always use our own instance to ensure we read fresh data from JSON
+	# This is important because dev_tools may have modified the config file
+	if _debug_config == null:
+		_debug_config = DebugConfig.new()
+		_debug_config._load()
+	
+	# Check if this floor is in the allowed regenerate_floors list
+	var allowed_floors: Array = _debug_config.get_regenerate_floors()
+	if allowed_floors.is_empty():
+		# No floors specified, allow all (backward compatibility)
+		return true
+	
+	return floor_idx in allowed_floors
+
 # Called when player changes floors (via elevator, stairs, escalator, or debug)
 func on_floor_changed(new_floor_idx: int) -> void:
 	if new_floor_idx == _current_floor_idx:
@@ -123,15 +141,23 @@ func _update_active_floors(current_idx: int) -> void:
 			_build_floor_in_container(i, container)
 			_built_floors[i] = true
 		
-		# Spawn NPCs when floor becomes active
-		if should_be_active and not _npcs_spawned.has(i):
+		# Spawn NPCs when floor becomes active (only if allowed by debug_config)
+		if should_be_active and not _npcs_spawned.has(i) and _is_spawning_allowed_for_floor(i):
 			spawn_floor_npcs(i, container)
 			_npcs_spawned[i] = true
+		elif should_be_active and not _npcs_spawned.has(i):
+			# Floor is active but not in debug_config, mark as spawned to skip
+			_npcs_spawned[i] = true
+			print("[FloorManager] Skipping NPC spawn for Floor %d (not in regenerate_floors config)" % i)
 		
-		# Spawn robots when floor becomes active
-		if should_be_active and not _robots_spawned.has(i):
+		# Spawn robots when floor becomes active (only if allowed by debug_config)
+		if should_be_active and not _robots_spawned.has(i) and _is_spawning_allowed_for_floor(i):
 			spawn_floor_robots(i, container)
 			_robots_spawned[i] = true
+		elif should_be_active and not _robots_spawned.has(i):
+			# Floor is active but not in debug_config, mark as spawned to skip
+			_robots_spawned[i] = true
+			print("[FloorManager] Skipping robot spawn for Floor %d (not in regenerate_floors config)" % i)
 		
 		# Update active state
 		container.set_floor_active(should_be_active)
