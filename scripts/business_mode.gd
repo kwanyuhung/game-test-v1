@@ -45,7 +45,7 @@ func _build_ui() -> void:
 	# Title bar
 	var title_bar := ColorRect.new()
 	title_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	title_bar.size = Vector2(0, 36)
+	title_bar.set_deferred("size", Vector2(0, 36))
 	title_bar.color = Color(0.12, 0.14, 0.20)
 	add_child(title_bar)
 

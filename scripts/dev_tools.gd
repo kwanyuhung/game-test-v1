@@ -12,6 +12,7 @@ const DEV_MODE := true  # Set to false to disable dev tools globally
 var _main: Node = null
 var _super_actor: Node = null
 var _visible := false
+var _debug_config = null
 
 # ─── Panel Layout ────────────────────────────────────────────────
 # Title bar + action buttons stacked vertically
@@ -20,6 +21,9 @@ func _ready() -> void:
 	_custom_init()
 
 func _custom_init() -> void:
+	# Load debug config
+	_debug_config = preload("res://scripts/debug_config.gd").new()
+	
 	# Semi-transparent dark background
 	var bg := ColorRect.new()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -63,6 +67,10 @@ func _custom_init() -> void:
 		{"label": "TRIGGER DELIVERY", "cmd": "trigger_delivery"},
 		{"label": "LOW STOCK ALERT", "cmd": "low_stock_alert"},
 		{"label": "KILL ALL NPCs", "cmd": "kill_npcs"},
+		{"label": "REGEN FLOOR 0", "cmd": "regen_floor_0"},
+		{"label": "REGEN FLOOR 1", "cmd": "regen_floor_1"},
+		{"label": "REGEN FLOOR 2", "cmd": "regen_floor_2"},
+		{"label": "REGEN ALL CFG FLOORS", "cmd": "regen_configured_floors"},
 		{"label": "CLOSE PANEL [ESC]", "cmd": "close"},
 	]
 
@@ -154,6 +162,14 @@ func _on_dev_button(cmd: String) -> void:
 			_low_stock_alert()
 		"kill_npcs":
 			_kill_npcs()
+		"regen_floor_0":
+			_regen_floor(0)
+		"regen_floor_1":
+			_regen_floor(1)
+		"regen_floor_2":
+			_regen_floor(2)
+		"regen_configured_floors":
+			_regen_configured_floors()
 		"close":
 			close()
 
@@ -264,3 +280,39 @@ func _update_status(msg: String) -> void:
 	var lbl := get_node_or_null("StatusLbl")
 	if lbl != null:
 		lbl.text = msg
+
+func _regen_floor(floor_idx: int) -> void:
+	if _main == null:
+		_update_status("Error: main not set")
+		return
+	var floor_manager = _main.get_node_or_null("_floor_manager")
+	if floor_manager == null:
+		_update_status("Error: floor_manager not found")
+		return
+	floor_manager.clear_floor_entities(floor_idx)
+	floor_manager.regenerate_floor_npcs(floor_idx)
+	floor_manager.regenerate_floor_robots(floor_idx)
+	_update_status("Regenerated floor %d" % floor_idx)
+
+func _regen_configured_floors() -> void:
+	if _main == null:
+		_update_status("Error: main not set")
+		return
+	if _debug_config == null:
+		_update_status("Error: debug_config not loaded")
+		return
+	var floor_manager = _main.get_node_or_null("_floor_manager")
+	if floor_manager == null:
+		_update_status("Error: floor_manager not found")
+		return
+	var floors: Array = _debug_config.get_regenerate_floors()
+	var floor_list := ""
+	for i in range(floors.size()):
+		var floor_idx: int = floors[i]
+		floor_manager.clear_floor_entities(floor_idx)
+		floor_manager.regenerate_floor_npcs(floor_idx)
+		floor_manager.regenerate_floor_robots(floor_idx)
+		floor_list += "%d" % floor_idx
+		if i < floors.size() - 1:
+			floor_list += ", "
+	_update_status("Regenerated floors: %s" % floor_list)

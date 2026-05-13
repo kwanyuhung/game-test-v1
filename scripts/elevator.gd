@@ -228,7 +228,7 @@ func _show_floor_panel() -> void:
 	var panel := Control.new()
 	panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	panel.position = Vector2(50.0, 30.0)
-	panel.size = Vector2(220.0, 120.0)
+	panel.set_deferred("size", Vector2(220.0, 120.0))
 	panel.gui_input.connect(_on_panel_input)
 	add_child(panel)
 	_panel = panel
@@ -264,7 +264,7 @@ func _show_floor_panel() -> void:
 
 		var btn := ColorRect.new()
 		btn.position = Vector2(bx, by)
-		btn.size = Vector2(btn_w, btn_h)
+		btn.set_deferred("size", Vector2(btn_w, btn_h))
 		var is_current := (i == _current_floor)
 		var is_staff_only: bool = fd.is_staff_only 
 		# Check if player can access (staff mode check)

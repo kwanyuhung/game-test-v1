@@ -158,6 +158,9 @@ func init_all() -> void:
 	# ── Floor Manager (multi-floor LOD system) ────────────────────────────────────
 	var floor_manager = preload("res://scripts/floor_manager.gd").new()
 	m.add_child(floor_manager)
+	# Mark floor 0 as having NPCs/robots already spawned by _build_floor(0)
+	# This prevents duplicate spawning when floor_manager.setup() calls _update_active_floors(0)
+	floor_manager.mark_initial_spawn_complete()
 	floor_manager.setup(m)
 	m.set("_floor_manager", floor_manager)
 

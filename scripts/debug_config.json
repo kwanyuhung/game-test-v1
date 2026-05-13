@@ -1,0 +1,11 @@
+{
+  "regenerate_floors": [0],
+  "auto_regenerate_enabled": false,
+  "regenerate_npc_count": 3,
+  "regenerate_robot_count": 1,
+  "enabled_staff_roles": [],
+  "enabled_customer_types": [],
+  "enabled_humanoid_robot_roles": [],
+  "enabled_single_robot_roles": [],
+  "enabled_sections": []
+}

@@ -76,7 +76,8 @@ func _build_ui() -> void:
 	var viewport_rect: Rect2 = get_viewport().get_visible_rect()
 	var scr_w: float = viewport_rect.size.x
 	var scr_h: float = viewport_rect.size.y
-	var font_scale: float = scr_h / 360.0
+	# Cap font_scale to prevent UI from becoming too large on big screens
+	var font_scale: float = clampf(scr_h / 720.0, 0.6, 1.5)
 
 	var ov := ColorRect.new()
 	ov.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -84,11 +85,11 @@ func _build_ui() -> void:
 	ov.gui_input.connect(_on_input)
 	add_child(ov)
 
-	# Settings panel (left side)
-	var pan_x: float = scr_w * 0.1
-	var pan_y: float = scr_h * 0.1
-	var pan_w: float = scr_w * 0.4
-	var pan_h: float = scr_h * 0.8
+	# Settings panel (left side) - full screen with margin
+	var pan_x: float = scr_w * 0.05
+	var pan_y: float = scr_h * 0.05
+	var pan_w: float = scr_w * 0.42
+	var pan_h: float = scr_h * 0.90
 
 	var pan := ColorRect.new()
 	pan.position = Vector2(pan_x, pan_y)
@@ -131,11 +132,11 @@ func _build_ui() -> void:
 	hint.add_theme_font_size_override("font_size", int(14 * font_scale))
 	add_child(hint)
 
-	# Controls panel (right side)
-	var ctrl_x: float = scr_w * 0.55
-	var ctrl_y: float = scr_h * 0.1
-	var ctrl_w: float = scr_w * 0.35
-	var ctrl_h: float = scr_h * 0.8
+	# Controls panel (right side) - full screen with margin
+	var ctrl_x: float = scr_w * 0.52
+	var ctrl_y: float = scr_h * 0.05
+	var ctrl_w: float = scr_w * 0.43
+	var ctrl_h: float = scr_h * 0.90
 
 	var ctrl_pan := ColorRect.new()
 	ctrl_pan.position = Vector2(ctrl_x, ctrl_y)

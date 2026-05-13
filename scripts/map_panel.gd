@@ -7,8 +7,7 @@ const WORLD_H := 52
 
 # Map display scale (larger than minimap)
 const MAP_SCALE := 6.0
-const MAP_W := WORLD_W * CELL_SIZE / MAP_SCALE  # ~256 pixels
-const MAP_H := WORLD_H * CELL_SIZE / MAP_SCALE  # ~139 pixels
+# MAP_W and MAP_H are now computed dynamically based on screen size
 
 var _player_ref = null
 var _floor_idx := 0
@@ -17,6 +16,10 @@ var _item_labels: Array = []
 var _player_dot: ColorRect = null
 var _bg_panel: Panel = null
 var _title_label: Label = null
+var _map_w: float = 256.0
+var _map_h: float = 139.0
+var _map_offset: Vector2 = Vector2(20, 40)
+var _font_scale: float = 1.0
 
 # Floor item definitions
 const FLOOR_ITEMS := {
@@ -120,11 +123,22 @@ func close() -> void:
 	_clear_items()
 
 func _build_panel() -> void:
+	# Compute dynamic map size based on screen
+	var viewport_rect: Rect2 = get_viewport().get_visible_rect()
+	var scr_w: float = viewport_rect.size.x
+	var scr_h: float = viewport_rect.size.y
+	_font_scale = clampf(scr_h / 720.0, 0.6, 1.5)
+	
+	# Dynamic map dimensions - scale to fill more of screen
+	_map_w = scr_w * 0.45
+	_map_h = scr_h * 0.65
+	_map_offset = Vector2(20 * _font_scale, 40 * _font_scale)
+	
 	# Background panel
 	if _bg_panel == null:
 		_bg_panel = Panel.new()
 		_bg_panel.set_anchors_preset(Control.PRESET_CENTER)
-		_bg_panel.custom_minimum_size = Vector2(MAP_W + 40, MAP_H + 60)
+		_bg_panel.custom_minimum_size = Vector2(_map_w + 80 * _font_scale, _map_h + 80 * _font_scale)
 		_bg_panel.position = -_bg_panel.custom_minimum_size / 2
 		_bg_panel.z_index = 1000
 		
@@ -145,9 +159,10 @@ func _build_panel() -> void:
 		# Title
 		_title_label = Label.new()
 		_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_title_label.position = Vector2(0, 5)
-		_title_label.size = Vector2(_bg_panel.custom_minimum_size.x, 25)
+		_title_label.position = Vector2(0, 5 * _font_scale)
+		_title_label.size = Vector2(_bg_panel.custom_minimum_size.x, 30 * _font_scale)
 		_title_label.add_theme_color_override("font_color", Color(0.90, 0.90, 0.95))
+		_title_label.add_theme_font_size_override("font_size", int(16 * _font_scale))
 		_bg_panel.add_child(_title_label)
 
 func _update_title() -> void:
@@ -171,13 +186,10 @@ func _build_items() -> void:
 	# Get floor items
 	var floor_data = FLOOR_ITEMS.get(_floor_idx, {})
 	
-	# Map container position (relative to panel center)
-	var map_offset := Vector2(20, 40)  # Offset from panel edges
-	
 	# Draw map background (floor area)
 	var map_bg := ColorRect.new()
-	map_bg.position = map_offset
-	map_bg.size = Vector2(MAP_W, MAP_H)
+	map_bg.position = _map_offset
+	map_bg.size = Vector2(_map_w, _map_h)
 	map_bg.color = Color(0.15, 0.15, 0.20, 0.80)
 	add_child(map_bg)
 	_items.append(map_bg)
@@ -185,15 +197,15 @@ func _build_items() -> void:
 	# Grid lines for map
 	for i in range(6):
 		var grid_h := ColorRect.new()
-		grid_h.position = map_offset + Vector2(0, i * (MAP_H / 5))
-		grid_h.size = Vector2(MAP_W, 1)
+		grid_h.position = _map_offset + Vector2(0, i * (_map_h / 5))
+		grid_h.size = Vector2(_map_w, 1)
 		grid_h.color = Color(0.25, 0.25, 0.30, 0.50)
 		add_child(grid_h)
 		_items.append(grid_h)
 		
 		var grid_v := ColorRect.new()
-		grid_v.position = map_offset + Vector2(i * (MAP_W / 5), 0)
-		grid_v.size = Vector2(1, MAP_H)
+		grid_v.position = _map_offset + Vector2(i * (_map_w / 5), 0)
+		grid_v.size = Vector2(1, _map_h)
 		grid_v.color = Color(0.25, 0.25, 0.30, 0.50)
 		add_child(grid_v)
 		_items.append(grid_v)
@@ -206,17 +218,16 @@ func _build_items() -> void:
 		var color: Color = item["color"]
 		
 		# Convert world position to map position
-		# Scale: MAP_W / WORLD_W tiles = pixels per tile
-		var pixels_per_tile_x := MAP_W / float(WORLD_W)
-		var pixels_per_tile_y := MAP_H / float(WORLD_H)
+		var pixels_per_tile_x := _map_w / float(WORLD_W)
+		var pixels_per_tile_y := _map_h / float(WORLD_H)
 		
-		var map_x := map_offset.x + pos.x * pixels_per_tile_x
-		var map_y := map_offset.y + pos.y * pixels_per_tile_y
+		var map_x := _map_offset.x + pos.x * pixels_per_tile_x
+		var map_y := _map_offset.y + pos.y * pixels_per_tile_y
 		
-		# Item marker
+		# Item marker (scaled with font_scale)
 		var marker := ColorRect.new()
-		marker.position = Vector2(map_x - 4, map_y - 4)
-		marker.size = Vector2(8, 8)
+		marker.position = Vector2(map_x - 4 * _font_scale, map_y - 4 * _font_scale)
+		marker.size = Vector2(8 * _font_scale, 8 * _font_scale)
 		marker.color = color
 		marker.z_index = 1001
 		add_child(marker)
@@ -225,10 +236,10 @@ func _build_items() -> void:
 		# Label
 		var lbl := Label.new()
 		lbl.text = label
-		lbl.position = Vector2(map_x - 20, map_y + 6)
-		lbl.size = Vector2(50, 15)
+		lbl.position = Vector2(map_x - 20 * _font_scale, map_y + 6 * _font_scale)
+		lbl.size = Vector2(50 * _font_scale, 15 * _font_scale)
 		lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.90))
-		lbl.add_theme_font_size_override("font_size", 9)
+		lbl.add_theme_font_size_override("font_size", int(10 * _font_scale))
 		lbl.z_index = 1001
 		add_child(lbl)
 		_items.append(lbl)
@@ -237,7 +248,7 @@ func _build_items() -> void:
 	# Player dot
 	_player_dot = ColorRect.new()
 	_player_dot.name = "MapPlayerDot"
-	_player_dot.size = Vector2(6, 6)
+	_player_dot.size = Vector2(6 * _font_scale, 6 * _font_scale)
 	_player_dot.color = Color(0.95, 0.85, 0.30)  # Yellow
 	_player_dot.z_index = 1002
 	add_child(_player_dot)
@@ -247,13 +258,11 @@ func _process(_delta: float) -> void:
 	if not visible or _player_ref == null or _player_dot == null:
 		return
 	
-	# Map container position
-	var map_offset := Vector2(20, 40)
-	var pixels_per_tile_x := MAP_W / float(WORLD_W)
-	var pixels_per_tile_y := MAP_H / float(WORLD_H)
-	
 	# Scale player position to map coordinates
+	var pixels_per_tile_x := _map_w / float(WORLD_W)
+	var pixels_per_tile_y := _map_h / float(WORLD_H)
+	
 	var px :float= (_player_ref.position.x / CELL_SIZE) * pixels_per_tile_x
 	var py :float= (_player_ref.position.y / CELL_SIZE) * pixels_per_tile_y
 	
-	_player_dot.position = map_offset + Vector2(px - 3, py - 3)
+	_player_dot.position = _map_offset + Vector2(px - 3 * _font_scale, py - 3 * _font_scale)

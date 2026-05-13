@@ -4,13 +4,13 @@
 # Uses floor_builder.gd for rendering.
 extends Node2D
 
-const FloorConfig = preload("res://scripts/floor_config.gd")
+const FloorConfigScript = preload("res://scripts/floor_config.gd")
 const FloorBuilderScript = preload("res://scripts/floor_builder.gd")
 const SectionBrowseScript = preload("res://scripts/section_browse.gd")
 const StoreData = preload("res://scripts/store_data.gd")
 const ElevatorScript = preload("res://scripts/elevator.gd")
 const FoodStallBrowseScript = preload("res://scripts/food_stall_browse.gd")
-const ClawMachine = preload("res://scripts/claw_machine.gd")
+const ClawMachineScript = preload("res://scripts/claw_machine.gd")
 const ActorData = preload("res://scripts/actor_data.gd")
 const ChatManagerScript = preload("res://scripts/chat_manager.gd")
 const ChatPanelScript = preload("res://scripts/chat_panel.gd")
@@ -52,21 +52,21 @@ const ProximitySystemScript = preload("res://scripts/proximity_system.gd")
 const CheckoutSystemScript = preload("res://scripts/checkout_system.gd")
 const FoodCourtSystemScript = preload("res://scripts/food_court_system.gd")
 const TruckDockSystemScript = preload("res://scripts/truck_dock_system.gd")
-const StoreExpansionScript = preload("res://scripts/store_expansion.gd")
-const AntiTheftScript = preload("res://scripts/anti_theft.gd")
-const DynamicPricingScript = preload("res://scripts/dynamic_pricing.gd")
-const SupplierManagerScript = preload("res://scripts/supplier_manager.gd")
+const StoreExpansionScriptRef = preload("res://scripts/store_expansion.gd")
+const AntiTheftScriptRef = preload("res://scripts/anti_theft.gd")
+const DynamicPricingScriptRef = preload("res://scripts/dynamic_pricing.gd")
+const SupplierManagerScriptRef = preload("res://scripts/supplier_manager.gd")
 const RobotPanelSystemScript = preload("res://scripts/robot_panel_system.gd")
-const PromotionManagerScript = preload("res://scripts/promotion_manager.gd")
+const PromotionManagerScriptRef = preload("res://scripts/promotion_manager.gd")
 const MainSpawnerScript = preload("res://scripts/main_spawner.gd")
 const MainInitScript = preload("res://scripts/main_init.gd")
 const InteractionBubbleScript = preload("res://scripts/interaction_bubble.gd")
 
 const DEV_MODE := true  # Set to false to disable dev tools
 
-const CELL_SIZE := FloorConfig.CELL_SIZE
-const WORLD_W  := FloorConfig.WORLD_W
-const WORLD_H  := FloorConfig.WORLD_H
+const CELL_SIZE := FloorConfigScript.CELL_SIZE
+const WORLD_W  := FloorConfigScript.WORLD_W
+const WORLD_H  := FloorConfigScript.WORLD_H
 
 var _proximity_system: Node = null
 var _checkout_system: Node = null
@@ -226,7 +226,7 @@ func _build_floor(idx: int) -> void:
 		_player_stats.on_floor_visited(idx)
 	# HUD labels (time, status, shopping list, XP bar)
 	_main_panels.build_floor_hud(idx)
-	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(idx)
+	var fd: FloorConfig.FloorDef = FloorConfigScript.get_floor(idx)
 
 	# Create a dedicated container for this floor's content
 	var floor_content: Node2D = Node2D.new()
@@ -353,7 +353,7 @@ func _clear_floor_nodes() -> void:
 
 # Get floor information for UI display
 func get_floor_info() -> Dictionary:
-	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(_current_floor_idx)
+	var fd: FloorConfig.FloorDef = FloorConfigScript.get_floor(_current_floor_idx)
 	var info := {
 		"index": _current_floor_idx,
 		"name": fd.label if fd else "Unknown",
@@ -369,7 +369,7 @@ func get_floor_info() -> Dictionary:
 
 func set_ambient_floor(idx: int) -> void:
 	_current_floor_idx = idx
-	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(idx)
+	var fd: FloorConfig.FloorDef = FloorConfigScript.get_floor(idx)
 	_floor_ambient = fd.ambient_color
 	_apply_ambient_shift()
 	_update_floor_hud()
@@ -392,7 +392,7 @@ func _build_parking() -> void:
 
 # ?????? Player boards elevator ????????????????????????????????????????????????????????????????????????
 
-func player_board_elevator(player, floor_idx: int) -> void:
+func player_board_elevator(_player, _floor_idx: int) -> void:
 	_in_elevator = true
 	# Teleport player into elevator car (near tile 6)
 	var car_y: float = _elevator.get_car_world_y()
@@ -693,13 +693,12 @@ func _process(_delta: float) -> void:
 			_nearby_checkout.dismiss_error()
 		_checkout_system.retry_checkout(_nearby_checkout)
 
-func _on_warehouse_delivery_arrived(contents: Dictionary) -> void:
+func _on_warehouse_delivery_arrived(_contents: Dictionary) -> void:
 	# Spawn truck at dock on Floor G
 	_truck_dock_system.spawn_truck()
 
 func _on_warehouse_low_stock(section_id: String) -> void:
 	var section_name := section_id.to_upper()
-	var msg := "Low stock warning: %s section needs restocking!" % section_name
 	if _current_floor_idx == 12:  # on warehouse floor
 		var prompt_lbl = get_node_or_null("PromptLbl")
 		if prompt_lbl != null:
@@ -836,7 +835,7 @@ func _navigate_to_floor(floor_idx: int) -> void:
 
 # DEBUG: Quick jump to any floor (dev mode only)
 func _jump_to_floor(floor_idx: int) -> void:
-	var max_floors := FloorConfig.floor_count()
+	var max_floors := FloorConfigScript.floor_count()
 	if floor_idx < 0 or floor_idx >= max_floors:
 		if _toasts:
 			_toasts.toast_warning("Invalid floor! Range: 0-%d" % (max_floors - 1))
@@ -883,10 +882,10 @@ func _on_achievement_unlocked(ach_id: String) -> void:
 	var info: Dictionary = _player_stats.get_achievement_info(ach_id)
 	_show_achievement_popup(ach_id, info.get("name", ""), info.get("icon", "?"), info.get("xp", 20))
 
-func _show_achievement_popup(ach_id: String, name: String, icon: String, xp: int) -> void:
+func _show_achievement_popup(ach_id: String, ach_name: String, icon: String, xp: int) -> void:
 	var popup := AchievementPopupScript.new()
 	add_child(popup)
-	popup.show_achievement(ach_id, name, icon, xp)
+	popup.show_achievement(ach_id, ach_name, icon, xp)
 
 func _on_staff_rank_up(new_rank: PlayerStats.StaffRank) -> void:
 	var rank_name := "???"
@@ -926,8 +925,6 @@ func _on_stats_panel_closed() -> void:
 
 func _on_hour_changed(hour: int) -> void:
 	if _game_clock != null:
-		var t := _game_clock.game_time_string()
-		var period := _game_clock.period_name()
 		if hour == 6:  # Store opens
 			if _toasts != null: _toasts.toast_success("Store Open! 6:00 AM")
 		if hour == 23:  # 11pm closing soon
@@ -939,7 +936,7 @@ func _on_day_changed() -> void:
 	if _player_stats != null:
 		var wages := _player_stats.get_total_daily_wages()
 		if wages > 0 and _player_stats.get_cash() >= wages:
-			var remaining := _player_stats.pay_staff_wages(_player_stats.get_cash())
+			_player_stats.pay_staff_wages(_player_stats.get_cash())
 			if _toasts:
 				_toasts.toast_info("Daily wages paid: $%.2f" % wages)
 	else:
@@ -982,7 +979,7 @@ func add_to_shopping_list(product_name: String) -> bool:
 		return _shopping_list.add_item(product_name)
 	return false
 
-func _on_quest_completed(quest_id: String, desc: String, xp: int) -> void:
+func _on_quest_completed(_quest_id: String, desc: String, xp: int) -> void:
 	if _toasts != null:
 		_toasts.toast_success("Quest Done! +%d XP" % xp)
 	if _player_stats != null:
@@ -1264,16 +1261,20 @@ func _open_stall_browse(stall) -> void:
 func _handle_warehouse_interact() -> void:
 	if _warehouse_mode:
 		_warehouse_mode = false
-		_warehouse_floor.set_staff_mode(false) if _warehouse_floor else null
-		if _toasts: _toasts.toast_info("Exited warehouse control.")
+		if _warehouse_floor:
+			_warehouse_floor.set_staff_mode(false)
+		if _toasts: 
+			_toasts.toast_info("Exited warehouse control.")
 	else:
 		if _player != null and _player.is_in_staff_mode():
 			_warehouse_mode = true
 			if _warehouse_floor:
 				_warehouse_floor.set_staff_mode(true)
-			if _toasts: _toasts.toast_success("Warehouse Control Mode — use WASD/Q/E/F to operate equipment!")
+			if _toasts:
+				_toasts.toast_success("Warehouse Control Mode — use WASD/Q/E/F to operate equipment!")
 		else:
-			if _toasts: _toasts.toast_warning("Staff mode required for warehouse control. Press [K] to enter staff mode.")
+			if _toasts:
+				_toasts.toast_warning("Staff mode required for warehouse control. Press [K] to enter staff mode.")
 
 # ── NPC Chat interaction ─────────────────────────────────────────────
 func _open_npc_chat() -> void:
@@ -1306,7 +1307,7 @@ func _on_claw_interact_requested() -> void:
 	if _nearby_claw_machine != null:
 		_nearby_claw_machine.start_game()
 
-func _on_claw_played(prize_name: String, won: bool, machine) -> void:
+func _on_claw_played(prize_name: String, won: bool, _machine) -> void:
 	if won and _player_stats != null:
 		_player_stats.add_xp(15, "Claw machine win: %s" % prize_name)
 		_player_stats.on_claw_win()
@@ -1317,7 +1318,7 @@ func _on_claw_played(prize_name: String, won: bool, machine) -> void:
 			_toasts.toast_info("No prize this time. Try again!")
 
 # ── Checkout proximity & interaction ─────────────────────────────
-func _on_checkout_interacted(checkout_id: int, checkout_type) -> void:
+func _on_checkout_interacted(_checkout_id: int, _checkout_type) -> void:
 	_checkout_system.do_checkout(_nearby_checkout)
 
 func _on_self_checkout_cleared() -> void:
@@ -1434,7 +1435,6 @@ func _toggle_business_mode() -> void:
 	if _player_stats == null:
 		return
 	if not _player_stats.can_open_business_mode():
-		var rank_name := _player_stats.get_staff_rank_name()
 		var next_xp := _player_stats.get_staff_xp_for_next_rank()
 		if _toasts:
 			if next_xp > 0:
@@ -1527,7 +1527,7 @@ func _toggle_floor_jump_panel() -> void:
 	_floor_jump_panel = Control.new()
 	_floor_jump_panel.set_anchors_preset(Control.PRESET_CENTER)
 	_floor_jump_panel.position = Vector2(-150.0, -180.0)
-	_floor_jump_panel.size = Vector2(300.0, 360.0)
+	_floor_jump_panel.set_deferred("size", Vector2(300.0, 360.0))
 	_floor_jump_panel.gui_input.connect(_on_floor_jump_panel_input)
 	add_child(_floor_jump_panel)
 	
@@ -1546,7 +1546,7 @@ func _toggle_floor_jump_panel() -> void:
 	_floor_jump_panel.add_child(hdr)
 	
 	# Floor buttons - 5 columns x 3 rows for 15 floors (0-14)
-	var floor_count := FloorConfig.floor_count()
+	var floor_count := FloorConfigScript.floor_count()
 	var cols := 5
 	var btn_w := 50.0
 	var btn_h := 30.0
@@ -1557,16 +1557,15 @@ func _toggle_floor_jump_panel() -> void:
 	
 	for i in range(floor_count):
 		var col := i % cols
-		var row := i / cols
+		var row := i / float(cols)
 		var bx := start_x + col * (btn_w + gap_x)
 		var by := start_y + row * (btn_h + gap_y)
 		
-		var fd = FloorConfig.get_floor(i)
 		var floor_label := "G" if i == 0 else str(i)
 		
 		var btn := ColorRect.new()
 		btn.position = Vector2(bx, by)
-		btn.size = Vector2(btn_w, btn_h)
+		btn.set_deferred("size", Vector2(btn_w, btn_h))
 		var is_current := (i == _current_floor_idx)
 		btn.color = Color(0.18, 0.40, 0.25) if is_current else Color(0.22, 0.20, 0.28)
 		_floor_jump_panel.add_child(btn)
@@ -1615,7 +1614,7 @@ func _on_streak_reward(days: int, bonus_xp: int) -> void:
 		audio.play_bonus()
 
 # 商品添加到购物车（商品浏览面板信号）
-func _on_item_added_to_cart(item_data: Dictionary, count: int = 1) -> void:
+func _on_item_added_to_cart(item_data: Dictionary, _count: int = 1) -> void:
 	# 弹出添加成功提示
 	var toasts = get("_toasts")
 	if toasts != null:

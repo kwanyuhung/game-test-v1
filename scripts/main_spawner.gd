@@ -284,11 +284,13 @@ func spawn_robot_single(rrole: ActorData.RobotRole) -> void:
 
 	var robot := preload("res://scripts/robot_controller.gd").new()
 	robot.configure_single_function(rrole, spawn_pos)
-	robot.name = "Robot_Single_%s" % _assigned_robot_role_name(rrole)
+	# Include unique ID in name to prevent duplicates
+	robot.name = "Robot_Single_%s_%d" % [_assigned_robot_role_name(rrole), _npc_count]
 	_main.add_child(robot)
 	var robots: Array = _main.get("_robots")
 	if robots != null:
 		robots.append(robot)
+	_npc_count += 1
 
 # ── Default robot batch ───────────────────────────────────────────────────────
 func spawn_robots() -> void:

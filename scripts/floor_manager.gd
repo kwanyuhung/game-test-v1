@@ -22,6 +22,8 @@ var _main: Node2D = null
 var _current_floor_idx: int = 0
 var _floor_containers: Dictionary = {}  # floor_idx -> FloorContainer
 var _built_floors: Dictionary = {}     # floor_idx -> bool (has been built)
+var _npcs_spawned: Dictionary = {}    # floor_idx -> bool (NPCs spawned)
+var _robots_spawned: Dictionary = {}    # floor_idx -> bool (robots spawned)
 var _player: Node = null
 
 signal floor_activated(floor_idx: int)
@@ -69,6 +71,15 @@ func _create_floor_containers() -> void:
 func get_floor_container(idx: int) -> Node2D:
 	return _floor_containers.get(idx)
 
+# Called by main_init.gd after _build_floor(0) has already spawned NPCs/robots
+# to prevent floor_manager from spawning duplicates when setup() calls _update_active_floors()
+func mark_initial_spawn_complete() -> void:
+	# Mark floor 0 as having NPCs and robots already spawned
+	# Note: spawn_robots() only spawns on current_floor == 0, so only floor 0 is affected
+	_npcs_spawned[0] = true
+	_robots_spawned[0] = true
+	print("[FloorManager] Marked floor 0 as having NPCs/robots already spawned")
+
 func get_current_floor_container() -> Node2D:
 	return _floor_containers.get(_current_floor_idx)
 
@@ -88,6 +99,12 @@ func on_floor_changed(new_floor_idx: int) -> void:
 func _update_active_floors(current_idx: int) -> void:
 	var floor_count := FloorConfig.floor_count()
 	
+	# Track which floors become inactive so we can clean them up
+	var previously_active_floors := []
+	for idx in _npcs_spawned.keys():
+		if is_floor_active(idx):
+			previously_active_floors.append(idx)
+	
 	for i in range(floor_count):
 		var container: Node2D = _floor_containers[i]
 		if container == null:
@@ -106,6 +123,16 @@ func _update_active_floors(current_idx: int) -> void:
 			_build_floor_in_container(i, container)
 			_built_floors[i] = true
 		
+		# Spawn NPCs when floor becomes active
+		if should_be_active and not _npcs_spawned.has(i):
+			spawn_floor_npcs(i, container)
+			_npcs_spawned[i] = true
+		
+		# Spawn robots when floor becomes active
+		if should_be_active and not _robots_spawned.has(i):
+			spawn_floor_robots(i, container)
+			_robots_spawned[i] = true
+		
 		# Update active state
 		container.set_floor_active(should_be_active)
 		
@@ -117,6 +144,12 @@ func _update_active_floors(current_idx: int) -> void:
 			container.process_mode = Node.PROCESS_MODE_INHERIT
 		else:
 			container.process_mode = Node.PROCESS_MODE_DISABLED
+	
+	# Clean up entities from floors that became inactive
+	for idx in previously_active_floors:
+		if not is_floor_active(idx):
+			print("[FloorManager] Floor %d became inactive, cleaning up entities" % idx)
+			clear_floor_entities(idx)
 
 func _build_floor_in_container(floor_idx: int, container: Node2D) -> void:
 	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(floor_idx)
@@ -148,6 +181,289 @@ func _build_floor_in_container(floor_idx: int, container: Node2D) -> void:
 	
 	# Store the objects in the container for later access
 	container.store_objects(sections, food_stalls, claw_machines, escalators, checkout_counters, floor_nodes)
+
+# Get floor-specific spawn configuration
+func _get_floor_spawn_config(floor_idx: int) -> Dictionary:
+	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(floor_idx)
+	if fd == null:
+		return {}
+	
+	var theme := fd.theme
+	
+	# Different floors have different staff roles based on their theme
+	var staff_roles := []
+	var staff_count := 3
+	
+	match theme:
+		"lobby":
+			staff_roles = [0, 3, 4, 5]  # CASHIER, GREETER, SECURITY, MANAGER
+			staff_count = 4
+		"shoes":
+			staff_roles = [0, 1, 6]  # CASHIER, SHELF_STOCKER, FLOOR_STAFF
+			staff_count = 3
+		"fashion":
+			staff_roles = [0, 1, 6]  # CASHIER, SHELF_STOCKER, FLOOR_STAFF
+			staff_count = 4
+		"sport":
+			staff_roles = [0, 1, 6]  # CASHIER, SHELF_STOCKER, FLOOR_STAFF
+			staff_count = 3
+		"outdoor":
+			staff_roles = [0, 1, 6]  # CASHIER, SHELF_STOCKER, FLOOR_STAFF
+			staff_count = 3
+		_:
+			staff_roles = [0, 1, 2]  # CASHIER, SHELF_STOCKER, CLEANER
+			staff_count = 3
+	
+	# Customer group types vary by floor type
+	var customer_types := [0, 1, 2]  # SOLO, COUPLE, PAIR
+	var customer_count := 3 + floor_idx
+	
+	match theme:
+		"lobby":
+			customer_types = [0, 1, 2, 3, 4, 5, 6]  # All types including families
+			customer_count = 5
+		"shoes", "fashion", "sport":
+			customer_types = [1, 2, 3, 4, 6]  # COUPLE, PAIR, families, friends
+			customer_count = 4
+		_:
+			customer_types = [0, 1, 2]
+			customer_count = 3
+	
+	return {
+		"staff_roles": staff_roles,
+		"staff_count": staff_count,
+		"customer_types": customer_types,
+		"customer_count": customer_count
+	}
+
+# Spawn NPCs for a specific floor
+func spawn_floor_npcs(floor_idx: int, container: Node2D) -> void:
+	var main_spawner = _main.get("_main_spawner")
+	if main_spawner == null:
+		print("[FloorManager] Warning: main_spawner not found, cannot spawn NPCs")
+		return
+	
+	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(floor_idx)
+	if fd == null:
+		return
+	
+	# Get floor Y position (world coordinate)
+	var floor_y: float = get_floor_y(floor_idx)
+	
+	# Get spawn configuration for this floor
+	var config := _get_floor_spawn_config(floor_idx)
+	var staff_roles: Array = config.get("staff_roles", [0, 1, 2])
+	var staff_count: int = config.get("staff_count", 3)
+	var customer_types: Array = config.get("customer_types", [0, 1, 2])
+	var customer_count: int = config.get("customer_count", 3)
+	
+	print("[FloorManager] Spawning NPCs for Floor %d (theme: %s): %d staff, %d customers" % [floor_idx, fd.theme, staff_count, customer_count])
+	
+	# Spawn staff NPCs
+	var staff_spawn_area_x := [100.0, 300.0, 500.0, 700.0, 900.0]
+	var staff_spawn_area_y := [floor_y + 200.0, floor_y + 350.0, floor_y + 450.0]
+	
+	for i in range(staff_count):
+		var role_idx: int = staff_roles[i % staff_roles.size()]
+		var pos_x: float = staff_spawn_area_x[i % staff_spawn_area_x.size()]
+		var pos_y: float = staff_spawn_area_y[i % staff_spawn_area_y.size()]
+		var pos := Vector2(pos_x + randf_range(-30, 30), pos_y + randf_range(-20, 20))
+		
+		main_spawner.spawn_npc_staff(role_idx, floor_idx, pos)
+	
+	# Spawn customer groups
+	var customer_spawn_area_x := [150.0, 350.0, 550.0, 750.0, 950.0]
+	var customer_spawn_area_y := [floor_y + 250.0, floor_y + 400.0, floor_y + 500.0]
+	
+	for i in range(customer_count):
+		var group_type: int = customer_types[i % customer_types.size()]
+		var pos_x: float = customer_spawn_area_x[i % customer_spawn_area_x.size()]
+		var pos_y: float = customer_spawn_area_y[i % customer_spawn_area_y.size()]
+		var pos := Vector2(pos_x + randf_range(-40, 40), pos_y + randf_range(-30, 30))
+		
+		main_spawner.spawn_customer_group(group_type, floor_idx, pos)
+
+# Spawn robots for a specific floor
+func spawn_floor_robots(floor_idx: int, container: Node2D) -> void:
+	var main_spawner = _main.get("_main_spawner")
+	if main_spawner == null:
+		print("[FloorManager] Warning: main_spawner not found, cannot spawn robots")
+		return
+	
+	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(floor_idx)
+	if fd == null:
+		return
+	
+	# Get floor Y position (world coordinate)
+	var floor_y: float = get_floor_y(floor_idx)
+	
+	print("[FloorManager] Spawning robots for Floor %d (theme: %s)" % [floor_idx, fd.theme])
+	
+	# Check if robots already exist for this floor before spawning
+	var robots: Array = _main.get("_robots")
+	
+	# Spawn cleaning robot on EVERY floor
+	var cleaner_pos := Vector2(800.0, floor_y + 400.0) + Vector2(randf_range(-50, 50), randf_range(-30, 30))
+	# Check if cleaning robot already exists for this floor
+	var has_cleaner := false
+	if robots != null:
+		for r in robots:
+			if r.name.begins_with("Robot_Cleaner_Floor%d" % floor_idx) or r.name.begins_with("Robot_Single_Cleaner"):
+				has_cleaner = true
+				break
+	if not has_cleaner:
+		main_spawner.spawn_robot_single(0)  # CLEANING_ROBOT
+		# Find the robot we just spawned (it has the newest name with _npc_count)
+		var all_robots = _main.get("_robots")
+		if all_robots != null and all_robots.size() > 0:
+			var newest_robot = all_robots[all_robots.size() - 1]
+			newest_robot.position = cleaner_pos
+			newest_robot.name = "Robot_Cleaner_Floor%d" % floor_idx
+			print("[FloorManager] Spawned cleaning robot at %s" % str(cleaner_pos))
+	
+	# Spawn guidance robot (only on ground floor - lobby)
+	if floor_idx == 0:
+		var guide_pos := Vector2(400.0, floor_y + 150.0) + Vector2(randf_range(-30, 30), randf_range(-20, 20))
+		var has_guide := false
+		if robots != null:
+			for r in robots:
+				if r.name.begins_with("Robot_Guide_Floor0") or r.name.begins_with("Robot_Single_Guide"):
+					has_guide = true
+					break
+		if not has_guide:
+			main_spawner.spawn_robot_single(1)  # GUIDANCE_ROBOT
+			var all_robots = _main.get("_robots")
+			if all_robots != null and all_robots.size() > 0:
+				var newest_robot = all_robots[all_robots.size() - 1]
+				newest_robot.position = guide_pos
+				newest_robot.name = "Robot_Guide_Floor0"
+				print("[FloorManager] Spawned guidance robot at %s" % str(guide_pos))
+	
+	# Spawn shelf stocking robot on floors with shopping
+	if fd.has_shopping and floor_idx > 0:
+		var shelf_pos := Vector2(200.0, floor_y + 300.0) + Vector2(randf_range(-30, 30), randf_range(-20, 20))
+		var has_shelf := false
+		if robots != null:
+			for r in robots:
+				if r.name.begins_with("Robot_Shelf_Floor%d" % floor_idx) or r.name.begins_with("Robot_Single_Shelf"):
+					has_shelf = true
+					break
+		if not has_shelf:
+			main_spawner.spawn_robot_single(4)  # SHELF_ROBOT
+			var all_robots = _main.get("_robots")
+			if all_robots != null and all_robots.size() > 0:
+				var newest_robot = all_robots[all_robots.size() - 1]
+				newest_robot.position = shelf_pos
+				newest_robot.name = "Robot_Shelf_Floor%d" % floor_idx
+				print("[FloorManager] Spawned shelf robot at %s" % str(shelf_pos))
+	
+	# Spawn security robot on lobby floor
+	if floor_idx == 0:
+		var sec_pos := Vector2(150.0, floor_y + 200.0) + Vector2(randf_range(-30, 30), randf_range(-20, 20))
+		var has_security := false
+		if robots != null:
+			for r in robots:
+				if r.name.begins_with("Robot_Security_Floor0") or r.name.begins_with("Robot_Single_Security"):
+					has_security = true
+					break
+		if not has_security:
+			main_spawner.spawn_robot_single(3)  # SECURITY_ROBOT
+			var all_robots = _main.get("_robots")
+			if all_robots != null and all_robots.size() > 0:
+				var newest_robot = all_robots[all_robots.size() - 1]
+				newest_robot.position = sec_pos
+				newest_robot.name = "Robot_Security_Floor0"
+				print("[FloorManager] Spawned security robot at %s" % str(sec_pos))
+
+# Regenerate NPCs for a floor (call when floor changes to refresh)
+func regenerate_floor_npcs(floor_idx: int) -> void:
+	_npcs_spawned.erase(floor_idx)
+	var container: Node2D = _floor_containers.get(floor_idx)
+	if container != null and is_floor_active(floor_idx):
+		spawn_floor_npcs(floor_idx, container)
+		_npcs_spawned[floor_idx] = true
+
+# Regenerate robots for a floor (call when floor changes to refresh)
+func regenerate_floor_robots(floor_idx: int) -> void:
+	_robots_spawned.erase(floor_idx)
+	var container: Node2D = _floor_containers.get(floor_idx)
+	if container != null and is_floor_active(floor_idx):
+		spawn_floor_robots(floor_idx, container)
+		_robots_spawned[floor_idx] = true
+
+# Clear all NPCs and robots from a floor
+func clear_floor_entities(floor_idx: int) -> void:
+	var container: Node2D = _floor_containers.get(floor_idx)
+	if container == null:
+		return
+	
+	# Remove NPC nodes from container
+	var to_remove := []
+	for child in container.get_children():
+		if child.name.begins_with("Staff_") or child.name.begins_with("Customer_") or child.name.begins_with("GroupLeader_"):
+			to_remove.append(child)
+		elif child.name.begins_with("Robot_") or child.name.begins_with("Robo_"):
+			to_remove.append(child)
+	
+	for node in to_remove:
+		container.remove_child(node)
+		node.queue_free()
+	
+	# Also remove NPCs/robots from _main that belong to this floor
+	# They were spawned directly to _main, not to container
+	_cleanup_main_entities_for_floor(floor_idx)
+	
+	_npcs_spawned.erase(floor_idx)
+	_robots_spawned.erase(floor_idx)
+
+# Clean up entities from _main that belong to a specific floor
+func _cleanup_main_entities_for_floor(floor_idx: int) -> void:
+	if _main == null:
+		return
+	
+	# Get all NPCs from _main's _npcs array that belong to this floor
+	var npcs: Array = _main.get("_npcs")
+	if npcs != null:
+		var to_remove := []
+		for npc in npcs:
+			if is_instance_valid(npc):
+				# Check if this NPC belongs to the target floor
+				# NPCs track their floor via actor.current_floor - this is the most reliable check
+				if npc.has_method("get_actor"):
+					var actor = npc.get_actor()
+					if actor != null and actor.current_floor == floor_idx:
+						to_remove.append(npc)
+		
+		for npc in to_remove:
+			npcs.erase(npc)
+			if npc.get_parent() == _main:
+				_main.remove_child(npc)
+			npc.queue_free()
+	
+	# Clean up robots from _main's _robots array
+	var robots: Array = _main.get("_robots")
+	if robots != null:
+		var to_remove := []
+		for robot in robots:
+			if is_instance_valid(robot):
+				# Robots have floor info in their name (Robot_Cleaner_Floor0, etc.)
+				# Check for floor-specific naming pattern
+				var robot_name = robot.name if robot.name != null else ""
+				if robot_name.find("Floor%d" % floor_idx) >= 0:
+					to_remove.append(robot)
+				# Also check old-style naming without floor suffix
+				elif robot_name.begins_with("Robot_Single_Cleaner") or robot_name.begins_with("Robot_Single_Guide") or robot_name.begins_with("Robot_Single_Shelf") or robot_name.begins_with("Robot_Single_Security"):
+					to_remove.append(robot)
+				elif robot_name.begins_with("Robot_Humanoid_"):
+					to_remove.append(robot)
+		
+		for robot in to_remove:
+			robots.erase(robot)
+			if robot.get_parent() == _main:
+				_main.remove_child(robot)
+			robot.queue_free()
+	
+	print("[FloorManager] Cleaned up entities for floor %d from _main" % floor_idx)
 
 func get_distance_to_floor(floor_idx: int) -> int:
 	return abs(floor_idx - _current_floor_idx)
