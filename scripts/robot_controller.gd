@@ -790,11 +790,12 @@ func _update_sprite() -> void:
 		else:
 			_bob_offset = 0.0
 		_sprite.position.y = _bob_offset
-		_sprite.frame = int(_anim_timer * 3) % 4
+		if _sprite.hframes > 1:
+			_sprite.frame = int(_anim_timer * 3) % _sprite.hframes
 	else:
 		_sprite.position.y = sin(_anim_timer * 3.0) * 1.0
-		if _state == "moving":
-			_sprite.frame = int(_anim_timer * 4) % 4
+		if _state == "moving" and _sprite.hframes > 1:
+			_sprite.frame = int(_anim_timer * 4) % _sprite.hframes
 
 func set_bounds_visible(visible: bool) -> void:
 	_bounds_visible = visible
