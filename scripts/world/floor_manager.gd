@@ -1,4 +1,4 @@
-﻿# floor_manager.gd
+# floor_manager.gd
 # Manages multiple floors with LOD-style freezing for distant floors.
 # All floors are pre-built but only floors within ACTIVE_RANGE are fully active.
 extends Node

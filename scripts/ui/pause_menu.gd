@@ -63,7 +63,9 @@ func _build_ui() -> void:
 	var title_settings := LabelSettings.new()
 	title_settings.font_color = Color(0.90, 0.90, 0.95)
 	title_settings.font_size = 14
-	title_settings.font_bold = true
+	if ThemeDB.fallback_font:
+		var bold_font := ThemeDB.fallback_font
+		title_settings.font = bold_font
 	title.label_settings = title_settings
 	add_child(title)
 
