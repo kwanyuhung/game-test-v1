@@ -49,6 +49,9 @@ var _prev_nearby_section: Node = null
 var _prev_nearby_stall: Node = null
 var _prev_nearby_npc: Node = null
 
+# All nearby interactions for numbered bubble display
+var _all_nearby_interactions: Array = []
+
 func setup(main: Node2D) -> void:
 	_main = main
 	_floor_builder = main.get("_floor_builder")
@@ -99,64 +102,280 @@ func _register_debug_objects() -> void:
 		for esc in _floor_builder.get_escalators():
 			debug_bounds.track_escalator(esc)
 
-func _update_interaction_bubble() -> void:
-	var bubble = _main.get("_interaction_bubble")
-	if bubble == null:
-		return
+# Build list of all nearby interactions for numbered bubble display
+func _collect_all_interactions() -> Array:
+	var interactions: Array = []
 	
-	# Priority order for bubble display
+	if _player == null:
+		return interactions
+	
+	var ppos = _player.position
+	
+	# 0: Elevator
 	if nearby_elevator:
-		bubble.show_interaction(_main.get("_elevator"), "Elevator", "elevator")
-	elif nearby_checkout != null:
+		var elevator = _main.get("_elevator")
+		interactions.append({
+			"index": 0,
+			"label": "Elevator",
+			"type": "elevator",
+			"target": elevator,
+			"position": elevator.global_position if elevator else ppos
+		})
+	
+	# 1: Stairs
+	if nearby_stairs:
+		interactions.append({
+			"index": 1,
+			"label": "Stairs",
+			"type": "stairs",
+			"target": null,
+			"position": ppos
+		})
+	
+	# 2: Checkout
+	if nearby_checkout != null:
 		var ctype = nearby_checkout.get_checkout_type() if nearby_checkout.has_method("get_checkout_type") else -1
 		var label = "Checkout"
 		if ctype == 1: label = "Self-Checkout"
 		elif ctype == 0: label = "Express"
-		bubble.show_interaction(nearby_checkout, label, "checkout")
-	elif nearby_section != null:
+		interactions.append({
+			"index": 2,
+			"label": label,
+			"type": "checkout",
+			"target": nearby_checkout,
+			"position": nearby_checkout.global_position
+		})
+	
+	# 3: Section
+	if nearby_section != null:
 		var sec_name = "Section"
 		if nearby_section.has_method("get_def"):
 			var def = nearby_section.get_def()
 			if def.has("name"):
 				sec_name = def.name
-		bubble.show_interaction(nearby_section, sec_name, "section")
-	elif nearby_stall != null:
+		interactions.append({
+			"index": 3,
+			"label": sec_name,
+			"type": "section",
+			"target": nearby_section,
+			"position": nearby_section.global_position
+		})
+	
+	# 4: Food Stall
+	if nearby_stall != null:
 		var stall_name = "Food Stall"
 		if nearby_stall.has_method("get_stall_def"):
 			var fd = nearby_stall.get_stall_def()
 			stall_name = fd.get("name", "Food Stall")
-		bubble.show_interaction(nearby_stall, stall_name, "stall")
-	elif nearby_npc_for_chat != null:
+		interactions.append({
+			"index": 4,
+			"label": stall_name,
+			"type": "stall",
+			"target": nearby_stall,
+			"position": nearby_stall.global_position
+		})
+	
+	# 5: NPC
+	if nearby_npc_for_chat != null:
 		var npc_name = "NPC"
 		if nearby_npc_for_chat.has_method("get_actor"):
 			var actor = nearby_npc_for_chat.get_actor()
 			if actor != null:
 				npc_name = actor.display_name
-		bubble.show_interaction(nearby_npc_for_chat, npc_name, "npc")
-	elif nearby_claw_machine != null:
+		interactions.append({
+			"index": 5,
+			"label": "Talk: " + npc_name,
+			"type": "npc",
+			"target": nearby_npc_for_chat,
+			"position": nearby_npc_for_chat.global_position
+		})
+	
+	# 6: Claw Machine
+	if nearby_claw_machine != null:
 		var mid = nearby_claw_machine.get_machine_id() if nearby_claw_machine.has_method("get_machine_id") else "1"
-		bubble.show_interaction(nearby_claw_machine, "Claw #" + mid.replace("claw_", ""), "claw")
-	elif nearby_loyalty or nearby_gift_wrap or nearby_digital_kiosk or nearby_info_desk or nearby_cafe or nearby_vending or nearby_promo_booth or nearby_lost_found or nearby_store_news:
-		var label = "Facility"
-		var ftype = "facility"
-		if nearby_loyalty: label = "Loyalty"
-		elif nearby_gift_wrap: label = "Gift Wrap"
-		elif nearby_digital_kiosk: label = "Directory"
-		elif nearby_info_desk: label = "Info Desk"
-		elif nearby_cafe: label = "Cafe"
-		elif nearby_vending: label = "Vending"
-		elif nearby_promo_booth: label = "Deals"
-		elif nearby_lost_found: label = "Lost & Found"
-		elif nearby_store_news: label = "News"
-		bubble.show_interaction(null, label, ftype)
-	elif nearby_atm:
-		bubble.show_interaction(null, "ATM", "facility")
-	elif nearby_warehouse_dock:
-		bubble.show_interaction(null, "Truck Dock", "facility")
+		interactions.append({
+			"index": 6,
+			"label": "Claw #" + mid.replace("claw_", ""),
+			"type": "claw",
+			"target": nearby_claw_machine,
+			"position": nearby_claw_machine.global_position
+		})
+	
+	# 7: Facility (loyalty, gift wrap, kiosk, info desk, cafe, vending, promo, lost & found, news)
+	if nearby_loyalty:
+		interactions.append({
+			"index": 7,
+			"label": "Loyalty",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	elif nearby_gift_wrap:
+		interactions.append({
+			"index": 7,
+			"label": "Gift Wrap",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	elif nearby_digital_kiosk:
+		interactions.append({
+			"index": 7,
+			"label": "Directory",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	elif nearby_info_desk:
+		interactions.append({
+			"index": 7,
+			"label": "Info Desk",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	elif nearby_cafe:
+		interactions.append({
+			"index": 7,
+			"label": "Cafe",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	elif nearby_vending:
+		interactions.append({
+			"index": 7,
+			"label": "Vending",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	elif nearby_promo_booth:
+		interactions.append({
+			"index": 7,
+			"label": "Deals",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	elif nearby_lost_found:
+		interactions.append({
+			"index": 7,
+			"label": "Lost & Found",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	elif nearby_store_news:
+		interactions.append({
+			"index": 7,
+			"label": "News",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	elif nearby_karaoke:
+		interactions.append({
+			"index": 7,
+			"label": "Karaoke",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	elif nearby_pool_table:
+		interactions.append({
+			"index": 7,
+			"label": "Pool",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	elif nearby_darts_board:
+		interactions.append({
+			"index": 7,
+			"label": "Darts",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	
+	# 8: ATM
+	if nearby_atm:
+		interactions.append({
+			"index": 8,
+			"label": "ATM",
+			"type": "atm",
+			"target": null,
+			"position": ppos
+		})
+	
+	# 9: Warehouse/Truck Dock
+	if nearby_warehouse_dock:
+		interactions.append({
+			"index": 9,
+			"label": "Truck Dock",
+			"type": "warehouse",
+			"target": null,
+			"position": ppos
+		})
 	elif nearby_warehouse:
-		bubble.show_interaction(null, "Warehouse", "facility")
+		interactions.append({
+			"index": 9,
+			"label": "Warehouse",
+			"type": "warehouse",
+			"target": null,
+			"position": ppos
+		})
+	elif nearby_terminal:
+		interactions.append({
+			"index": 9,
+			"label": "Terminal",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	elif nearby_monitor:
+		interactions.append({
+			"index": 9,
+			"label": "Monitor",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	elif nearby_issue:
+		interactions.append({
+			"index": 9,
+			"label": "Fix Issue",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	
+	# Parking
+	if nearby_parking:
+		interactions.append({
+			"index": 9,
+			"label": "Parking",
+			"type": "facility",
+			"target": null,
+			"position": ppos
+		})
+	
+	return interactions
+
+func _update_interaction_bubble() -> void:
+	var bubble = _main.get("_interaction_bubble")
+	if bubble == null:
+		return
+	
+	# Collect all nearby interactions
+	_all_nearby_interactions = _collect_all_interactions()
+	
+	# Show all interactions as numbered bubbles
+	if _all_nearby_interactions.size() > 0:
+		bubble.show_interactions(_all_nearby_interactions)
 	else:
-		bubble.hide_interaction()
+		bubble.hide_all()
 
 # Update bounding box visibility based on proximity
 func _update_bounds_visibility() -> void:
@@ -224,7 +443,7 @@ func update_all() -> void:
 	_update_phase3_proximity()
 	# Update the unified interaction hint showing all available [E] actions
 	_update_interaction_hint()
-	# Update the interaction bubble above the player
+	# Update the numbered interaction bubbles above the player
 	_update_interaction_bubble()
 	# Update bounding box visibility based on proximity
 	_update_bounds_visibility()
@@ -247,65 +466,67 @@ func _update_interaction_hint() -> void:
 	var hints: Array = []
 	
 	if nearby_elevator:
-		hints.append("[E] Elevator")
+		hints.append("[0] Elevator")
+	if nearby_stairs:
+		hints.append("[1] Stairs")
 	if nearby_section != null:
 		var sec_name = "Section"
 		if nearby_section.has_method("get_def"):
 			var def = nearby_section.get_def()
 			if def.has("name"):
 				sec_name = def.name
-		hints.append("[E] Browse " + sec_name)
+		hints.append("[3] Browse " + sec_name)
 	if nearby_checkout != null:
 		var checkout_type = "Checkout"
 		if nearby_checkout.has_method("get_checkout_type"):
 			var ctype = nearby_checkout.get_checkout_type()
 			if ctype == 1: checkout_type = "Self-Checkout"
 			elif ctype == 0: checkout_type = "Express Lane"
-		hints.append("[E] " + checkout_type)
+		hints.append("[2] " + checkout_type)
 	if nearby_stall != null:
-		hints.append("[E] Food Stall")
+		hints.append("[4] Food Stall")
 	if nearby_claw_machine != null:
-		hints.append("[E] Claw Machine")
+		hints.append("[6] Claw Machine")
 	if nearby_atm:
-		hints.append("[E] ATM")
+		hints.append("[8] ATM")
 	if nearby_terminal:
-		hints.append("[E] Price Terminal")
+		hints.append("[9] Price Terminal")
 	if nearby_monitor:
-		hints.append("[E] Monitor")
+		hints.append("[9] Monitor")
 	if nearby_npc_for_chat != null:
-		hints.append("[E] Talk to NPC")
-	if nearby_issue != null:
-		hints.append("[E] Fix Issue")
+		hints.append("[5] Talk to NPC")
+	if nearby_issue:
+		hints.append("[9] Fix Issue")
 	if nearby_loyalty:
-		hints.append("[E] Loyalty")
+		hints.append("[7] Loyalty")
 	if nearby_gift_wrap:
-		hints.append("[E] Gift Wrap")
+		hints.append("[7] Gift Wrap")
 	if nearby_digital_kiosk:
-		hints.append("[E] Directory")
+		hints.append("[7] Directory")
 	if nearby_info_desk:
-		hints.append("[E] Info Desk")
+		hints.append("[7] Info Desk")
 	if nearby_cafe:
-		hints.append("[E] Cafe")
+		hints.append("[7] Cafe")
 	if nearby_vending:
-		hints.append("[E] Vending")
+		hints.append("[7] Vending")
 	if nearby_promo_booth:
-		hints.append("[E] Daily Deals")
+		hints.append("[7] Daily Deals")
 	if nearby_lost_found:
-		hints.append("[E] Lost & Found")
+		hints.append("[7] Lost & Found")
 	if nearby_store_news:
-		hints.append("[E] Store News")
+		hints.append("[7] Store News")
 	if nearby_karaoke:
-		hints.append("[E] Karaoke")
+		hints.append("[7] Karaoke")
 	if nearby_pool_table:
-		hints.append("[E] Pool")
+		hints.append("[7] Pool")
 	if nearby_darts_board:
-		hints.append("[E] Darts")
+		hints.append("[7] Darts")
 	if nearby_warehouse_dock:
-		hints.append("[E] Truck Dock")
+		hints.append("[9] Truck Dock")
 	if nearby_warehouse:
-		hints.append("[E] Warehouse")
+		hints.append("[9] Warehouse")
 	if nearby_parking:
-		hints.append("[E] Parking")
+		hints.append("[9] Parking")
 	
 	# Show all hints combined, or hide prompt if nothing nearby
 	if hints.size() > 0:
@@ -338,16 +559,6 @@ func _update_stall_proximity() -> void:
 			nearest_dist = dist
 			nearby_stall = stall
 
-	var prompt_lbl = _main.get_node_or_null("PromptLbl")
-	var prompt_bg = _main.get_node_or_null("PromptBg")
-	if nearby_stall != null and not nearby_elevator and not nearby_stairs:
-		if prompt_lbl != null:
-			var fd = nearby_stall.get_stall_def()
-			prompt_lbl.text = "[E] Order at %s" % fd.name
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
-
 	_main.set("_nearby_stall", nearby_stall)
 
 func _update_claw_machine_proximity() -> void:
@@ -366,16 +577,6 @@ func _update_claw_machine_proximity() -> void:
 		if dist < nearest_dist and dist < _CELL_SIZE * 10.0:
 			nearest_dist = dist
 			nearby_claw_machine = machine
-
-	var prompt_lbl = _main.get_node_or_null("PromptLbl")
-	var prompt_bg = _main.get_node_or_null("PromptBg")
-	if nearby_claw_machine != null and not nearby_elevator and not nearby_stairs:
-		if prompt_lbl != null:
-			var mid = nearby_claw_machine.get_machine_id()
-			prompt_lbl.text = "[E] Play Claw #%s" % mid.replace("claw_", "")
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
 
 	_main.set("_nearby_claw_machine", nearby_claw_machine)
 
@@ -396,31 +597,6 @@ func _update_npc_chat_proximity() -> void:
 			nearest_dist = dist
 			nearby_npc_for_chat = npc
 
-	var prompt_lbl = _main.get_node_or_null("PromptLbl")
-	var prompt_bg = _main.get_node_or_null("PromptBg")
-	if nearby_npc_for_chat != null and not nearby_elevator and not nearby_stairs:
-		if _chat_panel == null or not _chat_panel._is_open:
-			if prompt_lbl != null:
-				var actor = nearby_npc_for_chat.get_actor()
-				var role_str := ""
-				if actor.role == 1:  # ActorData.Role.STAFF
-					var role_names := {
-						0: "Cashier",    # CASHIER
-						1: "Stocker",    # SHELF_STOCKER
-						2: "Cleaner",    # CLEANER
-						3: "Security",   # SECURITY
-						4: "Greeter",    # GREETER
-						5: "Manager",    # MANAGER
-						6: "Staff",      # FLOOR_STAFF
-					}
-					role_str = role_names.get(actor.staff_role, "Staff")
-					prompt_lbl.text = "[C] Chat with %s (%s)" % [actor.display_name, role_str]
-				else:
-					prompt_lbl.text = "[C] Chat with %s" % actor.display_name
-				prompt_lbl.visible = true
-			if prompt_bg != null:
-				prompt_bg.visible = true
-
 	_main.set("_nearby_npc_for_chat", nearby_npc_for_chat)
 
 func _update_issue_proximity() -> void:
@@ -431,20 +607,6 @@ func _update_issue_proximity() -> void:
 		return
 	var issue = _maintenance_system.get_issue_at_pos(_player.position, _CELL_SIZE * 7.0)
 	nearby_issue = (issue != null)
-	var prompt_lbl = _main.get_node_or_null("PromptLbl")
-	var prompt_bg = _main.get_node_or_null("PromptBg")
-	if issue != null and not nearby_elevator and not nearby_stairs:
-		if prompt_lbl != null:
-			prompt_lbl.text = "[E] Fix: %s [%s]" % [issue.label, issue.assigned_to]
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
-	if _target_issue != null and _target_issue.status < 2:
-		if prompt_lbl != null and not nearby_issue:
-			prompt_lbl.text = "[E] Fix: %s (Floor %d)" % [_target_issue.label, _target_issue.floor]
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
 
 	_main.set("_nearby_issue", nearby_issue)
 	_main.set("_target_issue", _target_issue)
@@ -458,14 +620,6 @@ func _update_atm_proximity() -> void:
 			if node.is_nearby(_player.position):
 				nearby_atm = true
 				break
-	var prompt_lbl = _main.get_node_or_null("PromptLbl")
-	var prompt_bg = _main.get_node_or_null("PromptBg")
-	if nearby_atm and not nearby_elevator and not nearby_stairs:
-		if prompt_lbl != null:
-			prompt_lbl.text = "[E] Use ATM"
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
 
 	_main.set("_nearby_atm", nearby_atm)
 
@@ -477,18 +631,6 @@ func _update_warehouse_proximity() -> void:
 	var wh_pos := Vector2(40 * _CELL_SIZE, 20 * _CELL_SIZE)
 	if _player.position.distance_to(wh_pos) < _CELL_SIZE * 12.0:
 		nearby_warehouse = true
-	var prompt_lbl = _main.get_node_or_null("PromptLbl")
-	var prompt_bg = _main.get_node_or_null("PromptBg")
-	var _warehouse_mode = _main.get("_warehouse_mode")
-	if nearby_warehouse and not nearby_elevator and not nearby_stairs:
-		if prompt_lbl != null:
-			if _warehouse_mode:
-				prompt_lbl.text = "[WASD] Drive Truck  [Q/E] Forklift  [F] Conveyor  [Space] Stop  [E] Exit"
-			else:
-				prompt_lbl.text = "[E] Warehouse  [R] Robot Panel"
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
 
 	_main.set("_nearby_warehouse", nearby_warehouse)
 
@@ -522,24 +664,6 @@ func _update_stairs_proximity() -> void:
 	var result: Dictionary = _stairs_system.check_stairs_proximity(_player.position, _current_floor_idx)
 	nearby_stairs = result.get("in_zone", false)
 	
-	# Update prompt label if stairs zone is nearby
-	var prompt_lbl = _main.get_node_or_null("PromptLbl")
-	var prompt_bg = _main.get_node_or_null("PromptBg")
-	if nearby_stairs and not nearby_elevator:
-		var can_go_up: bool = result.get("can_go_up", false)
-		var can_go_down: bool = result.get("can_go_down", false)
-		var prompt_text := ""
-		if can_go_up and can_go_down:
-			prompt_text = "[W] Go Up  [S] Go Down"
-		elif can_go_up:
-			prompt_text = "[W] Go Up"
-		elif can_go_down:
-			prompt_text = "[S] Go Down"
-		if prompt_lbl != null and prompt_text != "":
-			prompt_lbl.text = prompt_text
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
 	_main.set("_nearby_stairs", nearby_stairs)
 
 func _update_monitor_proximity() -> void:
@@ -552,14 +676,6 @@ func _update_monitor_proximity() -> void:
 	var wh_pos := Vector2(66 * _CELL_SIZE + 2 * _CELL_SIZE, 3 * _CELL_SIZE + 2 * _CELL_SIZE)
 	if _player.position.distance_to(wh_pos) < _CELL_SIZE * 8.0:
 		nearby_monitor = true
-	var prompt_lbl = _main.get_node_or_null('PromptLbl')
-	var prompt_bg = _main.get_node_or_null('PromptBg')
-	if nearby_monitor and not nearby_elevator and not nearby_stairs:
-		if prompt_lbl != null:
-			prompt_lbl.text = '[E] Open Monitor Panel'
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
 
 	_main.set("_nearby_monitor", nearby_monitor)
 
@@ -577,16 +693,6 @@ func _update_terminal_proximity() -> void:
 	if ppos.distance_to(terminal_center) < _CELL_SIZE * 12.0:
 		nearby_terminal = true
 
-	var prompt_lbl = _main.get_node_or_null("PromptLbl")
-	var prompt_bg = _main.get_node_or_null("PromptBg")
-	var _player_stats = _main.get("_player_stats")
-	if nearby_terminal and _player != null and _player.is_in_staff_mode():
-		if prompt_lbl != null:
-			prompt_lbl.text = "[E] Price Terminal"
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
-
 	_main.set("_nearby_terminal", nearby_terminal)
 
 func _update_checkout_proximity() -> void:
@@ -601,26 +707,6 @@ func _update_checkout_proximity() -> void:
 		if dist < nearest_dist and dist < _CELL_SIZE * 8.0:
 			nearest_dist = dist
 			nearby_checkout = counter
-
-	var prompt_lbl = _main.get_node_or_null("PromptLbl")
-	var prompt_bg = _main.get_node_or_null("PromptBg")
-	if nearby_checkout != null and not nearby_elevator and not nearby_stairs:
-		var ctype = nearby_checkout.get_checkout_type()
-		var type_str := "Checkout"
-		match ctype:
-			0: type_str = "[E] Staffed Checkout"    # STAFFED
-			1: type_str = "[E] Self-Checkout"       # SELF
-			2: type_str = "[E] Express Checkout"    # EXPRESS
-		if prompt_lbl != null:
-			prompt_lbl.text = type_str
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
-	else:
-		if prompt_lbl != null:
-			var txt = prompt_lbl.text
-			if txt == "[E] Staffed Checkout" or txt == "[E] Self-Checkout" or txt == "[E] Express Checkout" or txt == "[E] Checkout":
-				prompt_lbl.text = ""
 
 	_main.set("_nearby_checkout", nearby_checkout)
 
@@ -643,8 +729,6 @@ func _update_phase3_proximity() -> void:
 		return
 
 	var ppos = _player.position
-	var prompt_lbl = _main.get_node_or_null("PromptLbl")
-	var prompt_bg = _main.get_node_or_null("PromptBg")
 	var _current_floor_idx = _main.get("_current_floor_idx")
 
 	if _floor_builder.is_near_zone_type(17, ppos):  # ZONE_LOYALTY_KIOSK
@@ -675,30 +759,6 @@ func _update_phase3_proximity() -> void:
 	# Floor G: warehouse receiving dock proximity
 	if _floor_builder.is_near_zone_type(2, ppos) and _current_floor_idx == 0:  # ZONE_WAREHOUSE
 		nearby_warehouse_dock = true
-
-	# Update prompt if no higher-priority prompt is showing
-	var show_phase3 = nearby_loyalty or nearby_gift_wrap or nearby_digital_kiosk or nearby_info_desk or nearby_cafe or nearby_vending
-	if show_phase3 and not nearby_elevator and not nearby_stairs and nearby_section == null and nearby_checkout == null:
-		var txt := "[E] "
-		if nearby_loyalty: txt += "Loyalty Sign-Up"
-		elif nearby_gift_wrap: txt += "Gift Wrap (+XP)"
-		elif nearby_digital_kiosk: txt += "Info Directory [E Browse]"
-		elif nearby_warehouse_dock: txt += "Truck Dock [E Unload]"
-		elif nearby_warehouse: txt += "Warehouse Ctrl [E Enter]"
-		elif nearby_info_desk: txt += "Info Desk"
-		elif nearby_cafe: txt += "Cafe Menu"
-		elif nearby_karaoke: txt += "Karaoke [E Sing]"
-		elif nearby_pool_table: txt += "Pool Table [E Play]"
-		elif nearby_darts_board: txt += "Darts [E Throw]"
-		elif nearby_promo_booth: txt += "Daily Deals [E Browse]"
-		elif nearby_lost_found: txt += "Lost & Found"
-		elif nearby_store_news: txt += "Store News [E Read]"
-		elif nearby_vending: txt += "Vending Machine"
-		if prompt_lbl != null:
-			prompt_lbl.text = txt
-			prompt_lbl.visible = true
-		if prompt_bg != null:
-			prompt_bg.visible = true
 
 	_main.set("_nearby_loyalty", nearby_loyalty)
 	_main.set("_nearby_gift_wrap", nearby_gift_wrap)
@@ -744,3 +804,7 @@ func get_nearby_parking(): return nearby_parking
 
 func set_nearby_section(v): nearby_section = v
 func set_nearby_checkout(v): nearby_checkout = v
+
+# Get all nearby interactions for external access
+func get_all_nearby_interactions() -> Array:
+	return _all_nearby_interactions

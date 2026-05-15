@@ -9,6 +9,8 @@ var _main: Node2D = null
 var _config: MainConfig = null
 var _cell_size: int = 16
 var _npc_count: int = 0
+var _npc_spawned: bool = false  # Track if a single NPC has been spawned
+var _robot_spawned: bool = false  # Track if a single robot has been spawned
 
 # Helper to get world Y position for a floor
 func _get_floor_world_y(floor_idx: int) -> float:
@@ -39,6 +41,11 @@ func set_npc_count(v: int) -> void:
 func spawn_npc_staff(role: int, floor_idx: int, pos: Vector2) -> void:
 	# 🔥 空值防护
 	if _main == null: return
+	# Limit to only 1 NPC spawn
+	if _npc_spawned:
+		print("[MainSpawner] NPC already spawned, skipping staff NPC")
+		return
+	_npc_spawned = true
 	var npc_scene = preload("res://scripts/npc_controller.gd")
 	var npc = npc_scene.new()
 	var actor = ActorData.Actor.random_staff(role)
@@ -59,6 +66,11 @@ func spawn_npc_staff(role: int, floor_idx: int, pos: Vector2) -> void:
 func spawn_customer(group_type: int, floor_idx: int, pos: Vector2) -> void:
 	# 🔥 空值防护
 	if _main == null: return
+	# Limit to only 1 NPC spawn
+	if _npc_spawned:
+		print("[MainSpawner] NPC already spawned, skipping customer")
+		return
+	_npc_spawned = true
 	var npc_scene = preload("res://scripts/npc_controller.gd")
 	var npc = npc_scene.new()
 	var actor = ActorData.Actor.random_customer(group_type)
@@ -79,6 +91,12 @@ func spawn_customer(group_type: int, floor_idx: int, pos: Vector2) -> void:
 func spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void:
 	# 🔥 空值防护
 	if _main == null: return
+	# Limit to only 1 NPC spawn total (only spawn the group leader)
+	if _npc_spawned:
+		print("[MainSpawner] NPC already spawned, skipping customer group")
+		return
+	_npc_spawned = true
+	
 	var leader = null
 	var offsets := []
 	var has_baby := false
@@ -251,6 +269,11 @@ func build_npcs() -> void:
 func spawn_robot_humanoid(staff_role: ActorData.StaffRole) -> void:
 	# 🔥 空值防护
 	if _main == null: return
+	# Limit to only 1 robot spawn
+	if _robot_spawned:
+		print("[MainSpawner] Robot already spawned, skipping humanoid robot")
+		return
+	_robot_spawned = true
 	var spawn_pos := Vector2.ZERO
 	match staff_role:
 		ActorData.StaffRole.CASHIER:    spawn_pos = Vector2(580, 320)
@@ -274,6 +297,11 @@ func spawn_robot_humanoid(staff_role: ActorData.StaffRole) -> void:
 func spawn_robot_single(rrole: ActorData.RobotRole) -> void:
 	# 🔥 空值防护
 	if _main == null: return
+	# Limit to only 1 robot spawn
+	if _robot_spawned:
+		print("[MainSpawner] Robot already spawned, skipping robot")
+		return
+	_robot_spawned = true
 	var spawn_pos := Vector2.ZERO
 	match rrole:
 		ActorData.RobotRole.CLEANING_ROBOT:  spawn_pos = Vector2(400, 400)
@@ -361,6 +389,11 @@ func _assigned_robot_role_name(rrole: ActorData.RobotRole) -> String:
 func spawn_scan_go_companion() -> void:
 	# 🔥 空值防护
 	if _main == null: return
+	# Limit to only 1 NPC spawn
+	if _npc_spawned:
+		print("[MainSpawner] NPC already spawned, skipping scan go companion")
+		return
+	_npc_spawned = true
 	var player: Node2D = _main.get("_player")
 	if player == null:
 		return
@@ -418,31 +451,41 @@ func spawn_player() -> void:
 # ── Test helpers ───────────────────────────────────────────────────────────────
 func spawn_test_customers(count: int) -> void:
 	if _main == null: return
-	for i in range(count):
-		var npc: Node = preload("res://scripts/npc_controller.gd").new()
-		npc.position = Vector2(300.0 + randf_range(-50, 50), 500.0 + randf_range(-30, 30))
-		_main.add_child(npc)
-		npc.configure(ActorData.Actor.new_test_customer())
-		var npcs: Array = _main.get("_npcs")
-		if npcs != null:
-			npcs.append(npc)
-		var chat_mgr = _main.get("_chat_manager")
-		if chat_mgr != null:
-			chat_mgr.register_npc(npc)
+	# Limit to only 1 NPC spawn total (ignore count, spawn just 1)
+	if _npc_spawned:
+		print("[MainSpawner] NPC already spawned, skipping test customer")
+		return
+	_npc_spawned = true
+	# Spawn just 1 NPC for testing
+	var npc: Node = preload("res://scripts/npc_controller.gd").new()
+	npc.position = Vector2(300.0 + randf_range(-50, 50), 500.0 + randf_range(-30, 30))
+	_main.add_child(npc)
+	npc.configure(ActorData.Actor.new_test_customer())
+	var npcs: Array = _main.get("_npcs")
+	if npcs != null:
+		npcs.append(npc)
+	var chat_mgr = _main.get("_chat_manager")
+	if chat_mgr != null:
+		chat_mgr.register_npc(npc)
 
 func spawn_test_staff(count: int) -> void:
 	if _main == null: return
-	for i in range(count):
-		var npc: Node = preload("res://scripts/npc_controller.gd").new()
-		npc.position = Vector2(350.0 + randf_range(-50, 50), 300.0 + randf_range(-30, 30))
-		_main.add_child(npc)
-		npc.configure(ActorData.Actor.new_test_staff())
-		var npcs: Array = _main.get("_npcs")
-		if npcs != null:
-			npcs.append(npc)
-		var chat_mgr = _main.get("_chat_manager")
-		if chat_mgr != null:
-			chat_mgr.register_npc(npc)
+	# Limit to only 1 NPC spawn total (ignore count, spawn just 1)
+	if _npc_spawned:
+		print("[MainSpawner] NPC already spawned, skipping test staff")
+		return
+	_npc_spawned = true
+	# Spawn just 1 NPC for testing
+	var npc: Node = preload("res://scripts/npc_controller.gd").new()
+	npc.position = Vector2(350.0 + randf_range(-50, 50), 300.0 + randf_range(-30, 30))
+	_main.add_child(npc)
+	npc.configure(ActorData.Actor.new_test_staff())
+	var npcs: Array = _main.get("_npcs")
+	if npcs != null:
+		npcs.append(npc)
+	var chat_mgr = _main.get("_chat_manager")
+	if chat_mgr != null:
+		chat_mgr.register_npc(npc)
 
 # ── Truck at dock ─────────────────────────────────────────────────────────────
 func spawn_truck_at_dock() -> void:
@@ -494,3 +537,28 @@ func spawn_truck_at_dock() -> void:
 	dock_lbl.add_theme_font_size_override("font_size", 8)
 	dock_lbl.position = Vector2(0, 44 * CELL)
 	truck_dock_node.add_child(dock_lbl)
+
+# ── Spawn limit helpers ────────────────────────────────────────────────────────
+# Reset NPC spawn flag (allows spawning 1 NPC again)
+func reset_npc_spawn() -> void:
+	_npc_spawned = false
+	print("[MainSpawner] NPC spawn limit reset")
+
+# Reset robot spawn flag (allows spawning 1 robot again)
+func reset_robot_spawn() -> void:
+	_robot_spawned = false
+	print("[MainSpawner] Robot spawn limit reset")
+
+# Reset both NPC and robot spawn flags
+func reset_all_spawns() -> void:
+	_npc_spawned = false
+	_robot_spawned = false
+	print("[MainSpawner] All spawn limits reset")
+
+# Check if an NPC has been spawned
+func has_npc_spawned() -> bool:
+	return _npc_spawned
+
+# Check if a robot has been spawned
+func has_robot_spawned() -> bool:
+	return _robot_spawned

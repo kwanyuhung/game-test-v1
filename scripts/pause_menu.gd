@@ -60,9 +60,11 @@ func _build_ui() -> void:
 	var title := Label.new()
 	title.text = "PAUSED"
 	title.position = Vector2(pan_x + 50, pan_y + 8)
-	title.add_theme_color_override("font_color", Color(0.90, 0.90, 0.95))
-	title.add_theme_font_size_override("font_size", 14)
-	title.bold = true
+	var title_settings := LabelSettings.new()
+	title_settings.font_color = Color(0.90, 0.90, 0.95)
+	title_settings.font_size = 14
+	title_settings.font_bold = true
+	title.label_settings = title_settings
 	add_child(title)
 
 	var hint := Label.new()

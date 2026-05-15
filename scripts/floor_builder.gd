@@ -5,11 +5,98 @@ class_name FloorBuilder
 # Data-driven floor renderer. Reads FloorDef + zones from floor_config.gd
 # and builds all visual content. Add new zone types by implementing
 # _build_<type>() and calling it from _build_zone().
+#
+# Floor 1 (Shoes) uses dedicated area handlers from scripts/areas/ directory
+# for better modularity and maintainability.
 
 const FloorConfig = preload("res://scripts/floor_config.gd")
 const StoreData = preload("res://scripts/store_data.gd")
 const FoodStallScript = preload("res://scripts/food_stall.gd")
 const ClawMachineScript = preload("res://scripts/claw_machine.gd")
+
+# Floor 0 (Ground) handlers
+const LobbyHandler = preload("res://scripts/areas/floor_0/lobby_handler.gd")
+const FoodStallHandler = preload("res://scripts/areas/floor_0/food_stall_handler.gd")
+const ServiceAreaHandler = preload("res://scripts/areas/floor_0/service_area_handler.gd")
+const WCHandler = preload("res://scripts/areas/floor_0/wc_handler.gd")
+const WarehouseHandler = preload("res://scripts/areas/floor_0/warehouse_handler.gd")
+const MiscHandler = preload("res://scripts/areas/floor_0/misc_handler.gd")
+const Floor0Handler = preload("res://scripts/areas/floor_0/floor_0_handler.gd")
+
+# Floor 1 handlers
+const ShoesRackHandler = preload("res://scripts/areas/floor_1/shoes_rack_handler.gd")
+const CommonAreaHandler = preload("res://scripts/areas/floor_1/common_area_handler.gd")
+const Floor1Handler = preload("res://scripts/areas/floor_1/floor_1_handler.gd")
+
+# Floor 2 handlers
+const DressRackHandler = preload("res://scripts/areas/floor_2/dress_rack_handler.gd")
+const FashionCommonHandler = preload("res://scripts/areas/floor_2/fashion_common_handler.gd")
+const Floor2Handler = preload("res://scripts/areas/floor_2/floor_2_handler.gd")
+
+# Floor 3 handlers
+const SportAreaHandler = preload("res://scripts/areas/floor_3/sport_area_handler.gd")
+const SportCommonHandler = preload("res://scripts/areas/floor_3/sport_common_handler.gd")
+const Floor3Handler = preload("res://scripts/areas/floor_3/floor_3_handler.gd")
+
+# Floor 4 handlers
+const OutdoorAreaHandler = preload("res://scripts/areas/floor_4/outdoor_area_handler.gd")
+const OutdoorCommonHandler = preload("res://scripts/areas/floor_4/outdoor_common_handler.gd")
+const Floor4Handler = preload("res://scripts/areas/floor_4/floor_4_handler.gd")
+
+# Floor 5 handlers
+const StationeryHandler = preload("res://scripts/areas/floor_5/stationery_handler.gd")
+const PlantsAreaHandler = preload("res://scripts/areas/floor_5/plants_area_handler.gd")
+const StationeryCommonHandler = preload("res://scripts/areas/floor_5/stationery_common_handler.gd")
+const Floor5Handler = preload("res://scripts/areas/floor_5/floor_5_handler.gd")
+
+# Floor 6 handlers
+const LockerHandler = preload("res://scripts/areas/floor_6/locker_handler.gd")
+const StaffLoungeHandler = preload("res://scripts/areas/floor_6/staff_lounge_handler.gd")
+const TrainingHandler = preload("res://scripts/areas/floor_6/training_handler.gd")
+const StaffAreaCommonHandler = preload("res://scripts/areas/floor_6/staff_area_common_handler.gd")
+const Floor6Handler = preload("res://scripts/areas/floor_6/floor_6_handler.gd")
+
+# Floor 7 handlers
+const OfficeDeskHandler = preload("res://scripts/areas/floor_7/office_desk_handler.gd")
+const MonitorRoomHandler = preload("res://scripts/areas/floor_7/monitor_room_handler.gd")
+const BackOfficeCommonHandler = preload("res://scripts/areas/floor_7/back_office_common_handler.gd")
+const Floor7Handler = preload("res://scripts/areas/floor_7/floor_7_handler.gd")
+
+# Floor 8 handlers
+const ExecOfficeHandler = preload("res://scripts/areas/floor_8/exec_office_handler.gd")
+const ExecOfficeCommonHandler = preload("res://scripts/areas/floor_8/exec_office_common_handler.gd")
+const Floor8Handler = preload("res://scripts/areas/floor_8/floor_8_handler.gd")
+
+# Floor 9 handlers
+const StaffRoomHandler = preload("res://scripts/areas/floor_9/staff_room_handler.gd")
+const StaffRoomCommonHandler = preload("res://scripts/areas/floor_9/staff_room_common_handler.gd")
+const Floor9Handler = preload("res://scripts/areas/floor_9/floor_9_handler.gd")
+
+# Floor 10 handlers (Rooftop Cafe)
+const Floor10Handler = preload("res://scripts/areas/floor_10/floor_10_handler.gd")
+const CafeCounterHandler = preload("res://scripts/areas/floor_10/cafe_counter_handler.gd")
+const RooftopCommonHandler = preload("res://scripts/areas/floor_10/rooftop_common_handler.gd")
+
+# Floor 11 handlers (Warehouse)
+const Floor11Handler = preload("res://scripts/areas/floor_11/floor_11_handler.gd")
+const WarehouseFloorHandler = preload("res://scripts/areas/floor_11/warehouse_floor_handler.gd")
+const TruckDockHandler = preload("res://scripts/areas/floor_11/truck_dock_handler.gd")
+const ConveyorHandler = preload("res://scripts/areas/floor_11/conveyor_handler.gd")
+
+# Floor 12 handlers (Juice Bar)
+const Floor12Handler = preload("res://scripts/areas/floor_12/floor_12_handler.gd")
+const JuiceBarHandler = preload("res://scripts/areas/floor_12/juice_bar_handler.gd")
+const JuiceBarCommonHandler = preload("res://scripts/areas/floor_12/juice_bar_common_handler.gd")
+
+# Floor 13 handlers (Kids Kingdom)
+const Floor13Handler = preload("res://scripts/areas/floor_13/floor_13_handler.gd")
+const KidsKingdomHandler = preload("res://scripts/areas/floor_13/kids_kingdom_handler.gd")
+const KidsKingdomCommonHandler = preload("res://scripts/areas/floor_13/kids_kingdom_common_handler.gd")
+
+# Floor 14 handlers (Electronics)
+const Floor14Handler = preload("res://scripts/areas/floor_14/floor_14_handler.gd")
+const ElectronicsHandler = preload("res://scripts/areas/floor_14/electronics_handler.gd")
+const ElectronicsCommonHandler = preload("res://scripts/areas/floor_14/electronics_common_handler.gd")
 
 const CELL_SIZE := FloorConfig.CELL_SIZE
 const WORLD_W  := FloorConfig.WORLD_W
@@ -131,6 +218,13 @@ func _build_zone(zone: Dictionary) -> void:
 		FloorConfig.ZONE_POOL_TABLE:   _build_zone_pool_table(zone)
 		FloorConfig.ZONE_DARTS_BOARD:  _build_zone_darts_board(zone)
 		FloorConfig.ZONE_ENTERTAINMENT: _build_zone_entertainment(zone)
+		FloorConfig.ZONE_PROMO_BOOTH: _build_zone_promo_booth(zone)
+		FloorConfig.ZONE_WAREHOUSE_STOCK_VIEW: _build_zone_warehouse_stock_view(zone)
+		FloorConfig.ZONE_STORE_NEWS: _build_zone_store_news(zone)
+		FloorConfig.ZONE_LOST_FOUND: _build_zone_lost_found(zone)
+		FloorConfig.ZONE_TRUCK_DOCK: _build_zone_truck_dock(zone)
+		FloorConfig.ZONE_FORKLIFT: _build_zone_forklift(zone)
+		FloorConfig.ZONE_CONVEYOR: _build_zone_conveyor(zone)
 		# Unknown types are silently skipped (extensible)
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -154,19 +248,8 @@ func _build_zone_aisle(zone: Dictionary) -> void:
 	_floor_nodes.append(r)
 
 func _build_zone_lobby(zone: Dictionary) -> void:
-	var r := ColorRect.new()
-	r.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	r.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
-	r.color = Color(0.22, 0.20, 0.18)
-	_parent.add_child(r)
-	_floor_nodes.append(r)
-
-	var stripe := ColorRect.new()
-	stripe.position = Vector2(zone.x * CELL_SIZE, (zone.y + zone.h - 1) * CELL_SIZE)
-	stripe.size = Vector2(zone.w * CELL_SIZE, 2)
-	stripe.color = Color(0.30, 0.27, 0.24)
-	_parent.add_child(stripe)
-	_floor_nodes.append(stripe)
+	# Delegate to LobbyHandler
+	LobbyHandler.build_lobby(_parent, zone, _floor_nodes)
 
 func _build_zone_parking(zone: Dictionary) -> void:
 	var base := ColorRect.new()
@@ -255,185 +338,19 @@ func _fill_img(img: Image, x: int, y: int, w: int, h: int, col: Color) -> void:
 			img.set_pixel(px, py, col)
 
 func _build_zone_wc(zone: Dictionary) -> void:
-	var bg := ColorRect.new()
-	bg.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	bg.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
-	bg.color = Color(0.18, 0.20, 0.24)
-	_parent.add_child(bg)
-	_floor_nodes.append(bg)
-
-	var door := ColorRect.new()
-	door.position = Vector2((zone.x + 2) * CELL_SIZE, (zone.y + zone.h - 3) * CELL_SIZE)
-	door.size = Vector2(2 * CELL_SIZE, 3 * CELL_SIZE)
-	door.color = Color(0.50, 0.48, 0.55)
-	_parent.add_child(door)
-	_floor_nodes.append(door)
-
-	var lbl := Label.new()
-	lbl.text = "WC"
-	lbl.position = Vector2((zone.x + zone.w * 0.5 - 1.5) * CELL_SIZE, (zone.y + 1) * CELL_SIZE)
-	lbl.add_theme_color_override("font_color", Color(0.80, 0.80, 0.90))
-	lbl.add_theme_font_size_override("font_size", 9)
-	_parent.add_child(lbl)
-	_floor_nodes.append(lbl)
-
-	var hint := Label.new()
-	hint.text = "[E] Use"
-	hint.position = Vector2((zone.x + 1) * CELL_SIZE, (zone.y + zone.h - 3) * CELL_SIZE + 2)
-	hint.add_theme_color_override("font_color", Color(0.50, 0.50, 0.60))
-	hint.add_theme_font_size_override("font_size", 7)
-	_parent.add_child(hint)
-	_floor_nodes.append(hint)
-
-	var wc := _get_wall_base_color()
-	var top_w := ColorRect.new()
-	top_w.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	top_w.size = Vector2(zone.w * CELL_SIZE, 2)
-	top_w.color = wc
-	_parent.add_child(top_w); _floor_nodes.append(top_w)
-	var bot_w := ColorRect.new()
-	bot_w.position = Vector2(zone.x * CELL_SIZE, (zone.y + zone.h - 2) * CELL_SIZE)
-	bot_w.size = Vector2(zone.w * CELL_SIZE, 2)
-	bot_w.color = wc.darkened(0.2)
-	_parent.add_child(bot_w); _floor_nodes.append(bot_w)
-	var l_w := ColorRect.new()
-	l_w.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	l_w.size = Vector2(2, zone.h * CELL_SIZE)
-	l_w.color = wc.darkened(0.1)
-	_parent.add_child(l_w); _floor_nodes.append(l_w)
-	var r_w := ColorRect.new()
-	r_w.position = Vector2((zone.x + zone.w - 2) * CELL_SIZE, zone.y * CELL_SIZE)
-	r_w.size = Vector2(2, zone.h * CELL_SIZE)
-	r_w.color = wc.darkened(0.2)
-	_parent.add_child(r_w); _floor_nodes.append(r_w)
+	# Delegate to WCHandler
+	WCHandler.build_wc(_parent, zone, _floor_nodes)
 
 func _build_zone_info_desk(zone: Dictionary) -> void:
-	var bg := ColorRect.new()
-	bg.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	bg.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
-	bg.color = Color(0.28, 0.24, 0.22)
-	_parent.add_child(bg)
-	_floor_nodes.append(bg)
-
-	var top_c := ColorRect.new()
-	top_c.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	top_c.size = Vector2(zone.w * CELL_SIZE, 2)
-	top_c.color = Color(0.55, 0.48, 0.40)
-	_parent.add_child(top_c); _floor_nodes.append(top_c)
-
-	var sign := Label.new()
-	sign.text = "INFORMATION"
-	sign.position = Vector2((zone.x + 1) * CELL_SIZE, (zone.y + 1) * CELL_SIZE)
-	sign.add_theme_color_override("font_color", Color(0.90, 0.85, 0.60))
-	sign.add_theme_font_size_override("font_size", 8)
-	_parent.add_child(sign); _floor_nodes.append(sign)
-
-	var dir := Label.new()
-	dir.text = _get_floor_directory()
-	dir.position = Vector2((zone.x + 1) * CELL_SIZE, (zone.y + 2.5) * CELL_SIZE)
-	dir.add_theme_color_override("font_color", Color(0.65, 0.62, 0.55))
-	dir.add_theme_font_size_override("font_size", 7)
-	_parent.add_child(dir); _floor_nodes.append(dir)
+	# Delegate to ServiceAreaHandler
+	ServiceAreaHandler.build_service_area(_parent, zone, _floor_nodes, "ZONE_INFO_DESK")
 
 func _get_floor_directory() -> String:
 	return "F1:Fresh  F2:Pantry\nF3:Drinks  F4:Snacks\nF5:Frozen  F6:Home\nF7:Health  F8:Arcade\nF9:Staff  F10:Cafe"
 
 func _build_zone_food_stall(zone: Dictionary) -> void:
-	var stall_id: String = zone.meta.get("stall_id", "jp_ramen")
-	var fd: Dictionary = FloorConfig.get_stall_def(stall_id)
-
-	var base := ColorRect.new()
-	base.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	base.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
-	base.color = fd.get("color", Color(0.85, 0.70, 0.50)).darkened(0.78)
-	_parent.add_child(base)
-	_floor_nodes.append(base)
-
-	var counter := ColorRect.new()
-	counter.position = Vector2(zone.x * CELL_SIZE, (zone.y + zone.h - 3) * CELL_SIZE)
-	counter.size = Vector2(zone.w * CELL_SIZE, 3 * CELL_SIZE)
-	counter.color = fd.get("color", Color(0.85, 0.70, 0.50)).darkened(0.45)
-	_parent.add_child(counter)
-	_floor_nodes.append(counter)
-
-	var counter_top := ColorRect.new()
-	counter_top.position = Vector2(zone.x * CELL_SIZE, (zone.y + zone.h - 3) * CELL_SIZE)
-	counter_top.size = Vector2(zone.w * CELL_SIZE, 2)
-	counter_top.color = fd.get("color", Color(0.85, 0.70, 0.50)).lightened(0.25)
-	_parent.add_child(counter_top)
-	_floor_nodes.append(counter_top)
-
-	var wall_h: int = zone.h - 3
-	var wc: Color = fd.get("color", Color(0.85, 0.70, 0.50)).darkened(0.3)
-
-	var bw_bg := ColorRect.new()
-	bw_bg.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	bw_bg.size = Vector2(zone.w * CELL_SIZE, wall_h * CELL_SIZE)
-	bw_bg.color = wc.darkened(0.1)
-	_parent.add_child(bw_bg); _floor_nodes.append(bw_bg)
-
-	var tw := ColorRect.new()
-	tw.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	tw.size = Vector2(zone.w * CELL_SIZE, 2)
-	tw.color = wc
-	_parent.add_child(tw); _floor_nodes.append(tw)
-
-	var lw := ColorRect.new()
-	lw.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	lw.size = Vector2(2, zone.h * CELL_SIZE)
-	lw.color = wc.darkened(0.1)
-	_parent.add_child(lw); _floor_nodes.append(lw)
-
-	var rw := ColorRect.new()
-	rw.position = Vector2((zone.x + zone.w - 2) * CELL_SIZE, zone.y * CELL_SIZE)
-	rw.size = Vector2(2, zone.h * CELL_SIZE)
-	rw.color = wc.darkened(0.2)
-	_parent.add_child(rw); _floor_nodes.append(rw)
-
-	var bot_wall := ColorRect.new()
-	bot_wall.position = Vector2(zone.x * CELL_SIZE, (zone.y + zone.h - 1) * CELL_SIZE)
-	bot_wall.size = Vector2(zone.w * CELL_SIZE, 1)
-	bot_wall.color = wc.darkened(0.2)
-	_parent.add_child(bot_wall); _floor_nodes.append(bot_wall)
-
-	var board_x:int = (zone.x + 1) * CELL_SIZE
-	var board_y:int = (zone.y + 1) * CELL_SIZE
-	var board_w:int = (zone.w - 2) * CELL_SIZE
-	var board_h:int = (wall_h - 2) * CELL_SIZE
-	if board_w > 0 and board_h > 0:
-		var board := ColorRect.new()
-		board.position = Vector2(board_x, board_y)
-		board.size = Vector2(board_w, board_h)
-		board.color = Color(0.05, 0.12, 0.08)
-		_parent.add_child(board); _floor_nodes.append(board)
-
-	var glow_color :Color = fd.get("glow", Color(1.0, 0.85, 0.60))
-	var glow := Sprite2D.new()
-	glow.position = Vector2((zone.x + zone.w * 0.5) * CELL_SIZE, (zone.y - 7) * CELL_SIZE)
-	glow.texture = _make_glow(glow_color)
-	_parent.add_child(glow)
-	_floor_nodes.append(glow)
-
-	var name_lbl := Label.new()
-	name_lbl.text = fd.get("name", stall_id)
-	name_lbl.position = Vector2((zone.x + 1) * CELL_SIZE, (zone.y + zone.h - 2.5) * CELL_SIZE)
-	name_lbl.add_theme_color_override("font_color", fd.get("color", Color(0.85, 0.70, 0.50)).lightened(0.35))
-	name_lbl.add_theme_font_size_override("font_size", 7)
-	_parent.add_child(name_lbl); _floor_nodes.append(name_lbl)
-
-	var cuisine_lbl := Label.new()
-	cuisine_lbl.text = fd.get("cuisine", "Food")
-	cuisine_lbl.position = Vector2((zone.x + 1) * CELL_SIZE, (zone.y + zone.h - 1.8) * CELL_SIZE)
-	cuisine_lbl.add_theme_color_override("font_color", fd.get("color", Color(0.85, 0.70, 0.50)).lightened(0.15))
-	cuisine_lbl.add_theme_font_size_override("font_size", 6)
-	_parent.add_child(cuisine_lbl); _floor_nodes.append(cuisine_lbl)
-
-	var hint := Label.new()
-	hint.text = "[E] Order"
-	hint.position = Vector2((zone.x + zone.w - 5) * CELL_SIZE, (zone.y + zone.h - 2.5) * CELL_SIZE)
-	hint.add_theme_color_override("font_color", glow_color.lightened(0.3))
-	hint.add_theme_font_size_override("font_size", 7)
-	_parent.add_child(hint); _floor_nodes.append(hint)
+	# Delegate to FoodStallHandler
+	FoodStallHandler.build_food_stall(_parent, zone, _floor_nodes)
 
 func _build_zone_food_court(zone: Dictionary) -> void:
 	var floor_c := ColorRect.new()
@@ -491,11 +408,9 @@ func _build_dining_table(tile_x: int, tile_y: int) -> void:
 		_parent.add_child(chair); _floor_nodes.append(chair)
 
 func _build_zone_common(zone: Dictionary) -> void:
-	var r := ColorRect.new()
-	r.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	r.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
-	r.color = Color(0.20, 0.19, 0.18)
-	_parent.add_child(r); _floor_nodes.append(r)
+	# Delegate to CommonAreaHandler for better modularity
+	CommonAreaHandler.build_common_area(_parent, zone, _floor_nodes)
+	CommonAreaHandler.build_floor_path(_parent, zone, _floor_nodes)
 
 func _build_zone_rooftop(zone: Dictionary) -> void:
 	var r := ColorRect.new()
@@ -516,48 +431,15 @@ func _build_zone_rooftop(zone: Dictionary) -> void:
 			_build_dining_table(tx, ty)
 
 func _build_zone_shaft(zone: Dictionary) -> void:
-	var shaft := ColorRect.new()
-	shaft.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	shaft.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
-	shaft.color = Color(0.30, 0.27, 0.25)
-	_parent.add_child(shaft); _floor_nodes.append(shaft)
-
-	var bl := ColorRect.new()
-	bl.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	bl.size = Vector2(1, zone.h * CELL_SIZE)
-	bl.color = Color(0.50, 0.45, 0.40)
-	_parent.add_child(bl); _floor_nodes.append(bl)
-
-	var br := ColorRect.new()
-	br.position = Vector2((zone.x + zone.w - 1) * CELL_SIZE, zone.y * CELL_SIZE)
-	br.size = Vector2(1, zone.h * CELL_SIZE)
-	br.color = Color(0.40, 0.37, 0.35)
-	_parent.add_child(br); _floor_nodes.append(br)
+	# Delegate to ElevatorHandler for better modularity
+	ElevatorHandler.build_elevator(_parent, zone, _floor_nodes)
+	# Add call button panel
+	ElevatorHandler.build_elevator_call_button(_parent, zone, _floor_nodes, _floor_def.label)
 
 func _build_zone_stairs(zone: Dictionary) -> void:
-	var bg := ColorRect.new()
-	bg.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	bg.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
-	bg.color = Color(0.28, 0.26, 0.24)
-	_parent.add_child(bg); _floor_nodes.append(bg)
-
-	var n_steps := 12
-	var step_h :int= (zone.h * CELL_SIZE) / n_steps
-	for i in range(n_steps):
-		var step_y :int= zone.y * CELL_SIZE + i * step_h
-		var step_l := ColorRect.new()
-		step_l.position = Vector2(zone.x * CELL_SIZE, step_y)
-		step_l.size = Vector2(zone.w * CELL_SIZE, 2)
-		step_l.color = Color(0.45, 0.42, 0.38)
-		_parent.add_child(step_l); _floor_nodes.append(step_l)
-
-	var lbl := Label.new()
-	lbl.text = "STAIRS"
-	lbl.position = Vector2((zone.x + 0.5) * CELL_SIZE, (zone.y + 1) * CELL_SIZE)
-	lbl.add_theme_color_override("font_color", Color(0.60, 0.60, 0.70))
-	lbl.add_theme_font_size_override("font_size", 7)
-	_parent.add_child(lbl); _floor_nodes.append(lbl)
-
+	# Delegate to StairsHandler for better modularity
+	StairsHandler.build_stairs(_parent, zone, _floor_nodes)
+	
 	# Register this stairs zone with the stairs system for open-world floor navigation
 	if _stairs_system != null and _stairs_system.has_method("register_stairs_zone"):
 		var direction: int = 1  # Default: stairs go UP to next floor
@@ -576,54 +458,8 @@ func _build_zone_escalator(zone: Dictionary) -> void:
 	_escalators.append(esc)
 
 func _build_zone_decor(zone: Dictionary) -> void:
-	var decor_type: String = zone.meta.get("decor_type", "dining_table")
-	match decor_type:
-		"dining_table":
-			_build_dining_table(zone.x, zone.y)
-		"planter":
-			_build_planter(zone.x, zone.y, zone.w, zone.h)
-		"shelf":
-			_build_prize_shelf(zone.x, zone.y, zone.w, zone.h)
-		"canteen_tables":
-			for ti in range(zone.w / 10):
-				for row in range(2):
-					_build_dining_table(zone.x + ti * 10, zone.y + row * 8)
-		"arcade_machines":
-			for ax in range(zone.w / 8):
-				var cab := ColorRect.new()
-				cab.color = Color(0.30, 0.25, 0.40)
-				cab.size = Vector2(7 * CELL_SIZE, 10 * CELL_SIZE)
-				cab.position = Vector2((zone.x + ax * 8) * CELL_SIZE, (zone.y + 2) * CELL_SIZE)
-				_parent.add_child(cab); _floor_nodes.append(cab)
-				var screen := ColorRect.new()
-				screen.color = Color(0.20, 0.60, 0.80)
-				screen.size = Vector2(5 * CELL_SIZE, 5 * CELL_SIZE)
-				screen.position = Vector2((zone.x + ax * 8 + 1) * CELL_SIZE, (zone.y + 3) * CELL_SIZE)
-				_parent.add_child(screen); _floor_nodes.append(screen)
-		"lounge_seating":
-			var lounge_bg := ColorRect.new()
-			lounge_bg.color = Color(0.25, 0.20, 0.30)
-			lounge_bg.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
-			lounge_bg.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-			_parent.add_child(lounge_bg); _floor_nodes.append(lounge_bg)
-			for sx in range(zone.w / 12):
-				var seat := ColorRect.new()
-				seat.color = Color(0.45, 0.30, 0.50)
-				seat.size = Vector2(10 * CELL_SIZE, 6 * CELL_SIZE)
-				seat.position = Vector2((zone.x + sx * 12) * CELL_SIZE, (zone.y + 2) * CELL_SIZE)
-				_parent.add_child(seat); _floor_nodes.append(seat)
-		"trash_bin":
-			var bin := ColorRect.new()
-			bin.color = Color(0.35, 0.45, 0.30)
-			bin.size = Vector2(3 * CELL_SIZE, 3 * CELL_SIZE)
-			bin.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-			_parent.add_child(bin); _floor_nodes.append(bin)
-		_:
-			var r := ColorRect.new()
-			r.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-			r.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
-			r.color = Color(0.22, 0.20, 0.18)
-			_parent.add_child(r); _floor_nodes.append(r)
+	# Delegate to MiscHandler
+	MiscHandler.build_misc_area(_parent, zone, _floor_nodes, "ZONE_DECOR")
 
 func _build_planter(px: int, py: int, pw: int, ph: int) -> void:
 	var box := ColorRect.new()
@@ -796,74 +632,8 @@ func _make_pet_sprite(pet_type: int) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 func _build_zone_warehouse(zone: Dictionary) -> void:
-	var cx :int= zone.x * CELL_SIZE
-	var cy :int= zone.y * CELL_SIZE
-	var cw :int= zone.w * CELL_SIZE
-	var ch :int= zone.h * CELL_SIZE
-
-	var floor_bg := ColorRect.new()
-	floor_bg.position = Vector2(cx, cy)
-	floor_bg.size = Vector2(cw, ch)
-	floor_bg.color = Color(0.38, 0.32, 0.26)
-	_parent.add_child(floor_bg); _floor_nodes.append(floor_bg)
-
-	for gx in range(cx, cx + cw, CELL_SIZE * 4):
-		var line := ColorRect.new()
-		line.position = Vector2(gx, cy)
-		line.size = Vector2(2, ch)
-		line.color = Color(0.32, 0.28, 0.22)
-		_parent.add_child(line); _floor_nodes.append(line)
-
-	var shelf_colors := [
-		Color(0.50, 0.42, 0.32),
-		Color(0.45, 0.38, 0.28),
-		Color(0.52, 0.44, 0.34),
-	]
-	for rack in range(3):
-		var rx := cx + 8 + rack * (cw * 0.22)
-		var rack_h := ch * 0.85
-		var rack_bg := ColorRect.new()
-		rack_bg.position = Vector2(rx, cy + 8)
-		rack_bg.size = Vector2(cw * 0.18, rack_h)
-		rack_bg.color = shelf_colors[rack % shelf_colors.size()]
-		_parent.add_child(rack_bg); _floor_nodes.append(rack_bg)
-
-		for row in range(5):
-			var shelf_y := cy + 8 + row * (rack_h / 5.5)
-			var shelf_plank := ColorRect.new()
-			shelf_plank.position = Vector2(rx + 2, shelf_y)
-			shelf_plank.size = Vector2(cw * 0.18 - 4, 2)
-			shelf_plank.color = Color(0.35, 0.28, 0.20)
-			_parent.add_child(shelf_plank); _floor_nodes.append(shelf_plank)
-
-			for col in range(3):
-				var crate_x := rx + 4 + col * (cw * 0.055)
-				var crate_spr := Sprite2D.new()
-				crate_spr.texture = _make_crate_texture(rack, row)
-				crate_spr.position = Vector2(crate_x + CELL_SIZE, shelf_y - CELL_SIZE * 0.5)
-				crate_spr.z_index = 3
-				_parent.add_child(crate_spr); _floor_nodes.append(crate_spr)
-
-	var dock_x := cx + cw * 0.70
-	var dock := ColorRect.new()
-	dock.position = Vector2(dock_x, cy + 8)
-	dock.size = Vector2(cw * 0.25, ch * 0.80)
-	dock.color = Color(0.25, 0.22, 0.18)
-	_parent.add_child(dock); _floor_nodes.append(dock)
-
-	for st in range(0, dock.size.y as int, 16):
-		var stripe := ColorRect.new()
-		stripe.position = Vector2(dock_x, cy + 8 + st)
-		stripe.size = Vector2(cw * 0.25, 8)
-		stripe.color = Color(0.85, 0.72, 0.20) if (st / 16 % 2 == 0) else Color(0.15, 0.12, 0.08)
-		_parent.add_child(stripe); _floor_nodes.append(stripe)
-
-	var recv_lbl := Label.new()
-	recv_lbl.text = "RECEIVING DOCK"
-	recv_lbl.position = Vector2(cx + 4, cy - 14)
-	recv_lbl.add_theme_color_override("font_color", Color(0.85, 0.72, 0.20))
-	recv_lbl.add_theme_font_size_override("font_size", 10)
-	_parent.add_child(recv_lbl); _floor_nodes.append(recv_lbl)
+	# Delegate to WarehouseHandler
+	WarehouseHandler.build_warehouse_area(_parent, zone, _floor_nodes, "ZONE_WAREHOUSE")
 
 func _make_crate_texture(rack_idx: int, row_idx: int) -> Texture2D:
 	var W := 12; var H := 12
@@ -893,62 +663,12 @@ func _make_crate_texture(rack_idx: int, row_idx: int) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 func _build_zone_storage_shelf(zone: Dictionary) -> void:
-	var shelf_color = zone.meta.get("color", Color(0.60, 0.50, 0.40))
-	var base := ColorRect.new()
-	base.color = shelf_color
-	base.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
-	base.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	_parent.add_child(base); _floor_nodes.append(base)
-
-	for row in range(zone.h):
-		var line := ColorRect.new()
-		line.color = Color(0.45, 0.38, 0.30)
-		line.size = Vector2(zone.w * CELL_SIZE, 2)
-		line.position = Vector2(zone.x * CELL_SIZE, (zone.y + row * 3) * CELL_SIZE)
-		_parent.add_child(line); _floor_nodes.append(line)
+	# Delegate to WarehouseHandler
+	WarehouseHandler.build_warehouse_area(_parent, zone, _floor_nodes, "ZONE_STORAGE_SHELF")
 
 func _build_zone_atm(zone: Dictionary) -> void:
-	var atm_id: String = zone.meta.get("atm_id", "atm_1")
-	var cx :int= zone.x * CELL_SIZE
-	var cy :int= zone.y * CELL_SIZE
-
-	var body := ColorRect.new()
-	body.position = Vector2(cx + CELL_SIZE * 2, cy + CELL_SIZE * 2)
-	body.size = Vector2(CELL_SIZE * 3, CELL_SIZE * 4)
-	body.color = Color(0.15, 0.20, 0.15)
-	_parent.add_child(body); _floor_nodes.append(body)
-
-	var screen := ColorRect.new()
-	screen.position = Vector2(cx + CELL_SIZE * 2 + 4, cy + CELL_SIZE * 2 + 2)
-	screen.size = Vector2(CELL_SIZE * 2 + 2, CELL_SIZE)
-	screen.color = Color(0.08, 0.18, 0.08)
-	_parent.add_child(screen); _floor_nodes.append(screen)
-
-	var screen_lbl := Label.new()
-	screen_lbl.text = "INSERT CARD"
-	screen_lbl.position = Vector2(cx + CELL_SIZE * 2 + 6, cy + CELL_SIZE * 2 + 3)
-	screen_lbl.add_theme_color_override("font_color", Color(0.30, 0.90, 0.40))
-	screen_lbl.add_theme_font_size_override("font_size", 6)
-	_parent.add_child(screen_lbl); _floor_nodes.append(screen_lbl)
-
-	var slot := ColorRect.new()
-	slot.position = Vector2(cx + CELL_SIZE * 3 + 4, cy + CELL_SIZE * 3 + 4)
-	slot.size = Vector2(CELL_SIZE + 2, 3)
-	slot.color = Color(0.08, 0.08, 0.08)
-	_parent.add_child(slot); _floor_nodes.append(slot)
-
-	var cash := ColorRect.new()
-	cash.position = Vector2(cx + CELL_SIZE * 2 + 4, cy + CELL_SIZE * 4 + 2)
-	cash.size = Vector2(CELL_SIZE * 2 + 2, CELL_SIZE)
-	cash.color = Color(0.12, 0.18, 0.12)
-	_parent.add_child(cash); _floor_nodes.append(cash)
-
-	var brand_lbl := Label.new()
-	brand_lbl.text = "STORE BANK"
-	brand_lbl.position = Vector2(cx + CELL_SIZE * 2 + 2, cy + CELL_SIZE * 2 - 10)
-	brand_lbl.add_theme_color_override("font_color", Color(0.20, 0.60, 0.30))
-	brand_lbl.add_theme_font_size_override("font_size", 6)
-	_parent.add_child(brand_lbl); _floor_nodes.append(brand_lbl)
+	# Delegate to MiscHandler
+	MiscHandler.build_misc_area(_parent, zone, _floor_nodes, "ZONE_ATM")
 
 func _build_zone_claw_machine(zone: Dictionary) -> void:
 	var machine_id: String = zone.meta.get("machine_id", "claw_1")
@@ -970,144 +690,16 @@ func _build_zone_claw_machine(zone: Dictionary) -> void:
 	_claw_machines.append(machine)
 
 func _build_zone_shoes_rack(zone: Dictionary) -> void:
-	var name: String = zone.meta.get("name", "SHOES")
-	var zone_color: Color = zone.meta.get("color", Color(0.70, 0.60, 0.55))
-	var cx :int= zone.x * CELL_SIZE
-	var cy :int= zone.y * CELL_SIZE
-	var cw :int= zone.w * CELL_SIZE
-	var ch :int= zone.h * CELL_SIZE
-
-	var bg := ColorRect.new()
-	bg.position = Vector2(cx, cy); bg.size = Vector2(cw, ch)
-	bg.color = zone_color.darkened(0.3)
-	_parent.add_child(bg); _floor_nodes.append(bg)
-
-	var title_lbl := Label.new()
-	title_lbl.text = name
-	title_lbl.position = Vector2(cx + 4, cy - 14)
-	title_lbl.add_theme_color_override("font_color", zone_color.lightened(0.3))
-	title_lbl.add_theme_font_size_override("font_size", 10)
-	_parent.add_child(title_lbl); _floor_nodes.append(title_lbl)
-
-	# Shoe styles: 0=sneaker, 1=formal, 2=sandal, 3=boot
-	var shoe_styles := [0, 1, 2, 3]
-	var shoe_colors := [
-		zone_color.lightened(0.2),
-		zone_color,
-		zone_color.darkened(0.15),
-		Color(0.35, 0.28, 0.22)  # brown for boots
-	]
-
-	for row in range(4):
-		var shelf_y := cy + 8 + row * (ch * 0.22)
-		var plank := ColorRect.new()
-		plank.position = Vector2(cx + 4, shelf_y)
-		plank.size = Vector2(cw - 8, 2)
-		plank.color = zone_color.darkened(0.4)
-		_parent.add_child(plank); _floor_nodes.append(plank)
-		for col in range(6):
-			var box_x := cx + 8 + col * ((cw - 16) / 6.0)
-			# Create shoe sprite instead of abstract box
-			var shoe_sprite := Sprite2D.new()
-			shoe_sprite.texture = PixelArtGenerator.make_shoe(shoe_colors[row % shoe_colors.size()], shoe_styles[row % shoe_styles.size()])
-			shoe_sprite.position = Vector2(box_x + (cw - 16) / 12.0, shelf_y - 6)
-			shoe_sprite.scale = Vector2(1.0, 1.0)
-			_parent.add_child(shoe_sprite); _floor_nodes.append(shoe_sprite)
+	# Delegate to ShoesRackHandler for better modularity
+	ShoesRackHandler.build_shoes_rack(_parent, zone, _floor_nodes)
 
 func _build_zone_dress_rack(zone: Dictionary) -> void:
-	var name: String = zone.meta.get("name", "DRESSES")
-	var zone_color: Color = zone.meta.get("color", Color(0.75, 0.55, 0.70))
-	var cx :int= zone.x * CELL_SIZE
-	var cy :int= zone.y * CELL_SIZE
-	var cw :int= zone.w * CELL_SIZE
-	var ch :int= zone.h * CELL_SIZE
-
-	var bg := ColorRect.new()
-	bg.position = Vector2(cx, cy); bg.size = Vector2(cw, ch)
-	bg.color = zone_color.darkened(0.35)
-	_parent.add_child(bg); _floor_nodes.append(bg)
-
-	var title_lbl := Label.new()
-	title_lbl.text = name
-	title_lbl.position = Vector2(cx + 4, cy - 14)
-	title_lbl.add_theme_color_override("font_color", zone_color.lightened(0.25))
-	title_lbl.add_theme_font_size_override("font_size", 10)
-	_parent.add_child(title_lbl); _floor_nodes.append(title_lbl)
-
-	# Clothing styles: 0=dress, 1=tshirt, 2=pants, 3=jacket
-	var clothing_styles := [0, 1, 2, 3]
-	var clothing_colors := [
-		zone_color.lightened(0.15),
-		zone_color,
-		zone_color.darkened(0.2),
-		zone_color.darkened(0.1)
-	]
-
-	var num_racks := 3
-	for rack in range(num_racks):
-		var rack_y := cy + 16 + rack * (ch * 0.28)
-		var pole := ColorRect.new()
-		pole.position = Vector2(cx + 6, rack_y)
-		pole.size = Vector2(cw - 12, 2)
-		pole.color = Color(0.55, 0.52, 0.48)
-		_parent.add_child(pole); _floor_nodes.append(pole)
-		for h in range(7):
-			var hanger_x := cx + 10 + h * ((cw - 20) / 7.0)
-			# Create clothing sprite instead of abstract rectangle
-			var cloth_sprite := Sprite2D.new()
-			var style_idx := (rack + h) % clothing_styles.size()
-			cloth_sprite.texture = PixelArtGenerator.make_clothing(clothing_colors[style_idx], clothing_styles[style_idx])
-			cloth_sprite.position = Vector2(hanger_x + 7, rack_y - 10)
-			cloth_sprite.scale = Vector2(1.2, 1.2)
-			_parent.add_child(cloth_sprite); _floor_nodes.append(cloth_sprite)
+	# Delegate to DressRackHandler for better modularity
+	DressRackHandler.build_dress_rack(_parent, zone, _floor_nodes)
 
 func _build_zone_sport_area(zone: Dictionary) -> void:
-	var name: String = zone.meta.get("name", "SPORT")
-	var zone_color: Color = zone.meta.get("color", Color(0.50, 0.65, 0.75))
-	var cx :int= zone.x * CELL_SIZE
-	var cy :int= zone.y * CELL_SIZE
-	var cw :int= zone.w * CELL_SIZE
-	var ch :int= zone.h * CELL_SIZE
-
-	var bg := ColorRect.new()
-	bg.position = Vector2(cx, cy); bg.size = Vector2(cw, ch)
-	bg.color = zone_color.darkened(0.35)
-	_parent.add_child(bg); _floor_nodes.append(bg)
-
-	var title_lbl := Label.new()
-	title_lbl.text = name
-	title_lbl.position = Vector2(cx + 4, cy - 14)
-	title_lbl.add_theme_color_override("font_color", zone_color.lightened(0.3))
-	title_lbl.add_theme_font_size_override("font_size", 10)
-	_parent.add_child(title_lbl); _floor_nodes.append(title_lbl)
-
-	# Sports equipment styles: 0=dumbbell, 1=ball, 2=yogamat, 3=racket, 4=helmet
-	var equipment_styles := [0, 1, 2, 3, 4]
-	var equip_colors := [
-		Color(0.45, 0.58, 0.68),
-		Color(0.80, 0.45, 0.45),  # red ball
-		Color(0.55, 0.78, 0.68),  # green mat
-		Color(0.90, 0.85, 0.40),   # yellow racket
-		Color(0.35, 0.45, 0.65)    # blue helmet
-	]
-
-	var shelf_colors := [Color(0.45, 0.58, 0.68), Color(0.58, 0.52, 0.62), Color(0.52, 0.68, 0.58)]
-	for row in range(3):
-		var shelf_y := cy + 12 + row * (ch * 0.28)
-		var plank := ColorRect.new()
-		plank.position = Vector2(cx + 4, shelf_y)
-		plank.size = Vector2(cw - 8, 2)
-		plank.color = shelf_colors[row % 3].darkened(0.3)
-		_parent.add_child(plank); _floor_nodes.append(plank)
-		# Place sports equipment on shelf
-		for col in range(5):
-			var equip_x := cx + 10 + col * ((cw - 20) / 5.0)
-			var equip_sprite := Sprite2D.new()
-			var style_idx := (row + col) % equipment_styles.size()
-			equip_sprite.texture = PixelArtGenerator.make_sports_equipment(equip_colors[style_idx], equipment_styles[style_idx])
-			equip_sprite.position = Vector2(equip_x + 8, shelf_y - 8)
-			equip_sprite.scale = Vector2(1.0, 1.0)
-			_parent.add_child(equip_sprite); _floor_nodes.append(equip_sprite)
+	# Delegate to SportAreaHandler for better modularity
+	SportAreaHandler.build_sport_area(_parent, zone, _floor_nodes)
 
 func _build_zone_entertainment(zone: Dictionary) -> void:
 	var bg := ColorRect.new()
@@ -1264,82 +856,52 @@ func _build_zone_darts_board(zone: Dictionary) -> void:
 	_parent.add_child(bull); _floor_nodes.append(bull)
 
 func _build_zone_vending_machine(zone: Dictionary) -> void:
-	var name: String = zone.meta.get("name", "VENDING")
-	var cx :int= zone.x * CELL_SIZE; 
-	var cy :int= zone.y * CELL_SIZE
-	var cw :int= zone.w * CELL_SIZE; 
-	var ch :int= zone.h * CELL_SIZE
-
-	var body := ColorRect.new()
-	body.position = Vector2(cx, cy); body.size = Vector2(cw, ch)
-	body.color = Color(0.25, 0.28, 0.32)
-	_parent.add_child(body); _floor_nodes.append(body)
-
-	var glass := ColorRect.new()
-	glass.position = Vector2(cx + 2, cy + 2); glass.size = Vector2(cw - 4, ch * 0.70)
-	glass.color = Color(0.15, 0.18, 0.22).lightened(0.15)
-	_parent.add_child(glass); _floor_nodes.append(glass)
-
-	var frame_top := ColorRect.new()
-	frame_top.position = Vector2(cx, cy); frame_top.size = Vector2(cw, 2)
-	frame_top.color = Color(0.50, 0.50, 0.55)
-	_parent.add_child(frame_top); _floor_nodes.append(frame_top)
-
-	var item_colors := [Color(0.40, 0.70, 0.90), Color(0.85, 0.30, 0.30), Color(0.80, 0.75, 0.30),
-			Color(0.90, 0.65, 0.30), Color(0.60, 0.40, 0.25), Color(0.30, 0.80, 0.50)]
-	for row in range(2):
-		for col in range(mini(3, 6)):
-			var ix := cx + 4 + col * ((cw - 8) / 3.0)
-			var iy := cy + 4 + row * (ch * 0.35)
-			var slot := ColorRect.new()
-			slot.position = Vector2(ix, iy); slot.size = Vector2((cw - 8) / 3.5, ch * 0.30)
-			slot.color = item_colors[(row * 3 + col) % item_colors.size()]
-			_parent.add_child(slot); _floor_nodes.append(slot)
-
-	var panel := ColorRect.new()
-	panel.position = Vector2(cx + 2, cy + ch * 0.72); panel.size = Vector2(cw - 4, ch * 0.25)
-	panel.color = Color(0.20, 0.22, 0.26)
-	_parent.add_child(panel); _floor_nodes.append(panel)
-
-	var tl := Label.new(); tl.text = name
-	tl.position = Vector2(cx + 2, cy - 12)
-	tl.add_theme_color_override("font_color", Color(0.80, 0.85, 0.90))
-	tl.add_theme_font_size_override("font_size", 8)
-	_parent.add_child(tl); _floor_nodes.append(tl)
+	# Delegate to MiscHandler
+	MiscHandler.build_misc_area(_parent, zone, _floor_nodes, "ZONE_VENDING_MACHINE")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STUB ZONE BUILDERS (placeholders for future implementation)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 func _build_zone_outdoor_area(zone: Dictionary) -> void:
-	_build_generic_zone(zone, "OUTDOOR", Color(0.45, 0.60, 0.40))
+	# Delegate to OutdoorAreaHandler for better modularity
+	OutdoorAreaHandler.build_outdoor_area(_parent, zone, _floor_nodes)
 
 func _build_zone_stationery(zone: Dictionary) -> void:
-	_build_generic_zone(zone, "STATIONERY", Color(0.70, 0.65, 0.55))
+	# Delegate to StationeryHandler for better modularity
+	StationeryHandler.build_stationery(_parent, zone, _floor_nodes)
 
 func _build_zone_plants_area(zone: Dictionary) -> void:
-	_build_generic_zone(zone, "PLANTS", Color(0.40, 0.60, 0.35))
+	# Delegate to PlantsAreaHandler for better modularity
+	PlantsAreaHandler.build_plants_area(_parent, zone, _floor_nodes)
 
 func _build_zone_locker(zone: Dictionary) -> void:
-	_build_generic_zone(zone, "LOCKER", Color(0.55, 0.55, 0.60))
+	# Delegate to LockerHandler for better modularity
+	LockerHandler.build_locker(_parent, zone, _floor_nodes)
 
 func _build_zone_staff_lounge(zone: Dictionary) -> void:
-	_build_generic_zone(zone, "STAFF LOUNGE", Color(0.50, 0.45, 0.55))
+	# Delegate to StaffLoungeHandler for better modularity
+	StaffLoungeHandler.build_staff_lounge(_parent, zone, _floor_nodes)
 
 func _build_zone_training(zone: Dictionary) -> void:
-	_build_generic_zone(zone, "TRAINING", Color(0.45, 0.55, 0.65))
+	# Delegate to TrainingHandler for better modularity
+	TrainingHandler.build_training(_parent, zone, _floor_nodes)
 
 func _build_zone_office_desk(zone: Dictionary) -> void:
-	_build_generic_zone(zone, "OFFICE", Color(0.60, 0.55, 0.50))
+	# Delegate to OfficeDeskHandler for better modularity
+	OfficeDeskHandler.build_office_desk(_parent, zone, _floor_nodes)
 
 func _build_zone_exec_office(zone: Dictionary) -> void:
-	_build_generic_zone(zone, "EXEC OFFICE", Color(0.50, 0.45, 0.55))
+	# Delegate to ExecOfficeHandler for better modularity
+	ExecOfficeHandler.build_exec_office(_parent, zone, _floor_nodes)
 
 func _build_zone_ad(zone: Dictionary) -> void:
-	_build_generic_zone(zone, "ADVERTISEMENT", Color(0.70, 0.50, 0.60))
+	# Delegate to AdDisplayHandler for better modular display
+	AdDisplayHandler.build_ad_display(_parent, zone, _floor_nodes, _floor_idx)
 
 func _build_zone_monitor_room(zone: Dictionary) -> void:
-	_build_generic_zone(zone, "MONITOR ROOM", Color(0.25, 0.30, 0.35))
+	# Delegate to MonitorRoomHandler for better modularity
+	MonitorRoomHandler.build_monitor_room(_parent, zone, _floor_nodes)
 
 func _build_zone_home_decor(zone: Dictionary) -> void:
 	_build_generic_zone(zone, "HOME DECOR", Color(0.78, 0.65, 0.50))
@@ -1357,16 +919,20 @@ func _build_zone_lighting(zone: Dictionary) -> void:
 	_build_generic_zone(zone, "LIGHTING", Color(0.90, 0.85, 0.60))
 
 func _build_zone_customer_service(zone: Dictionary) -> void:
-	_build_generic_zone(zone, "CUSTOMER SERVICE", Color(0.60, 0.65, 0.70))
+	# Delegate to ServiceAreaHandler
+	ServiceAreaHandler.build_service_area(_parent, zone, _floor_nodes, "ZONE_CUSTOMER_SERVICE")
 
 func _build_zone_loyalty_kiosk(zone: Dictionary) -> void:
-	_build_generic_zone(zone, "LOYALTY", Color(0.70, 0.60, 0.80))
+	# Delegate to ServiceAreaHandler
+	ServiceAreaHandler.build_service_area(_parent, zone, _floor_nodes, "ZONE_LOYALTY_KIOSK")
 
 func _build_zone_gift_wrap(zone: Dictionary) -> void:
-	_build_generic_zone(zone, "GIFT WRAP", Color(0.80, 0.50, 0.60))
+	# Delegate to ServiceAreaHandler
+	ServiceAreaHandler.build_service_area(_parent, zone, _floor_nodes, "ZONE_GIFT_WRAP")
 
 func _build_zone_digital_kiosk(zone: Dictionary) -> void:
-	_build_generic_zone(zone, "DIGITAL KIOSK", Color(0.30, 0.50, 0.70))
+	# Delegate to ServiceAreaHandler
+	ServiceAreaHandler.build_service_area(_parent, zone, _floor_nodes, "ZONE_DIGITAL_KIOSK")
 
 func _build_zone_juice_bar(zone: Dictionary) -> void:
 	_build_generic_zone(zone, "JUICE BAR", Color(0.90, 0.70, 0.40))
@@ -1409,6 +975,34 @@ func _build_zone_repair_counter(zone: Dictionary) -> void:
 
 func _build_zone_cafe_counter(zone: Dictionary) -> void:
 	_build_generic_zone(zone, "CAFE", Color(0.65, 0.50, 0.40))
+
+func _build_zone_promo_booth(zone: Dictionary) -> void:
+	# Delegate to MiscHandler
+	MiscHandler.build_misc_area(_parent, zone, _floor_nodes, "ZONE_PROMO_BOOTH")
+
+func _build_zone_lost_found(zone: Dictionary) -> void:
+	# Delegate to MiscHandler
+	MiscHandler.build_misc_area(_parent, zone, _floor_nodes, "ZONE_LOST_FOUND")
+
+func _build_zone_store_news(zone: Dictionary) -> void:
+	# Delegate to MiscHandler
+	MiscHandler.build_misc_area(_parent, zone, _floor_nodes, "ZONE_STORE_NEWS")
+
+func _build_zone_truck_dock(zone: Dictionary) -> void:
+	# Delegate to WarehouseHandler
+	WarehouseHandler.build_warehouse_area(_parent, zone, _floor_nodes, "ZONE_TRUCK_DOCK")
+
+func _build_zone_forklift(zone: Dictionary) -> void:
+	# Delegate to WarehouseHandler
+	WarehouseHandler.build_warehouse_area(_parent, zone, _floor_nodes, "ZONE_FORKLIFT")
+
+func _build_zone_conveyor(zone: Dictionary) -> void:
+	# Delegate to WarehouseHandler
+	WarehouseHandler.build_warehouse_area(_parent, zone, _floor_nodes, "ZONE_CONVEYOR")
+
+func _build_zone_warehouse_stock_view(zone: Dictionary) -> void:
+	# Delegate to WarehouseHandler
+	WarehouseHandler.build_warehouse_area(_parent, zone, _floor_nodes, "ZONE_WAREHOUSE_STOCK_VIEW")
 
 func _build_generic_zone(zone: Dictionary, label: String, base_color: Color) -> void:
 	var bg := ColorRect.new()

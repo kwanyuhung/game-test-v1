@@ -107,6 +107,12 @@ func spend_xp(amount: int) -> bool:
 func get_xp() -> int:
 	return _total_xp
 
+func get_xp_for_next_level() -> int:
+	return _xp_for_next_level
+
+func get_xp_for_current_level() -> int:
+	return _xp_for_current_level
+
 # ─── Staff Rank Progression ───────────────────────────────────────
 # Staff rank determines which features robots and abilities unlock.
 # Rank is earned through XP spent on staff activities.

@@ -45,6 +45,7 @@ const PauseMenuScript = preload("res://scripts/pause_menu.gd")
 const StatsDashboardScript = preload("res://scripts/stats_dashboard.gd")
 const MiniMapScript = preload("res://scripts/mini_map.gd")
 const MapPanelScript = preload("res://scripts/map_panel.gd")
+const FloorPanelScript = preload("res://scripts/floor_panel.gd")
 const ToastManagerScript = preload("res://scripts/toast_manager.gd")
 const FloatingTextScript = preload("res://scripts/floating_text.gd")
 const FadeTransitionScript = preload("res://scripts/fade_transition.gd")
@@ -130,6 +131,7 @@ var _pause_menu: PauseMenu = null
 var _stats_dashboard: StatsDashboard = null
 var _interaction_bubble: InteractionBubbleScript = null
 var _floor_jump_panel: Control = null
+var _floor_panel: FloorPanel = null
 
 var _nearby_monitor: bool = false
 var _monitor_panel: MonitorPanel = null
@@ -540,18 +542,6 @@ func _input(event: InputEvent) -> void:
 	if _maintenance_panel_blocking:
 		return
 	if event is InputEventKey and event.pressed:
-		# DEBUG: Number keys 0-9 to quickly jump to floors (dev mode only)
-		if DEV_MODE:
-			var floor_keys := {
-				KEY_0: 0, KEY_1: 1, KEY_2: 2, KEY_3: 3,
-				KEY_4: 4, KEY_5: 5, KEY_6: 6, KEY_7: 7,
-				KEY_8: 8, KEY_9: 9, KEY_MINUS: 10
-			}
-			if event.keycode in floor_keys and not (event.shift_pressed or event.ctrl_pressed or event.alt_pressed):
-				var floor_idx: int = floor_keys[event.keycode]
-				_jump_to_floor(floor_idx)
-				return
-		
 		# Stairs W/S ── Open-world floor navigation via stairs
 		var _stairs_sys = get("_stairs_system")
 		if _stairs_sys != null and _stairs_sys.has_method("check_stairs_proximity") and _player != null:
@@ -598,6 +588,9 @@ func _input(event: InputEvent) -> void:
 			# M ── Map Panel
 			KEY_M:
 				_toggle_map_panel()
+			# V ── Floor Panel (Clickable floor selector)
+			KEY_V:
+				_toggle_floor_panel()
 			# X ── Renovate nearby section (staff mode)
 			KEY_X:
 				_renovate_nearby_section()
@@ -645,6 +638,18 @@ func _input(event: InputEvent) -> void:
 						_food_court_system.handle_loyalty_key(idx, item)
 					else:
 						_food_court_system.add_order_item(idx, item)
+				return
+
+		# 0-9 ── Numbered bubble interactions
+		if not _maintenance_panel_blocking:
+			var num_key_map := {
+				KEY_0: 0, KEY_1: 1, KEY_2: 2, KEY_3: 3,
+				KEY_4: 4, KEY_5: 5, KEY_6: 6, KEY_7: 7,
+				KEY_8: 8, KEY_9: 9
+			}
+			if event.keycode in num_key_map and not (event.shift_pressed or event.ctrl_pressed or event.alt_pressed):
+				var num: int = num_key_map[event.keycode]
+				_handle_numbered_interaction(num)
 				return
 
 		# Warehouse equipment controls (active when in warehouse mode)
@@ -1276,6 +1281,84 @@ func _handle_warehouse_interact() -> void:
 			if _toasts:
 				_toasts.toast_warning("Staff mode required for warehouse control. Press [K] to enter staff mode.")
 
+# ── Numbered bubble interaction (0-9 keys) ─────────────────────────────────
+func _handle_numbered_interaction(num: int) -> void:
+	if _proximity_system == null:
+		return
+	
+	var interactions = _proximity_system.get_all_nearby_interactions()
+	
+	# Find interaction with matching index
+	var target_interaction = null
+	for interaction in interactions:
+		if interaction.get("index", -1) == num:
+			target_interaction = interaction
+			break
+	
+	if target_interaction == null:
+		# No interaction at this number
+		return
+	
+	# Highlight the bubble
+	var bubble = get_node_or_null("_interaction_bubble")
+	if bubble != null and bubble.has_method("highlight_bubble"):
+		bubble.highlight_bubble(num)
+	
+	# Trigger the interaction based on type
+	var int_type = target_interaction.get("type", "")
+	
+	match int_type:
+		"elevator":
+			if _elevator != null:
+				_elevator.open_panel(_player.position, _player)
+		"stairs":
+			_handle_stairs_interaction()
+		"checkout":
+			var target = target_interaction.get("target")
+			if target != null:
+				_checkout_system.do_checkout(target)
+		"section":
+			var target = target_interaction.get("target")
+			if target != null:
+				_open_section_browse(target)
+		"stall":
+			var target = target_interaction.get("target")
+			if target != null:
+				var stall_id = target.get_stall_id() if target.has_method("get_stall_id") else ""
+				_on_stall_interact_requested(stall_id)
+		"npc":
+			_open_npc_chat()
+		"claw":
+			var target = target_interaction.get("target")
+			if target != null:
+				_start_claw_machine(target)
+		"facility":
+			_handle_facility_interact()
+		"atm":
+			_open_atm_panel()
+		"warehouse":
+			_handle_warehouse_interact()
+		_:
+			if _toasts:
+				_toasts.toast_info("Interaction [%d] not yet implemented" % num)
+
+func _handle_stairs_interaction() -> void:
+	var _stairs_sys = get("_stairs_system")
+	if _stairs_sys != null and _stairs_sys.has_method("check_stairs_proximity") and _player != null:
+		var proximity_result: Dictionary = _stairs_sys.check_stairs_proximity(_player.position, _current_floor_idx)
+		if proximity_result.get("in_zone", false):
+			var can_go_up: bool = proximity_result.get("can_go_up", false)
+			var can_go_down: bool = proximity_result.get("can_go_down", false)
+			# Try to go up if possible, otherwise down
+			if can_go_up and not _stairs_sys.is_transitioning():
+				_stairs_sys.start_stairs_transition(1)
+			elif can_go_down and not _stairs_sys.is_transitioning():
+				_stairs_sys.start_stairs_transition(-1)
+
+func _start_claw_machine(machine) -> void:
+	if machine != null and machine.has_method("start_game"):
+		machine.start_game()
+
 # ── NPC Chat interaction ─────────────────────────────────────────────
 func _open_npc_chat() -> void:
 	var npc = _proximity_system.get_nearby_npc_for_chat()
@@ -1516,6 +1599,17 @@ func _toggle_map_panel() -> void:
 		_map_panel.set_player(_player)
 		_map_panel.set_floor(_current_floor_idx)
 	_map_panel.toggle()
+
+# ── Floor Panel (V key - Clickable floor selector) ───────────────────────────────────
+func _toggle_floor_panel() -> void:
+	if _floor_panel == null:
+		_floor_panel = FloorPanelScript.new()
+		add_child(_floor_panel)
+		_floor_panel.set_owner_node(self)
+		_floor_panel.set_floor(_current_floor_idx)
+	_floor_panel.toggle()
+	if _floor_panel.visible:
+		_floor_panel.set_floor(_current_floor_idx)
 
 # ── Floor Jump Panel (T key - Teleport) ──────────────────────────────────────────────
 func _toggle_floor_jump_panel() -> void:

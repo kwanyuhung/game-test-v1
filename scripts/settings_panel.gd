@@ -33,6 +33,7 @@ var _controls := [
 	{"key": "G", "desc": "Drop/grab cart"},
 	{"key": "K", "desc": "Toggle staff mode"},
 	{"key": "M", "desc": "Toggle map panel"},
+	{"key": "V", "desc": "Floor panel"},
 	{"key": "L", "desc": "Shopping list"},
 	{"key": "J", "desc": "Quest journal"},
 	{"key": "O", "desc": "Settings"},

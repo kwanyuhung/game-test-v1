@@ -12,6 +12,7 @@ A cozy pixel-art supermarket simulation built in **Godot 4.6**. Walk the aisles,
 - **Shop with quantity** — Add multiple of the same item, see details before buying
 - **Checkout** — 3 lanes on the ground floor, printed receipt with tax breakdown + loyalty savings
 - **Ride the elevator** — Access 18 floors of shopping, dining, and entertainment
+- **Floor panel** — Press `V` to open a clickable floor selector for quick navigation between floors
 - **Chat with NPCs** — Press `C` near any AI shopper or staff member
 - **Play claw machines** — Floor 8 and Floor 17, multiple machines with different prize themes
 - **Play mini-games** — Karaoke (Floor 17), Pool Table, Darts — each gives XP rewards!
@@ -37,7 +38,8 @@ A cozy pixel-art supermarket simulation built in **Godot 4.6**. Walk the aisles,
 | `K` | Toggle staff/business mode |
 | `L` | Toggle shopping list |
 | `J` | Open quest journal |
-| `M` | Loyalty panel (coins, sign-up) |
+| `M` | Toggle map panel |
+| `V` | Floor panel (clickable floor selector) |
 | `P` | Pause menu |
 | `O` | Settings (volume, speed, notifications) |
 | `X` | Renovation panel (staff mode) |
