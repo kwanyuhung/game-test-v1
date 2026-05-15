@@ -130,5 +130,3 @@ func _write_response(payload: Dictionary) -> void:
 		return
 	f.store_string(JSON.stringify(payload))
 	f.close()
-
-

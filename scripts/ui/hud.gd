@@ -1,8 +1,8 @@
-# hud.gd — Heads-Up Display
+﻿# hud.gd — Heads-Up Display
 class_name HUD
 extends CanvasLayer
 
-const StoreData = preload("res://scripts/store_data.gd")
+const StoreData = preload("res://scripts/world/store_data.gd")
 
 var _cart_count_label: Label
 var _zone_label: Label
