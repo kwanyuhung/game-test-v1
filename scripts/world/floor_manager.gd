@@ -191,6 +191,7 @@ func _build_floor_in_container(floor_idx: int, container: Node2D) -> void:
 	# Use FloorBuilder to build into this container
 	var builder_script = preload("res://scripts/world/floor_builder.gd")
 	var builder: Node = builder_script.new()
+	container.add_child(builder)
 	builder.build(fd, container, floor_idx, stairs_sys)
 	
 	# Collect objects from builder before it's freed
