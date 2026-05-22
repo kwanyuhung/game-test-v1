@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xxd)",
+      "Bash(godot --headless --check-only-export-preset \"HTML5\")"
+    ]
+  },
+  "mcpServers": {
+    "godot-agent-tools": {
+      "command": "npx",
+      "args": ["-y", "godot-agent-tools-mcp"]
+    }
+  }
+}

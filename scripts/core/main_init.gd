@@ -22,21 +22,12 @@ func init_all() -> void:
 
 	m.set("_main_spawner", preload("res://scripts/world/main_spawner.gd").new())
 	m.add_child(m.get("_main_spawner"))
-	# FIX: Call setup() on main_spawner so _main reference is set
 	m.get("_main_spawner").setup(m, config)
-
 
 	# Build ground floor first
 	m.set("_current_floor_idx", 0)
-	# Spawn player first so NPCs can reference it
 	m._spawn_player()
-	m._build_floor(0)
-	m._setup_camera()
-	m._build_hud()
-	m.get("_main_panels").build_elevator()
-	m.get("_main_panels").build_stairs()
-	# NPCs are now built inside _build_floor() for each floor
-	m.get("_main_panels").update_floor_hud()
+	# FloorManager will be setup after stairs_system and will pre-build all floors
 
 	# ── Game Clock ──────────────────────────────────────────────────────────────
 	var game_clock = preload("res://scripts/managers/game_clock.gd").new()
@@ -156,13 +147,13 @@ func init_all() -> void:
 	m.set("_stairs_system", stairs_system)
 
 	# ── Floor Manager (multi-floor LOD system) ────────────────────────────────────
+	# IMPORTANT: Setup floor manager BEFORE building floors.
+	# FloorManager handles all floor building and switching.
 	var floor_manager = preload("res://scripts/world/floor_manager.gd").new()
 	m.add_child(floor_manager)
-	# Mark floor 0 as having NPCs/robots already spawned by _build_floor(0)
-	# This prevents duplicate spawning when floor_manager.setup() calls _update_active_floors(0)
-	floor_manager.mark_initial_spawn_complete()
-	floor_manager.setup(m)
 	m.set("_floor_manager", floor_manager)
+	# Setup now pre-builds all floors and shows floor 0
+	floor_manager.setup(m)
 
 	# ── Audio Manager (singleton) ─────────────────────────────────────────────
 	m.set("_audio", m.get_node_or_null("/root/Main/AudioManager"))
@@ -175,7 +166,7 @@ func init_all() -> void:
 	save_hint_label.add_theme_font_size_override("font_size", 9)
 	save_hint_label.z_index = 200
 	m.add_child(save_hint_label)
-	m.set("_save_hint_label", save_hint_label)
+	m.set_save_hint_label(save_hint_label)
 
 	# ── Save System load ───────────────────────────────────────────────────────
 	var save_sys = preload("res://scripts/managers/save_system.gd")

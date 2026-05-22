@@ -4,6 +4,7 @@
 extends Node
 
 const FloorConfig = preload("res://scripts/world/floor_config.gd")
+const FloorManager = preload("res://scripts/world/floor_manager.gd")
 const CELL_SIZE := 16
 
 var _main: Node2D = null
@@ -63,22 +64,25 @@ func _update_transition(delta: float) -> void:
 func _complete_transition() -> void:
 	_is_transitioning = false
 	_transition_progress = 0.0
-	
+
 	# Actually change the floor
 	_main.set("_current_floor_idx", _transition_to_floor)
 	_current_floor_idx = _transition_to_floor
-	
+
 	# Use FloorManager if available for multi-floor system
 	var floor_manager = _main.get("_floor_manager")
 	if floor_manager != null:
 		floor_manager.on_travel_completed(_transition_to_floor)
 	else:
-		# Fallback to old rebuild approach
 		_main._rebuild_floor(_transition_to_floor)
-	
+
 	# Position player at the stairs entrance on new floor
 	if _player != null:
-		_player.position = _stairs_entry_pos
+		# Calculate the Y offset for the new floor
+		var old_floor_y: float = FloorManager.get_floor_y(_transition_from_floor)
+		var new_floor_y: float = FloorManager.get_floor_y(_transition_to_floor)
+		var y_offset: float = _stairs_entry_pos.y - old_floor_y
+		_player.position = Vector2(_stairs_entry_pos.x, new_floor_y + y_offset)
 	
 	# Show toast
 	if _main.get("_toasts") != null:

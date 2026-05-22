@@ -9,6 +9,7 @@ const FloorBuilderScript = preload("res://scripts/world/floor_builder.gd")
 const SectionBrowseScript = preload("res://scripts/world/section_browse.gd")
 const StoreData = preload("res://scripts/world/store_data.gd")
 const ElevatorScript = preload("res://scripts/systems/elevator.gd")
+const FloorManagerScript = preload("res://scripts/world/floor_manager.gd")
 const FoodStallBrowseScript = preload("res://scripts/systems/food_stall_browse.gd")
 const ClawMachineScript = preload("res://scripts/amenities/claw_machine.gd")
 const ActorData = preload("res://scripts/entities/actor_data.gd")
@@ -138,43 +139,34 @@ var _monitor_panel: MonitorPanel = null
 var _nearby_warehouse: bool = false
 var _nearby_warehouse_dock: bool = false  # Floor G receiving dock
 var _warehouse_mode: bool = false
-var _truck_dock_node: Node2D = null       # Truck visual at receiving dock
-var _truck_arrived: bool = false          # Truck currently at dock
-var _dock_stock_label: Label = null       # Shows warehouse stock summary   # player is controlling warehouse equipment
+var _truck_dock_node: Node2D = null
+var _truck_arrived: bool = false
 var _warehouse_floor: Node2D = null
 var _nearby_elevator: bool = false
 var _nearby_parking: bool = false
-var _nearby_stairs: bool = false
 var _nearby_terminal: bool = false
 var _nearby_loyalty: bool = false
 var _nearby_gift_wrap: bool = false
 var _nearby_digital_kiosk: bool = false
 var _nearby_info_desk: bool = false
 var _nearby_cafe: bool = false
-var _nearby_promo_booth: bool = false  # Floor G promo booth
+var _nearby_promo_booth: bool = false
 var _nearby_lost_found: bool = false
-var _nearby_store_news: bool = false      # Floor G lost & found
+var _nearby_store_news: bool = false
 var _nearby_vending: bool = false
-var _in_checkout: bool = false
-var _cart_panel: CanvasLayer
-var _cart_items_lbl: Label
-var _cart_total_lbl: Label
-var _cart_count_lbl: Label
-var _checkout_receipt: Control
-var _checkout_counter_label: Label
-var _checkout_items_lbl: Label
-var _checkout_total_lbl: Label
+var _checkout_counter_label: Label = null
+var _checkout_items_lbl: Label = null
+var _checkout_total_lbl: Label = null
 var _checkout_receipt_visible: bool = false
-var _cart_panel_visible: bool = false
 var _price_terminal: PriceTerminal = null
 var _staff_blocked_floor: int = -1
 var _brand_manager: BrandManager = null
 var _brand_portal: BrandPortal = null
 var _business_mode: BusinessMode = null
-var _robots: Array = []           # active AI robot staff NPCs
+var _robots: Array = []
 var _robot_panel_system: Node = null
-var _robot_panel: Control = null   # robot management UI
-var _temp_order_mode: String = ""  # "cafe" or "vending"
+var _robot_panel: Control = null
+var _temp_order_mode: String = ""
 var _temp_order_items: Array = []
 
 var _world_bg: ColorRect = null
@@ -196,6 +188,131 @@ var _current_floor_idx: int = 0
 var _floor_nodes: Array = []
 var _floor_ambient: Color = Color(0.18, 0.18, 0.16)
 var _floor_label: Label = null
+
+func set_nearby_npc_for_chat(val: NPCController) -> void:
+	_nearby_npc_for_chat = val
+func get_nearby_npc_for_chat() -> NPCController:
+	return _nearby_npc_for_chat
+
+func set_nearby_issue(val: bool) -> void:
+	_nearby_issue = val
+func is_nearby_issue() -> bool:
+	return _nearby_issue
+
+func set_save_hint_label(val: Label) -> void:
+	_save_hint_label = val
+func get_save_hint_label() -> Label:
+	return _save_hint_label
+
+# Dynamic variable getters
+func get_chat_manager() -> ChatManager:
+	return _chat_manager
+
+func is_minimap_visible() -> bool:
+	return _minimap_visible
+func get_time_label() -> Label:
+	return _time_label
+func get_store_status_label() -> Label:
+	return _store_status_label
+func get_shopping_list_count_lbl() -> Label:
+	return _shopping_list_count_lbl
+func get_xp_bar_bg() -> ColorRect:
+	return _xp_bar_bg
+func get_xp_bar_fill() -> ColorRect:
+	return _xp_bar_fill
+func get_floating_text() -> FloatingText:
+	return _floating_text
+func get_daily_bonus() -> DailyBonus:
+	return _daily_bonus
+func get_loyalty_panel() -> Node2D:
+	return _loyalty_panel
+func get_interaction_bubble() -> Node:
+	return _interaction_bubble
+func is_nearby_monitor() -> bool:
+	return _nearby_monitor
+func get_truck_dock_node() -> Node2D:
+	return _truck_dock_node
+func is_truck_arrived() -> bool:
+	return _truck_arrived
+func get_checkout_counter_label() -> Label:
+	return _checkout_counter_label
+func get_checkout_items_lbl() -> Label:
+	return _checkout_items_lbl
+func get_checkout_total_lbl() -> Label:
+	return _checkout_total_lbl
+func get_brand_manager() -> BrandManager:
+	return _brand_manager
+func get_promo_manager():
+	return _promo_manager
+func get_dynamic_pricing():
+	return _dynamic_pricing
+func get_supplier_manager():
+	return _supplier_manager
+func get_stairs_node() -> Node2D:
+	return _stairs_node
+func get_floor_label() -> Label:
+	return _floor_label
+
+# Additional getters for core systems
+func get_proximity_system() -> Node:
+	return _proximity_system
+func get_checkout_system() -> Node:
+	return _checkout_system
+func get_food_court_system() -> Node:
+	return _food_court_system
+func get_truck_dock_system() -> Node:
+	return _truck_dock_system
+func get_player() -> Player:
+	return _player
+func get_sections() -> Array:
+	return _sections
+func get_checkout_counters() -> Array:
+	return _checkout_counters
+func get_npcs() -> Array:
+	return _npcs
+func get_game_clock() -> GameClock:
+	return _game_clock
+func get_maintenance_system() -> MaintenanceSystem:
+	return _maintenance_system
+func get_player_stats() -> PlayerStats:
+	return _player_stats
+func get_warehouse() -> WarehouseSystem:
+	return _warehouse
+func get_minimap() -> MiniMap:
+	return _minimap
+func get_map_panel() -> MapPanel:
+	return _map_panel
+func get_toasts() -> ToastManager:
+	return _toasts
+func get_elevator() -> ElevatorScript:
+	return _elevator
+func get_floor_manager() -> Node:
+	return _floor_manager
+func get_main_panels() -> Node:
+	return _main_panels
+func get_main_spawner() -> Node:
+	return _main_spawner
+func get_floor_jump_panel() -> Control:
+	return _floor_jump_panel
+func get_floor_panel() -> FloorPanel:
+	return _floor_panel
+func get_monitor_panel() -> MonitorPanel:
+	return _monitor_panel
+func get_price_terminal() -> PriceTerminal:
+	return _price_terminal
+func get_stats_dashboard() -> StatsDashboard:
+	return _stats_dashboard
+func get_settings_panel() -> SettingsPanel:
+	return _settings_panel
+func get_quest_system() -> QuestSystem:
+	return _quest_system
+func get_shopping_list() -> ShoppingList:
+	return _shopping_list
+func get_robots() -> Array:
+	return _robots
+func is_in_elevator() -> bool:
+	return _in_elevator
+
 var _floor_builder: FloorBuilder
 var _food_stall_browse: FoodStallBrowse
 var _in_elevator: bool = false
@@ -400,8 +517,6 @@ func player_board_elevator(_player, _floor_idx: int) -> void:
 	var car_y: float = _elevator.get_car_world_y()
 	_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, car_y + 5 * CELL_SIZE)
 
-func get_elevator():
-	return _elevator
 
 # ?????? Floor reached after travel ??????????????????????????????????????????????????????????????
 
@@ -413,18 +528,20 @@ func _on_elevator_travel_finished() -> void:
 	if _fade != null:
 		_fade.fade_out(0.2)
 		await get_tree().create_timer(0.25).timeout
-	
-	# Use FloorManager for multi-floor system if available
+
+	# Use FloorManager for multi-floor system
 	if _floor_manager != null:
 		_floor_manager.on_travel_completed(_current_floor_idx)
-		# Position player near elevator
+		# Position player near elevator on current floor
 		if _player != null:
-			_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
+			var floor_y: float = FloorManagerScript.get_floor_y(_current_floor_idx)
+			_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, floor_y + 20 * CELL_SIZE)
+	if _camera != null:
+		update_camera_limits(_current_floor_idx)
 	else:
-		# Fallback to old rebuild approach
 		_rebuild_floor(_current_floor_idx)
 		if _player != null:
-			_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
+			_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, 8 * CELL_SIZE)
 	
 	if _fade != null:
 		_fade.fade_in(0.3)
@@ -493,23 +610,41 @@ func _rebuild_floor_with_manager(idx: int) -> void:
 # ???????????????????????????????????????????????????????????????????????????????????????????????
 var _camera: Camera2D = null
 
+const CAMERA_ZOOM := 3.0
+const CAMERA_SMOOTH_SPEED := 10.0
+const CAMERA_LAG := Vector2(0, 0)
+
+const FLOOR_H := 10 * CELL_SIZE
+const FLOOR_Y_OFFSET := 10 * CELL_SIZE
+
 func _setup_camera() -> void:
 	_camera = Camera2D.new()
-	_camera.zoom = Vector2(3.0, 3.0)
-	_camera.limit_left = 0
-	_camera.limit_top = 0
-	_camera.limit_right = WORLD_W * CELL_SIZE
-	_camera.limit_bottom = WORLD_H * CELL_SIZE
-	_camera.position_smoothing_speed = 5.0
+	_camera.zoom = Vector2(CAMERA_ZOOM, CAMERA_ZOOM)
+	_camera.drag_enabled = false
+	_camera.position_smoothing_enabled = true
+	_camera.position_smoothing_speed = CAMERA_SMOOTH_SPEED
 	add_child(_camera)
 	_camera.make_current()
+	update_camera_limits(_current_floor_idx)
+
+func update_camera_limits(floor_idx: int) -> void:
+	var floor_y = 32 * CELL_SIZE - (floor_idx * FLOOR_Y_OFFSET)
+	_camera.limit_left = 0
+	_camera.limit_top = int(floor_y + CELL_SIZE * 2)
+	_camera.limit_right = WORLD_W * CELL_SIZE
+	_camera.limit_bottom = int(floor_y + FLOOR_H - CELL_SIZE * 2)
 
 func _build_hud() -> void:
 	pass  # HUD built by main_hud.gd in _ready()
+
+func _show_save_hint(msg: String) -> void:
+	if _save_hint_label != null:
+		_save_hint_label.text = msg
+		_save_hint_label.visible = true
+		await get_tree().create_timer(2.0).timeout
+		_save_hint_label.visible = false
 func _build_checkout_receipt_panel() -> void:
 	pass  # receipt panel built by main_hud.gd
-func get_warehouse() -> Node:
-	return _warehouse
 
 func _update_floor_hud() -> void:
 	if _main_panels != null:
@@ -680,9 +815,7 @@ func _input(event: InputEvent) -> void:
 				_toggle_shelf_panel()
 
 func _process(_delta: float) -> void:
-	# Camera follow player
-	if _camera != null and _player != null:
-		_camera.global_position = _player.global_position
+	# Camera smoothing handles following automatically
 	
 	if _current_section_browse != null and _current_section_browse.visible:
 		return
@@ -831,7 +964,7 @@ func _navigate_to_floor(floor_idx: int) -> void:
 		_rebuild_floor(floor_idx)
 	
 	if _player:
-		_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
+		_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, 8 * CELL_SIZE)
 	if _minimap:
 		_minimap.set_floor(floor_idx)
 	if _toasts:
@@ -845,18 +978,21 @@ func _jump_to_floor(floor_idx: int) -> void:
 		if _toasts:
 			_toasts.toast_warning("Invalid floor! Range: 0-%d" % (max_floors - 1))
 		return
-	
+
 	_current_floor_idx = floor_idx
-	
-	# Use FloorManager for multi-floor system if available
+
+	# Use FloorManager for multi-floor system
 	if _floor_manager != null:
 		_floor_manager.on_floor_changed(floor_idx)
 	else:
 		_rebuild_floor(floor_idx)
-	
+
+	if _camera:
+		update_camera_limits(floor_idx)
 	if _player:
-		# Position player near elevator (tile 6)
-		_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, 20 * CELL_SIZE)
+		# Position player near elevator on correct floor Y
+		var floor_y: float = FloorManagerScript.get_floor_y(floor_idx)
+		_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, floor_y + 20 * CELL_SIZE)
 	if _minimap:
 		_minimap.set_floor(floor_idx)
 	if _map_panel:
@@ -1575,9 +1711,6 @@ func _spawn_robots() -> void:
 func _on_brand_portal_closed() -> void:
 	# Refresh any brand data that may have changed
 	pass
-
-func get_game_clock() -> Node:
-	return _game_clock
 
 # ── Phase 3: Cafe Counter Browse ────────────────────────────────
 func _spawn_truck_at_dock() -> void:

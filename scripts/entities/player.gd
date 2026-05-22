@@ -5,6 +5,11 @@ extends CharacterBody2D
 const SPEED := 90.0
 const CELL_SIZE := 16
 
+var _min_x := 0.0
+var _max_x := 2048.0
+var _min_y := 0.0
+var _max_y := 160.0
+
 var _cart: ShoppingCart
 var _cart_sprite: Sprite2D
 var _cart_offset: Vector2 = Vector2(0, 12)
@@ -14,12 +19,12 @@ var _current_zone := ""
 var _sprite: Sprite2D
 var _staff_mode: bool = false
 var _staff_badge: Label = null
-var _staff_sprite_normal: bool = true  # true = normal, false = uniform
-var _has_cart: bool = true  # true = cart is with player, false = cart is left behind
-var _dropped_cart_pos: Vector2 = Vector2.ZERO  # Where cart was dropped
-var _cart_sprite_anchor: Node2D = null  # Anchor for dropped cart sprite
-var _bounding_box: ColorRect = null  # Debug bounding box
-var _bounding_visible: bool = true  # Toggle via debug system
+var _staff_sprite_normal: bool = true
+var _has_cart: bool = true
+var _dropped_cart_pos: Vector2 = Vector2.ZERO
+var _cart_sprite_anchor: Node2D = null
+var _bounding_box: ColorRect = null
+var _bounding_visible: bool = true
 var _top_border: ColorRect = null
 var _bottom_border: ColorRect = null
 var _left_border: ColorRect = null
@@ -51,46 +56,43 @@ func _build_sprite() -> void:
 	_sprite.hframes = 1
 	_sprite.vframes = 1
 	add_child(_sprite)
-	
+
 	var col = CollisionShape2D.new()
 	var shape = RectangleShape2D.new()
 	shape.size = Vector2(10, 10)
 	col.shape = shape
 	col.position = Vector2.ZERO
 	add_child(col)
-	
-	# Bounding box debug visualization (always visible)
+
 	_bounding_box = ColorRect.new()
 	_bounding_box.size = Vector2(16, 16)
 	_bounding_box.position = Vector2(-8, -8)
-	_bounding_box.color = Color(0.0, 1.0, 0.5, 0.15)  # Green transparent fill
+	_bounding_box.color = Color(0.0, 1.0, 0.5, 0.15)
 	_bounding_box.z_index = 100
 	add_child(_bounding_box)
-	
-	# Add border lines around bounding box
+
 	var border_color := Color(0.0, 1.0, 0.5, 0.8)
-	# Top border
 	_top_border = ColorRect.new()
 	_top_border.size = Vector2(16, 1)
 	_top_border.position = Vector2(-8, -8)
 	_top_border.color = border_color
 	_top_border.z_index = 101
 	add_child(_top_border)
-	# Bottom border
+
 	_bottom_border = ColorRect.new()
 	_bottom_border.size = Vector2(16, 1)
 	_bottom_border.position = Vector2(-8, 7)
 	_bottom_border.color = border_color
 	_bottom_border.z_index = 101
 	add_child(_bottom_border)
-	# Left border
+
 	_left_border = ColorRect.new()
 	_left_border.size = Vector2(1, 16)
 	_left_border.position = Vector2(-8, -8)
 	_left_border.color = border_color
 	_left_border.z_index = 101
 	add_child(_left_border)
-	# Right border
+
 	_right_border = ColorRect.new()
 	_right_border.size = Vector2(1, 16)
 	_right_border.position = Vector2(7, -8)
@@ -123,7 +125,6 @@ func toggle_staff_mode() -> bool:
 		if _staff_badge != null:
 			_staff_badge.text = "[STAFF MODE]"
 			_staff_badge.visible = true
-		# Hide shopping cart in staff mode
 		if _cart_sprite != null:
 			_cart_sprite.visible = false
 	else:
@@ -146,114 +147,88 @@ func set_staff_mode(val: bool) -> void:
 func _make_player_tex() -> Texture2D:
 	var img = Image.create(16, 16, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	
-	# Hair (top)
+
 	_fill(5, 1, 6, 1, Color(0.30, 0.20, 0.15), img)
 	_fill(4, 2, 8, 1, Color(0.30, 0.20, 0.15), img)
-	
-	# Face
+
 	_fill(5, 2, 6, 4, Color(0.96, 0.80, 0.65), img)
-	_fill(4, 3, 1, 2, Color(0.96, 0.80, 0.65), img)  # left ear
-	_fill(11, 3, 1, 2, Color(0.96, 0.80, 0.65), img)  # right ear
-	
-	# Eyes (with highlights)
-	_set_pixel(6, 3, Color(0.15, 0.10, 0.08), img)  # left eye
-	_set_pixel(6, 3, Color(1.0, 1.0, 1.0, 0.8), img)  # left eye highlight
-	_set_pixel(9, 3, Color(0.15, 0.10, 0.08), img)  # right eye
-	_set_pixel(9, 3, Color(1.0, 1.0, 1.0, 0.8), img)  # right eye highlight
-	
-	# Mouth/smile
+	_fill(4, 3, 1, 2, Color(0.96, 0.80, 0.65), img)
+	_fill(11, 3, 1, 2, Color(0.96, 0.80, 0.65), img)
+
+	_set_pixel(6, 3, Color(0.15, 0.10, 0.08), img)
+	_set_pixel(6, 3, Color(1.0, 1.0, 1.0, 0.8), img)
+	_set_pixel(9, 3, Color(0.15, 0.10, 0.08), img)
+	_set_pixel(9, 3, Color(1.0, 1.0, 1.0, 0.8), img)
+
 	_set_pixel(7, 5, Color(0.80, 0.50, 0.50), img)
 	_set_pixel(8, 5, Color(0.80, 0.50, 0.50), img)
-	
-	# Neck
+
 	_fill(7, 6, 2, 1, Color(0.96, 0.80, 0.65), img)
-	
-	# Body/Shirt (yellow t-shirt)
-	_fill(4, 7, 8, 4, Color(0.91, 0.76, 0.44), img)  # main shirt
-	_fill(3, 7, 1, 3, Color(0.91, 0.76, 0.44), img)  # left sleeve
-	_fill(12, 7, 1, 3, Color(0.91, 0.76, 0.44), img)  # right sleeve
-	
-	# Shirt collar detail
+
+	_fill(4, 7, 8, 4, Color(0.91, 0.76, 0.44), img)
+	_fill(3, 7, 1, 3, Color(0.91, 0.76, 0.44), img)
+	_fill(12, 7, 1, 3, Color(0.91, 0.76, 0.44), img)
+
 	_fill(6, 7, 4, 1, Color(0.98, 0.88, 0.58), img)
-	
-	# Arms (skin)
+
 	_fill(3, 9, 1, 2, Color(0.96, 0.80, 0.65), img)
 	_fill(12, 9, 1, 2, Color(0.96, 0.80, 0.65), img)
-	
-	# Pants (blue jeans)
+
 	_fill(5, 11, 2, 3, Color(0.25, 0.35, 0.60), img)
 	_fill(9, 11, 2, 3, Color(0.25, 0.35, 0.60), img)
-	
-	# Belt
+
 	_fill(5, 11, 6, 1, Color(0.45, 0.30, 0.20), img)
-	
-	# Shoes (brown)
+
 	_fill(4, 14, 4, 2, Color(0.40, 0.28, 0.22), img)
 	_fill(8, 14, 4, 2, Color(0.40, 0.28, 0.22), img)
-	
-	# Shoe soles
+
 	_fill(4, 15, 4, 1, Color(0.25, 0.18, 0.15), img)
 	_fill(8, 15, 4, 1, Color(0.25, 0.18, 0.15), img)
-	
+
 	return ImageTexture.create_from_image(img)
 
 func _make_staff_tex() -> Texture2D:
-	# Same as player but shirt is blue (uniform) and has name badge
 	var img = Image.create(16, 16, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	
-	# Hair (top)
+
 	_fill(5, 1, 6, 1, Color(0.30, 0.20, 0.15), img)
 	_fill(4, 2, 8, 1, Color(0.30, 0.20, 0.15), img)
-	
-	# Face
+
 	_fill(5, 2, 6, 4, Color(0.96, 0.80, 0.65), img)
-	_fill(4, 3, 1, 2, Color(0.96, 0.80, 0.65), img)  # left ear
-	_fill(11, 3, 1, 2, Color(0.96, 0.80, 0.65), img)  # right ear
-	
-	# Eyes (with highlights)
-	_set_pixel(6, 3, Color(0.15, 0.10, 0.08), img)  # left eye
-	_set_pixel(9, 3, Color(0.15, 0.10, 0.08), img)  # right eye
-	
-	# Mouth/smile
+	_fill(4, 3, 1, 2, Color(0.96, 0.80, 0.65), img)
+	_fill(11, 3, 1, 2, Color(0.96, 0.80, 0.65), img)
+
+	_set_pixel(6, 3, Color(0.15, 0.10, 0.08), img)
+	_set_pixel(9, 3, Color(0.15, 0.10, 0.08), img)
+
 	_set_pixel(7, 5, Color(0.80, 0.50, 0.50), img)
 	_set_pixel(8, 5, Color(0.80, 0.50, 0.50), img)
-	
-	# Neck
+
 	_fill(7, 6, 2, 1, Color(0.96, 0.80, 0.65), img)
-	
-	# Body/Uniform (blue work uniform)
-	_fill(4, 7, 8, 4, Color(0.30, 0.50, 0.80), img)  # main uniform
-	_fill(3, 7, 1, 3, Color(0.30, 0.50, 0.80), img)  # left sleeve
-	_fill(12, 7, 1, 3, Color(0.30, 0.50, 0.80), img)  # right sleeve
-	
-	# Uniform collar
+
+	_fill(4, 7, 8, 4, Color(0.30, 0.50, 0.80), img)
+	_fill(3, 7, 1, 3, Color(0.30, 0.50, 0.80), img)
+	_fill(12, 7, 1, 3, Color(0.30, 0.50, 0.80), img)
+
 	_fill(6, 7, 4, 1, Color(0.40, 0.58, 0.85), img)
-	
-	# Name badge on chest
+
 	_fill(8, 8, 3, 2, Color(0.90, 0.90, 0.85), img)
 	_fill(9, 9, 1, 1, Color(0.30, 0.30, 0.35), img)
-	
-	# Arms (skin)
+
 	_fill(3, 9, 1, 2, Color(0.96, 0.80, 0.65), img)
 	_fill(12, 9, 1, 2, Color(0.96, 0.80, 0.65), img)
-	
-	# Pants (dark work pants)
+
 	_fill(5, 11, 2, 3, Color(0.25, 0.25, 0.35), img)
 	_fill(9, 11, 2, 3, Color(0.25, 0.25, 0.35), img)
-	
-	# Belt
+
 	_fill(5, 11, 6, 1, Color(0.35, 0.25, 0.20), img)
-	
-	# Work boots
+
 	_fill(4, 14, 4, 2, Color(0.25, 0.20, 0.18), img)
 	_fill(8, 14, 4, 2, Color(0.25, 0.20, 0.18), img)
-	
-	# Boot soles
+
 	_fill(4, 15, 4, 1, Color(0.15, 0.12, 0.10), img)
 	_fill(8, 15, 4, 1, Color(0.15, 0.12, 0.10), img)
-	
+
 	return ImageTexture.create_from_image(img)
 
 func _make_cart_tex() -> Texture2D:
@@ -282,33 +257,31 @@ func _set_pixel(x: int, y: int, col: Color, img: Image) -> void:
 		img.set_pixel(x, y, col)
 
 func _physics_process(delta: float) -> void:
-	# Check if input is blocked by a panel
 	if _world_ref != null and _world_ref.has_method("is_input_blocked"):
 		if _world_ref.is_input_blocked():
 			return
-	
+
 	var input_dir = Vector2(
 		Input.get_axis("move_left", "move_right"),
 		Input.get_axis("move_up", "move_down")
 	)
-	
+
 	if input_dir.length() > 0.0:
 		input_dir = input_dir.normalized()
 		var new_pos = position + input_dir * SPEED * delta
-		new_pos.x = clampf(new_pos.x, 20.0, 1260.0)
-		new_pos.y = clampf(new_pos.y, 20.0, 740.0)
+		new_pos.x = clampf(new_pos.x, _min_x, _max_x)
+		new_pos.y = clampf(new_pos.y, _min_y, _max_y)
 		position = new_pos
-		
-		var cart_target = position + _cart_offset
+
 		_cart_sprite.position = _cart_sprite.position.lerp(_cart_offset, 0.15)
-		
+
 		if absf(input_dir.x) > 0.1:
 			_sprite.flip_h = input_dir.x < 0.0
-		
+
 		var t = Time.get_ticks_msec() / 1000.0
 		var bob = sin(t * 10.0) * 0.04
 		_sprite.scale = Vector2(1.0, 1.0 + bob)
-	
+
 	if Input.is_action_just_pressed("interact"):
 		interact_requested.emit()
 
@@ -321,15 +294,12 @@ func _input(event: InputEvent) -> void:
 		toggle_cart()
 
 func _toggle_staff_mode_input() -> void:
-	# Only allow toggling on floor 9 or near staff area
 	if _world_ref != null and _world_ref.has_method("can_toggle_staff_mode"):
 		if _world_ref.can_toggle_staff_mode():
-			var was_staff = _staff_mode
 			toggle_staff_mode()
 			if _world_ref.has_method("on_staff_mode_toggled"):
 				_world_ref.on_staff_mode_toggled(_staff_mode)
 		else:
-			# Show "Staff Only" hint if on floor 9 or near staff area
 			if _world_ref.has_method("show_staff_only_hint"):
 				_world_ref.show_staff_only_hint()
 
@@ -341,7 +311,20 @@ func set_nearby_section(section) -> void:
 		zone_changed.emit(_current_zone)
 	else:
 		_current_zone = ""
-		zone_changed.emit("")
+
+func set_floor_bounds(floor_idx: int) -> void:
+	var CELL = 16
+	var FLOOR_Y_OFFSET = 10 * CELL  # 160 pixels per floor
+	var FLOOR_0_BASE_Y = 32 * CELL  # 512 pixels for floor 0 base
+	var FLOOR_H = 10 * CELL  # 160 pixels per floor
+	var WORLD_W = 128 * CELL  # 2048 pixels
+
+	var floor_y = FLOOR_0_BASE_Y - (floor_idx * FLOOR_Y_OFFSET)
+	_min_x = CELL * 2.0
+	_max_x = WORLD_W - CELL * 2.0
+	# Floor spans from floor_y to floor_y + FLOOR_H (512 to 672 for floor 0)
+	_min_y = floor_y + CELL * 2.0  # 544 (below lobby wall)
+	_max_y = floor_y + FLOOR_H - CELL * 2.0  # 640
 
 func get_nearby_section():
 	return _nearby_section
@@ -352,54 +335,46 @@ func get_cart():
 func get_current_zone() -> String:
 	return _current_zone
 
-# ── Cart Drop / Grab (G key) ─────────────────────────────────────────
 func has_cart() -> bool:
 	return _has_cart
 
 func drop_cart() -> void:
 	if not _has_cart:
 		return
-	# Remember where we dropped the cart
 	_dropped_cart_pos = global_position + _cart_offset
-	
-	# Hide cart sprite attached to player
+
 	if _cart_sprite != null:
 		_cart_sprite.visible = false
-	
-	# Create a standalone cart sprite where we dropped it
+
 	_drop_cart_sprite()
-	
+
 	_has_cart = false
 	cart_dropped.emit()
 
 func grab_cart() -> void:
 	if _has_cart:
 		return
-	
-	# Remove the dropped cart sprite
+
 	if _cart_sprite_anchor != null:
 		_cart_sprite_anchor.queue_free()
 		_cart_sprite_anchor = null
-	
-	# Show cart sprite attached to player
+
 	if _cart_sprite != null:
 		_cart_sprite.visible = true
-	
+
 	_has_cart = true
 	cart_grabbed.emit()
 
 func _drop_cart_sprite() -> void:
-	# Create a Node2D to hold the dropped cart sprite
 	_cart_sprite_anchor = Node2D.new()
 	_cart_sprite_anchor.name = "DroppedCart"
 	_cart_sprite_anchor.global_position = _dropped_cart_pos
 	get_parent().add_child(_cart_sprite_anchor)
-	
-	# Add cart sprite to anchor
+
 	var dropped_sprite := Sprite2D.new()
 	dropped_sprite.texture = _make_cart_tex()
 	dropped_sprite.position = Vector2.ZERO
-	dropped_sprite.z_index = -1  # Below player
+	dropped_sprite.z_index = -1
 	_cart_sprite_anchor.add_child(dropped_sprite)
 
 func toggle_cart() -> void:

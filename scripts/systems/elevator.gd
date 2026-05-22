@@ -5,6 +5,7 @@ class_name Elevator
 extends Node2D
 
 const Floors = preload("res://scripts/world/floors.gd")
+const FloorManager = preload("res://scripts/world/floor_manager.gd")
 const PixelArt = preload("res://scripts/utils/pixel_art_generator.gd")
 const CELL_SIZE := 16
 
@@ -12,19 +13,6 @@ const CELL_SIZE := 16
 # x = same for all floors, y per floor
 # NOTE: Must match shaft_x in floor_builder.gd (currently tile 6)
 const SHAFT_X := 6 * CELL_SIZE
-const FLOOR_Y := {
-	0: 32 * CELL_SIZE,   # Ground
-	1: 22 * CELL_SIZE,   # Floor 1
-	2: 12 * CELL_SIZE,   # Floor 2
-	3:  2 * CELL_SIZE,   # Floor 3
-	4: -8 * CELL_SIZE,   # Floor 4
-	5: -18 * CELL_SIZE,  # Floor 5
-	6: -28 * CELL_SIZE,  # Floor 6
-	7: -38 * CELL_SIZE,  # Floor 7
-	8: -48 * CELL_SIZE,  # Floor 8
-	9: -58 * CELL_SIZE,  # Floor 9
-	10: -68 * CELL_SIZE, # Floor 10 (rooftop)
-}
 
 const CAR_W := 14 * CELL_SIZE
 const CAR_H := 10 * CELL_SIZE
@@ -111,7 +99,7 @@ func _ready() -> void:
 
 # Position car at a given floor (instant, no animation)
 func _position_car_at_floor(idx: int) -> void:
-	_car.position = Vector2(SHAFT_X, FLOOR_Y[idx])
+	_car.position = Vector2(SHAFT_X, FloorManager.get_floor_y(idx))
 	_floor_label.text = Floors.floor_at(idx).label
 
 func _process(delta: float) -> void:
@@ -208,8 +196,8 @@ func call_to_floor(idx: int) -> void:
 			main.on_elevator_staff_blocked(idx)
 		return
 	_target_floor = idx
-	_travel_from_y = FLOOR_Y[_current_floor]
-	_travel_to_y = FLOOR_Y[_target_floor]
+	_travel_from_y = FloorManager.get_floor_y(_current_floor)
+	_travel_to_y = FloorManager.get_floor_y(_target_floor)
 	_travel_progress = 0.0
 	_is_traveling = true
 	_door_open = false

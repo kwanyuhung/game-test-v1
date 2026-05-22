@@ -4,6 +4,8 @@ class_name ProximitySystem
 # Called each frame by main.gd's _process().
 extends Node
 
+const FloorConfig = preload("res://scripts/world/floor_config.gd")
+
 var _main: Node2D = null
 var _floor_builder = null
 var _player = null
@@ -41,7 +43,7 @@ var nearby_parking: bool = false
 
 # Cached refs
 var _checkout_counter_label = null
-var _CELL_SIZE: int = 16
+var _CELL_SIZE: int = FloorConfig.CELL_SIZE
 
 # Track previously nearby objects for bounds visibility
 var _prev_nearby_checkout: Node = null
@@ -54,19 +56,22 @@ var _all_nearby_interactions: Array = []
 
 func setup(main: Node2D) -> void:
 	_main = main
-	_floor_builder = main.get("_floor_builder")
 	_player = main.get("_player")
 	_checkout_counters = main.get("_checkout_counters")
 	_npcs = main.get("_npcs")
 	_chat_panel = main.get("_chat_panel")
 	_checkout_counter_label = main.get("_checkout_counter_label")
-	# Try to get CELL_SIZE from FloorConfig
-	var fc = main.get_node_or_null("/root/Main/FloorConfig")
-	if fc != null:
-		_CELL_SIZE = fc.CELL_SIZE if fc.has_method("get") else 16
 	# Register all interactive objects with debug system
 	_register_debug_objects()
-	# Listen for proximity changes to update debug visuals
+
+func refresh_from_floor_manager() -> void:
+	# Called when floor changes - update references from FloorManager
+	var floor_manager = _main.get("_floor_manager")
+	if floor_manager != null:
+		_checkout_counters = floor_manager.get_checkout_counters()
+		var sections = floor_manager.get_sections()
+		# Update floor_builder reference for section access
+		_floor_builder = _main.get("_floor_builder")
 
 func _register_debug_objects() -> void:
 	var debug_bounds = _main.get("_debug_bounds")
@@ -597,7 +602,7 @@ func _update_npc_chat_proximity() -> void:
 			nearest_dist = dist
 			nearby_npc_for_chat = npc
 
-	_main.set("_nearby_npc_for_chat", nearby_npc_for_chat)
+	_main.set_nearby_npc_for_chat(nearby_npc_for_chat)
 
 func _update_issue_proximity() -> void:
 	nearby_issue = false
@@ -608,7 +613,7 @@ func _update_issue_proximity() -> void:
 	var issue = _maintenance_system.get_issue_at_pos(_player.position, _CELL_SIZE * 7.0)
 	nearby_issue = (issue != null)
 
-	_main.set("_nearby_issue", nearby_issue)
+	_main.set_nearby_issue(nearby_issue)
 	_main.set("_target_issue", _target_issue)
 
 func _update_atm_proximity() -> void:

@@ -2,8 +2,8 @@
 # Use setup(main, config) before calling any spawn methods.
 extends Node
 
-const ActorData = preload("res://scripts/entities/actor_data.gd") 
-const ElevatorScript = preload("res://scripts/systems/elevator.gd")
+const ActorData = preload("res://scripts/entities/actor_data.gd")
+const FloorManager = preload("res://scripts/world/floor_manager.gd")
 
 var _main: Node2D = null
 var _config: MainConfig = null
@@ -14,7 +14,7 @@ var _robot_spawned: bool = false  # Track if a single robot has been spawned
 
 # Helper to get world Y position for a floor
 func _get_floor_world_y(floor_idx: int) -> float:
-	return ElevatorScript.FLOOR_Y.get(floor_idx, 32 * _cell_size)
+	return FloorManager.get_floor_y(floor_idx)
 
 func setup(main: Node2D, config: MainConfig) -> void:
 	# 🔥 空值防护
@@ -437,8 +437,9 @@ func spawn_player() -> void:
 	# 🔥 空值防护
 	if _main == null: return
 	var player: Node2D = preload("res://scripts/entities/player.gd").new()
-	# Spawn near elevator (tile 6, mid-floor y)
-	player.position = Vector2(6 * _cell_size + 7 * _cell_size, 20 * _cell_size)
+	# Spawn near elevator (tile 6, mid-floor y=8 tiles = 128 pixels from floor base)
+	# Floor base at y=512, player at y=512 + 128 = 640, which is within lobby zone (y=2-15 = 32-240)
+	player.position = Vector2(6 * _cell_size + 7 * _cell_size, 8 * _cell_size)
 	_main.add_child(player)
 	player.set_world(_main)
 	player.cart_updated.connect(_main._on_cart_updated)

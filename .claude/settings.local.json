@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xxd)",
+      "Bash(godot --headless --check-only-export-preset \"HTML5\")",
+      "Bash(settings\\\\.json\")",
+      "Bash(xxd \"C:/Users/User/Documents/GitHub/game-test-v1/scripts/entities/player.gd\")",
+      "Bash(python3 *)"
+    ]
+  }
+}
