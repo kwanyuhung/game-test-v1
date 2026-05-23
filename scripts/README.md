@@ -71,7 +71,7 @@ This document describes the organization and purpose of each subdirectory in the
 - `floor_manager.gd` - Manages active floors and freeze/unfreeze
 - `floors.gd` - Floor utility functions
 - `floor_config.gd` - Floor configuration and constants
-- `floor_0_config.gd` - Ground floor specific configuration
+- `floor_0_config.gd` - Ground floor specific configuration (moved to `areas/floor_0/`)
 - `spawn_config.gd` - NPC spawn configuration
 - `spawn_manager.gd` - Handles spawn limits and weighted random selection
 

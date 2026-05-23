@@ -39,7 +39,7 @@ REORGANIZE_MAP = {
     "floor_manager.gd": "world",
     "floors.gd": "world",
     "floor_config.gd": "world",
-    "floor_0_config.gd": "world",
+    "floor_0_config.gd": "areas/floor_0",
     "spawn_config.gd": "world",
     "spawn_manager.gd": "world",
     

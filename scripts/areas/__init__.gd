@@ -11,7 +11,7 @@ class_name Areas
 const LobbyHandler = preload("res://scripts/areas/floor_0/lobby_handler.gd")
 const FoodStallHandler = preload("res://scripts/areas/floor_0/food_stall_handler.gd")
 const ServiceAreaHandler = preload("res://scripts/areas/floor_0/service_area_handler.gd")
-const WCHandler = preload("res://scripts/areas/floor_0/wc_handler.gd")
+const WCHandler = preload("res://scripts/areas/shared/wc_handler.gd")
 const WarehouseHandler = preload("res://scripts/areas/floor_0/warehouse_handler.gd")
 const MiscHandler = preload("res://scripts/areas/floor_0/misc_handler.gd")
 const Floor0Handler = preload("res://scripts/areas/floor_0/floor_0_handler.gd")
