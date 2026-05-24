@@ -314,17 +314,18 @@ func set_nearby_section(section) -> void:
 
 func set_floor_bounds(floor_idx: int) -> void:
 	var CELL = 16
-	var FLOOR_Y_OFFSET = 10 * CELL  # 160 pixels per floor
+	var FLOOR_Y_OFFSET = 10 * CELL  # 160 pixels per floor (vertical spacing between floors)
 	var FLOOR_0_BASE_Y = 32 * CELL  # 512 pixels for floor 0 base
-	var FLOOR_H = 10 * CELL  # 160 pixels per floor
 	var WORLD_W = 128 * CELL  # 2048 pixels
+	# Full floor height is 40 tiles (from floor_config_data.json zones), not the spacing constant
+	var FLOOR_ZONE_H = 40 * CELL  # 640 pixels — actual zone height per floor
 
 	var floor_y = FLOOR_0_BASE_Y - (floor_idx * FLOOR_Y_OFFSET)
 	_min_x = CELL * 2.0
 	_max_x = WORLD_W - CELL * 2.0
-	# Floor spans from floor_y to floor_y + FLOOR_H (512 to 672 for floor 0)
-	_min_y = floor_y + CELL * 2.0  # 544 (below lobby wall)
-	_max_y = floor_y + FLOOR_H - CELL * 2.0  # 640
+	# Allow movement across the full floor zone height (512 to 1152 world pixels for floor 0)
+	_min_y = floor_y + CELL * 2.0
+	_max_y = floor_y + FLOOR_ZONE_H - CELL * 2.0
 
 func get_nearby_section():
 	return _nearby_section

@@ -234,6 +234,7 @@ func init_all() -> void:
 	quest_journal.set_quest_system(quest_system)
 	quest_journal.visible = false
 	m.set("_quest_journal", quest_journal)
+	PanelManager.register("quest_journal", quest_journal, PanelManager.Policy.ALONE)
 
 	# ── Settings Panel ────────────────────────────────────────────────────────
 	var settings_panel = preload("res://scripts/ui/settings_panel.gd").new()
@@ -241,6 +242,7 @@ func init_all() -> void:
 	settings_panel.visible = false
 	settings_panel.setting_changed.connect(m._on_setting_changed)
 	m.set("_settings_panel", settings_panel)
+	PanelManager.register("settings", settings_panel, PanelManager.Policy.ALONE)
 
 	# ── Pause Menu ────────────────────────────────────────────────────────────
 	var pause_menu = preload("res://scripts/ui/pause_menu.gd").new()
@@ -249,12 +251,14 @@ func init_all() -> void:
 	pause_menu.paused.connect(m._on_game_paused)
 	pause_menu.resumed.connect(m._on_game_resumed)
 	m.set("_pause_menu", pause_menu)
+	PanelManager.register("pause", pause_menu, PanelManager.Policy.ALONE)
 
 	# ── Stats Dashboard ────────────────────────────────────────────────────────
 	var stats_dashboard = preload("res://scripts/ui/stats_dashboard.gd").new()
 	m.add_child(stats_dashboard)
 	stats_dashboard.visible = false
 	m.set("_stats_dashboard", stats_dashboard)
+	PanelManager.register("stats_dashboard", stats_dashboard, PanelManager.Policy.ALONE)
 
 	# ── Interaction Bubble ─────────────────────────────────────────────────────
 	var interaction_bubble = preload("res://scripts/ui/interaction_bubble.gd").new()
@@ -295,6 +299,7 @@ func init_all() -> void:
 		dev_tools.position = Vector2(100.0, 100.0)
 		dev_tools.z_index = 1000
 		m.add_child(dev_tools)
+		PanelManager.register("dev_tools", dev_tools, PanelManager.Policy.ALONE)
 
 	# ── Debug Sprite Viewer ──────────────────────────────────────────────────
 	var debug_viewer = preload("res://scripts/utils/debug_sprite_viewer.gd").new()
@@ -308,3 +313,4 @@ func init_all() -> void:
 	shelf_panel.visible = false
 	m.add_child(shelf_panel)
 	m.set("_shelf_panel", shelf_panel)
+	PanelManager.register("shelf", shelf_panel, PanelManager.Policy.ALONE)

@@ -3,19 +3,22 @@
 class_name MapPanel
 extends CanvasLayer
 
+const FloorConfig = preload("res://scripts/world/floor_config.gd")
+
 const CELL_SIZE := 16
 const FLOOR_TILE_SPACING := 10
 const FLOOR_Y_OFFSET := FLOOR_TILE_SPACING * CELL_SIZE  # 160 pixels per floor
 # Floor 0 base Y = tile 32 = 512 pixels
 const FLOOR_0_BASE_Y := 32 * CELL_SIZE  # 512 pixels
-const FLOOR_HEIGHT := FLOOR_TILE_SPACING * CELL_SIZE  # 160 pixels per floor
-const FLOOR_TOP_MARGIN := 2 * CELL_SIZE  # 32 pixels above floor base (lobby wall area)
+# Actual zone height per floor: 40 tiles = 640 pixels
+const FLOOR_ZONE_H := 40 * CELL_SIZE  # 640 pixels per floor
+# Margin from floor base to topmost zone (30 tiles above base tile 32)
+const FLOOR_TOP_MARGIN_TILES := 30
+const FLOOR_TOP_MARGIN := FLOOR_TOP_MARGIN_TILES * CELL_SIZE  # 480 pixels
 
 # World dimensions
 const WORLD_W_TILES := 128  # tiles
 const WORLD_W := WORLD_W_TILES * CELL_SIZE  # 2048 pixels
-const WORLD_H_TILES := FLOOR_TILE_SPACING  # 10 tiles per floor
-const WORLD_H := WORLD_H_TILES * CELL_SIZE  # 160 pixels per floor
 
 # Robot marker colors by type
 const ROBOT_COLORS := {
@@ -47,58 +50,6 @@ var _map_w: float = 0.0
 var _map_h: float = 0.0
 var _map_offset: Vector2 = Vector2.ZERO
 var _font_scale: float = 1.0
-
-# Floor item definitions (positions in tiles, 0-127 for X, 0-9 for Y per floor)
-# Y positions are relative to floor base (tile 15 = y=240)
-const FLOOR_ITEMS := {
-	0: {
-		"elevator": {"pos": Vector2(6, 5), "label": "Elevator", "color": Color(0.60, 0.78, 0.95)},
-		"stairs": {"pos": Vector2(84, 5), "label": "Stairs", "color": Color(0.55, 0.45, 0.60)},
-		"food_stall": {"pos": Vector2(9, 3), "label": "Food Stall", "color": Color(0.85, 0.55, 0.30)},
-		"checkout": {"pos": Vector2(50, 7), "label": "Checkout", "color": Color(0.30, 0.80, 0.40)},
-	},
-	1: {
-		"elevator": {"pos": Vector2(6, 5), "label": "Elevator", "color": Color(0.60, 0.78, 0.95)},
-		"stairs": {"pos": Vector2(84, 5), "label": "Stairs", "color": Color(0.55, 0.45, 0.60)},
-	},
-	2: {
-		"elevator": {"pos": Vector2(6, 5), "label": "Elevator", "color": Color(0.60, 0.78, 0.95)},
-		"stairs": {"pos": Vector2(84, 5), "label": "Stairs", "color": Color(0.55, 0.45, 0.60)},
-	},
-	3: {
-		"elevator": {"pos": Vector2(6, 5), "label": "Elevator", "color": Color(0.60, 0.78, 0.95)},
-		"stairs": {"pos": Vector2(84, 5), "label": "Stairs", "color": Color(0.55, 0.45, 0.60)},
-	},
-	4: {
-		"elevator": {"pos": Vector2(6, 5), "label": "Elevator", "color": Color(0.60, 0.78, 0.95)},
-		"stairs": {"pos": Vector2(84, 5), "label": "Stairs", "color": Color(0.55, 0.45, 0.60)},
-	},
-	5: {
-		"elevator": {"pos": Vector2(6, 5), "label": "Elevator", "color": Color(0.60, 0.78, 0.95)},
-		"stairs": {"pos": Vector2(84, 5), "label": "Stairs", "color": Color(0.55, 0.45, 0.60)},
-	},
-	6: {
-		"elevator": {"pos": Vector2(6, 5), "label": "Elevator", "color": Color(0.60, 0.78, 0.95)},
-		"stairs": {"pos": Vector2(84, 5), "label": "Stairs", "color": Color(0.55, 0.45, 0.60)},
-	},
-	7: {
-		"elevator": {"pos": Vector2(6, 5), "label": "Elevator", "color": Color(0.60, 0.78, 0.95)},
-		"stairs": {"pos": Vector2(84, 5), "label": "Stairs", "color": Color(0.55, 0.45, 0.60)},
-	},
-	8: {
-		"elevator": {"pos": Vector2(6, 5), "label": "Elevator", "color": Color(0.60, 0.78, 0.95)},
-		"stairs": {"pos": Vector2(84, 5), "label": "Stairs", "color": Color(0.55, 0.45, 0.60)},
-	},
-	9: {
-		"elevator": {"pos": Vector2(6, 5), "label": "Elevator", "color": Color(0.60, 0.78, 0.95)},
-		"stairs": {"pos": Vector2(84, 5), "label": "Stairs", "color": Color(0.55, 0.45, 0.60)},
-	},
-	11: {
-		"elevator": {"pos": Vector2(6, 5), "label": "Elevator", "color": Color(0.60, 0.78, 0.95)},
-		"stairs": {"pos": Vector2(84, 5), "label": "Stairs", "color": Color(0.55, 0.45, 0.60)},
-		"dock": {"pos": Vector2(80, 5), "label": "Truck Dock", "color": Color(0.50, 0.60, 0.40)},
-	},
-}
 
 func _ready() -> void:
 	visible = false
@@ -289,6 +240,61 @@ func _clear_robot_dots() -> void:
 func _get_floor_base_y(floor_idx: int) -> float:
 	return FLOOR_0_BASE_Y - (floor_idx * FLOOR_Y_OFFSET)
 
+func _get_floor_zone_items(floor_idx: int) -> Dictionary:
+	# Load floor items (elevator, stairs, section zones) from FloorConfig
+	# Returns dict: zone_id -> {pos: Vector2(tile_x, tile_y), label, color}
+	var items := {}
+	var floor_def = FloorConfig.get_floor(floor_idx)
+	if floor_def == null:
+		return items
+
+	for zone in floor_def.zones:
+		var ztype: String = zone.get("type", "")
+		var zx: int = zone.get("x", 0)
+		var zy: int = zone.get("y", 0)
+		var zw: int = zone.get("w", 0)
+		var zh: int = zone.get("h", 0)
+		var zmeta: Dictionary = zone.get("meta", {})
+
+		# Elevator: elevator_shaft zone
+		if ztype == "elevator_shaft":
+			var center_x := zx + zw / 2
+			var center_y := zy + zh / 2
+			items["elevator"] = {
+				"pos": Vector2(center_x, center_y),
+				"label": zmeta.get("name", "Elevator"),
+				"color": Color(0.60, 0.78, 0.95),
+			}
+		# Stairs: stairs zone
+		elif ztype == "stairs":
+			var center_x := zx + zw / 2
+			var center_y := zy + zh / 2
+			items["stairs"] = {
+				"pos": Vector2(center_x, center_y),
+				"label": zmeta.get("name", "Stairs"),
+				"color": Color(0.55, 0.45, 0.60),
+			}
+		# Other named zones (food_stall, checkout, etc.) from meta
+		elif zmeta.get("name", "") != "":
+			var zone_name: String = zmeta.get("name", "")
+			var center_x := zx + zw / 2
+			var center_y := zy + zh / 2
+			# Assign colors based on zone name/content
+			var zone_color := Color(0.70, 0.65, 0.55)
+			if "food" in zone_name.to_lower() or "cafe" in zone_name.to_lower():
+				zone_color = Color(0.85, 0.55, 0.30)
+			elif "check" in zone_name.to_lower():
+				zone_color = Color(0.30, 0.80, 0.40)
+			elif "dock" in zone_name.to_lower() or "warehouse" in zone_name.to_lower():
+				zone_color = Color(0.50, 0.60, 0.40)
+			items[zone_name] = {
+				"pos": Vector2(center_x, center_y),
+				"label": zone_name,
+				"color": zone_color,
+			}
+
+	return items
+
 func _get_robots_for_current_floor() -> Array:
 	if _main_ref == null:
 		return []
@@ -305,7 +311,7 @@ func _get_robots_for_current_floor() -> Array:
 			continue
 		var robot_pos: Vector2 = robot.position if "position" in robot else Vector2.ZERO
 		# Check if robot is on this floor
-		if robot_pos.y >= floor_base_y and robot_pos.y < floor_base_y + FLOOR_HEIGHT:
+		if robot_pos.y >= floor_base_y and robot_pos.y < floor_base_y + FLOOR_ZONE_H:
 			floor_robots.append(robot)
 
 	return floor_robots
@@ -360,22 +366,23 @@ func _get_robot_display_name(robot) -> String:
 func _world_to_map(world_pos: Vector2, floor_idx: int) -> Vector2:
 	# Convert world position to map position
 	# X: 0 to WORLD_W (2048px) -> proportional to _map_w
-	# Y: relative to floor visual area
+	# Y: relative to floor visual area (40-tile zone height = 640px)
+	# World Y increases downward; map Y increases upward (top of floor = top of map)
 
-	var floor_base_y: float = _get_floor_base_y(floor_idx)  # 240 for floor 0
-	# Floor visual extends from (floor_base_y - 5 tiles) to (floor_base_y + FLOOR_HEIGHT)
-	var floor_top: float = floor_base_y - FLOOR_TOP_MARGIN
-	var floor_bottom: float = floor_base_y + FLOOR_HEIGHT
-	var total_span: float = floor_bottom - floor_top
+	var floor_base_y: float = _get_floor_base_y(floor_idx)
+	# Floor visual spans 40 tiles: top at floor_base_y - 30*16, bottom at floor_base_y + 10*16
+	var floor_top_world_y: float = floor_base_y - FLOOR_TOP_MARGIN  # 32 for floor 0
+	var floor_bottom_world_y: float = floor_base_y + FLOOR_ZONE_H  # 1152 for floor 0
+	var total_span: float = floor_bottom_world_y - floor_top_world_y  # 1120 for floor 0
 
-	# Calculate relative position
-	var relative_y: float = world_pos.y - floor_top
-	relative_y = clampf(relative_y, 0, total_span)
+	# Clamp world Y to floor bounds
+	var clamped_y: float = clampf(world_pos.y, floor_top_world_y, floor_bottom_world_y)
 
 	# Map X: proportional across full map width
 	var map_x: float = _map_offset.x + (world_pos.x / float(WORLD_W)) * _map_w
-	# Map Y: proportional within floor visual area
-	var map_y: float = _map_offset.y + (relative_y / float(total_span)) * _map_h
+	# Map Y: proportional within floor visual area (inverted: top of floor -> top of map)
+	var relative_y: float = (clamped_y - floor_top_world_y) / float(total_span)
+	var map_y: float = _map_offset.y + (1.0 - relative_y) * _map_h
 
 	return Vector2(map_x, map_y)
 
@@ -384,7 +391,7 @@ func _build_items() -> void:
 		_build_panel()
 	_clear_items()
 
-	var floor_data: Dictionary = FLOOR_ITEMS.get(_floor_idx, {})
+	var floor_data: Dictionary = _get_floor_zone_items(_floor_idx)
 
 	# Map background
 	var map_bg := ColorRect.new()

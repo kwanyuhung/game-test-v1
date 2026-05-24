@@ -8,13 +8,6 @@ A 2D pixel art game built with Godot.
 - Resolution: 1920x1080, fullscreen
 - Pixel-perfect rendering (`snap_2d_transforms_to_pixel=true`)
 
-## MCP Setup
-
-- **godot-agent-tools** MCP server for Claude Code integration
-- Server runs on `127.0.0.1:9920` (TCP) or via npx bridge
-- Enable plugin: **Project → Project Settings → Plugins → Agent Tools**
-- Output confirms: `[agent_tools] listening on 127.0.0.1:9920`
-
 ## Controls
 
 | Action | Keys |

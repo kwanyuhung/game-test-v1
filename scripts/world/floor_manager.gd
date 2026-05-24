@@ -8,6 +8,23 @@ const FloorConfig = preload("res://scripts/world/floor_config.gd")
 const DebugConfig = preload("res://scripts/utils/debug_config.gd")
 const CELL_SIZE := FloorConfig.CELL_SIZE
 
+# Floor spawn config scripts
+const Floor0Config = preload("res://scripts/areas/floor_0/floor_0_config.gd")
+const Floor1Config = preload("res://scripts/areas/floor_1/floor_1_config.gd")
+const Floor2Config = preload("res://scripts/areas/floor_2/floor_2_config.gd")
+const Floor3Config = preload("res://scripts/areas/floor_3/floor_3_config.gd")
+const Floor4Config = preload("res://scripts/areas/floor_4/floor_4_config.gd")
+const Floor5Config = preload("res://scripts/areas/floor_5/floor_5_config.gd")
+const Floor6Config = preload("res://scripts/areas/floor_6/floor_6_config.gd")
+const Floor7Config = preload("res://scripts/areas/floor_7/floor_7_config.gd")
+const Floor8Config = preload("res://scripts/areas/floor_8/floor_8_config.gd")
+const Floor9Config = preload("res://scripts/areas/floor_9/floor_9_config.gd")
+const Floor10Config = preload("res://scripts/areas/floor_10/floor_10_config.gd")
+const Floor11Config = preload("res://scripts/areas/floor_11/floor_11_config.gd")
+const Floor12Config = preload("res://scripts/areas/floor_12/floor_12_config.gd")
+const Floor13Config = preload("res://scripts/areas/floor_13/floor_13_config.gd")
+const Floor14Config = preload("res://scripts/areas/floor_14/floor_14_config.gd")
+
 # Floor spacing: 10 tiles (160 pixels) between floor origins
 const FLOOR_TILE_SPACING := 10
 const FLOOR_Y_OFFSET := FLOOR_TILE_SPACING * CELL_SIZE  # 160 pixels
@@ -18,6 +35,68 @@ const FLOOR_0_BASE_Y := 32 * CELL_SIZE  # 512 pixels
 # Static method to get floor Y position (used by elevator.gd and other systems)
 static func get_floor_y(floor_idx: int) -> float:
 	return FLOOR_0_BASE_Y - (floor_idx * FLOOR_Y_OFFSET)
+
+# Get the floor spawn config instance for a given floor index
+func _get_floor_spawn_config_obj(floor_idx: int) -> Node:
+	match floor_idx:
+		0: return Floor0Config.new()
+		1: return Floor1Config.new()
+		2: return Floor2Config.new()
+		3: return Floor3Config.new()
+		4: return Floor4Config.new()
+		5: return Floor5Config.new()
+		6: return Floor6Config.new()
+		7: return Floor7Config.new()
+		8: return Floor8Config.new()
+		9: return Floor9Config.new()
+		10: return Floor10Config.new()
+		11: return Floor11Config.new()
+		12: return Floor12Config.new()
+		13: return Floor13Config.new()
+		14: return Floor14Config.new()
+	return null
+
+# Map robot role names from floor configs to ActorData.RobotRole enum values
+static func _robot_role_name_to_enum(role_name: String) -> int:
+	match role_name:
+		"CLEANING_ROBOT": return 0  # ActorData.RobotRole.CLEANING_ROBOT
+		"GUIDANCE_ROBOT": return 1  # ActorData.RobotRole.GUIDANCE_ROBOT
+		"DELIVERY_ROBOT": return 2  # ActorData.RobotRole.DELIVERY_ROBOT
+		"SECURITY_ROBOT": return 3  # ActorData.RobotRole.SECURITY_ROBOT
+		"SHELF_ROBOT": return 4     # ActorData.RobotRole.SHELF_ROBOT
+		"MAINTENANCE_ROBOT": return 3  # SECURITY_ROBOT as closest match
+		"CLEANING": return 0
+		"GUIDANCE": return 1
+		"SECURITY": return 3
+		"SHELF": return 4
+		"DELIVERY": return 2
+	return 0  # Default to CLEANING_ROBOT
+
+# Map floor config role names to ActorData.StaffRole integer values
+static func _role_name_to_int(role_name: String) -> int:
+	match role_name:
+		"CASHIER": return 1
+		"SHELF_STOCKER": return 2
+		"CLEANER": return 3
+		"SECURITY": return 4
+		"GREETER": return 5
+		"MANAGER": return 6
+		"FLOOR_STAFF": return 7
+		"SCAN_GO": return 8
+		# Custom roles map to FLOOR_STAFF
+		"CUSTOMER_SERVICE", "LOYALTY_KIOSK", "INFO_DESK", "PROMO_BOOTH", \
+		"LOST_FOUND", "STORE_NEWS", "TECH_ADVISOR", "DEMO_SPECIALIST", \
+		"REPAIR_TECHNICIAN", "FITNESS_ADVISOR", "STYLIST", "EXPERT", \
+		"FLORIST", "NURSERY_ATTENDANT", "KIDS_CLUB_HOST", "PLAY_ATTENDANT", \
+		"ENTERTAINMENT_STAFF", "CAFE_BARISTA", "WAITER", "DOCK_WORKER", \
+		"FORKLIFT_OPERATOR", "CONVEYOR_OPERATOR", "PACKING_STAFF", \
+		"JUICE_BARTENDER", "NUTRITIONIST", "SMOOTHIE_MAKER", "SALAD_CHEF", \
+		"ADMIN_STAFF", "HR_STAFF", "RECRUITER", "OFFICE_WORKER", \
+		"OPERATOR", "STAFF_MEMBER", "OPERATIONS_STAFF", "SHIFT_SUPERVISOR", \
+		"ENTERTAINMENT_STAFF", "CLAW_ATTENDANT", "TRAINING_COORDINATOR", \
+		"LOCKER_ATTENDANT", "LOUNGE_STAFF":
+			return 7  # FLOOR_STAFF as generic fallback
+	return 7  # Default to FLOOR_STAFF
 
 var _main: Node2D = null
 var _current_floor_idx: int = 0
@@ -251,24 +330,48 @@ func spawn_floor_npcs(floor_idx: int, container: Node2D) -> void:
 		return
 
 	var floor_y: float = get_floor_y(floor_idx)
-	var config := _get_floor_spawn_config(floor_idx)
-	var staff_roles: Array = config.get("staff_roles", [0, 1, 2])
-	var staff_count: int = config.get("staff_count", 3)
-	var customer_types: Array = config.get("customer_types", [0, 1, 2])
-	var customer_count: int = config.get("customer_count", 3)
+	var floor_config = _get_floor_spawn_config_obj(floor_idx)
+	var customer_types: Array = [0, 1, 2]
+	var customer_count: int = 3
 
-	print("[FloorManager] Spawning NPCs for Floor %d: %d staff, %d customers" % [floor_idx, staff_count, customer_count])
+	# Use actual spawn positions from FloorNConfig when available
+	var npc_spawns := []
+	var use_config_spawns := false
+	if floor_config != null and floor_config.has_method("get_npc_staff_spawns"):
+		var spawns: Array = floor_config.get_npc_staff_spawns()
+		if not spawns.is_empty():
+			npc_spawns = spawns
+			use_config_spawns = true
 
-	var staff_spawn_x := [100.0, 300.0, 500.0, 700.0, 900.0]
-	var staff_spawn_y := [200.0, 350.0, 450.0]
+	if use_config_spawns:
+		print("[FloorManager] Spawning %d NPCs for Floor %d from config" % [npc_spawns.size(), floor_idx])
+		for spawn in npc_spawns:
+			var world_pos: Vector2 = floor_config.get_spawn_world_pos(spawn)
+			# Add slight random offset for natural variation
+			world_pos += Vector2(randf_range(-20, 20), randf_range(-15, 15))
+			var role_int: int = _role_name_to_int(spawn.role)
+			main_spawner.spawn_npc_staff(role_int, floor_idx, world_pos)
+	else:
+		# Fallback to theme-based config if no floor config available
+		var config := _get_floor_spawn_config(floor_idx)
+		var staff_roles: Array = config.get("staff_roles", [0, 1, 2])
+		var staff_count: int = config.get("staff_count", 3)
+		customer_types = config.get("customer_types", [0, 1, 2])
+		customer_count = config.get("customer_count", 3)
 
-	for i in range(staff_count):
-		var role_idx: int = staff_roles[i % staff_roles.size()]
-		var pos_x: float = staff_spawn_x[i % staff_spawn_x.size()]
-		var pos_y: float = staff_spawn_y[i % staff_spawn_y.size()]
-		var pos := Vector2(pos_x + randf_range(-30, 30), floor_y + pos_y + randf_range(-20, 20))
-		main_spawner.spawn_npc_staff(role_idx, floor_idx, pos)
+		print("[FloorManager] Spawning NPCs for Floor %d: %d staff, %d customers (fallback)" % [floor_idx, staff_count, customer_count])
 
+		var staff_spawn_x := [100.0, 300.0, 500.0, 700.0, 900.0]
+		var staff_spawn_y := [200.0, 350.0, 450.0]
+
+		for i in range(staff_count):
+			var role_idx: int = staff_roles[i % staff_roles.size()]
+			var pos_x: float = staff_spawn_x[i % staff_spawn_x.size()]
+			var pos_y: float = staff_spawn_y[i % staff_spawn_y.size()]
+			var pos := Vector2(pos_x + randf_range(-30, 30), floor_y + pos_y + randf_range(-20, 20))
+			main_spawner.spawn_npc_staff(role_idx, floor_idx, pos)
+
+	# Customer spawning (not in floor configs, always uses fallback positions)
 	var customer_spawn_x := [150.0, 350.0, 550.0, 750.0, 950.0]
 	var customer_spawn_y := [250.0, 400.0, 500.0]
 
@@ -290,75 +393,105 @@ func spawn_floor_robots(floor_idx: int, container: Node2D) -> void:
 		return
 
 	var floor_y: float = get_floor_y(floor_idx)
-	print("[FloorManager] Spawning robots for Floor %d" % floor_idx)
-
 	var robots: Array = _main.get("_robots")
+	var floor_config = _get_floor_spawn_config_obj(floor_idx)
 
-	# Cleaning robot on every floor
-	var cleaner_pos := Vector2(800.0, floor_y + 400.0) + Vector2(randf_range(-50, 50), randf_range(-30, 30))
-	var has_cleaner := false
-	if robots != null:
-		for r in robots:
-			if r.name.begins_with("Robot_Cleaner_Floor%d" % floor_idx):
-				has_cleaner = true
-				break
-	if not has_cleaner:
-		main_spawner.spawn_robot_single(0)
-		var all_robots = _main.get("_robots")
-		if all_robots != null and all_robots.size() > 0:
-			var newest = all_robots[all_robots.size() - 1]
-			newest.position = cleaner_pos
-			newest.name = "Robot_Cleaner_Floor%d" % floor_idx
+	# Use actual robot spawn positions from FloorNConfig when available
+	var robot_spawns := []
+	var use_config_spawns := false
+	if floor_config != null and floor_config.has_method("get_robot_spawns"):
+		var spawns: Array = floor_config.get_robot_spawns()
+		if not spawns.is_empty():
+			robot_spawns = spawns
+			use_config_spawns = true
 
-	# Guidance robot on ground floor
-	if floor_idx == 0:
-		var guide_pos := Vector2(400.0, floor_y + 150.0) + Vector2(randf_range(-30, 30), randf_range(-20, 20))
-		var has_guide := false
+	if use_config_spawns:
+		print("[FloorManager] Spawning %d robots for Floor %d from config" % [robot_spawns.size(), floor_idx])
+		for spawn in robot_spawns:
+			var world_pos: Vector2 = floor_config.get_spawn_world_pos(spawn)
+			world_pos += Vector2(randf_range(-15, 15), randf_range(-10, 10))  # Small variation
+			var robot_role_int: int = _robot_role_name_to_enum(spawn.role)
+			# Determine robot type from entity_type
+			var rtype: int
+			if spawn.entity_type == "robot_humanoid":
+				rtype = robot_role_int  # Humanoid robots use their role
+			else:
+				rtype = robot_role_int  # Single-function robots
+			main_spawner.spawn_robot_single(rtype)
+			var all_robots: Array = _main.get("_robots")
+			if all_robots != null and all_robots.size() > 0:
+				var newest = all_robots[all_robots.size() - 1]
+				newest.position = world_pos
+				newest.name = "Robot_%s_Floor%d" % [spawn.role, floor_idx]
+	else:
+		# Fallback to original type-based spawning
+		print("[FloorManager] Spawning robots for Floor %d (fallback)" % floor_idx)
+
+		# Cleaning robot on every floor
+		var cleaner_pos := Vector2(800.0, floor_y + 400.0) + Vector2(randf_range(-50, 50), randf_range(-30, 30))
+		var has_cleaner := false
 		if robots != null:
 			for r in robots:
-				if r.name.begins_with("Robot_Guide_Floor0"):
-					has_guide = true
+				if r.name.begins_with("Robot_Cleaner_Floor%d" % floor_idx):
+					has_cleaner = true
 					break
-		if not has_guide:
-			main_spawner.spawn_robot_single(1)
+		if not has_cleaner:
+			main_spawner.spawn_robot_single(0)
 			var all_robots = _main.get("_robots")
 			if all_robots != null and all_robots.size() > 0:
 				var newest = all_robots[all_robots.size() - 1]
-				newest.position = guide_pos
-				newest.name = "Robot_Guide_Floor0"
+				newest.position = cleaner_pos
+				newest.name = "Robot_Cleaner_Floor%d" % floor_idx
 
-	# Security robot on lobby
-	var sec_pos := Vector2(150.0, floor_y + 200.0) + Vector2(randf_range(-30, 30), randf_range(-20, 20))
-	var has_security := false
-	if robots != null:
-		for r in robots:
-			if r.name.begins_with("Robot_Security_Floor0"):
-				has_security = true
-				break
-	if not has_security:
-		main_spawner.spawn_robot_single(3)
-		var all_robots = _main.get("_robots")
-		if all_robots != null and all_robots.size() > 0:
-			var newest = all_robots[all_robots.size() - 1]
-			newest.position = sec_pos
-			newest.name = "Robot_Security_Floor0"
+		# Guidance robot on ground floor
+		if floor_idx == 0:
+			var guide_pos := Vector2(400.0, floor_y + 150.0) + Vector2(randf_range(-30, 30), randf_range(-20, 20))
+			var has_guide := false
+			if robots != null:
+				for r in robots:
+					if r.name.begins_with("Robot_Guide_Floor0"):
+						has_guide = true
+						break
+			if not has_guide:
+				main_spawner.spawn_robot_single(1)
+				var all_robots = _main.get("_robots")
+				if all_robots != null and all_robots.size() > 0:
+					var newest = all_robots[all_robots.size() - 1]
+					newest.position = guide_pos
+					newest.name = "Robot_Guide_Floor0"
 
-	# Shelf robot on shopping floors
-	if fd.has_shopping and floor_idx > 0:
-		var shelf_pos := Vector2(200.0, floor_y + 300.0) + Vector2(randf_range(-30, 30), randf_range(-20, 20))
-		var has_shelf := false
+		# Security robot on lobby
+		var sec_pos := Vector2(150.0, floor_y + 200.0) + Vector2(randf_range(-30, 30), randf_range(-20, 20))
+		var has_security := false
 		if robots != null:
 			for r in robots:
-				if r.name.begins_with("Robot_Shelf_Floor%d" % floor_idx):
-					has_shelf = true
+				if r.name.begins_with("Robot_Security_Floor0"):
+					has_security = true
 					break
-		if not has_shelf:
-			main_spawner.spawn_robot_single(4)
+		if not has_security:
+			main_spawner.spawn_robot_single(3)
 			var all_robots = _main.get("_robots")
 			if all_robots != null and all_robots.size() > 0:
 				var newest = all_robots[all_robots.size() - 1]
-				newest.position = shelf_pos
-				newest.name = "Robot_Shelf_Floor%d" % floor_idx
+				newest.position = sec_pos
+				newest.name = "Robot_Security_Floor0"
+
+		# Shelf robot on shopping floors
+		if fd.has_shopping and floor_idx > 0:
+			var shelf_pos := Vector2(200.0, floor_y + 300.0) + Vector2(randf_range(-30, 30), randf_range(-20, 20))
+			var has_shelf := false
+			if robots != null:
+				for r in robots:
+					if r.name.begins_with("Robot_Shelf_Floor%d" % floor_idx):
+						has_shelf = true
+						break
+			if not has_shelf:
+				main_spawner.spawn_robot_single(4)
+				var all_robots = _main.get("_robots")
+				if all_robots != null and all_robots.size() > 0:
+					var newest = all_robots[all_robots.size() - 1]
+					newest.position = shelf_pos
+					newest.name = "Robot_Shelf_Floor%d" % floor_idx
 
 func get_distance_to_floor(floor_idx: int) -> int:
 	return abs(floor_idx - _current_floor_idx)

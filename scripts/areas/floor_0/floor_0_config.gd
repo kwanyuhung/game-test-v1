@@ -153,9 +153,9 @@ class EntitySpawnDef:
 	var entity_type: String  # "npc_staff", "npc_customer", "robot_humanoid", "robot_single"
 	var role: String  # e.g., "CASHIER", "CLEANER", "GREETER" or robot role
 	var area: String  # Which area this spawn belongs to
-	var x: int  # Tile X position
-	var y: int  # Tile Y position
-	var patrol_points: Array  # Optional patrol waypoints
+	var x: int  # Tile X position (→world px via tile_to_world)
+	var y: int  # Tile Y position (→world px via tile_to_world)
+	var patrol_points: Array  # Patrol waypoints in WORLD PIXEL coords (not tiles)
 
 	func _init(p_type: String, p_role: String, p_area: String, p_x: int, p_y: int, p_patrol: Array = []) -> void:
 		entity_type = p_type
@@ -237,20 +237,38 @@ func _init() -> void:
 func _setup_areas() -> void:
 	# ─── LOBBY AREA ───────────────────────────────────────────────────────
 	# Customer service, info desk, loyalty, gift wrap, digital kiosk, AD displays, ATM
+	# NOTE: spawn x/y are in TILES, patrol_points are in WORLD PIXELS
+	# tile (35,5) → pixel (560,80) via tile_to_pixel()
 	var lobby_spawns := [
-		# NPC Staff spawns
+		# NPC Staff spawns (7 total)
 		EntitySpawnDef.new("npc_staff", "GREETER", AREA_LOBBY, 35, 5, [
-			Vector2(300, 100), Vector2(350, 100), Vector2(300, 100)
+			Vector2(560, 80), Vector2(640, 80), Vector2(720, 80), Vector2(640, 80), Vector2(560, 80)
 		]),
-		EntitySpawnDef.new("npc_staff", "CUSTOMER_SERVICE", AREA_LOBBY, 12, 5, []),
-		EntitySpawnDef.new("npc_staff", "LOYALTY_KIOSK", AREA_LOBBY, 28, 5, []),
+		EntitySpawnDef.new("npc_staff", "CUSTOMER_SERVICE", AREA_LOBBY, 12, 5, [
+			Vector2(192, 80), Vector2(272, 80), Vector2(272, 140), Vector2(192, 140), Vector2(192, 80)
+		]),
+		EntitySpawnDef.new("npc_staff", "LOYALTY_KIOSK", AREA_LOBBY, 28, 5, [
+			Vector2(448, 80), Vector2(528, 80), Vector2(528, 140), Vector2(448, 140), Vector2(448, 80)
+		]),
+		EntitySpawnDef.new("npc_staff", "INFO_DESK", AREA_LOBBY, 40, 3, [
+			Vector2(640, 48), Vector2(720, 48), Vector2(720, 96), Vector2(640, 96), Vector2(640, 48)
+		]),
+		EntitySpawnDef.new("npc_staff", "PROMO_BOOTH", AREA_LOBBY, 3, 3, [
+			Vector2(48, 48), Vector2(112, 48), Vector2(112, 96), Vector2(48, 96), Vector2(48, 48)
+		]),
+		EntitySpawnDef.new("npc_staff", "LOST_FOUND", AREA_LOBBY, 22, 3, [
+			Vector2(352, 48), Vector2(416, 48), Vector2(416, 96), Vector2(352, 96), Vector2(352, 48)
+		]),
+		EntitySpawnDef.new("npc_staff", "STORE_NEWS", AREA_LOBBY, 36, 3, [
+			Vector2(576, 48), Vector2(656, 48), Vector2(656, 96), Vector2(576, 96), Vector2(576, 48)
+		]),
 
-		# Robot spawns
-		EntitySpawnDef.new("robot_humanoid", "GREETER", AREA_LOBBY, 25, 12, [
-			Vector2(250, 120), Vector2(320, 120), Vector2(250, 120)
+		# Robot spawns (2 total)
+		EntitySpawnDef.new("robot_humanoid", "GREETER_BOT", AREA_LOBBY, 25, 6, [
+			Vector2(400, 96), Vector2(480, 96), Vector2(480, 160), Vector2(400, 160), Vector2(400, 96)
 		]),
 		EntitySpawnDef.new("robot_single", "GUIDANCE_ROBOT", AREA_LOBBY, 30, 10, [
-			Vector2(300, 100), Vector2(600, 100), Vector2(600, 200), Vector2(300, 200)
+			Vector2(480, 160), Vector2(640, 160), Vector2(640, 240), Vector2(480, 240), Vector2(480, 160)
 		]),
 	]
 
@@ -266,18 +284,22 @@ func _setup_areas() -> void:
 
 	# ─── FOOD COURT AREA ──────────────────────────────────────────────────
 	# 10 food stalls in 3 rows, plus dining tables
+	# NOTE: spawn x/y are TILES → pixel via tile_to_pixel(); patrol_points are PIXELS
 	var food_court_spawns := [
-		# NPC Staff spawns - one per food stall type
+		# NPC Staff spawns (3 total)
 		EntitySpawnDef.new("npc_staff", "SHELF_STOCKER", AREA_FOOD_COURT, 5, 6, [
-			Vector2(80, 100), Vector2(320, 100), Vector2(560, 100), Vector2(80, 300)
+			Vector2(80, 96), Vector2(320, 96), Vector2(560, 96), Vector2(80, 300)
 		]),
 		EntitySpawnDef.new("npc_staff", "FLOOR_STAFF", AREA_FOOD_COURT, 40, 20, [
-			Vector2(200, 300), Vector2(450, 300), Vector2(200, 500), Vector2(450, 500)
+			Vector2(640, 320), Vector2(800, 320), Vector2(800, 480), Vector2(640, 480), Vector2(640, 320)
+		]),
+		EntitySpawnDef.new("npc_staff", "CLEANER", AREA_FOOD_COURT, 20, 18, [
+			Vector2(320, 288), Vector2(480, 288), Vector2(480, 400), Vector2(320, 400), Vector2(320, 288)
 		]),
 
-		# Robot spawns
+		# Robot spawns (1 total)
 		EntitySpawnDef.new("robot_single", "CLEANING_ROBOT", AREA_FOOD_COURT, 40, 15, [
-			Vector2(200, 300), Vector2(600, 300), Vector2(600, 450), Vector2(200, 450)
+			Vector2(640, 240), Vector2(960, 240), Vector2(960, 480), Vector2(640, 480), Vector2(640, 240)
 		]),
 	]
 
@@ -291,24 +313,28 @@ func _setup_areas() -> void:
 
 	# ─── WAREHOUSE AREA ───────────────────────────────────────────────────
 	# Truck dock, forklift zone, conveyor, storage shelves, stock view
+	# NOTE: spawn x/y are TILES → pixel via tile_to_pixel(); patrol_points are PIXELS
 	var warehouse_spawns := [
-		# NPC Staff spawns
+		# NPC Staff spawns (3 total)
 		EntitySpawnDef.new("npc_staff", "SHELF_STOCKER", AREA_WAREHOUSE, 10, 40, [
-			Vector2(80, 640), Vector2(320, 640), Vector2(560, 640), Vector2(80, 800)
+			Vector2(160, 640), Vector2(320, 640), Vector2(480, 640), Vector2(640, 640), Vector2(160, 800)
 		]),
 		EntitySpawnDef.new("npc_staff", "FLOOR_STAFF", AREA_WAREHOUSE, 50, 42, [
-			Vector2(400, 700), Vector2(600, 700), Vector2(800, 700), Vector2(1000, 700)
+			Vector2(800, 672), Vector2(960, 672), Vector2(1120, 672), Vector2(1280, 672), Vector2(800, 672)
+		]),
+		EntitySpawnDef.new("npc_staff", "MANAGER", AREA_WAREHOUSE, 60, 42, [
+			Vector2(960, 672), Vector2(1120, 672), Vector2(1120, 800), Vector2(960, 800), Vector2(960, 672)
 		]),
 
-		# Robot spawns
+		# Robot spawns (3 total)
 		EntitySpawnDef.new("robot_single", "DELIVERY_ROBOT", AREA_WAREHOUSE, 10, 38, [
-			Vector2(100, 600), Vector2(640, 600), Vector2(640, 750), Vector2(100, 750)
+			Vector2(160, 608), Vector2(640, 608), Vector2(640, 752), Vector2(160, 752), Vector2(160, 608)
 		]),
 		EntitySpawnDef.new("robot_single", "SHELF_ROBOT", AREA_WAREHOUSE, 90, 40, [
-			Vector2(150, 640), Vector2(350, 640), Vector2(550, 640), Vector2(150, 800)
+			Vector2(1440, 640), Vector2(1600, 640), Vector2(1760, 640), Vector2(1440, 800), Vector2(1440, 640)
 		]),
-		EntitySpawnDef.new("robot_humanoid", "MANAGER", AREA_WAREHOUSE, 60, 42, [
-			Vector2(500, 700), Vector2(900, 700), Vector2(900, 850), Vector2(500, 850)
+		EntitySpawnDef.new("robot_humanoid", "SECURITY", AREA_WAREHOUSE, 30, 39, [
+			Vector2(480, 624), Vector2(640, 624), Vector2(640, 752), Vector2(480, 752), Vector2(480, 624)
 		]),
 	]
 
@@ -322,13 +348,14 @@ func _setup_areas() -> void:
 	)
 
 	# ─── TRANSIT AREA ─────────────────────────────────────────────────────
-	# Elevator, stairs, escalator - mainly for navigation, minimal spawns
+	# Elevator, stairs, escalator — mainly for navigation, minimal spawns
+	# NOTE: spawn x/y are TILES → pixel via tile_to_pixel(); patrol_points are PIXELS
 	var transit_spawns := [
 		EntitySpawnDef.new("robot_single", "SECURITY_ROBOT", AREA_TRANSIT, 8, 20, [
-			Vector2(100, 400), Vector2(400, 400), Vector2(400, 700), Vector2(100, 700)
+			Vector2(128, 320), Vector2(320, 320), Vector2(320, 560), Vector2(128, 560), Vector2(128, 320)
 		]),
 		EntitySpawnDef.new("robot_humanoid", "SECURITY", AREA_TRANSIT, 12, 25, [
-			Vector2(100, 400), Vector2(500, 400), Vector2(500, 700), Vector2(100, 700)
+			Vector2(192, 400), Vector2(400, 400), Vector2(400, 640), Vector2(192, 640), Vector2(192, 400)
 		]),
 	]
 
@@ -480,9 +507,18 @@ func get_spawns_by_role(entity_type: String, role: String) -> Array:
 				result.append(spawn)
 	return result
 
+# Coordinate conversion helpers
+# tile_to_pixel: converts tile coords to world pixel coords (tile * CELL_SIZE)
+func tile_to_pixel(tile_x: int, tile_y: int) -> Vector2:
+	return Vector2(tile_x * CELL_SIZE, tile_y * CELL_SIZE)
+
+# pixel_to_tile: converts world pixel coords back to tile coords
+func pixel_to_tile(px: int, py: int) -> Vector2:
+	return Vector2(px / CELL_SIZE, py / CELL_SIZE)
+
 # Get world position from tile position
 func tile_to_world(tile_x: int, tile_y: int) -> Vector2:
-	return Vector2(tile_x * CELL_SIZE, tile_y * CELL_SIZE)
+	return tile_to_pixel(tile_x, tile_y)
 
 # Get spawn world position
 func get_spawn_world_pos(spawn: EntitySpawnDef) -> Vector2:
@@ -699,7 +735,8 @@ func get_debug_info() -> String:
 		info += "  Spawns:\n"
 		for spawn in area.spawns:
 			var patrol_str = "" if spawn.patrol_points.is_empty() else " (patrol)"
-			info += "    - %s/%s at (%d, %d)%s\n" % [spawn.entity_type, spawn.role, spawn.x, spawn.y, patrol_str]
+			var world_pos := get_spawn_world_pos(spawn)
+			info += "    - %s/%s at tile(%d,%d) → world(%.0f,%.0f)%s\n" % [spawn.entity_type, spawn.role, spawn.x, spawn.y, world_pos.x, world_pos.y, patrol_str]
 		info += "\n"
 
 	# Player Moveable Areas

@@ -41,11 +41,6 @@ func set_npc_count(v: int) -> void:
 func spawn_npc_staff(role: int, floor_idx: int, pos: Vector2) -> void:
 	# 🔥 空值防护
 	if _main == null: return
-	# Limit to only 1 NPC spawn
-	if _npc_spawned:
-		print("[MainSpawner] NPC already spawned, skipping staff NPC")
-		return
-	_npc_spawned = true
 	var npc_scene = preload("res://scripts/entities/npc_controller.gd")
 	var npc = npc_scene.new()
 	var actor = ActorData.Actor.random_staff(role)
@@ -66,11 +61,6 @@ func spawn_npc_staff(role: int, floor_idx: int, pos: Vector2) -> void:
 func spawn_customer(group_type: int, floor_idx: int, pos: Vector2) -> void:
 	# 🔥 空值防护
 	if _main == null: return
-	# Limit to only 1 NPC spawn
-	if _npc_spawned:
-		print("[MainSpawner] NPC already spawned, skipping customer")
-		return
-	_npc_spawned = true
 	var npc_scene = preload("res://scripts/entities/npc_controller.gd")
 	var npc = npc_scene.new()
 	var actor = ActorData.Actor.random_customer(group_type)
@@ -91,12 +81,6 @@ func spawn_customer(group_type: int, floor_idx: int, pos: Vector2) -> void:
 func spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void:
 	# 🔥 空值防护
 	if _main == null: return
-	# Limit to only 1 NPC spawn total (only spawn the group leader)
-	if _npc_spawned:
-		print("[MainSpawner] NPC already spawned, skipping customer group")
-		return
-	_npc_spawned = true
-	
 	var leader = null
 	var offsets := []
 	var has_baby := false
@@ -269,11 +253,6 @@ func build_npcs() -> void:
 func spawn_robot_humanoid(staff_role: ActorData.StaffRole) -> void:
 	# 🔥 空值防护
 	if _main == null: return
-	# Limit to only 1 robot spawn
-	if _robot_spawned:
-		print("[MainSpawner] Robot already spawned, skipping humanoid robot")
-		return
-	_robot_spawned = true
 	var spawn_pos := Vector2.ZERO
 	match staff_role:
 		ActorData.StaffRole.CASHIER:    spawn_pos = Vector2(580, 320)
@@ -297,11 +276,6 @@ func spawn_robot_humanoid(staff_role: ActorData.StaffRole) -> void:
 func spawn_robot_single(rrole: ActorData.RobotRole) -> void:
 	# 🔥 空值防护
 	if _main == null: return
-	# Limit to only 1 robot spawn
-	if _robot_spawned:
-		print("[MainSpawner] Robot already spawned, skipping robot")
-		return
-	_robot_spawned = true
 	var spawn_pos := Vector2.ZERO
 	match rrole:
 		ActorData.RobotRole.CLEANING_ROBOT:  spawn_pos = Vector2(400, 400)
@@ -389,11 +363,6 @@ func _assigned_robot_role_name(rrole: ActorData.RobotRole) -> String:
 func spawn_scan_go_companion() -> void:
 	# 🔥 空值防护
 	if _main == null: return
-	# Limit to only 1 NPC spawn
-	if _npc_spawned:
-		print("[MainSpawner] NPC already spawned, skipping scan go companion")
-		return
-	_npc_spawned = true
 	var player: Node2D = _main.get("_player")
 	if player == null:
 		return

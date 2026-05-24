@@ -6,7 +6,11 @@
       "Bash(settings\\\\.json\")",
       "Bash(xxd \"C:/Users/User/Documents/GitHub/game-test-v1/scripts/entities/player.gd\")",
       "Bash(python3 *)",
-      "Bash(python generate_floor_docs.py)"
+      "Bash(python generate_floor_docs.py)",
+      "Skill(telegram:configure)",
+      "Bash(chmod 600 ~/.claude/channels/telegram/.env)",
+      "Bash(mkdir -p ~/.claude/channels/telegram)",
+      "Read(//c/Users/User/.claude/channels/telegram/**)"
     ]
   }
 }

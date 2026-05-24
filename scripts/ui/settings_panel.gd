@@ -9,6 +9,7 @@ signal input_blocked(bool)  # Emitted when panel opens/closes to block player in
 
 var _is_open := false
 var _settings: Dictionary = {
+	"language": "en",
 	"bgm_volume": 0.8,
 	"sfx_volume": 0.8,
 	"game_speed": 1.0,
@@ -26,25 +27,69 @@ var _music_slider_val := 0.8
 var _sfx_slider_val := 0.8
 var _speed_val := 1.0
 
+var _lang: String = "en"
+
+# Inline translation table: key -> {"en": ..., "zh": ...}
+var _i18n := {
+	"settings_title":      {"en": "SETTINGS",           "zh": "设置"},
+	"controls_title":      {"en": "CONTROLS",           "zh": "操作说明"},
+	"bgm_volume":          {"en": "BGM Volume",         "zh": "背景音乐音量"},
+	"sfx_volume":          {"en": "SFX Volume",         "zh": "音效音量"},
+	"game_speed":          {"en": "Game Speed",         "zh": "游戏速度"},
+	"toasts":              {"en": "Toasts",             "zh": "通知弹窗"},
+	"draw_settings":       {"en": "--- Draw Settings ---", "zh": "--- 显示设置 ---"},
+	"factory_robot_1":     {"en": "Factory Robot 1 (Checkout)", "zh": "机械臂 1 (收银台)"},
+	"factory_robot_2":     {"en": "Factory Robot 2 (Shelf)", "zh": "机械臂 2 (货架)"},
+	"factory_robot_3":     {"en": "Factory Robot 3 (Warehouse)", "zh": "机械臂 3 (仓库)"},
+	"interactive_elements":{"en": "Interactive Elements","zh": "交互元素"},
+	"language":            {"en": "Language",           "zh": "语言"},
+	"lang_en":             {"en": "English",            "zh": "English"},
+	"lang_zh":             {"en": "中文",              "zh": "中文"},
+	"on":                  {"en": "ON",                "zh": "开"},
+	"off":                 {"en": "OFF",               "zh": "关"},
+	"nav_hint":            {"en": "W/S: select  A/D: adjust  E: confirm  ESC: close", "zh": "W/S: 选择  A/D: 调整  E: 确认  ESC: 关闭"},
+	"press_o_close":       {"en": "Press O to close",   "zh": "按 O 关闭"},
+	"move":                {"en": "Move player",        "zh": "移动角色"},
+	"interact":            {"en": "Interact / Confirm", "zh": "交互 / 确认"},
+	"drop_grab_cart":      {"en": "Drop/grab cart",     "zh": "放低/拿起购物车"},
+	"toggle_staff_mode":   {"en": "Toggle staff mode",  "zh": "切换员工模式"},
+	"toggle_map":          {"en": "Toggle map panel",   "zh": "切换地图面板"},
+	"floor_panel":         {"en": "Floor panel",        "zh": "楼层面板"},
+	"shopping_list":       {"en": "Shopping list",      "zh": "购物清单"},
+	"quest_journal":       {"en": "Quest journal",      "zh": "任务日志"},
+	"settings":            {"en": "Settings",           "zh": "设置"},
+	"pause_game":          {"en": "Pause game",         "zh": "暂停游戏"},
+	"quick_save":          {"en": "Quick save",         "zh": "快速保存"},
+	"quick_load":          {"en": "Quick load",         "zh": "快速读取"},
+	"robot_restock":       {"en": "Robot panel / Restock", "zh": "机械臂面板 / 补货"},
+	"renovate":            {"en": "Renovate section",   "zh": "装修区域"},
+	"brand_portal":        {"en": "Brand portal",       "zh": "品牌门户"},
+	"business_mode":       {"en": "Business mode",      "zh": "商业模式"},
+	"catch_thief":         {"en": "Catch thief",       "zh": "抓小偷"},
+}
+
+func _t(key: String) -> String:
+	return _i18n.get(key, {}).get(_lang, _i18n.get(key, {}).get("en", key))
+
 # Controls help data
 var _controls := [
-	{"key": "W/A/S/D", "desc": "Move player"},
-	{"key": "E", "desc": "Interact / Confirm"},
-	{"key": "G", "desc": "Drop/grab cart"},
-	{"key": "K", "desc": "Toggle staff mode"},
-	{"key": "M", "desc": "Toggle map panel"},
-	{"key": "V", "desc": "Floor panel"},
-	{"key": "L", "desc": "Shopping list"},
-	{"key": "J", "desc": "Quest journal"},
-	{"key": "O", "desc": "Settings"},
-	{"key": "P / SPACE", "desc": "Pause game"},
-	{"key": "F5", "desc": "Quick save"},
-	{"key": "F9", "desc": "Quick load"},
-	{"key": "R", "desc": "Robot panel / Restock"},
-	{"key": "X", "desc": "Renovate section"},
-	{"key": "B", "desc": "Brand portal"},
-	{"key": "Shift+B", "desc": "Business mode"},
-	{"key": "F", "desc": "Catch thief"},
+	{"key": "W/A/S/D", "desc": "move"},
+	{"key": "E", "desc": "interact"},
+	{"key": "G", "desc": "drop_grab_cart"},
+	{"key": "K", "desc": "toggle_staff_mode"},
+	{"key": "M", "desc": "toggle_map"},
+	{"key": "V", "desc": "floor_panel"},
+	{"key": "L", "desc": "shopping_list"},
+	{"key": "J", "desc": "quest_journal"},
+	{"key": "O", "desc": "settings"},
+	{"key": "P / SPACE", "desc": "pause_game"},
+	{"key": "F5", "desc": "quick_save"},
+	{"key": "F9", "desc": "quick_load"},
+	{"key": "R", "desc": "robot_restock"},
+	{"key": "X", "desc": "renovate"},
+	{"key": "B", "desc": "brand_portal"},
+	{"key": "Shift+B", "desc": "business_mode"},
+	{"key": "F", "desc": "catch_thief"},
 ]
 
 func _ready() -> void:
@@ -59,6 +104,7 @@ func toggle() -> void:
 func open() -> void:
 	_is_open = true
 	visible = true
+	_lang = _settings.get("language", "en")
 	input_blocked.emit(true)
 	_build_ui()
 
@@ -99,22 +145,23 @@ func _build_ui() -> void:
 	add_child(pan)
 
 	var title := Label.new()
-	title.text = "SETTINGS"
+	title.text = _t("settings_title")
 	title.position = Vector2(pan_x + 16, pan_y + 16)
 	title.add_theme_color_override("font_color", Color(0.85, 0.85, 0.95))
 	title.add_theme_font_size_override("font_size", int(22 * font_scale))
 	add_child(title)
 
 	var options := [
-		{"label": "BGM Volume", "type": "slider", "key": "bgm", "val": _settings["bgm_volume"]},
-		{"label": "SFX Volume", "type": "slider", "key": "sfx", "val": _settings["sfx_volume"]},
-		{"label": "Game Speed", "type": "slider", "key": "speed", "val": _settings["game_speed"]},
-		{"label": "Toasts", "type": "toggle", "key": "notif_toasts", "val": _settings["notif_toasts"]},
-		{"label": "--- Draw Settings ---", "type": "label", "key": "", "val": 0},
-		{"label": "Factory Robot 1 (Checkout)", "type": "toggle", "key": "draw_factory_robot_1", "val": _settings["draw_factory_robot_1"]},
-		{"label": "Factory Robot 2 (Shelf)", "type": "toggle", "key": "draw_factory_robot_2", "val": _settings["draw_factory_robot_2"]},
-		{"label": "Factory Robot 3 (Warehouse)", "type": "toggle", "key": "draw_factory_robot_3", "val": _settings["draw_factory_robot_3"]},
-		{"label": "Interactive Elements", "type": "toggle", "key": "draw_interactive", "val": _settings["draw_interactive"]},
+		{"label": "language", "type": "lang", "key": "language", "val": _settings["language"]},
+		{"label": "bgm_volume", "type": "slider", "key": "bgm", "val": _settings["bgm_volume"]},
+		{"label": "sfx_volume", "type": "slider", "key": "sfx", "val": _settings["sfx_volume"]},
+		{"label": "game_speed", "type": "slider", "key": "speed", "val": _settings["game_speed"]},
+		{"label": "toasts", "type": "toggle", "key": "notif_toasts", "val": _settings["notif_toasts"]},
+		{"label": "draw_settings", "type": "label", "key": "", "val": 0},
+		{"label": "factory_robot_1", "type": "toggle", "key": "draw_factory_robot_1", "val": _settings["draw_factory_robot_1"]},
+		{"label": "factory_robot_2", "type": "toggle", "key": "draw_factory_robot_2", "val": _settings["draw_factory_robot_2"]},
+		{"label": "factory_robot_3", "type": "toggle", "key": "draw_factory_robot_3", "val": _settings["draw_factory_robot_3"]},
+		{"label": "interactive_elements", "type": "toggle", "key": "draw_interactive", "val": _settings["draw_interactive"]},
 	]
 	_option_rows = options
 
@@ -127,7 +174,7 @@ func _build_ui() -> void:
 
 	# Hint row
 	var hint := Label.new()
-	hint.text = "W/S: select  A/D: adjust  E: confirm  ESC: close"
+	hint.text = _t("nav_hint")
 	hint.position = Vector2(pan_x + 16, pan_y + pan_h - 32)
 	hint.add_theme_color_override("font_color", Color(0.30, 0.30, 0.35))
 	hint.add_theme_font_size_override("font_size", int(14 * font_scale))
@@ -146,7 +193,7 @@ func _build_ui() -> void:
 	add_child(ctrl_pan)
 
 	var ctrl_title := Label.new()
-	ctrl_title.text = "CONTROLS"
+	ctrl_title.text = _t("controls_title")
 	ctrl_title.position = Vector2(ctrl_x + 16, ctrl_y + 16)
 	ctrl_title.add_theme_color_override("font_color", Color(0.85, 0.85, 0.95))
 	ctrl_title.add_theme_font_size_override("font_size", int(22 * font_scale))
@@ -165,7 +212,7 @@ func _build_ui() -> void:
 
 		# Description label
 		var desc_lbl := Label.new()
-		desc_lbl.text = ctrl["desc"]
+		desc_lbl.text = tr(ctrl["desc"])
 		desc_lbl.position = Vector2(ctrl_x + 160 * font_scale, ctrl_y_pos)
 		desc_lbl.add_theme_color_override("font_color", Color(0.60, 0.60, 0.65))
 		desc_lbl.add_theme_font_size_override("font_size", int(14 * font_scale))
@@ -175,7 +222,7 @@ func _build_ui() -> void:
 
 	# Controls hint
 	var ctrl_hint := Label.new()
-	ctrl_hint.text = "Press O to close"
+	ctrl_hint.text = _t("press_o_close")
 	ctrl_hint.position = Vector2(ctrl_x + 16, ctrl_y_pos + 8)
 	ctrl_hint.add_theme_color_override("font_color", Color(0.30, 0.30, 0.35))
 	ctrl_hint.add_theme_font_size_override("font_size", int(14 * font_scale))
@@ -191,7 +238,7 @@ func _draw_option(opt: Dictionary, idx: int, pos: Vector2, font_scale: float) ->
 	# Handle label type (divider/header)
 	if opt["type"] == "label":
 		var lbl := Label.new()
-		lbl.text = opt["label"]
+		lbl.text = tr(opt["label"])
 		lbl.position = pos
 		lbl.add_theme_color_override("font_color", Color(0.50, 0.50, 0.55))
 		lbl.add_theme_font_size_override("font_size", int(14 * font_scale))
@@ -200,7 +247,7 @@ func _draw_option(opt: Dictionary, idx: int, pos: Vector2, font_scale: float) ->
 		return
 
 	var lbl := Label.new()
-	lbl.text = prefix + opt["label"]
+	lbl.text = prefix + tr(opt["label"])
 	lbl.position = pos
 	lbl.add_theme_color_override("font_color", col)
 	lbl.add_theme_font_size_override("font_size", int(16 * font_scale))
@@ -213,7 +260,9 @@ func _draw_option(opt: Dictionary, idx: int, pos: Vector2, font_scale: float) ->
 	if opt["type"] == "slider":
 		val_text = "%.1f" % opt["val"]
 	elif opt["type"] == "toggle":
-		val_text = "ON" if opt["val"] else "OFF"
+		val_text = _t("on") if opt["val"] else _t("off")
+	elif opt["type"] == "lang":
+		val_text = "EN / 中文"
 	val_lbl.text = val_text
 	val_lbl.position = Vector2(pos.x + 240 * font_scale, pos.y)
 	var toggle_color: Color
@@ -232,7 +281,7 @@ func _update_selection() -> void:
 		if lbl != null:
 			if opt["type"] == "label":
 				continue  # Skip label rows
-			lbl.text = ("> " if i == _selected_idx else "  ") + opt["label"]
+			lbl.text = ("> " if i == _selected_idx else "  ") + tr(opt["label"])
 			lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.70) if i == _selected_idx else Color(0.55, 0.55, 0.60))
 
 func _clear_ui() -> void:
@@ -275,7 +324,7 @@ func _adjust_selected(delta: float) -> void:
 		return
 	var opt = _option_rows[_selected_idx]
 	# Skip label rows
-	if opt["type"] == "label":
+	if opt["type"] == "label" or opt["type"] == "lang":
 		return
 	if opt["type"] == "slider":
 		opt["val"] = clampf(opt["val"] + delta, 0.0, 1.0)
@@ -296,7 +345,12 @@ func _toggle_selected() -> void:
 	# Skip label rows
 	if opt["type"] == "label":
 		return
-	if opt["type"] == "toggle":
+	if opt["type"] == "lang":
+		_lang = "zh" if _lang == "en" else "en"
+		_settings["language"] = _lang
+		setting_changed.emit("language", _lang)
+		_update_val_label(_selected_idx)
+	elif opt["type"] == "toggle":
 		opt["val"] = not opt["val"]
 		_settings[opt["key"]] = opt["val"]
 		setting_changed.emit(opt["key"], opt["val"])
@@ -312,6 +366,8 @@ func _update_val_label(idx: int) -> void:
 	if opt["type"] == "slider":
 		lbl.text = "%.1f" % opt["val"]
 	elif opt["type"] == "toggle":
-		lbl.text = "ON" if opt["val"] else "OFF"
+		lbl.text = _t("on") if opt["val"] else _t("off")
 		var toggle_color: Color = Color(0.60, 0.85, 0.60) if opt["val"] else Color(0.85, 0.50, 0.50)
 		lbl.add_theme_color_override("font_color", toggle_color)
+	elif opt["type"] == "lang":
+		lbl.text = "EN / 中文"

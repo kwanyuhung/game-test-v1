@@ -95,8 +95,6 @@ var _game_clock: GameClock = null
 var _maintenance_system: MaintenanceSystem = null
 var _maintenance_visual: MaintenanceVisual = null
 var _maintenance_panel: MaintenancePanel = null
-var _maintenance_panel_blocking: bool = false
-var _input_blocking_panels: int = 0  # Counter for panels blocking input
 var _nearby_issue: bool = false
 var _target_issue: Object = null  # Issue the player is heading to resolve
 var _player_stats: PlayerStats = null
@@ -673,8 +671,8 @@ func _spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> voi
 	_main_spawner.spawn_customer_group(group_type, floor_idx, pos)
 	return
 func _input(event: InputEvent) -> void:
-	# Block all input when maintenance panel is open
-	if _maintenance_panel_blocking:
+	# Block all input when any panel is blocking
+	if PanelManager.is_input_blocked():
 		return
 	if event is InputEventKey and event.pressed:
 		# Stairs W/S ── Open-world floor navigation via stairs
@@ -697,6 +695,10 @@ func _input(event: InputEvent) -> void:
 			# C ── Chat with nearby NPC
 			KEY_C:
 				_open_npc_chat()
+			# F3 ── Dev Tools
+			KEY_F3:
+				if DEV_MODE:
+					PanelManager.toggle("dev_tools")
 			# F5 ── Quick Save
 			KEY_F5:
 				SaveSystem.save_game(self)
@@ -708,12 +710,6 @@ func _input(event: InputEvent) -> void:
 				else:
 					SaveSystem.load_game(self)
 					if _toasts != null: _toasts.toast_info("Game Loaded!")
-			# N ── Mini-map
-			#KEY_N:
-				#_toggle_minimap()
-			# ? ── Tutorial
-			#KEY_QUESTION:
-				#_show_tutorial()
 			# L ── Shopping List
 			KEY_L:
 				_toggle_shopping_list()
@@ -722,10 +718,10 @@ func _input(event: InputEvent) -> void:
 				_toggle_floor_jump_panel()
 			# M ── Map Panel
 			KEY_M:
-				_toggle_map_panel()
+				PanelManager.toggle("map")
 			# V ── Floor Panel (Clickable floor selector)
 			KEY_V:
-				_toggle_floor_panel()
+				PanelManager.toggle("floor")
 			# X ── Renovate nearby section (staff mode)
 			KEY_X:
 				_renovate_nearby_section()
@@ -750,7 +746,7 @@ func _input(event: InputEvent) -> void:
 					_toggle_robot_panel()
 			# O ── Settings
 			KEY_O:
-				_toggle_settings_panel()
+				PanelManager.toggle("settings")
 			# P / SPACE ── Pause / Resume
 			KEY_P:
 				_toggle_pause()
@@ -776,7 +772,7 @@ func _input(event: InputEvent) -> void:
 				return
 
 		# 0-9 ── Numbered bubble interactions
-		if not _maintenance_panel_blocking:
+		if not PanelManager.is_input_blocked():
 			var num_key_map := {
 				KEY_0: 0, KEY_1: 1, KEY_2: 2, KEY_3: 3,
 				KEY_4: 4, KEY_5: 5, KEY_6: 6, KEY_7: 7,
@@ -921,30 +917,16 @@ func _toggle_maintenance_panel() -> void:
 		return
 	_maintenance_panel = MaintenancePanelScript.new()
 	add_child(_maintenance_panel)
+	PanelManager.register("maintenance", _maintenance_panel, PanelManager.Policy.ALONE)
 	_maintenance_panel.open(_maintenance_system)
 	_maintenance_panel.closed.connect(_on_maintenance_panel_closed)
 	_maintenance_panel.issue_selected.connect(_on_maintenance_issue_selected)
-	_maintenance_panel.input_blocked.connect(_on_maintenance_panel_input_blocked)
 
 func _on_maintenance_panel_closed() -> void:
 	_maintenance_panel = null
 
-func _on_maintenance_panel_input_blocked(blocking: bool) -> void:
-	if blocking:
-		_input_blocking_panels += 1
-	else:
-		_input_blocking_panels = max(0, _input_blocking_panels - 1)
-	_maintenance_panel_blocking = _input_blocking_panels > 0
-
-func _on_chat_panel_input_blocked(blocking: bool) -> void:
-	if blocking:
-		_input_blocking_panels += 1
-	else:
-		_input_blocking_panels = max(0, _input_blocking_panels - 1)
-	_maintenance_panel_blocking = _input_blocking_panels > 0
-
 func is_input_blocked() -> bool:
-	return _input_blocking_panels > 0
+	return PanelManager.is_input_blocked()
 
 func _on_maintenance_issue_selected(issue) -> void:
 	_target_issue = issue
@@ -1058,6 +1040,7 @@ func _toggle_stats_panel() -> void:
 		return
 	_stats_panel = StatsPanelScript.new()
 	add_child(_stats_panel)
+	PanelManager.register("stats", _stats_panel, PanelManager.Policy.ALONE)
 	_stats_panel.open(_player_stats)
 	_stats_panel.closed.connect(_on_stats_panel_closed)
 
@@ -1504,9 +1487,12 @@ func _open_npc_chat() -> void:
 		_chat_panel = ChatPanelScript.new()
 		add_child(_chat_panel)
 		_chat_panel.closed.connect(_on_chat_panel_closed)
-		_chat_panel.input_blocked.connect(_on_chat_panel_input_blocked)
+		PanelManager.register("chat", _chat_panel, PanelManager.Policy.ALONE)
 	if _chat_panel._is_open:
+		_chat_panel.close()
 		return
+	# Close all other ALONE panels before opening chat
+	PanelManager.close_all_alone_panels()
 	var actor = npc.get_actor()
 	if actor == null:
 		return
@@ -1681,7 +1667,7 @@ func _toggle_robot_panel() -> void:
 	if _robot_panel == null:
 		_robot_panel_system.build_robot_panel()
 		_robot_panel = _robot_panel_system.get_robot_panel()
-		_robot_panel_system.input_blocked.connect(_on_robot_panel_input_blocked)
+		PanelManager.register("robot", _robot_panel_system, PanelManager.Policy.ALONE)
 	if _robot_panel != null and _robot_panel.visible:
 		_robot_panel_system.hide_panel()
 	else:
@@ -1691,13 +1677,6 @@ func _toggle_robot_panel() -> void:
 		if _robot_panel != null:
 			_robot_panel_system.show_panel()
 		_robot_panel_system._update_robot_panel()
-
-func _on_robot_panel_input_blocked(blocking: bool) -> void:
-	if blocking:
-		_input_blocking_panels += 1
-	else:
-		_input_blocking_panels = max(0, _input_blocking_panels - 1)
-	_maintenance_panel_blocking = _input_blocking_panels > 0
 
 func _spawn_robot_humanoid(staff_role: ActorData.StaffRole) -> void:
 	_main_spawner.spawn_robot_humanoid(staff_role)
@@ -1732,6 +1711,7 @@ func _toggle_map_panel() -> void:
 		_map_panel.set_player(_player)
 		_map_panel.set_main(self)
 		_map_panel.set_floor(_current_floor_idx)
+		PanelManager.register("map", _map_panel, PanelManager.Policy.ALONE)
 	_map_panel.toggle()
 
 # ── Floor Panel (V key - Clickable floor selector) ───────────────────────────────────
@@ -1741,7 +1721,8 @@ func _toggle_floor_panel() -> void:
 		add_child(_floor_panel)
 		_floor_panel.set_owner_node(self)
 		_floor_panel.set_floor(_current_floor_idx)
-	_floor_panel.toggle()
+		PanelManager.register("floor", _floor_panel, PanelManager.Policy.ALONE)
+	PanelManager.toggle("floor")
 	if _floor_panel.visible:
 		_floor_panel.set_floor(_current_floor_idx)
 

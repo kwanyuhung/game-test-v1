@@ -8,6 +8,7 @@ extends CanvasLayer
 const FloorConfig = preload("res://scripts/world/floor_config.gd")
 
 signal floor_selected(floor_idx: int)
+signal input_blocked(bool)  # Emitted when panel opens/closes to block player input
 
 var _current_floor: int = 0
 var _panel: Control = null
@@ -34,9 +35,11 @@ func show_panel() -> void:
 	if _panel == null:
 		_create_panel()
 	visible = true
+	input_blocked.emit(true)
 
 func hide_panel() -> void:
 	visible = false
+	input_blocked.emit(false)
 
 func _create_panel() -> void:
 	if _panel != null:
