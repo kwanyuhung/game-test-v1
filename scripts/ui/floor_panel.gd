@@ -64,6 +64,16 @@ func _create_panel() -> void:
 	hdr.add_theme_color_override("font_color", Color(0.88, 0.82, 0.60))
 	hdr.add_theme_font_size_override("font_size", 14)
 	_panel.add_child(hdr)
+
+	# Close button (X) in top-right corner
+	var close_btn := Button.new()
+	close_btn.text = "X"
+	close_btn.position = Vector2(270.0, 8.0)
+	close_btn.size = Vector2(40.0, 24.0)
+	close_btn.add_theme_color_override("font_color", Color(0.90, 0.60, 0.60))
+	close_btn.add_theme_color_override("bg_color", Color(0.30, 0.15, 0.15))
+	close_btn.connect("pressed", hide_panel)
+	_panel.add_child(close_btn)
 	
 	# Floor buttons - 4 columns x 4 rows for up to 16 floors
 	var floor_count := FloorConfig.floor_count()
@@ -158,6 +168,13 @@ func _hide_panel_and_jump(idx: int) -> void:
 	floor_selected.emit(idx)
 	if _owner != null and _owner.has_method("_jump_to_floor"):
 		_owner._jump_to_floor(idx)
+
+func _input(event: InputEvent) -> void:
+	if not visible:
+		return
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_ESCAPE:
+			hide_panel()
 
 func _update_button_states() -> void:
 	for btn in _floor_buttons:

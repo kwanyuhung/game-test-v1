@@ -151,6 +151,16 @@ func _build_ui() -> void:
 	title.add_theme_font_size_override("font_size", int(22 * font_scale))
 	add_child(title)
 
+	# Close button (X) for settings panel
+	var close_btn := Button.new()
+	close_btn.text = "X"
+	close_btn.position = Vector2(pan_x + pan_w - 40, pan_y + 12)
+	close_btn.size = Vector2(28, 28)
+	close_btn.add_theme_color_override("font_color", Color(0.90, 0.60, 0.60))
+	close_btn.add_theme_color_override("bg_color", Color(0.30, 0.15, 0.15))
+	close_btn.connect("pressed", close)
+	add_child(close_btn)
+
 	var options := [
 		{"label": "language", "type": "lang", "key": "language", "val": _settings["language"]},
 		{"label": "bgm_volume", "type": "slider", "key": "bgm", "val": _settings["bgm_volume"]},
@@ -198,6 +208,16 @@ func _build_ui() -> void:
 	ctrl_title.add_theme_color_override("font_color", Color(0.85, 0.85, 0.95))
 	ctrl_title.add_theme_font_size_override("font_size", int(22 * font_scale))
 	add_child(ctrl_title)
+
+	# Close button (X) for controls panel
+	var ctrl_close_btn := Button.new()
+	ctrl_close_btn.text = "X"
+	ctrl_close_btn.position = Vector2(ctrl_x + ctrl_w - 40, ctrl_y + 12)
+	ctrl_close_btn.size = Vector2(28, 28)
+	ctrl_close_btn.add_theme_color_override("font_color", Color(0.90, 0.60, 0.60))
+	ctrl_close_btn.add_theme_color_override("bg_color", Color(0.30, 0.15, 0.15))
+	ctrl_close_btn.connect("pressed", close)
+	add_child(ctrl_close_btn)
 
 	var ctrl_y_pos: float = ctrl_y + 50.0
 	var ctrl_row_height: float = 32.0 * font_scale

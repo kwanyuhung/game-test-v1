@@ -244,22 +244,22 @@ func _setup_areas() -> void:
 		EntitySpawnDef.new("npc_staff", "GREETER", AREA_LOBBY, 35, 5, [
 			Vector2(560, 80), Vector2(640, 80), Vector2(720, 80), Vector2(640, 80), Vector2(560, 80)
 		]),
-		EntitySpawnDef.new("npc_staff", "CUSTOMER_SERVICE", AREA_LOBBY, 12, 5, [
+		EntitySpawnDef.new("npc_staff", "RECEPTIONIST", AREA_LOBBY, 12, 5, [
 			Vector2(192, 80), Vector2(272, 80), Vector2(272, 140), Vector2(192, 140), Vector2(192, 80)
 		]),
-		EntitySpawnDef.new("npc_staff", "LOYALTY_KIOSK", AREA_LOBBY, 28, 5, [
+		EntitySpawnDef.new("npc_staff", "SHOP_STAFF", AREA_LOBBY, 28, 5, [
 			Vector2(448, 80), Vector2(528, 80), Vector2(528, 140), Vector2(448, 140), Vector2(448, 80)
 		]),
 		EntitySpawnDef.new("npc_staff", "INFO_DESK", AREA_LOBBY, 40, 3, [
 			Vector2(640, 48), Vector2(720, 48), Vector2(720, 96), Vector2(640, 96), Vector2(640, 48)
 		]),
-		EntitySpawnDef.new("npc_staff", "PROMO_BOOTH", AREA_LOBBY, 3, 3, [
+		EntitySpawnDef.new("npc_staff", "SHOP_STAFF", AREA_LOBBY, 3, 3, [
 			Vector2(48, 48), Vector2(112, 48), Vector2(112, 96), Vector2(48, 96), Vector2(48, 48)
 		]),
-		EntitySpawnDef.new("npc_staff", "LOST_FOUND", AREA_LOBBY, 22, 3, [
+		EntitySpawnDef.new("npc_staff", "RECEPTIONIST", AREA_LOBBY, 22, 3, [
 			Vector2(352, 48), Vector2(416, 48), Vector2(416, 96), Vector2(352, 96), Vector2(352, 48)
 		]),
-		EntitySpawnDef.new("npc_staff", "STORE_NEWS", AREA_LOBBY, 36, 3, [
+		EntitySpawnDef.new("npc_staff", "SHOP_STAFF", AREA_LOBBY, 36, 3, [
 			Vector2(576, 48), Vector2(656, 48), Vector2(656, 96), Vector2(576, 96), Vector2(576, 48)
 		]),
 
@@ -293,7 +293,7 @@ func _setup_areas() -> void:
 		EntitySpawnDef.new("npc_staff", "FLOOR_STAFF", AREA_FOOD_COURT, 40, 20, [
 			Vector2(640, 320), Vector2(800, 320), Vector2(800, 480), Vector2(640, 480), Vector2(640, 320)
 		]),
-		EntitySpawnDef.new("npc_staff", "CLEANER", AREA_FOOD_COURT, 20, 18, [
+		EntitySpawnDef.new("npc_staff", "CLEAN_STAFF", AREA_FOOD_COURT, 20, 18, [
 			Vector2(320, 288), Vector2(480, 288), Vector2(480, 400), Vector2(320, 400), Vector2(320, 288)
 		]),
 
@@ -417,13 +417,13 @@ var _facilities: Array = []
 
 func _setup_facilities() -> void:
 	_facilities = [
-		Facility.new(FACILITY_ATM, "ATM Machine", 2, 58, 4, 4, 5),
-		Facility.new(FACILITY_WC, "Restroom", 2, 68, 3, 12, 7),
-		Facility.new(FACILITY_VENDING_MACHINE, "Vending Machine", 2, 70, 3, 10, 10),
-		Facility.new(FACILITY_AD, "AD Display", 4, 56, 3, 4, 5),
-		Facility.new(FACILITY_PROMO_BOOTH, "Promo Booth", 1, 3, 3, 12, 8),
-		Facility.new(FACILITY_LOST_FOUND, "Lost & Found", 1, 22, 3, 12, 7),
-		Facility.new(FACILITY_STORE_NEWS, "Store News Board", 1, 36, 3, 12, 7),
+		Facility.new(FACILITY_ATM, "ATM Machine", 2, 58, 4, 6, 6),
+		Facility.new(FACILITY_WC, "Restroom", 2, 68, 3, 6, 6),
+		Facility.new(FACILITY_VENDING_MACHINE, "Vending Machine", 2, 70, 3, 6, 6),
+		Facility.new(FACILITY_AD, "AD Display", 4, 56, 3, 6, 6),
+		Facility.new(FACILITY_PROMO_BOOTH, "Promo Booth", 1, 3, 3, 6, 6),
+		Facility.new(FACILITY_LOST_FOUND, "Lost & Found", 1, 22, 3, 6, 6),
+		Facility.new(FACILITY_STORE_NEWS, "Store News Board", 1, 36, 3, 6, 6),
 	]
 
 # ═══════════════════════════════════════════════════════════════════════════

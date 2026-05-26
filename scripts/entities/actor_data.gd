@@ -24,6 +24,13 @@ enum StaffRole {
 	MANAGER,        # Walks the floor supervising
 	FLOOR_STAFF,    # General floor assistance
 	SCAN_GO,        # Scan & Go staff — walks alongside player, auto-scans items
+	# ─── Extended roles for supermarket ───────────────────────────────────────
+	SHOP_STAFF,     # General shop floor sales staff
+	FOOD_STAFF,     # Food service / cafe staff
+	CLEAN_STAFF,    # Cleaning staff (distict from CLEANER which auto-cleans)
+	RECEPTIONIST,   # Info desk / customer service desk
+	MAINTENANCE_STAFF, # Equipment / facility maintenance
+	DELIVERY_STAFF, # Warehouse / delivery staff
 }
 
 # ─── Robot Type ────────────────────────────────────────────────

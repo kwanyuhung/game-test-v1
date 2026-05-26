@@ -1,0 +1,142 @@
+[gd_resource type="TileSet" format=3 uid="uid://d1fgm0ec41ign"]
+
+[ext_resource type="Texture2D" uid="uid://dctkyhilawwxj" path="res://resources/tilesets/generated_tiles/blocked.png" id="1_blocked"]
+[ext_resource type="Texture2D" uid="uid://bxbfqvyxxr7st" path="res://resources/tilesets/generated_tiles/atm.png" id="2_atm"]
+[ext_resource type="Texture2D" uid="uid://8nrfsvtntn7u" path="res://resources/tilesets/generated_tiles/floor_common.png" id="3_common"]
+[ext_resource type="Texture2D" uid="uid://qpt2pl32o38t" path="res://resources/tilesets/generated_tiles/floor_shoes.png" id="4_shoes"]
+[ext_resource type="Texture2D" uid="uid://cud7phuphmush" path="res://resources/tilesets/generated_tiles/floor_sport.png" id="5_sport"]
+[ext_resource type="Texture2D" uid="uid://ctvjrn7asbkuq" path="res://resources/tilesets/generated_tiles/floor_storage_shelf.png" id="6_storage"]
+[ext_resource type="Texture2D" uid="uid://cdpv57hbfbxwa" path="res://resources/tilesets/generated_tiles/floor_truck_dock.png" id="7_truck"]
+[ext_resource type="Texture2D" uid="uid://bso8gq72ueltv" path="res://resources/tilesets/generated_tiles/floor_warehouse.png" id="8_warehouse"]
+[ext_resource type="Texture2D" uid="uid://dl7acy8equc4q" path="res://resources/tilesets/generated_tiles/floor_wc.png" id="9_wc"]
+[ext_resource type="Texture2D" uid="uid://b85hliejjrc3a" path="res://resources/tilesets/generated_tiles/kiosk.png" id="10_kiosk"]
+[ext_resource type="Texture2D" uid="uid://c3kdw1cwu1wj6" path="res://resources/tilesets/generated_tiles/plant.png" id="11_plant"]
+[ext_resource type="Texture2D" uid="uid://bndfvfwe3ubrr" path="res://resources/tilesets/generated_tiles/promo_booth.png" id="12_promo"]
+[ext_resource type="Texture2D" uid="uid://lo5s56y4x838" path="res://resources/tilesets/generated_tiles/table.png" id="13_table"]
+[ext_resource type="Texture2D" uid="uid://xt6bhw02umwt" path="res://resources/tilesets/generated_tiles/floor_conveyor.png" id="14_conveyor"]
+[ext_resource type="Texture2D" uid="uid://daeyi0fvtau5w" path="res://resources/tilesets/generated_tiles/vending_machine.png" id="15_vending"]
+[ext_resource type="Texture2D" uid="uid://w0xs2l8ff274" path="res://resources/tilesets/generated_tiles/floor_dress.png" id="16_dress"]
+[ext_resource type="Texture2D" uid="uid://bcgvho55ladnv" path="res://resources/tilesets/generated_tiles/floor_food_court.png" id="17_food"]
+[ext_resource type="Texture2D" uid="uid://bqw67meafytaq" path="res://resources/tilesets/generated_tiles/floor_forklift.png" id="18_forklift"]
+[ext_resource type="Texture2D" uid="uid://cdvsbwa3dabh1" path="res://resources/tilesets/generated_tiles/floor_lobby.png" id="19_lobby"]
+[ext_resource type="Texture2D" uid="uid://bnk3fulyi6kvy" path="res://resources/tilesets/generated_tiles/floor_parking.png" id="20_parking"]
+[ext_resource type="Texture2D" uid="uid://ctv2611eb12ot" path="res://resources/tilesets/generated_tiles/floor_pet_adoption.png" id="21_pet"]
+[ext_resource type="Texture2D" uid="uid://c4u7iydt3fx5a" path="res://resources/tilesets/generated_tiles/floor_rooftop.png" id="22_rooftop"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_blocked"]
+texture = ExtResource("1_blocked")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_atm"]
+texture = ExtResource("2_atm")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_plant"]
+texture = ExtResource("11_plant")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_promo"]
+texture = ExtResource("12_promo")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_table"]
+texture = ExtResource("13_table")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_conveyor"]
+texture = ExtResource("14_conveyor")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_vending"]
+texture = ExtResource("15_vending")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dress"]
+texture = ExtResource("16_dress")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_food"]
+texture = ExtResource("17_food")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_forklift"]
+texture = ExtResource("18_forklift")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_lobby"]
+texture = ExtResource("19_lobby")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_parking"]
+texture = ExtResource("20_parking")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_common"]
+texture = ExtResource("3_common")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_pet"]
+texture = ExtResource("21_pet")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_rooftop"]
+texture = ExtResource("22_rooftop")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_shoes"]
+texture = ExtResource("4_shoes")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_sport"]
+texture = ExtResource("5_sport")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_storage"]
+texture = ExtResource("6_storage")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_truck"]
+texture = ExtResource("7_truck")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_warehouse"]
+texture = ExtResource("8_warehouse")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wc"]
+texture = ExtResource("9_wc")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_kiosk"]
+texture = ExtResource("10_kiosk")
+0:0/0 = 0
+
+[resource]
+resource_name = "Floor TileSet"
+tile_shape = 1
+tile_layout = 5
+tile_size = Vector2i(16, 16)
+physics_layer_0/collision_layer = 0
+physics_layer_0/collision_mask = 0
+sources/0 = SubResource("TileSetAtlasSource_blocked")
+sources/1 = SubResource("TileSetAtlasSource_atm")
+sources/2 = SubResource("TileSetAtlasSource_common")
+sources/3 = SubResource("TileSetAtlasSource_shoes")
+sources/4 = SubResource("TileSetAtlasSource_sport")
+sources/5 = SubResource("TileSetAtlasSource_storage")
+sources/6 = SubResource("TileSetAtlasSource_truck")
+sources/7 = SubResource("TileSetAtlasSource_warehouse")
+sources/8 = SubResource("TileSetAtlasSource_wc")
+sources/9 = SubResource("TileSetAtlasSource_kiosk")
+sources/10 = SubResource("TileSetAtlasSource_plant")
+sources/11 = SubResource("TileSetAtlasSource_promo")
+sources/12 = SubResource("TileSetAtlasSource_table")
+sources/13 = SubResource("TileSetAtlasSource_conveyor")
+sources/14 = SubResource("TileSetAtlasSource_vending")
+sources/15 = SubResource("TileSetAtlasSource_dress")
+sources/16 = SubResource("TileSetAtlasSource_food")
+sources/17 = SubResource("TileSetAtlasSource_forklift")
+sources/18 = SubResource("TileSetAtlasSource_lobby")
+sources/19 = SubResource("TileSetAtlasSource_parking")
+sources/20 = SubResource("TileSetAtlasSource_pet")
+sources/21 = SubResource("TileSetAtlasSource_rooftop")

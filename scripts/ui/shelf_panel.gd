@@ -59,6 +59,7 @@ func _build_ui() -> void:
 	
 	# Title
 	var title := Label.new()
+	title.name = "ShelfTitle"
 	title.text = "WAREHOUSE STORAGE SHELVES"
 	title.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	title.position = Vector2(0, 10)
@@ -66,6 +67,17 @@ func _build_ui() -> void:
 	title.add_theme_font_size_override("font_size", 18)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_container.add_child(title)
+
+	# Close button (X)
+	var close_btn := Button.new()
+	close_btn.text = "X"
+	close_btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	close_btn.position = Vector2(-45, 8)
+	close_btn.size = Vector2(36, 28)
+	close_btn.add_theme_color_override("font_color", Color(0.90, 0.60, 0.60))
+	close_btn.add_theme_color_override("bg_color", Color(0.30, 0.15, 0.15))
+	close_btn.connect("pressed", close)
+	_container.add_child(close_btn)
 	
 	# Subtitle
 	var subtitle := Label.new()

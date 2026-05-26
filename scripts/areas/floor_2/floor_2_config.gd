@@ -228,7 +228,7 @@ func _setup_areas() -> void:
 
 func _setup_facilities() -> void:
 	_facilities = [
-		Facility.new("ad", "AD Display", 1, 68, 4, 4, 6),
+		Facility.new("ad", "AD Display", 1, 68, 4, 6, 6),
 	]
 
 func _setup_places() -> void:

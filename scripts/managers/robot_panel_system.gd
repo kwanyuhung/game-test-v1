@@ -63,6 +63,17 @@ func build_robot_panel() -> Control:
 	subtitle.position = Vector2(0, 36)
 	_robot_panel.add_child(subtitle)
 
+	# Close button (X) in top-right corner
+	var close_btn := Button.new()
+	close_btn.text = "X"
+	close_btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	close_btn.position = Vector2(-45, 8)
+	close_btn.size = Vector2(36, 28)
+	close_btn.add_theme_color_override("font_color", Color(0.90, 0.60, 0.60))
+	close_btn.add_theme_color_override("bg_color", Color(0.30, 0.15, 0.15))
+	close_btn.connect("pressed", _on_close_pressed)
+	_robot_panel.add_child(close_btn)
+
 	var scroll := ScrollContainer.new()
 	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
 	scroll.position = Vector2(0, 60)
@@ -117,14 +128,14 @@ func build_robot_panel() -> Control:
 		btn.connect("pressed", _on_robot_single_pressed.bind(rt["rrole"], rt["cost"]))
 		list.add_child(btn)
 
-	var close_btn := Button.new()
-	close_btn.text = "[R] Close"
-	close_btn.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	close_btn.position = Vector2(0, -45)
-	close_btn.size = Vector2(0, 40)
-	close_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	close_btn.connect("pressed", _on_close_pressed)
-	_robot_panel.add_child(close_btn)
+	var close_bottom_btn := Button.new()
+	close_bottom_btn.text = "[R] Close"
+	close_bottom_btn.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	close_bottom_btn.position = Vector2(0, -45)
+	close_bottom_btn.size = Vector2(0, 40)
+	close_bottom_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	close_bottom_btn.connect("pressed", _on_close_pressed)
+	_robot_panel.add_child(close_bottom_btn)
 
 	_main.set("_robot_panel", _robot_panel)
 	return _robot_panel
@@ -142,6 +153,13 @@ func hide_panel() -> void:
 func _on_overlay_input(event: InputEvent) -> void:
 	# Consume all input events
 	pass
+
+func _input(event: InputEvent) -> void:
+	if _robot_panel == null or not _robot_panel.visible:
+		return
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_ESCAPE:
+			hide_panel()
 
 func _on_close_pressed() -> void:
 	hide_panel()
@@ -199,3 +217,15 @@ func _update_robot_panel() -> void:
 		if child is Label and child.text.begins_with("Active robots:"):
 			child.text = "Active robots: %d" % active_count
 			break
+
+func get_spawns_by_type(t: String) -> Array:
+	var robots: Array = _main.get("_robots") if _main else []
+	if robots == null:
+		return []
+	var result: Array = []
+	for r in robots:
+		if t == "humanoid" and r.get("_is_humanoid") == true:
+			result.append(r)
+		elif t == "single" and r.has("_is_humanoid") and r.get("_is_humanoid") == false:
+			result.append(r)
+	return result

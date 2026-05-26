@@ -69,6 +69,16 @@ func _build_ui() -> void:
 	title.label_settings = title_settings
 	add_child(title)
 
+	# Close button (X)
+	var close_btn := Button.new()
+	close_btn.text = "X"
+	close_btn.position = Vector2(pan_x + pan_w - 30, pan_y + 4)
+	close_btn.size = Vector2(26, 26)
+	close_btn.add_theme_color_override("font_color", Color(0.90, 0.60, 0.60))
+	close_btn.add_theme_color_override("bg_color", Color(0.30, 0.15, 0.15))
+	close_btn.connect("pressed", resume)
+	add_child(close_btn)
+
 	var hint := Label.new()
 	hint.text = "P or SPACE to resume"
 	hint.position = Vector2(pan_x + 20, pan_y + 32)

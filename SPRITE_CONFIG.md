@@ -169,7 +169,7 @@
 ---
 
 ## Interaction Bubbles & Prompts
-
+d
 | Property | Value | Description |
 |----------|-------|-------------|
 | **BUBBLE_OFFSET_Y** | -40 pixels | Bubble above player |

@@ -49,6 +49,17 @@ func _custom_init() -> void:
 	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(title_lbl)
 
+	# Close button (X) in top-right corner
+	var close_btn := Button.new()
+	close_btn.text = "X"
+	close_btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	close_btn.offset_left = -44; close_btn.offset_top = 2
+	close_btn.offset_right = -8; close_btn.offset_bottom = 24
+	close_btn.add_theme_color_override("font_color", Color(0.90, 0.60, 0.60))
+	close_btn.add_theme_color_override("bg_color", Color(0.30, 0.15, 0.15))
+	close_btn.connect("pressed", close)
+	add_child(close_btn)
+
 	# Button grid starts at y=36
 	var y_offset := 38
 	var col_width := 160
@@ -131,6 +142,13 @@ func toggle() -> void:
 		close()
 	else:
 		open()
+
+func _input(event: InputEvent) -> void:
+	if not visible:
+		return
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_ESCAPE or event.keycode == KEY_F3:
+			close()
 
 func set_main(main_node: Node) -> void:
 	_main = main_node

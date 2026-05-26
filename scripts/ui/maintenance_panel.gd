@@ -95,6 +95,16 @@ func _build_ui() -> void:
 	_header_lbl.add_theme_font_size_override("font_size", int(20 * font_scale))
 	add_child(_header_lbl)
 
+	# Close button (X)
+	var close_btn := Button.new()
+	close_btn.text = "X"
+	close_btn.position = Vector2(pan_x + pan_w - 40, pan_y + 4)
+	close_btn.size = Vector2(30, 26)
+	close_btn.add_theme_color_override("font_color", Color(0.90, 0.60, 0.60))
+	close_btn.add_theme_color_override("bg_color", Color(0.30, 0.15, 0.15))
+	close_btn.connect("pressed", close)
+	add_child(close_btn)
+
 	_time_lbl = Label.new()
 	_time_lbl.text = "Press M or ESC to close"
 	_time_lbl.position = Vector2(pan_x + pan_w - 280, pan_y + 10)

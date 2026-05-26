@@ -107,13 +107,15 @@ func _build_ui() -> void:
 	_name_label.add_theme_font_size_override("font_size", int(16 * font_scale))
 	add_child(_name_label)
 
-	# Close hint
-	var close_lbl := Label.new()
-	close_lbl.text = "ESC to close"
-	close_lbl.position = Vector2(_pan_x + _panel_w - 120, _pan_y + 10)
-	close_lbl.add_theme_color_override("font_color", Color(0.45, 0.45, 0.55))
-	close_lbl.add_theme_font_size_override("font_size", int(12 * font_scale))
-	add_child(close_lbl)
+	# Close button (X)
+	var close_btn := Button.new()
+	close_btn.text = "X"
+	close_btn.position = Vector2(_pan_x + _panel_w - 35, _pan_y + 5)
+	close_btn.size = Vector2(28, 26)
+	close_btn.add_theme_color_override("font_color", Color(0.90, 0.60, 0.60))
+	close_btn.add_theme_color_override("bg_color", Color(0.30, 0.15, 0.15))
+	close_btn.connect("pressed", close)
+	add_child(close_btn)
 
 	# History scroll area
 	_history_bg = ColorRect.new()

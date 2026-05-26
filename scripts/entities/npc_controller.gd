@@ -85,6 +85,34 @@ const STAFF_TASK_TEMPLATES = {
 	ActorData.StaffRole.SCAN_GO: [
 		{"name": "Scan & Go station", "floor": 0, "x": 500, "y": 200, "urgency": 1},
 	],
+	ActorData.StaffRole.SHOP_STAFF: [
+		{"name": "Shop floor Ladies", "floor": 1, "x": 200, "y": 100, "urgency": 1},
+		{"name": "Shop floor Mens", "floor": 1, "x": 600, "y": 100, "urgency": 0},
+		{"name": "Shop floor Kids", "floor": 1, "x": 1000, "y": 100, "urgency": 0},
+		{"name": "Help customer F1", "floor": 1, "x": 400, "y": 300, "urgency": 1},
+	],
+	ActorData.StaffRole.FOOD_STAFF: [
+		{"name": "Food stall", "floor": 0, "x": 200, "y": 80, "urgency": 1},
+		{"name": "Cafe counter", "floor": 10, "x": 400, "y": 200, "urgency": 1},
+		{"name": "Juice bar", "floor": 12, "x": 300, "y": 200, "urgency": 0},
+	],
+	ActorData.StaffRole.CLEAN_STAFF: [
+		{"name": "Clean lobby", "floor": 0, "x": 300, "y": 200, "urgency": 1},
+		{"name": "Clean corridor", "floor": 1, "x": 500, "y": 200, "urgency": 0},
+		{"name": "Clean restrooms", "floor": 0, "x": 700, "y": 200, "urgency": 1},
+	],
+	ActorData.StaffRole.RECEPTIONIST: [
+		{"name": "Info desk", "floor": 0, "x": 640, "y": 80, "urgency": 1},
+		{"name": "Service desk", "floor": 0, "x": 500, "y": 160, "urgency": 0},
+	],
+	ActorData.StaffRole.MAINTENANCE_STAFF: [
+		{"name": "Repair electronics", "floor": 14, "x": 800, "y": 400, "urgency": 1},
+		{"name": "Check equipment F1", "floor": 1, "x": 300, "y": 300, "urgency": 0},
+	],
+	ActorData.StaffRole.DELIVERY_STAFF: [
+		{"name": "Warehouse dock", "floor": 11, "x": 1300, "y": 600, "urgency": 1},
+		{"name": "Loading area", "floor": 11, "x": 1100, "y": 500, "urgency": 0},
+	],
 }
 
 # Instance Data
@@ -442,6 +470,43 @@ func _choose_staff_behavior() -> void:
 				_start_patrol()
 			else:
 				_start_idle(randf_range(3.0, 8.0))
+		ActorData.StaffRole.FLOOR_STAFF:
+			if randf() < 0.5:
+				_start_patrol()
+			else:
+				_start_idle(randf_range(3.0, 8.0))
+		ActorData.StaffRole.SCAN_GO:
+			_start_patrol()
+		ActorData.StaffRole.SHOP_STAFF:
+			if randf() < 0.6:
+				_start_shop_staff_task()
+			else:
+				_start_patrol()
+		ActorData.StaffRole.FOOD_STAFF:
+			if randf() < 0.6:
+				_start_food_staff_task()
+			else:
+				_start_patrol()
+		ActorData.StaffRole.CLEAN_STAFF:
+			if randf() < 0.7:
+				_start_clean_staff_task()
+			else:
+				_start_patrol()
+		ActorData.StaffRole.RECEPTIONIST:
+			if randf() < 0.5:
+				_start_receptionist_task()
+			else:
+				_start_patrol()
+		ActorData.StaffRole.MAINTENANCE_STAFF:
+			if randf() < 0.5:
+				_start_maintenance_task()
+			else:
+				_start_patrol()
+		ActorData.StaffRole.DELIVERY_STAFF:
+			if randf() < 0.6:
+				_start_delivery_task()
+			else:
+				_start_patrol()
 		_:
 			_start_wander()
 
@@ -496,6 +561,78 @@ func _start_restock_task() -> void:
 
 func _start_clean_task() -> void:
 	var templates = STAFF_TASK_TEMPLATES.get(ActorData.StaffRole.CLEANER, [])
+	if templates.is_empty():
+		_start_wander()
+		return
+	var task: Dictionary = templates[randi() % templates.size()]
+	var t = ActorData.StaffTask.new(task["name"], task["floor"], task["x"], task["y"], task["urgency"])
+	_tasks.clear()
+	_tasks.append(t)
+	_current_task_idx = 0
+	_start_staff_task()
+
+func _start_shop_staff_task() -> void:
+	var templates = STAFF_TASK_TEMPLATES.get(ActorData.StaffRole.SHOP_STAFF, [])
+	if templates.is_empty():
+		_start_wander()
+		return
+	var task: Dictionary = templates[randi() % templates.size()]
+	var t = ActorData.StaffTask.new(task["name"], task["floor"], task["x"], task["y"], task["urgency"])
+	_tasks.clear()
+	_tasks.append(t)
+	_current_task_idx = 0
+	_start_staff_task()
+
+func _start_food_staff_task() -> void:
+	var templates = STAFF_TASK_TEMPLATES.get(ActorData.StaffRole.FOOD_STAFF, [])
+	if templates.is_empty():
+		_start_wander()
+		return
+	var task: Dictionary = templates[randi() % templates.size()]
+	var t = ActorData.StaffTask.new(task["name"], task["floor"], task["x"], task["y"], task["urgency"])
+	_tasks.clear()
+	_tasks.append(t)
+	_current_task_idx = 0
+	_start_staff_task()
+
+func _start_clean_staff_task() -> void:
+	var templates = STAFF_TASK_TEMPLATES.get(ActorData.StaffRole.CLEAN_STAFF, [])
+	if templates.is_empty():
+		_start_wander()
+		return
+	var task: Dictionary = templates[randi() % templates.size()]
+	var t = ActorData.StaffTask.new(task["name"], task["floor"], task["x"], task["y"], task["urgency"])
+	_tasks.clear()
+	_tasks.append(t)
+	_current_task_idx = 0
+	_start_staff_task()
+
+func _start_receptionist_task() -> void:
+	var templates = STAFF_TASK_TEMPLATES.get(ActorData.StaffRole.RECEPTIONIST, [])
+	if templates.is_empty():
+		_start_wander()
+		return
+	var task: Dictionary = templates[randi() % templates.size()]
+	var t = ActorData.StaffTask.new(task["name"], task["floor"], task["x"], task["y"], task["urgency"])
+	_tasks.clear()
+	_tasks.append(t)
+	_current_task_idx = 0
+	_start_staff_task()
+
+func _start_maintenance_task() -> void:
+	var templates = STAFF_TASK_TEMPLATES.get(ActorData.StaffRole.MAINTENANCE_STAFF, [])
+	if templates.is_empty():
+		_start_wander()
+		return
+	var task: Dictionary = templates[randi() % templates.size()]
+	var t = ActorData.StaffTask.new(task["name"], task["floor"], task["x"], task["y"], task["urgency"])
+	_tasks.clear()
+	_tasks.append(t)
+	_current_task_idx = 0
+	_start_staff_task()
+
+func _start_delivery_task() -> void:
+	var templates = STAFF_TASK_TEMPLATES.get(ActorData.StaffRole.DELIVERY_STAFF, [])
 	if templates.is_empty():
 		_start_wander()
 		return

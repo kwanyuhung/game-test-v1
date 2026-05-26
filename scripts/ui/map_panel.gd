@@ -65,21 +65,27 @@ func set_floor(idx: int) -> void:
 	_update_title()
 	_build_items()
 
+signal input_blocked(bool)  # Emitted when panel opens/closes to block player input
+
 func toggle() -> void:
 	visible = not visible
 	if visible:
+		input_blocked.emit(true)
 		_build_panel()
 		_build_items()
 	else:
+		input_blocked.emit(false)
 		_clear_items()
 
 func open() -> void:
 	visible = true
+	input_blocked.emit(true)
 	_build_panel()
 	_build_items()
 
 func close() -> void:
 	visible = false
+	input_blocked.emit(false)
 	_clear_items()
 
 func _build_panel() -> void:
@@ -128,6 +134,16 @@ func _build_panel() -> void:
 	_title_label.add_theme_font_size_override("font_size", int(18 * _font_scale))
 	_title_label.z_index = 500
 	_bg_panel.add_child(_title_label)
+
+	# Close button (X) in top-right corner
+	var close_btn := Button.new()
+	close_btn.text = "X"
+	close_btn.position = Vector2(panel_w - 30, 4)
+	close_btn.size = Vector2(26, 26)
+	close_btn.add_theme_color_override("font_color", Color(0.90, 0.60, 0.60))
+	close_btn.add_theme_color_override("bg_color", Color(0.30, 0.15, 0.15))
+	close_btn.connect("pressed", close)
+	_bg_panel.add_child(close_btn)
 
 	# Calculate map offset (centered, below title)
 	_map_offset = Vector2(20 * _font_scale, 50 * _font_scale)
@@ -615,3 +631,10 @@ func _process(_delta: float) -> void:
 
 	if not over_robot:
 		_hide_robot_tooltip()
+
+func _input(event: InputEvent) -> void:
+	if not visible:
+		return
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_ESCAPE:
+			close()

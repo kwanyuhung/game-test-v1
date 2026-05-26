@@ -13,6 +13,7 @@ const FloorConfig = preload("res://scripts/world/floor_config.gd")
 const StoreData = preload("res://scripts/world/store_data.gd")
 const FoodStallScript = preload("res://scripts/systems/food_stall.gd")
 const ClawMachineScript = preload("res://scripts/amenities/claw_machine.gd")
+const TileMapBuilder = preload("res://scripts/world/tilemap_builder.gd")
 
 # Floor 0 (Ground) handlers
 const LobbyHandler = preload("res://scripts/areas/floor_0/lobby_handler.gd")
@@ -113,6 +114,7 @@ var _escalators: Array = []
 var _checkout_counters: Array = []
 var _aisle_labels: Array = []
 var _stairs_system = null  # Reference to stairs system for registering stairs zones
+var _tilemap: TileMap = null  # TileMap for base floor rendering
 
 signal section_interacted(section_id: String)
 signal stall_interacted(stall_id: String)
@@ -136,6 +138,7 @@ func build(floor_def: FloorConfig.FloorDef, parent: Node, floor_idx: int = 0, st
 
 	_build_world_bg()
 	_build_zones()
+	_build_tilemap()
 	_build_section_zones()
 	_build_checkout_if_needed()
 	_build_floor_sign()
@@ -1291,6 +1294,24 @@ func get_checkout_counters() -> Array:
 
 func get_floor_nodes() -> Array:
 	return _floor_nodes
+
+func get_tilemap() -> TileMap:
+	return _tilemap
+
+func _build_tilemap() -> void:
+	var tileset_path := "res://resources/tilesets/floor_tileset.tres"
+	var tileset := load(tileset_path)
+	if tileset == null:
+		print("[FloorBuilder] TileSet not found at ", tileset_path, " - skipping TileMap build")
+		return
+
+	var builder := TileMapBuilder.new()
+	_tilemap = builder.build_from_zones(_floor_def.zones, tileset)
+	_tilemap.position = Vector2.ZERO
+	_tilemap.z_index = 0  # Render below other floor elements
+	_parent.add_child(_tilemap)
+	_floor_nodes.append(_tilemap)
+	print("[FloorBuilder] Built TileMap for floor ", _floor_idx)
 
 # Get center position of office desk zone (for price terminal proximity)
 func get_office_desk_zone_center() -> Vector2:

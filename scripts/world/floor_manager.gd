@@ -25,9 +25,9 @@ const Floor12Config = preload("res://scripts/areas/floor_12/floor_12_config.gd")
 const Floor13Config = preload("res://scripts/areas/floor_13/floor_13_config.gd")
 const Floor14Config = preload("res://scripts/areas/floor_14/floor_14_config.gd")
 
-# Floor spacing: 10 tiles (160 pixels) between floor origins
-const FLOOR_TILE_SPACING := 10
-const FLOOR_Y_OFFSET := FLOOR_TILE_SPACING * CELL_SIZE  # 160 pixels
+# Floor spacing: 40 tiles (640 pixels) between floor origins (4x larger for bigger floors)
+const FLOOR_TILE_SPACING := 40
+const FLOOR_Y_OFFSET := FLOOR_TILE_SPACING * CELL_SIZE  # 640 pixels
 
 # Floor 0 base Y position (tile 32 = 512 pixels from top)
 const FLOOR_0_BASE_Y := 32 * CELL_SIZE  # 512 pixels
@@ -83,19 +83,52 @@ static func _role_name_to_int(role_name: String) -> int:
 		"MANAGER": return 6
 		"FLOOR_STAFF": return 7
 		"SCAN_GO": return 8
-		# Custom roles map to FLOOR_STAFF
-		"CUSTOMER_SERVICE", "LOYALTY_KIOSK", "INFO_DESK", "PROMO_BOOTH", \
-		"LOST_FOUND", "STORE_NEWS", "TECH_ADVISOR", "DEMO_SPECIALIST", \
-		"REPAIR_TECHNICIAN", "FITNESS_ADVISOR", "STYLIST", "EXPERT", \
-		"FLORIST", "NURSERY_ATTENDANT", "KIDS_CLUB_HOST", "PLAY_ATTENDANT", \
-		"ENTERTAINMENT_STAFF", "CAFE_BARISTA", "WAITER", "DOCK_WORKER", \
-		"FORKLIFT_OPERATOR", "CONVEYOR_OPERATOR", "PACKING_STAFF", \
-		"JUICE_BARTENDER", "NUTRITIONIST", "SMOOTHIE_MAKER", "SALAD_CHEF", \
-		"ADMIN_STAFF", "HR_STAFF", "RECRUITER", "OFFICE_WORKER", \
-		"OPERATOR", "STAFF_MEMBER", "OPERATIONS_STAFF", "SHIFT_SUPERVISOR", \
-		"ENTERTAINMENT_STAFF", "CLAW_ATTENDANT", "TRAINING_COORDINATOR", \
-		"LOCKER_ATTENDANT", "LOUNGE_STAFF":
-			return 7  # FLOOR_STAFF as generic fallback
+		"SHOP_STAFF": return 9
+		"FOOD_STAFF": return 10
+		"CLEAN_STAFF": return 11
+		"RECEPTIONIST": return 12
+		"MAINTENANCE_STAFF": return 13
+		"DELIVERY_STAFF": return 14
+		# Role aliases (more descriptive names that map to existing roles)
+		"CUSTOMER_SERVICE": return 12  # RECEPTIONIST
+		"LOYALTY_KIOSK": return 9       # SHOP_STAFF
+		"INFO_DESK": return 12          # RECEPTIONIST
+		"PROMO_BOOTH": return 9         # SHOP_STAFF
+		"LOST_FOUND": return 12          # RECEPTIONIST
+		"STORE_NEWS": return 9          # SHOP_STAFF
+		"TECH_ADVISOR": return 9        # SHOP_STAFF
+		"DEMO_SPECIALIST": return 9     # SHOP_STAFF
+		"REPAIR_TECHNICIAN": return 13  # MAINTENANCE_STAFF
+		"FITNESS_ADVISOR": return 9     # SHOP_STAFF
+		"STYLIST": return 9             # SHOP_STAFF
+		"EXPERT": return 9              # SHOP_STAFF
+		"FLORIST": return 10            # FOOD_STAFF
+		"NURSERY_ATTENDANT": return 9  # SHOP_STAFF
+		"KIDS_CLUB_HOST": return 9      # SHOP_STAFF
+		"PLAY_ATTENDANT": return 9     # SHOP_STAFF
+		"ENTERTAINMENT_STAFF": return 9 # SHOP_STAFF
+		"CAFE_BARISTA": return 10      # FOOD_STAFF
+		"WAITER": return 10             # FOOD_STAFF
+		"DOCK_WORKER": return 14       # DELIVERY_STAFF
+		"FORKLIFT_OPERATOR": return 14  # DELIVERY_STAFF
+		"CONVEYOR_OPERATOR": return 14  # DELIVERY_STAFF
+		"PACKING_STAFF": return 14      # DELIVERY_STAFF
+		"JUICE_BARTENDER": return 10   # FOOD_STAFF
+		"NUTRITIONIST": return 9        # SHOP_STAFF
+		"SMOOTHIE_MAKER": return 10    # FOOD_STAFF
+		"SALAD_CHEF": return 10        # FOOD_STAFF
+		"ADMIN_STAFF": return 9         # SHOP_STAFF (office/shop admin)
+		"HR_STAFF": return 9            # SHOP_STAFF
+		"RECRUITER": return 9          # SHOP_STAFF
+		"OFFICE_WORKER": return 9       # SHOP_STAFF
+		"OPERATOR": return 9            # SHOP_STAFF
+		"STAFF_MEMBER": return 9        # SHOP_STAFF
+		"OPERATIONS_STAFF": return 9    # SHOP_STAFF
+		"SHIFT_SUPERVISOR": return 6   # MANAGER
+		"CLAW_ATTENDANT": return 9     # SHOP_STAFF
+		"TRAINING_COORDINATOR": return 9 # SHOP_STAFF
+		"LOCKER_ATTENDANT": return 9   # SHOP_STAFF
+		"LOUNGE_STAFF": return 9       # SHOP_STAFF
 	return 7  # Default to FLOOR_STAFF
 
 var _main: Node2D = null

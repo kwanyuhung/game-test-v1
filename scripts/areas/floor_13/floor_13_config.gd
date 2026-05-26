@@ -102,7 +102,12 @@ func get_all_areas() -> Array: return _areas.values()
 func get_spawns_by_area(area_id: String) -> Array:
 	var a = _areas.get(area_id); return a.spawns if a else []
 func get_spawns_by_type(t: String) -> Array:
-	var r := []; for a in _areas.values(): for s in a.spawns: if s.entity_type == t: r.append(s); return r
+	var r := []
+	for a in _areas.values():
+		for s in a.spawns:
+			if s.entity_type == t:
+				r.append(s)
+	return r
 func get_npc_staff_spawns() -> Array: return get_spawns_by_type("npc_staff")
 func get_robot_spawns() -> Array:
 	var r := []; r.append_array(get_spawns_by_type("robot_humanoid")); r.append_array(get_spawns_by_type("robot_single")); return r

@@ -66,11 +66,21 @@ func _build_ui() -> void:
 	add_child(hdr)
 
 	var title_lbl := Label.new()
-	title_lbl.text = "  PLAYER STATS  [P] Close"
+	title_lbl.text = "  PLAYER STATS"
 	title_lbl.position = Vector2(pan_x + 2, pan_y + 3)
 	title_lbl.add_theme_color_override("font_color", Color(0.90, 0.85, 0.40))
 	title_lbl.add_theme_font_size_override("font_size", 8)
 	add_child(title_lbl)
+
+	# Close button (X)
+	var close_btn := Button.new()
+	close_btn.text = "X"
+	close_btn.position = Vector2(pan_x + pan_w - 22, pan_y + 1)
+	close_btn.size = Vector2(18, 16)
+	close_btn.add_theme_color_override("font_color", Color(0.90, 0.60, 0.60))
+	close_btn.add_theme_color_override("bg_color", Color(0.30, 0.15, 0.15))
+	close_btn.connect("pressed", close)
+	add_child(close_btn)
 
 	# Content
 	var summary := _stats.get_summary()

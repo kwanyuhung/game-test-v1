@@ -25,8 +25,8 @@ static var _initialized := false
 
 # ── World geometry ──────────────────────────────────────────────
 const CELL_SIZE := 16
-const WORLD_W   := 128   # tiles
-const WORLD_H   := 800  # total world height (all floors stacked)
+const WORLD_W   := 512   # tiles (4x larger for more walking space)
+const WORLD_H   := 3200  # total world height (all floors stacked)
 const WORLD_PIXEL_H := WORLD_W * CELL_SIZE   # 1536
 
 # ── Zone type constants ─────────────────────────────────────────
@@ -283,3 +283,117 @@ static func floor_count() -> int:
 
 static func get_stall_def(stall_id: String) -> Dictionary:
 	return FoodStallDef.get_stall(stall_id)
+
+# Tile mapping for TileMap-based rendering
+# Returns {"tile_id": int, "layer": int} for a given zone type
+# IMPORTANT: tile_id corresponds to TileSet source index, not tile ID
+# -1 means skip TileMap (special sprite-based handler)
+# TileSet source indices (updated with blocked at 0):
+# 0=blocked, 1=atm, 2=floor_common, 3=floor_shoes, 4=floor_sport
+# 5=floor_storage_shelf, 6=floor_truck_dock, 7=floor_warehouse, 8=floor_wc
+# 9=kiosk, 10=plant, 11=promo_booth, 12=table, 13=floor_conveyor
+# 14=vending_machine, 15=floor_dress, 16=floor_food_court, 17=floor_forklift
+# 18=floor_lobby, 19=floor_parking, 20=floor_pet_adoption, 21=floor_rooftop
+static func get_tile_for_zone(zone_type: String) -> Dictionary:
+	# Strip ZONE_ prefix if present (JSON has "ZONE_LOBBY", mapping uses "lobby")
+	var normalized_type = zone_type
+	if zone_type.begins_with("ZONE_"):
+		normalized_type = zone_type.substr(5).to_lower()
+
+	var mapping = {
+		# Walkable floor tiles
+		"lobby": {"tile_id": 18, "layer": 0},          # floor_lobby
+		"common": {"tile_id": 2, "layer": 0},           # floor_common
+		"food_court": {"tile_id": 16, "layer": 0},      # floor_food_court
+		"food_stall": {"tile_id": 2, "layer": 0},       # floor_common (walkable)
+		"warehouse": {"tile_id": 7, "layer": 0},        # floor_warehouse
+		"wc": {"tile_id": 8, "layer": 0},              # floor_wc
+		# Non-walkable (blocked) - use black tile
+		"elevator_shaft": {"tile_id": 0, "layer": 0},  # blocked
+		"stairs": {"tile_id": 0, "layer": 0},          # blocked
+		"escalator": {"tile_id": 0, "layer": 0},       # blocked
+		# Decor items
+		"decor": {"tile_id": 12, "layer": 2},          # table (layer 2 = decor)
+		"vending_machine": {"tile_id": 14, "layer": 0}, # vending_machine
+		"promo_booth": {"tile_id": 11, "layer": 0},   # promo_booth
+		"ad": {"tile_id": 9, "layer": 0},              # kiosk
+		"atm": {"tile_id": 1, "layer": 0},             # atm
+		"customer_service": {"tile_id": 9, "layer": 0}, # kiosk
+		"info_desk": {"tile_id": 9, "layer": 0},       # kiosk
+		"loyalty_kiosk": {"tile_id": 9, "layer": 0},  # kiosk
+		"gift_wrap": {"tile_id": 9, "layer": 0},      # kiosk
+		"digital_kiosk": {"tile_id": 9, "layer": 0},  # kiosk
+		"parking": {"tile_id": 19, "layer": 0},        # floor_parking
+		"rooftop": {"tile_id": 21, "layer": 0},        # floor_rooftop
+		"section": {"tile_id": 2, "layer": 0},         # floor_common
+		"pet_adoption": {"tile_id": 20, "layer": 0},   # floor_pet_adoption
+		"claw_machine": {"tile_id": 0, "layer": 0},    # blocked (machine)
+		"truck_dock": {"tile_id": 6, "layer": 0},     # floor_truck_dock
+		"forklift": {"tile_id": 17, "layer": 0},      # floor_forklift
+		"conveyor": {"tile_id": 13, "layer": 0},       # floor_conveyor
+		"storage_shelf": {"tile_id": 5, "layer": 0},  # floor_storage_shelf
+		"warehouse_stock_view": {"tile_id": 7, "layer": 0},   # floor_warehouse (alias)
+		"wh_stock_view": {"tile_id": 7, "layer": 0},   # floor_warehouse (alias)
+		"lost_found": {"tile_id": 11, "layer": 0},     # promo_booth
+		"store_news": {"tile_id": 9, "layer": 0},      # kiosk
+		"shoes_rack": {"tile_id": 3, "layer": 0},     # floor_shoes
+		"dress_rack": {"tile_id": 15, "layer": 0},    # floor_dress
+		"sport_area": {"tile_id": 4, "layer": 0},     # floor_sport
+		"outdoor_area": {"tile_id": 21, "layer": 0},  # floor_rooftop
+		"stationery": {"tile_id": 2, "layer": 0},     # floor_common
+		"plants_area": {"tile_id": 10, "layer": 0},   # plant
+		"locker": {"tile_id": 0, "layer": 0},        # blocked (lockers)
+		"staff_lounge": {"tile_id": 2, "layer": 0},  # floor_common
+		"training": {"tile_id": 2, "layer": 0},       # floor_common
+		"office_desk": {"tile_id": 0, "layer": 0},   # blocked (desks)
+		"exec_office": {"tile_id": 0, "layer": 0},   # blocked (desks)
+		"monitor_room": {"tile_id": 0, "layer": 0},   # blocked (equipment)
+		"home_decor": {"tile_id": 0, "layer": 0},    # blocked (shelves)
+		"furniture": {"tile_id": 0, "layer": 0},     # blocked (shelves)
+		"outdoor_living": {"tile_id": 21, "layer": 0}, # floor_rooftop
+		"organization": {"tile_id": 0, "layer": 0},   # blocked (shelves)
+		"lighting": {"tile_id": 0, "layer": 0},       # blocked (displays)
+		"juice_bar": {"tile_id": 2, "layer": 0},     # floor_common
+		"health_food": {"tile_id": 2, "layer": 0},   # floor_common
+		"smoothie": {"tile_id": 2, "layer": 0},      # floor_common
+		"salad_bar": {"tile_id": 2, "layer": 0},     # floor_common
+		"kids_play": {"tile_id": 2, "layer": 0},     # floor_common
+		"kids_clothing": {"tile_id": 15, "layer": 0}, # floor_dress
+		"nursing_room": {"tile_id": 8, "layer": 0},  # floor_wc
+		"family_wc": {"tile_id": 8, "layer": 0},     # floor_wc
+		"kids_club": {"tile_id": 2, "layer": 0},     # floor_common
+		"phone_gadgets": {"tile_id": 0, "layer": 0}, # blocked (displays)
+		"smart_home": {"tile_id": 0, "layer": 0},    # blocked (displays)
+		"electronics": {"tile_id": 0, "layer": 0},    # blocked (shelves)
+		"repair_counter": {"tile_id": 0, "layer": 0}, # blocked (counter)
+		"cafe_counter": {"tile_id": 0, "layer": 0},  # blocked (counter)
+		"canteen": {"tile_id": 2, "layer": 0},       # floor_common
+		"karaoke": {"tile_id": 2, "layer": 0},       # floor_common
+		"pool_table": {"tile_id": 0, "layer": 0},    # blocked (table)
+		"darts_board": {"tile_id": 0, "layer": 0},   # blocked (board)
+		"entertainment": {"tile_id": 2, "layer": 0}, # floor_common
+		"aisle_floor": {"tile_id": 2, "layer": 0},   # floor_common
+		# Additional zone types from JSON
+		"entry_gate": {"tile_id": 2, "layer": 0},    # floor_common
+		"packing_station": {"tile_id": 0, "layer": 0}, # blocked (station)
+	}
+	var result = mapping.get(normalized_type, null)
+	if result != null:
+		return result
+	# Default: floor_common for walkable areas
+	return {"tile_id": 2, "layer": 0}
+
+# Get zone bounds for a floor (used for camera limits)
+static func get_floor_zone_bounds(floor_idx: int) -> Dictionary:
+	_ensure_initialized()
+	var fd = get_floor(floor_idx)
+	if fd == null:
+		return {"min_y": 2, "max_y": 42, "height": 40}
+	var min_y = 800
+	var max_y = 0
+	for zone in fd.zones:
+		if zone.y < min_y:
+			min_y = zone.y
+		if zone.y + zone.h > max_y:
+			max_y = zone.y + zone.h
+	return {"min_y": min_y, "max_y": max_y, "height": max_y - min_y + 4}

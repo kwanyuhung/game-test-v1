@@ -406,9 +406,10 @@ func spawn_player() -> void:
 	# 🔥 空值防护
 	if _main == null: return
 	var player: Node2D = preload("res://scripts/entities/player.gd").new()
-	# Spawn near elevator (tile 6, mid-floor y=8 tiles = 128 pixels from floor base)
-	# Floor base at y=512, player at y=512 + 128 = 640, which is within lobby zone (y=2-15 = 32-240)
-	player.position = Vector2(6 * _cell_size + 7 * _cell_size, 8 * _cell_size)
+	# Spawn near elevator (tile 6, y=12 tiles = 192 pixels from floor base)
+	# Floor base at y=512, player at y=512 + 192 = 704, which is within lobby zone
+	var floor_y: float = _get_floor_world_y(0)  # Floor 0 world Y
+	player.position = Vector2(6 * _cell_size + 7 * _cell_size, floor_y + 12 * _cell_size)
 	_main.add_child(player)
 	player.set_world(_main)
 	player.cart_updated.connect(_main._on_cart_updated)

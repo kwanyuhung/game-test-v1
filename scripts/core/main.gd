@@ -608,8 +608,8 @@ func _rebuild_floor_with_manager(idx: int) -> void:
 # ???????????????????????????????????????????????????????????????????????????????????????????????
 var _camera: Camera2D = null
 
-const CAMERA_ZOOM := 3.0
-const CAMERA_SMOOTH_SPEED := 10.0
+const CAMERA_ZOOM := 0.3
+const CAMERA_SMOOTH_SPEED := 8.0
 const CAMERA_LAG := Vector2(0, 0)
 
 const FLOOR_H := 10 * CELL_SIZE
@@ -626,11 +626,26 @@ func _setup_camera() -> void:
 	update_camera_limits(_current_floor_idx)
 
 func update_camera_limits(floor_idx: int) -> void:
-	var floor_y = 32 * CELL_SIZE - (floor_idx * FLOOR_Y_OFFSET)
+	var zone_bounds = _get_floor_zone_bounds(floor_idx)
+	var container_y = FloorManagerScript.get_floor_y(floor_idx)
+	# Zone coordinates are relative to container, so convert to world coordinates
 	_camera.limit_left = 0
-	_camera.limit_top = int(floor_y + CELL_SIZE * 2)
+	_camera.limit_top = int(container_y + zone_bounds.min_y * CELL_SIZE)
 	_camera.limit_right = WORLD_W * CELL_SIZE
-	_camera.limit_bottom = int(floor_y + FLOOR_H - CELL_SIZE * 2)
+	_camera.limit_bottom = int(container_y + zone_bounds.max_y * CELL_SIZE)
+
+func _get_floor_zone_bounds(floor_idx: int) -> Dictionary:
+	var fd = FloorConfigScript.get_floor(floor_idx)
+	if fd == null:
+		return {"min_y": 2, "max_y": 42, "height": 40}
+	var min_y = 800
+	var max_y = 0
+	for zone in fd.zones:
+		if zone.y < min_y:
+			min_y = zone.y
+		if zone.y + zone.h > max_y:
+			max_y = zone.y + zone.h
+	return {"min_y": min_y, "max_y": max_y, "height": max_y - min_y + 4}
 
 func _build_hud() -> void:
 	pass  # HUD built by main_hud.gd in _ready()
@@ -811,8 +826,11 @@ func _input(event: InputEvent) -> void:
 				_toggle_shelf_panel()
 
 func _process(_delta: float) -> void:
-	# Camera smoothing handles following automatically
-	
+	# Camera smoothly follows player via position_smoothing_enabled (set in _setup_camera)
+	# Just ensure camera target is at player position when not in elevator
+	if _camera != null and _player != null and not _in_elevator:
+		_camera.global_position = _player.global_position
+
 	if _current_section_browse != null and _current_section_browse.visible:
 		return
 	if _checkout_receipt_visible:
@@ -946,7 +964,8 @@ func _navigate_to_floor(floor_idx: int) -> void:
 		_rebuild_floor(floor_idx)
 	
 	if _player:
-		_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, 8 * CELL_SIZE)
+		var floor_y: float = FloorManagerScript.get_floor_y(floor_idx)
+		_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, floor_y + 8 * CELL_SIZE)
 	if _minimap:
 		_minimap.set_floor(floor_idx)
 	if _toasts:
