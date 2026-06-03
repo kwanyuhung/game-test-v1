@@ -606,6 +606,9 @@ func _rebuild_floor_with_manager(idx: int) -> void:
 var _camera: Camera2D = null
 
 const CAMERA_ZOOM := 0.5
+const CAMERA_ZOOM_MIN := 0.25
+const CAMERA_ZOOM_MAX := 2.0
+const CAMERA_ZOOM_STEP := 0.1
 
 func _setup_camera() -> void:
 	_camera = Camera2D.new()
@@ -849,6 +852,23 @@ func _input(event: InputEvent) -> void:
 		# H ── Toggle Shelf Panel (warehouse/storage view)
 			if event.keycode == KEY_H:
 				_toggle_shelf_panel()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if _camera == null:
+		return
+	if PanelManager.is_input_blocked():
+		return
+	if event is InputEventMouseButton and event.pressed:
+		var zoom: Vector2 = _camera.zoom
+		var new_zoom: float = zoom.x
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			new_zoom = clampf(zoom.x + CAMERA_ZOOM_STEP, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			new_zoom = clampf(zoom.x - CAMERA_ZOOM_STEP, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX)
+		if not is_equal_approx(new_zoom, zoom.x):
+			_camera.zoom = Vector2(new_zoom, new_zoom)
+			if _player != null and not _in_elevator:
+				_camera.position = _player.position
 
 func _process(_delta: float) -> void:
 	# Center camera on player when not in elevator
