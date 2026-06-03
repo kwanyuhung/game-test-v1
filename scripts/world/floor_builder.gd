@@ -13,7 +13,6 @@ const FloorConfig = preload("res://scripts/world/floor_config.gd")
 const StoreData = preload("res://scripts/world/store_data.gd")
 const FoodStallScript = preload("res://scripts/systems/food_stall.gd")
 const ClawMachineScript = preload("res://scripts/amenities/claw_machine.gd")
-const TileMapBuilder = preload("res://scripts/world/tilemap_builder.gd")
 
 # Floor 0 (Ground) handlers
 const LobbyHandler = preload("res://scripts/areas/floor_0/lobby_handler.gd")
@@ -114,7 +113,7 @@ var _escalators: Array = []
 var _checkout_counters: Array = []
 var _aisle_labels: Array = []
 var _stairs_system = null  # Reference to stairs system for registering stairs zones
-var _tilemap: TileMap = null  # TileMap for base floor rendering
+var _tilemap: Node2D = null  # Sprite-based rendering (was TileMap)
 
 signal section_interacted(section_id: String)
 signal stall_interacted(stall_id: String)
@@ -1295,23 +1294,102 @@ func get_checkout_counters() -> Array:
 func get_floor_nodes() -> Array:
 	return _floor_nodes
 
-func get_tilemap() -> TileMap:
-	return _tilemap
+func get_tilemap() -> Node2D:
+	return _tilemap  # Returns null - using sprite-based rendering now
 
 func _build_tilemap() -> void:
-	var tileset_path := "res://resources/tilesets/floor_tileset.tres"
-	var tileset := load(tileset_path)
-	if tileset == null:
-		print("[FloorBuilder] TileSet not found at ", tileset_path, " - skipping TileMap build")
-		return
+	# Replaced with _build_zone_sprites() - sprite-based rendering instead of TileMap
+	_build_zone_sprites()
 
-	var builder := TileMapBuilder.new()
-	_tilemap = builder.build_from_zones(_floor_def.zones, tileset)
-	_tilemap.position = Vector2.ZERO
-	_tilemap.z_index = 0  # Render below other floor elements
-	_parent.add_child(_tilemap)
-	_floor_nodes.append(_tilemap)
-	print("[FloorBuilder] Built TileMap for floor ", _floor_idx)
+func _build_zone_sprites() -> void:
+	# Create colored sprite (ColorRect) for each zone
+	# Zones use pixel coordinates: x, y, w, h in tile units (multiply by CELL_SIZE)
+	for zone in _floor_def.zones:
+		var zone_type: String = zone.get("type", "")
+		var x: int = zone.get("x", 0)
+		var y: int = zone.get("y", 0)
+		var w: int = zone.get("w", 1)
+		var h: int = zone.get("h", 1)
+
+		# Get color from zone meta, or use default based on zone type
+		var color: Color = _get_zone_color(zone)
+
+		# Create ColorRect as the zone sprite
+		var zone_sprite := ColorRect.new()
+		zone_sprite.size = Vector2(w * CELL_SIZE, h * CELL_SIZE)
+		zone_sprite.position = Vector2(x * CELL_SIZE, y * CELL_SIZE)
+		zone_sprite.color = color
+		zone_sprite.z_index = 0  # Render below other elements
+
+		_parent.add_child(zone_sprite)
+		_floor_nodes.append(zone_sprite)
+
+		# Add zone label
+		_add_zone_label(zone, x, y, w, h)
+
+	print("[FloorBuilder] Built ", _floor_def.zones.size(), " zone sprites for floor ", _floor_idx)
+
+func _add_zone_label(zone: Dictionary, x: int, y: int, w: int, h: int) -> void:
+	# Get zone name from meta.name or generate from zone type
+	var zone_name: String = ""
+	if zone.has("meta") and zone["meta"].has("name"):
+		zone_name = zone["meta"]["name"]
+	else:
+		# Generate name from zone type (e.g., "ZONE_LOBBY" -> "LOBBY")
+		var zone_type: String = zone.get("type", "")
+		if zone_type.begins_with("ZONE_"):
+			zone_name = zone_type.substr(5).replace("_", " ")
+		else:
+			zone_name = zone_type.replace("_", " ")
+
+	# Create label centered in zone
+	var label := Label.new()
+	label.text = zone_name
+	label.position = Vector2(x * CELL_SIZE + 4, y * CELL_SIZE + 4)
+	label.z_index = 1  # Above zone color
+
+	# Style the label
+	var font_size := 10
+	if w >= 20:
+		font_size = 14
+	elif w >= 10:
+		font_size = 12
+
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1, 0.8))
+
+	# Only add label if zone is big enough
+	if w >= 4 and h >= 3:
+		_parent.add_child(label)
+		_floor_nodes.append(label)
+
+func _get_zone_color(zone: Dictionary) -> Color:
+	# Use zone's meta color if available
+	if zone.has("meta") and zone["meta"].has("color"):
+		return zone["meta"]["color"]
+
+	# Default colors by zone type (simple solid colors)
+	var zone_type: String = zone.get("type", "").to_lower()
+	var normalized := zone_type
+	if zone_type.begins_with("ZONE_"):
+		normalized = zone_type.substr(5).to_lower()
+
+	var color_map = {
+		"lobby": Color(0.85, 0.80, 0.70),
+		"common": Color(0.75, 0.75, 0.72),
+		"food_court": Color(0.90, 0.85, 0.75),
+		"food_stall": Color(0.88, 0.82, 0.72),
+		"warehouse": Color(0.70, 0.68, 0.65),
+		"wc": Color(0.80, 0.85, 0.90),
+		"elevator_shaft": Color(0.20, 0.20, 0.22),
+		"stairs": Color(0.25, 0.25, 0.27),
+		"escalator": Color(0.30, 0.28, 0.25),
+		"parking": Color(0.50, 0.50, 0.52),
+		"rooftop": Color(0.78, 0.85, 0.75),
+		"section": Color(0.75, 0.75, 0.72),
+	}
+
+	return color_map.get(normalized, Color(0.60, 0.60, 0.58))
 
 # Get center position of office desk zone (for price terminal proximity)
 func get_office_desk_zone_center() -> Vector2:

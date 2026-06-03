@@ -62,6 +62,9 @@ func _update_transition(delta: float) -> void:
 			_player.position.y = lerpf(start_y, end_y, t)
 
 func _complete_transition() -> void:
+	if _main == null:
+		push_error("[StairsSystem] _complete_transition called before setup")
+		return
 	_is_transitioning = false
 	_transition_progress = 0.0
 

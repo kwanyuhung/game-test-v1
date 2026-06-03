@@ -57,6 +57,23 @@ This file has two layers: Default Rules and On-Demand Modes.
 - Specs should not depend on line numbers for code location.
 - Don't pre-abstract, generalize, or expose configuration for unrequested future requirements.
 
+### Godot 4 API Rules
+
+- `TileMap.cell_size` is **read-only** — derived from the TileSet automatically. Do not assign to it.
+- `Control.Preset` enum: use `Control.PRESET_*` directly (e.g., `Control.PRESET_TOP_LEFT`). `Control.Preset.PRESET_*` does NOT work.
+- `Control.PRESET_BOTTOM_CENTER` and `Control.PRESET_CENTER_BOTTOM` **do not exist** in Godot 4. Use `PRESET_BOTTOM_WIDE` with offset narrowing, or `PRESET_CENTER` with computed viewport-relative offsets.
+- `Node.get_viewport_rect()` does not exist. Use `get_viewport().get_visible_rect()` instead.
+- **Autoloads are singletons**: `PanelManager` is registered in `project.godot` and accessed directly by name — do NOT `preload()` it or assign to a `const`. Same applies to all other autoloads (e.g., `SaveSystem`).
+- **Static methods**: `FloorManagerScript.get_floor_y()` is static, but `FloorConfigScript.get_floor_y()` does not exist. Verify the correct class before calling.
+- **Private method calls**: `_private_method()` cannot be called with dot syntax on another object. Use `other_object.call("_private_method")` instead.
+- Before setting properties that were writable in Godot 3, check the Godot 4 API docs — many read-only restrictions apply.
+
+### Initialization & Null Safety
+
+- When using `_main.set("property", value)` or similar cross-object state updates, always guard with null checks on the target object. Objects may not be fully initialized when called via deferred calls or signal connections.
+- Pattern: if an object `_main` is set via `setup(main)`, add `if _main == null: push_error(...); return` at the start of any public method that accesses it.
+- **Deferred calls (`call_deferred`) execute after the current call stack returns** — ensure all initialization is complete before deferred functions can reference uninitialized state.
+
 ### Quality & Verification
 
 - In early-stage projects, keep only minimum necessary quality standards: runnable, verifiable, rollbackable.

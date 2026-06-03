@@ -10,7 +10,13 @@
       "Skill(telegram:configure)",
       "Bash(chmod 600 ~/.claude/channels/telegram/.env)",
       "Bash(mkdir -p ~/.claude/channels/telegram)",
-      "Read(//c/Users/User/.claude/channels/telegram/**)"
+      "Read(//c/Users/User/.claude/channels/telegram/**)",
+      "WebFetch(domain:lobehub.com)",
+      "WebSearch",
+      "Skill(update-config)",
+      "Bash(npx skills *)",
+      "Bash(where mmx *)",
+      "Bash(mmx image *)"
     ]
   }
 }

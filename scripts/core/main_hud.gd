@@ -21,13 +21,12 @@ func build_hud(owner: Node2D) -> void:
 # ── Cart UI (top-left) ─────────────────────────────────────────────────────────
 
 func _get_font_scale() -> float:
-	# Scale fonts based on viewport height for responsiveness
 	var base_height := 720.0
-	return get_viewport_rect().size.y / base_height
+	return get_viewport().get_visible_rect().size.y / base_height
 
 func _build_cart_ui(owner: Node2D) -> void:
 	var font_scale := _get_font_scale()
-	
+
 	var cart_bg := ColorRect.new()
 	cart_bg.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	cart_bg.offset_left = 4
@@ -70,10 +69,10 @@ func _build_cart_ui(owner: Node2D) -> void:
 
 func _build_zone_prompt(owner: Node2D) -> void:
 	var font_scale := _get_font_scale()
-	
+
 	var prompt_bg := ColorRect.new()
 	prompt_bg.name = "PromptBg"
-	prompt_bg.set_anchors_preset(Control.PRESET_BOTTOM_CENTER)
+	prompt_bg.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	prompt_bg.offset_left = -60
 	prompt_bg.offset_top = -18
 	prompt_bg.offset_right = 60
@@ -85,7 +84,7 @@ func _build_zone_prompt(owner: Node2D) -> void:
 	var prompt_lbl := Label.new()
 	prompt_lbl.name = "PromptLbl"
 	prompt_lbl.text = "[E] Browse"
-	prompt_lbl.set_anchors_preset(Control.PRESET_BOTTOM_CENTER)
+	prompt_lbl.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	prompt_lbl.offset_left = -40
 	prompt_lbl.offset_top = -14
 	prompt_lbl.add_theme_color_override("font_color", Color(0.88, 0.78, 0.42))
@@ -97,10 +96,12 @@ func _build_zone_prompt(owner: Node2D) -> void:
 
 func _build_checkout_label(owner: Node2D) -> void:
 	var font_scale := _get_font_scale()
-	
+
 	_checkout_counter_label = Label.new()
 	_checkout_counter_label.text = ""
-	_checkout_counter_label.set_anchors_preset(Control.PRESET_BOTTOM_CENTER)
+	_checkout_counter_label.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	_checkout_counter_label.offset_left = -100
+	_checkout_counter_label.offset_right = 100
 	_checkout_counter_label.offset_top = -34
 	_checkout_counter_label.add_theme_color_override("font_color", Color(0.88, 0.88, 0.72))
 	_checkout_counter_label.add_theme_font_size_override("font_size", int(9 * font_scale))
@@ -111,7 +112,7 @@ func _build_checkout_label(owner: Node2D) -> void:
 
 func _build_checkout_receipt_panel(owner: Node2D) -> void:
 	var font_scale := _get_font_scale()
-	
+
 	# Receipt panel - positioned center-left area
 	var panel := ColorRect.new()
 	panel.name = "CheckoutReceipt"

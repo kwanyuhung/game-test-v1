@@ -12,15 +12,26 @@ const FloorConfig = preload("res://scripts/world/floor_config.gd")
 func build_from_zones(zones: Array, tileset: TileSet) -> TileMap:
 	var tilemap: TileMap = TileMap.new()
 	tilemap.tile_set = tileset
-	tilemap.cell_size = Vector2i(CELL_SIZE, CELL_SIZE)  # Ensure correct cell size
-	print("[TileMapBuilder] Cell size: ", tilemap.cell_size)
 	print("[TileMapBuilder] TileSet tile_size: ", tileset.tile_size if tileset else "null")
 	print("[TileMapBuilder] Building TileMap with ", zones.size(), " zones")
+
+	# Ensure TileMap has enough layers for all zones (max layer = 2 for decor)
+	_expand_layers_if_needed(tilemap, 3)
+
 	for zone in zones:
 		_apply_zone(tilemap, zone)
 	var tile_count = tilemap.get_used_cells(0).size()
 	print("[TileMapBuilder] TileMap built, layer 0 tiles: ", tile_count)
 	return tilemap
+
+func _expand_layers_if_needed(tilemap: TileMap, min_layers: int) -> void:
+	# Godot 4: TileMap layers must be set via TileSet or use add_layer()
+	# Since TileSet controls layers, we add extra layers via the TileMap's layer system
+	# In Godot 4 a TileMap's layers are fixed by the TileSet; we ensure the TileSet
+	# has enough layers by checking and warning
+	if tilemap.get_layers_count() < min_layers:
+		for _i in range(tilemap.get_layers_count(), min_layers):
+			tilemap.add_layer(_i)
 
 func _apply_zone(tilemap: TileMap, zone: Dictionary) -> void:
 	var zone_type: String = zone.get("type", "")

@@ -1,19 +1,20 @@
 # proximity_system.gd
+# Phase 7 rewrite: Uses GameState for shared state when available.
+# Falls back to _main.set() for backwards compatibility.
 class_name ProximitySystem
-# All zone-proximity checks consolidated.
-# Called each frame by main.gd's _process().
 extends Node
 
 const FloorConfig = preload("res://scripts/world/floor_config.gd")
 
 var _main: Node2D = null
+var _game_state: GameState = null
 var _floor_builder = null
 var _player = null
 var _checkout_counters: Array = []
 var _npcs: Array = []
 var _chat_panel = null
 
-# Nearby flags (shared with main via main.set())
+# Nearby flags (shared with main via main.set() AND with GameState when available)
 var nearby_elevator: bool = false
 var nearby_stairs: bool = false
 var nearby_section: Node = null
@@ -53,6 +54,16 @@ var _prev_nearby_npc: Node = null
 
 # All nearby interactions for numbered bubble display
 var _all_nearby_interactions: Array = []
+
+# ── Phase 7: Write proximity to GameState when available ──────────────
+func _write_nearby(key: String, value) -> void:
+	_main.set(key, value)  # backwards compat
+	if _game_state != null:
+		_game_state.set(key, value)
+
+func setup_with_game_state(main: Node2D, game_state: GameState) -> void:
+	_game_state = game_state
+	setup(main)
 
 func setup(main: Node2D) -> void:
 	_main = main
@@ -544,8 +555,8 @@ func _update_interaction_hint() -> void:
 		if prompt_bg != null:
 			prompt_bg.visible = false
 	
-	# Sync to main.gd
-	_main.set("_nearby_elevator", nearby_elevator)
+	# Sync to main.gd / GameState
+	_write_nearby("_nearby_elevator", nearby_elevator)
 
 func _update_stall_proximity() -> void:
 	nearby_stall = null
@@ -564,7 +575,7 @@ func _update_stall_proximity() -> void:
 			nearest_dist = dist
 			nearby_stall = stall
 
-	_main.set("_nearby_stall", nearby_stall)
+	_write_nearby("_nearby_stall", nearby_stall)
 
 func _update_claw_machine_proximity() -> void:
 	nearby_claw_machine = null
@@ -583,7 +594,7 @@ func _update_claw_machine_proximity() -> void:
 			nearest_dist = dist
 			nearby_claw_machine = machine
 
-	_main.set("_nearby_claw_machine", nearby_claw_machine)
+	_write_nearby("_nearby_claw_machine", nearby_claw_machine)
 
 func _update_npc_chat_proximity() -> void:
 	nearby_npc_for_chat = null
@@ -613,8 +624,12 @@ func _update_issue_proximity() -> void:
 	var issue = _maintenance_system.get_issue_at_pos(_player.position, _CELL_SIZE * 7.0)
 	nearby_issue = (issue != null)
 
-	_main.set_nearby_issue(nearby_issue)
-	_main.set("_target_issue", _target_issue)
+	if _game_state != null:
+		_game_state.nearby_issue = nearby_issue
+		_game_state.target_issue = _target_issue
+	else:
+		_main.set_nearby_issue(nearby_issue)
+		_main.set("_target_issue", _target_issue)
 
 func _update_atm_proximity() -> void:
 	nearby_atm = false
@@ -626,7 +641,7 @@ func _update_atm_proximity() -> void:
 				nearby_atm = true
 				break
 
-	_main.set("_nearby_atm", nearby_atm)
+	_write_nearby("_nearby_atm", nearby_atm)
 
 func _update_warehouse_proximity() -> void:
 	nearby_warehouse = false
@@ -637,7 +652,7 @@ func _update_warehouse_proximity() -> void:
 	if _player.position.distance_to(wh_pos) < _CELL_SIZE * 12.0:
 		nearby_warehouse = true
 
-	_main.set("_nearby_warehouse", nearby_warehouse)
+	_write_nearby("_nearby_warehouse", nearby_warehouse)
 
 func _update_parking_proximity() -> void:
 	nearby_parking = false
@@ -654,7 +669,7 @@ func _update_parking_proximity() -> void:
 		if parking_lot.is_player_near(_player.position):
 			nearby_parking = true
 
-	_main.set("_nearby_parking", nearby_parking)
+	_write_nearby("_nearby_parking", nearby_parking)
 
 func _update_stairs_proximity() -> void:
 	nearby_stairs = false
@@ -669,7 +684,7 @@ func _update_stairs_proximity() -> void:
 	var result: Dictionary = _stairs_system.check_stairs_proximity(_player.position, _current_floor_idx)
 	nearby_stairs = result.get("in_zone", false)
 	
-	_main.set("_nearby_stairs", nearby_stairs)
+	_write_nearby("_nearby_stairs", nearby_stairs)
 
 func _update_monitor_proximity() -> void:
 	nearby_monitor = false
@@ -682,7 +697,7 @@ func _update_monitor_proximity() -> void:
 	if _player.position.distance_to(wh_pos) < _CELL_SIZE * 8.0:
 		nearby_monitor = true
 
-	_main.set("_nearby_monitor", nearby_monitor)
+	_write_nearby("_nearby_monitor", nearby_monitor)
 
 func _update_terminal_proximity() -> void:
 	nearby_terminal = false
@@ -698,7 +713,7 @@ func _update_terminal_proximity() -> void:
 	if ppos.distance_to(terminal_center) < _CELL_SIZE * 12.0:
 		nearby_terminal = true
 
-	_main.set("_nearby_terminal", nearby_terminal)
+	_write_nearby("_nearby_terminal", nearby_terminal)
 
 func _update_checkout_proximity() -> void:
 	nearby_checkout = null
@@ -713,7 +728,7 @@ func _update_checkout_proximity() -> void:
 			nearest_dist = dist
 			nearby_checkout = counter
 
-	_main.set("_nearby_checkout", nearby_checkout)
+	_write_nearby("_nearby_checkout", nearby_checkout)
 
 func _update_phase3_proximity() -> void:
 	nearby_loyalty = false
@@ -765,19 +780,19 @@ func _update_phase3_proximity() -> void:
 	if _floor_builder.is_near_zone_type(2, ppos) and _current_floor_idx == 0:  # ZONE_WAREHOUSE
 		nearby_warehouse_dock = true
 
-	_main.set("_nearby_loyalty", nearby_loyalty)
-	_main.set("_nearby_gift_wrap", nearby_gift_wrap)
-	_main.set("_nearby_digital_kiosk", nearby_digital_kiosk)
-	_main.set("_nearby_info_desk", nearby_info_desk)
-	_main.set("_nearby_cafe", nearby_cafe)
-	_main.set("_nearby_vending", nearby_vending)
-	_main.set("_nearby_warehouse_dock", nearby_warehouse_dock)
-	_main.set("_nearby_karaoke", nearby_karaoke)
-	_main.set("_nearby_pool_table", nearby_pool_table)
-	_main.set("_nearby_darts_board", nearby_darts_board)
-	_main.set("_nearby_promo_booth", nearby_promo_booth)
-	_main.set("_nearby_lost_found", nearby_lost_found)
-	_main.set("_nearby_store_news", nearby_store_news)
+	_write_nearby("_nearby_loyalty", nearby_loyalty)
+	_write_nearby("_nearby_gift_wrap", nearby_gift_wrap)
+	_write_nearby("_nearby_digital_kiosk", nearby_digital_kiosk)
+	_write_nearby("_nearby_info_desk", nearby_info_desk)
+	_write_nearby("_nearby_cafe", nearby_cafe)
+	_write_nearby("_nearby_vending", nearby_vending)
+	_write_nearby("_nearby_warehouse_dock", nearby_warehouse_dock)
+	_write_nearby("_nearby_karaoke", nearby_karaoke)
+	_write_nearby("_nearby_pool_table", nearby_pool_table)
+	_write_nearby("_nearby_darts_board", nearby_darts_board)
+	_write_nearby("_nearby_promo_booth", nearby_promo_booth)
+	_write_nearby("_nearby_lost_found", nearby_lost_found)
+	_write_nearby("_nearby_store_news", nearby_store_news)
 
 # ── Accessors for main.gd to read current nearby flags ───────────────────────
 func get_nearby_section(): return nearby_section

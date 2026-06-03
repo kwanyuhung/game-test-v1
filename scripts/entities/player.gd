@@ -8,7 +8,7 @@ const CELL_SIZE := 16
 var _min_x := 0.0
 var _max_x := 2048.0
 var _min_y := 0.0
-var _max_y := 160.0
+var _max_y := 8192.0  # Large default, will be updated by set_floor_bounds
 
 var _cart: ShoppingCart
 var _cart_sprite: Sprite2D
@@ -29,6 +29,10 @@ var _top_border: ColorRect = null
 var _bottom_border: ColorRect = null
 var _left_border: ColorRect = null
 var _right_border: ColorRect = null
+
+# Debug: check point markers (4 corners of collision box)
+var _check_points: Array = []
+var _check_point_labels: Array = []
 
 signal cart_updated(count: int)
 signal zone_changed(zone_name: String)
@@ -64,41 +68,59 @@ func _build_sprite() -> void:
 	col.position = Vector2.ZERO
 	add_child(col)
 
+	# Debug: visible collision box (RED = collision area)
 	_bounding_box = ColorRect.new()
-	_bounding_box.size = Vector2(16, 16)
-	_bounding_box.position = Vector2(-8, -8)
-	_bounding_box.color = Color(0.0, 1.0, 0.5, 0.15)
+	_bounding_box.size = Vector2(12, 12)  # Match collision shape
+	_bounding_box.position = Vector2(-6, -6)
+	_bounding_box.color = Color(1.0, 0.0, 0.0, 0.3)  # Red, semi-transparent
 	_bounding_box.z_index = 100
 	add_child(_bounding_box)
 
-	var border_color := Color(0.0, 1.0, 0.5, 0.8)
+	# Red border around collision box
+	var border_color := Color(1.0, 0.0, 0.0, 0.9)
 	_top_border = ColorRect.new()
-	_top_border.size = Vector2(16, 1)
-	_top_border.position = Vector2(-8, -8)
+	_top_border.size = Vector2(12, 2)
+	_top_border.position = Vector2(-6, -6)
 	_top_border.color = border_color
 	_top_border.z_index = 101
 	add_child(_top_border)
 
 	_bottom_border = ColorRect.new()
-	_bottom_border.size = Vector2(16, 1)
-	_bottom_border.position = Vector2(-8, 7)
+	_bottom_border.size = Vector2(12, 2)
+	_bottom_border.position = Vector2(-6, 6)
 	_bottom_border.color = border_color
 	_bottom_border.z_index = 101
 	add_child(_bottom_border)
 
 	_left_border = ColorRect.new()
-	_left_border.size = Vector2(1, 16)
-	_left_border.position = Vector2(-8, -8)
+	_left_border.size = Vector2(2, 12)
+	_left_border.position = Vector2(-6, -6)
 	_left_border.color = border_color
 	_left_border.z_index = 101
 	add_child(_left_border)
 
 	_right_border = ColorRect.new()
-	_right_border.size = Vector2(1, 16)
-	_right_border.position = Vector2(7, -8)
+	_right_border.size = Vector2(2, 12)
+	_right_border.position = Vector2(6, -6)
 	_right_border.color = border_color
 	_right_border.z_index = 101
 	add_child(_right_border)
+
+	# Create 4 check point markers (dots at corners of collision box)
+	var check_offsets := [
+		Vector2(-6, -6),  # top-left
+		Vector2(6, -6),   # top-right
+		Vector2(-6, 6),   # bottom-left
+		Vector2(6, 6),    # bottom-right
+	]
+	for offset in check_offsets:
+		var dot := ColorRect.new()
+		dot.size = Vector2(4, 4)
+		dot.position = offset - Vector2(2, 2)
+		dot.color = Color(1.0, 0.5, 0.0, 0.8)  # Orange dots
+		dot.z_index = 102
+		add_child(dot)
+		_check_points.append(dot)
 
 func _build_cart_sprite() -> void:
 	_cart_sprite = Sprite2D.new()
@@ -269,9 +291,32 @@ func _physics_process(delta: float) -> void:
 	if input_dir.length() > 0.0:
 		input_dir = input_dir.normalized()
 		var new_pos = position + input_dir * SPEED * delta
-		new_pos.x = clampf(new_pos.x, _min_x, _max_x)
-		new_pos.y = clampf(new_pos.y, _min_y, _max_y)
-		position = new_pos
+
+		# Check if new position is in a blocked zone
+		var can_move := true
+		var floor_idx: int = 0
+		if _world_ref != null and _world_ref.has_method("is_position_blocked"):
+			if _world_ref.has_method("get_current_floor_idx"):
+				floor_idx = _world_ref.get_current_floor_idx()
+			# Check only center point first
+			if _world_ref.is_position_blocked(floor_idx, new_pos.x, new_pos.y):
+				can_move = false
+				# Print world pos AND tile pos for easier debugging
+				var tile_x := int(new_pos.x / CELL_SIZE)
+				var tile_y := int(new_pos.y / CELL_SIZE)
+				print("[Player] BLOCKED at world(%.0f, %.0f) tile(%d, %d) floor=%d" % [new_pos.x, new_pos.y, tile_x, tile_y, floor_idx])
+
+		if can_move:
+			position = new_pos
+		else:
+			var from_tile_x := int(position.x / CELL_SIZE)
+			var from_tile_y := int(position.y / CELL_SIZE)
+			var to_tile_x := int(new_pos.x / CELL_SIZE)
+			var to_tile_y := int(new_pos.y / CELL_SIZE)
+			print("[Player] Move blocked from tile(%d, %d) to tile(%d, %d)" % [from_tile_x, from_tile_y, to_tile_x, to_tile_y])
+	elif position != Vector2.ZERO:
+		# Show player position when not moving
+		pass  # Could add periodic debug here
 
 		_cart_sprite.position = _cart_sprite.position.lerp(_cart_offset, 0.15)
 
@@ -317,15 +362,33 @@ func set_floor_bounds(floor_idx: int) -> void:
 	var FLOOR_Y_OFFSET = 10 * CELL  # 160 pixels per floor (vertical spacing between floors)
 	var FLOOR_0_BASE_Y = 32 * CELL  # 512 pixels for floor 0 base
 	var WORLD_W = 128 * CELL  # 2048 pixels
-	# Full floor height is 40 tiles (from floor_config_data.json zones), not the spacing constant
-	var FLOOR_ZONE_H = 40 * CELL  # 640 pixels — actual zone height per floor
 
 	var floor_y = FLOOR_0_BASE_Y - (floor_idx * FLOOR_Y_OFFSET)
+
+	# Get actual zone bounds from floor config
+	var zone_bounds: Dictionary = _get_floor_zone_bounds(floor_idx)
+	var zone_min_y: float = zone_bounds.min_y * CELL  # tile to pixel
+	var zone_max_y: float = zone_bounds.max_y * CELL  # tile to pixel
+
 	_min_x = CELL * 2.0
 	_max_x = WORLD_W - CELL * 2.0
-	# Allow movement across the full floor zone height (512 to 1152 world pixels for floor 0)
-	_min_y = floor_y + CELL * 2.0
-	_max_y = floor_y + FLOOR_ZONE_H - CELL * 2.0
+	# Use actual zone height for movement bounds
+	_min_y = floor_y + zone_min_y + CELL * 2.0
+	_max_y = floor_y + zone_max_y - CELL * 2.0
+
+func _get_floor_zone_bounds(floor_idx: int) -> Dictionary:
+	var FloorConfig = preload("res://scripts/world/floor_config.gd")
+	var fd = FloorConfig.get_floor(floor_idx)
+	if fd == null:
+		return {"min_y": 2, "max_y": 42}
+	var min_y = 800
+	var max_y = 0
+	for zone in fd.zones:
+		if zone.y < min_y:
+			min_y = zone.y
+		if zone.y + zone.h > max_y:
+			max_y = zone.y + zone.h
+	return {"min_y": min_y, "max_y": max_y}
 
 func get_nearby_section():
 	return _nearby_section

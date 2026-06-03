@@ -146,6 +146,9 @@ signal floor_activated(floor_idx: int)
 signal floor_deactivated(floor_idx: int)
 
 func setup(main: Node2D) -> void:
+	if main == null:
+		push_error("[FloorManager] setup called with null main")
+		return
 	_main = main
 	_player = main.get("_player")
 	_current_floor_idx = main.get("_current_floor_idx")
@@ -200,6 +203,9 @@ func _is_spawning_allowed_for_floor(floor_idx: int) -> bool:
 	return floor_idx in allowed_floors
 
 func on_floor_changed(new_floor_idx: int) -> void:
+	if _main == null:
+		push_error("[FloorManager] on_floor_changed called before setup")
+		return
 	if new_floor_idx == _current_floor_idx:
 		return
 
@@ -213,10 +219,18 @@ func on_floor_changed(new_floor_idx: int) -> void:
 	_show_floor(new_floor_idx)
 
 func _show_floor(floor_idx: int) -> void:
+	if _main == null:
+		push_error("[FloorManager] _show_floor called before setup")
+		return
 	var container: Node2D = _floor_containers.get(floor_idx)
 	if container == null:
 		push_error("[FloorManager] No container for floor %d" % floor_idx)
 		return
+
+	# Build on-demand if not yet built (player navigated here before deferred build ran)
+	if not _built_floors.has(floor_idx):
+		_build_floor_in_container(floor_idx, container)
+		_built_floors[floor_idx] = true
 
 	# Activate container
 	container.visible = true
@@ -277,22 +291,37 @@ func _hide_floor(floor_idx: int) -> void:
 	print("[FloorManager] Hiding floor %d" % floor_idx)
 
 func preload_all_floors() -> void:
+	# Build floor 0 immediately so it displays right away
+	_build_floor_urgent(0)
+
+	# Build remaining floors in background via deferred calls
 	var floor_count := FloorConfig.floor_count()
+	for i in range(1, floor_count):
+		var idx := i  # capture for closure
+		call_deferred("_build_floor_deferred", idx)
 
-	for i in range(floor_count):
-		var container: Node2D = _floor_containers[i]
-		if container == null:
-			continue
+	print("[FloorManager] Started building floors (floor 0 immediate, others deferred)" % floor_count)
 
-		container.position = Vector2(0, get_floor_y(i))
+func _build_floor_urgent(floor_idx: int) -> void:
+	var container: Node2D = _floor_containers.get(floor_idx)
+	if container == null:
+		return
+	container.position = Vector2(0, get_floor_y(floor_idx))
+	if not _built_floors.has(floor_idx):
+		_build_floor_in_container(floor_idx, container)
+		_built_floors[floor_idx] = true
+	container.set_floor_active(false)
 
-		if not _built_floors.has(i):
-			_build_floor_in_container(i, container)
-			_built_floors[i] = true
-
+func _build_floor_deferred(floor_idx: int) -> void:
+	var container: Node2D = _floor_containers.get(floor_idx)
+	if container == null:
+		return
+	container.position = Vector2(0, get_floor_y(floor_idx))
+	if not _built_floors.has(floor_idx):
+		_build_floor_in_container(floor_idx, container)
+		_built_floors[floor_idx] = true
 		container.set_floor_active(false)
-
-	print("[FloorManager] Pre-built %d floors" % floor_count)
+		print("[FloorManager] Built floor %d" % floor_idx)
 
 func _build_floor_in_container(floor_idx: int, container: Node2D) -> void:
 	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(floor_idx)
@@ -539,6 +568,9 @@ func get_current_floor_index() -> int:
 	return _current_floor_idx
 
 func on_travel_completed(to_floor: int) -> void:
+	if _main == null:
+		push_error("[FloorManager] on_travel_completed called before setup")
+		return
 	on_floor_changed(to_floor)
 
 # Get sections for current floor (for proximity system)

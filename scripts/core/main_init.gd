@@ -13,9 +13,43 @@ func init_all() -> void:
 	var m = _main
 	m.add_to_group("main")
 
+	# ── PHASE 7: GameState + Managers ──────────────────────────────────────────
+	# GameState FIRST — single source of truth for shared mutable state
+	var game_state = preload("res://scripts/core/main_manager/game_state.gd").new()
+	game_state.name = "GameState"
+	m.add_child(game_state)
+	m.set("_game_state", game_state)
+
+	# Pre-create all 5 managers (setup called AFTER all systems exist)
+	var world_manager = preload("res://scripts/core/main_manager/world_manager.gd").new()
+	world_manager.name = "WorldManager"
+	m.add_child(world_manager)
+	m.set("_world_manager", world_manager)
+
+	var character_manager = preload("res://scripts/core/main_manager/character_manager.gd").new()
+	character_manager.name = "CharacterManager"
+	m.add_child(character_manager)
+	m.set("_character_manager", character_manager)
+
+	var system_manager = preload("res://scripts/core/main_manager/system_manager.gd").new()
+	system_manager.name = "SystemManager"
+	m.add_child(system_manager)
+	m.set("_system_manager", system_manager)
+
+	var ui_manager = preload("res://scripts/core/main_manager/ui_manager.gd").new()
+	ui_manager.name = "UIManager"
+	m.add_child(ui_manager)
+	m.set("_ui_manager", ui_manager)
+
+	var command_manager = preload("res://scripts/core/main_manager/command_manager.gd").new()
+	command_manager.name = "CommandManager"
+	m.add_child(command_manager)
+	m.set("_command_manager", command_manager)
+
+	# ── Continue with existing system creation ─────────────────────────────────
 	var config = preload("res://scripts/core/main_config.gd").new()
 	m.add_child(config)
-	
+
 	# ── Core world builder ──────────────────────────────────────────────────────
 	m.set("_main_panels", preload("res://scripts/core/main_panels.gd").new())
 	m.get("_main_panels").setup(m)
@@ -299,6 +333,7 @@ func init_all() -> void:
 		dev_tools.position = Vector2(100.0, 100.0)
 		dev_tools.z_index = 1000
 		m.add_child(dev_tools)
+		m.set("_dev_tools", dev_tools)
 		PanelManager.register("dev_tools", dev_tools, PanelManager.Policy.ALONE)
 
 	# ── Debug Sprite Viewer ──────────────────────────────────────────────────
@@ -314,3 +349,15 @@ func init_all() -> void:
 	m.add_child(shelf_panel)
 	m.set("_shelf_panel", shelf_panel)
 	PanelManager.register("shelf", shelf_panel, PanelManager.Policy.ALONE)
+
+	# ── PHASE 7: Manager setup (AFTER all systems exist) ───────────────────────
+	# Get game_state that was created at the top
+	var gs: GameState = m.get("_game_state")
+	world_manager.setup(m, gs)
+	character_manager.setup(m, gs)
+	system_manager.setup(m, gs)
+	ui_manager.setup(m, gs)
+	command_manager.setup(m, gs)
+
+	# Wire WorldManager to SystemManager (for checkout signal routing)
+	world_manager.set_system_manager(system_manager)

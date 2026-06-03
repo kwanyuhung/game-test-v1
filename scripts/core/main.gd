@@ -1,5 +1,5 @@
-﻿# main.gd
-# 10-floor supermarket ??data-driven world builder.
+# main.gd
+# 10-floor supermarket data-driven world builder.
 # Uses floor_config.gd for all floor/zone data.
 # Uses floor_builder.gd for rendering.
 extends Node2D
@@ -332,6 +332,7 @@ func _ready() -> void:
 	_main_init.setup(self)
 	_main_init.init_all()
 	# Note: _build_floor(0) is already called inside init_all()
+	_setup_camera()  # Initialize camera after systems are ready
 func _build_floor(idx: int) -> void:
 	# If FloorManager is active, delegate to it - don't build directly into main
 	if _floor_manager != null:
@@ -482,7 +483,7 @@ func get_floor_info() -> Dictionary:
 	}
 	return info
 
-# ?????? Ambient Color ????????????????????????????????????????????????????????????????????????????????????????????
+#  Ambient Color 
 
 func set_ambient_floor(idx: int) -> void:
 	_current_floor_idx = idx
@@ -495,8 +496,6 @@ func _apply_ambient_shift() -> void:
 	if _world_bg != null:
 		_world_bg.color = _floor_ambient.darkened(0.6)
 
-# ???????????????????????????????????????????????????????????????????????????????????????????????# ELEVATOR & STAIRS
-# ???????????????????????????????????????????????????????????????????????????????????????????????
 func _build_elevator() -> void:
 	if _main_panels != null:
 		_main_panels.build_elevator()
@@ -507,7 +506,7 @@ func _build_parking() -> void:
 	if _main_panels != null:
 		_main_panels.build_parking()
 
-# ?????? Player boards elevator ????????????????????????????????????????????????????????????????????????
+#  Player boards elevator
 
 func player_board_elevator(_player, _floor_idx: int) -> void:
 	_in_elevator = true
@@ -516,7 +515,7 @@ func player_board_elevator(_player, _floor_idx: int) -> void:
 	_player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, car_y + 5 * CELL_SIZE)
 
 
-# ?????? Floor reached after travel ??????????????????????????????????????????????????????????????
+#  Floor reached after travel 
 
 func _on_elevator_floor_reached(floor_idx: int) -> void:
 	_current_floor_idx = floor_idx
@@ -604,34 +603,25 @@ func _rebuild_floor_with_manager(idx: int) -> void:
 	_apply_ambient_shift()
 	_update_floor_hud()
 
-# ???????????????????????????????????????????????????????????????????????????????????????????????# CAMERA & HUD
-# ???????????????????????????????????????????????????????????????????????????????????????????????
 var _camera: Camera2D = null
 
-const CAMERA_ZOOM := 0.3
-const CAMERA_SMOOTH_SPEED := 8.0
-const CAMERA_LAG := Vector2(0, 0)
-
-const FLOOR_H := 10 * CELL_SIZE
-const FLOOR_Y_OFFSET := 10 * CELL_SIZE
+const CAMERA_ZOOM := 0.5
 
 func _setup_camera() -> void:
 	_camera = Camera2D.new()
 	_camera.zoom = Vector2(CAMERA_ZOOM, CAMERA_ZOOM)
-	_camera.drag_enabled = false
-	_camera.position_smoothing_enabled = true
-	_camera.position_smoothing_speed = CAMERA_SMOOTH_SPEED
 	add_child(_camera)
 	_camera.make_current()
 	update_camera_limits(_current_floor_idx)
 
 func update_camera_limits(floor_idx: int) -> void:
-	var zone_bounds = _get_floor_zone_bounds(floor_idx)
-	var container_y = FloorManagerScript.get_floor_y(floor_idx)
-	# Zone coordinates are relative to container, so convert to world coordinates
+	if _camera == null:
+		return
+	var container_y: float = FloorManagerScript.get_floor_y(floor_idx)
+	var zone_bounds: Dictionary = _get_floor_zone_bounds(floor_idx)
 	_camera.limit_left = 0
 	_camera.limit_top = int(container_y + zone_bounds.min_y * CELL_SIZE)
-	_camera.limit_right = WORLD_W * CELL_SIZE
+	_camera.limit_right = int(WORLD_W * CELL_SIZE)
 	_camera.limit_bottom = int(container_y + zone_bounds.max_y * CELL_SIZE)
 
 func _get_floor_zone_bounds(floor_idx: int) -> Dictionary:
@@ -646,6 +636,38 @@ func _get_floor_zone_bounds(floor_idx: int) -> Dictionary:
 		if zone.y + zone.h > max_y:
 			max_y = zone.y + zone.h
 	return {"min_y": min_y, "max_y": max_y, "height": max_y - min_y + 4}
+
+# Check if a world position is in a blocked zone (outside walkable area)
+func is_position_blocked(floor_idx: int, world_x: float, world_y: float) -> bool:
+	var fd = FloorConfigScript.get_floor(floor_idx)
+	if fd == null:
+		return false
+
+	# Zones are relative to floor container, so subtract container offset
+	var container_y := FloorManagerScript.get_floor_y(floor_idx)
+	var local_x := world_x
+	var local_y := world_y - container_y
+
+	var tile_x := int(local_x / CELL_SIZE)
+	var tile_y := int(local_y / CELL_SIZE)
+
+	# Check if player is inside ANY zone at all
+	# If no zone covers this position, it's "black void" and should be blocked
+	var inside_any_zone := false
+	for zone in fd.zones:
+		var zx: int = zone.get("x", 0)
+		var zy: int = zone.get("y", 0)
+		var zw: int = zone.get("w", 1)
+		var zh: int = zone.get("h", 1)
+		if tile_x >= zx and tile_x < zx + zw and tile_y >= zy and tile_y < zy + zh:
+			inside_any_zone = true
+			break
+
+	# Block if NOT inside any zone (this is the "black void")
+	return not inside_any_zone
+
+func get_current_floor_idx() -> int:
+	return _current_floor_idx
 
 func _build_hud() -> void:
 	pass  # HUD built by main_hud.gd in _ready()
@@ -663,8 +685,6 @@ func _update_floor_hud() -> void:
 	if _main_panels != null:
 		_main_panels.update_floor_hud()
 
-# ???????????????????????????????????????????????????????????????????????????????????????????????# PLAYER & NPCS
-# ???????????????????????????????????????????????????????????????????????????????????????????????
 func _spawn_player() -> void:
 	_main_spawner.spawn_player()
 
@@ -826,10 +846,9 @@ func _input(event: InputEvent) -> void:
 				_toggle_shelf_panel()
 
 func _process(_delta: float) -> void:
-	# Camera smoothly follows player via position_smoothing_enabled (set in _setup_camera)
-	# Just ensure camera target is at player position when not in elevator
+	# Center camera on player when not in elevator
 	if _camera != null and _player != null and not _in_elevator:
-		_camera.global_position = _player.global_position
+		_camera.position = _player.position
 
 	if _current_section_browse != null and _current_section_browse.visible:
 		return
@@ -837,13 +856,11 @@ func _process(_delta: float) -> void:
 		return
 	if _in_elevator:
 		return
-	_proximity_system.update_all()
 
-	# Self-checkout error dismiss on E key
-	if Input.is_action_just_pressed("interact") and _nearby_checkout != null:
-		if _nearby_checkout.is_self_checkout():
-			_nearby_checkout.dismiss_error()
-		_checkout_system.retry_checkout(_nearby_checkout)
+	# Delegate proximity updates to SystemManager
+	var sm = get("_system_manager")
+	if sm != null and sm.has_method("_process"):
+		sm._process(_delta)
 
 func _on_warehouse_delivery_arrived(_contents: Dictionary) -> void:
 	# Spawn truck at dock on Floor G
@@ -1248,54 +1265,10 @@ func _on_section_exited(section_id: String) -> void:
 
 # ── Player E-key interact ───────────────────────────────────────
 func _on_player_interact() -> void:
-	# Priority: UI panels > checkout > elevator > section > ATM > stall > claw
-	if _current_section_browse != null and _current_section_browse.visible:
-		return
-	if _checkout_receipt_visible:
-		return
-	if _in_elevator:
-		return
-	if _pause_menu != null and _pause_menu.visible:
-		return
-
-	# Checkout
-	if _nearby_checkout != null:
-		# Dismiss self-checkout error on E, then retry
-		if _nearby_checkout.has_error():
-			_nearby_checkout.dismiss_error()
-		_checkout_system.do_checkout(_nearby_checkout)
-		return
-
-	# Elevator (check first - most important for navigation)
-	if _nearby_elevator and _elevator != null:
-		_elevator.open_panel(_player.position, _player)
-		return
-
-	# Section browse
-	if _nearby_section != null:
-		_open_section_browse(_nearby_section)
-		return
-
-	# ATM
-	if _nearby_atm:
-		_open_atm_panel()
-		return
-
-	# Price terminal (staff mode)
-	if _nearby_terminal and _player != null and _player.is_in_staff_mode():
-		_open_price_terminal()
-		return
-
-	# Food stall (already emits interact_requested on body enter,
-	# but handle E as fallback)
-	if _nearby_stall != null:
-		_open_stall_browse(_nearby_stall)
-		return
-
-	# Claw machine
-	if _nearby_claw_machine != null:
-		_nearby_claw_machine.start_game()
-		return
+	# Delegate to SystemManager (reads proximity from GameState)
+	var sm = get("_system_manager")
+	if sm != null and sm.has_method("on_player_interact"):
+		sm.on_player_interact()
 
 	# Warehouse Receiving Dock (Floor G) — truck unloading
 	if _nearby_warehouse_dock:
