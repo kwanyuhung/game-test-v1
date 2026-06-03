@@ -56,6 +56,7 @@ func spawn_npc_staff(role: int, floor_idx: int, pos: Vector2) -> void:
 	if chat_mgr != null:
 		chat_mgr.register_npc(npc)
 	_npc_count += 1
+	print("    [Spawn] %s -> role=%d floor=%d world=(%.0f,%.0f) total_npcs=%d" % [npc.name, role, floor_idx, pos.x, pos.y, _npc_count])
 
 # ── Single customer ───────────────────────────────────────────────────────────
 func spawn_customer(group_type: int, floor_idx: int, pos: Vector2) -> void:
@@ -76,6 +77,7 @@ func spawn_customer(group_type: int, floor_idx: int, pos: Vector2) -> void:
 	if chat_mgr != null:
 		chat_mgr.register_npc(npc)
 	_npc_count += 1
+	print("    [Spawn] %s -> group=%d floor=%d world=(%.0f,%.0f) total_npcs=%d" % [npc.name, group_type, floor_idx, pos.x, pos.y, _npc_count])
 
 # ── Customer group ─────────────────────────────────────────────────────────────
 func spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void:
@@ -148,6 +150,48 @@ func spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void
 			# 🔥 直接使用（无需判断，属性已存在）
 			leader_actor.group_members.append(npc)
 		_npc_count += 1
+
+# ── Random customer spawn across floor's available zones ─────────────────────
+func spawn_random_customers_in_available_area(floor_idx: int, count: int) -> void:
+	if _main == null: return
+	var FloorConfig = preload("res://scripts/world/floor_config.gd")
+	var fd = FloorConfig.get_floor(floor_idx)
+	if fd == null or fd.zones.is_empty():
+		return
+
+	var floor_y: float = _get_floor_world_y(floor_idx)
+	var player: Node2D = _main.get("_player")
+	var player_pos: Vector2 = player.position if player != null else Vector2(-99999, -99999)
+	var min_dist_sq: float = (3 * _cell_size) * (3 * _cell_size)
+
+	var group_cycle := [
+		ActorData.CustomerGroupType.SOLO,
+		ActorData.CustomerGroupType.PAIR,
+		ActorData.CustomerGroupType.COUPLE,
+		ActorData.CustomerGroupType.FAMILY_BABY,
+		ActorData.CustomerGroupType.FAMILY_TODDLER,
+	]
+
+	for i in range(count):
+		var zone: Dictionary = fd.zones[randi() % fd.zones.size()]
+		var zw: int = int(zone.get("w", 1))
+		var zh: int = int(zone.get("h", 1))
+		if zw <= 0 or zh <= 0:
+			continue
+		var zx: int = int(zone.get("x", 0))
+		var zy: int = int(zone.get("y", 0))
+		var attempts := 8
+		var spawn_pos := Vector2.ZERO
+		while attempts > 0:
+			attempts -= 1
+			var tile_x: int = zx + randi() % zw
+			var tile_y: int = zy + randi() % zh
+			spawn_pos = Vector2(tile_x * _cell_size, floor_y + tile_y * _cell_size)
+			if spawn_pos.distance_squared_to(player_pos) >= min_dist_sq:
+				break
+		var gtype: int = group_cycle[i % group_cycle.size()]
+		spawn_customer(gtype, floor_idx, spawn_pos)
+		print("  [Customer] group=%d at world(%.0f,%.0f)" % [gtype, spawn_pos.x, spawn_pos.y])
 
 # ── Full NPC build (staff + customers) ───────────────────────────────────────
 func build_npcs() -> void:
@@ -250,7 +294,7 @@ func build_npcs() -> void:
 			spawn_customer_group(gtype, floor_idx, Vector2(px, py))
 			
 # ── Humanoid robot ───────────────────────────────────────────────────────────
-func spawn_robot_humanoid(staff_role: ActorData.StaffRole) -> void:
+func spawn_robot_humanoid(staff_role: ActorData.StaffRole, patrol_points: Array = []) -> void:
 	# 🔥 空值防护
 	if _main == null: return
 	var spawn_pos := Vector2.ZERO
@@ -265,15 +309,16 @@ func spawn_robot_humanoid(staff_role: ActorData.StaffRole) -> void:
 		ActorData.StaffRole.MANAGER:     spawn_pos = Vector2(500, 300)
 
 	var robot := preload("res://scripts/entities/robot_controller.gd").new()
-	robot.configure_humanoid(staff_role, spawn_pos)
+	robot.configure_humanoid(staff_role, spawn_pos, patrol_points)
 	robot.name = "Robot_Humanoid_%s" % _assigned_role_name(staff_role)
 	_main.add_child(robot)
 	var robots: Array = _main.get("_robots")
 	if robots != null:
 		robots.append(robot)
+	print("    [Spawn] %s -> humanoid staff_role=%d spawn_default=(%.0f,%.0f) patrol_pts=%d" % [robot.name, staff_role, spawn_pos.x, spawn_pos.y, patrol_points.size()])
 
 # ── Single-function robot ──────────────────────────────────────────────────────
-func spawn_robot_single(rrole: ActorData.RobotRole) -> void:
+func spawn_robot_single(rrole: ActorData.RobotRole, patrol_points: Array = []) -> void:
 	# 🔥 空值防护
 	if _main == null: return
 	var spawn_pos := Vector2.ZERO
@@ -285,7 +330,7 @@ func spawn_robot_single(rrole: ActorData.RobotRole) -> void:
 		ActorData.RobotRole.SHELF_ROBOT:     spawn_pos = Vector2(200, 300)
 
 	var robot := preload("res://scripts/entities/robot_controller.gd").new()
-	robot.configure_single_function(rrole, spawn_pos)
+	robot.configure_single_function(rrole, spawn_pos, patrol_points)
 	# Include unique ID in name to prevent duplicates
 	robot.name = "Robot_Single_%s_%d" % [_assigned_robot_role_name(rrole), _npc_count]
 	_main.add_child(robot)
@@ -293,6 +338,7 @@ func spawn_robot_single(rrole: ActorData.RobotRole) -> void:
 	if robots != null:
 		robots.append(robot)
 	_npc_count += 1
+	print("    [Spawn] %s -> single robot_role=%d spawn_default=(%.0f,%.0f) patrol_pts=%d" % [robot.name, rrole, spawn_pos.x, spawn_pos.y, patrol_points.size()])
 
 # ── Default robot batch ───────────────────────────────────────────────────────
 func spawn_robots() -> void:

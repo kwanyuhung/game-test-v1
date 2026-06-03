@@ -508,6 +508,9 @@ func get_spawns_by_role(entity_type: String, role: String) -> Array:
 	return result
 
 # Coordinate conversion helpers
+# Floor 0 config uses 1/4 scale relative to floor_config_data.json (JSON's lobby is 320x52, cfg is 80x13)
+const COORD_SCALE := 4
+
 # tile_to_pixel: converts tile coords to world pixel coords (tile * CELL_SIZE)
 func tile_to_pixel(tile_x: int, tile_y: int) -> Vector2:
 	return Vector2(tile_x * CELL_SIZE, tile_y * CELL_SIZE)
@@ -518,11 +521,18 @@ func pixel_to_tile(px: int, py: int) -> Vector2:
 
 # Get world position from tile position
 func tile_to_world(tile_x: int, tile_y: int) -> Vector2:
-	return tile_to_pixel(tile_x, tile_y)
+	return Vector2(tile_x * CELL_SIZE * COORD_SCALE, tile_y * CELL_SIZE * COORD_SCALE)
 
 # Get spawn world position
 func get_spawn_world_pos(spawn: EntitySpawnDef) -> Vector2:
 	return tile_to_world(spawn.x, spawn.y)
+
+# Get patrol points scaled to world pixel coords
+func get_patrol_world_points(spawn: EntitySpawnDef) -> Array:
+	var out: Array = []
+	for pp in spawn.patrol_points:
+		out.append(Vector2(pp.x * COORD_SCALE, pp.y * COORD_SCALE))
+	return out
 
 # Get all NPC staff spawns
 func get_npc_staff_spawns() -> Array:

@@ -613,6 +613,11 @@ func _setup_camera() -> void:
 	add_child(_camera)
 	_camera.make_current()
 	update_camera_limits(_current_floor_idx)
+	var p: Node2D = get("_player")
+	print("[Camera] pos=%s zoom=%s limits=(top=%d, bottom=%d, left=%d, right=%d) player=%s" % [
+		_camera.position, _camera.zoom, _camera.limit_top, _camera.limit_bottom, _camera.limit_left, _camera.limit_right,
+		(p.position if p else Vector2.ZERO)
+	])
 
 func update_camera_limits(floor_idx: int) -> void:
 	if _camera == null:

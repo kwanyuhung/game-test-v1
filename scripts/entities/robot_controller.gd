@@ -66,11 +66,11 @@ func _ready() -> void:
 
 # ─── Configuration ───────────────────────────────────────────────────
 
-func configure_humanoid(staff_role: ActorData.StaffRole, start_pos: Vector2) -> void:
+func configure_humanoid(staff_role: ActorData.StaffRole, start_pos: Vector2, patrol_points: Array = []) -> void:
 	_actor = ActorData.Actor.new()
 	_is_humanoid = true
 	_assigned_staff_role = staff_role
-	
+
 	_actor.role = ActorData.Role.ROBOT
 	_actor.robot_type = ActorData.RobotType.HUMANOID
 	_actor.robot_role = ActorData.RobotRole.SHELF_ROBOT
@@ -78,31 +78,39 @@ func configure_humanoid(staff_role: ActorData.StaffRole, start_pos: Vector2) -> 
 	_actor.appearance = ActorData.Appearance.random()
 	_actor.display_name = "Robo-" + _get_staff_role_name(staff_role)
 	_actor.energy = 1.0
-	
+
 	_global_pos = start_pos
 	position = _global_pos
 	_speed = _get_speed_for_role(staff_role)
 	_state = "working"
-	
-	_build_humanoid_sprite()
-	_build_patrol_for_humanoid()
 
-func configure_single_function(rrole: ActorData.RobotRole, start_pos: Vector2) -> void:
+	_build_humanoid_sprite()
+	if patrol_points.is_empty():
+		_build_patrol_for_humanoid()
+	else:
+		_patrol_points = patrol_points
+		_patrol_index = 0
+
+func configure_single_function(rrole: ActorData.RobotRole, start_pos: Vector2, patrol_points: Array = []) -> void:
 	_actor = ActorData.Actor.new()
 	_is_humanoid = false
-	
+
 	_actor.role = ActorData.Role.ROBOT
 	_actor.robot_type = ActorData.RobotType.SINGLE_FUNCTION
 	_actor.robot_role = rrole
 	_actor.energy = 1.0
-	
+
 	_global_pos = start_pos
 	position = _global_pos
 	_speed = _get_speed_for_robot_role(rrole)
 	_state = "working"
-	
+
 	_build_machine_sprite(rrole)
-	_build_patrol_for_robot(rrole)
+	if patrol_points.is_empty():
+		_build_patrol_for_robot(rrole)
+	else:
+		_patrol_points = patrol_points
+		_patrol_index = 0
 
 # ─── Speed Configuration ──────────────────────────────────────────────
 

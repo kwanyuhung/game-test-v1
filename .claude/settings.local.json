@@ -16,7 +16,13 @@
       "Skill(update-config)",
       "Bash(npx skills *)",
       "Bash(where mmx *)",
-      "Bash(mmx image *)"
+      "Bash(mmx image *)",
+      "Read(//c/Users/User/.claude/**)",
+      "Bash(dir /a ~/.claude/)",
+      "Bash(python -c ' *)",
+      "Bash(where godot *)",
+      "Read(//c/Program Files/**)",
+      "Bash(xargs grep -l \"extend Node2D\")"
     ]
   }
 }

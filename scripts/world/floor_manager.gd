@@ -80,6 +80,7 @@ static func _role_name_to_int(role_name: String) -> int:
 		"CLEANER": return 3
 		"SECURITY": return 4
 		"GREETER": return 5
+		"GREETER_BOT": return 5
 		"MANAGER": return 6
 		"FLOOR_STAFF": return 7
 		"SCAN_GO": return 8
@@ -198,6 +199,7 @@ func _is_spawning_allowed_for_floor(floor_idx: int) -> bool:
 		_debug_config._load()
 
 	var allowed_floors: Array = _debug_config.get_regenerate_floors()
+	print("[FloorManager] _is_spawning_allowed_for_floor(%d): allowed_floors=%s empty=%s" % [floor_idx, str(allowed_floors), str(allowed_floors.is_empty())])
 	if allowed_floors.is_empty():
 		return true
 	return floor_idx in allowed_floors
@@ -219,6 +221,7 @@ func on_floor_changed(new_floor_idx: int) -> void:
 	_show_floor(new_floor_idx)
 
 func _show_floor(floor_idx: int) -> void:
+	print("[FloorManager] _show_floor(%d) ENTER" % floor_idx)
 	if _main == null:
 		push_error("[FloorManager] _show_floor called before setup")
 		return
@@ -226,6 +229,8 @@ func _show_floor(floor_idx: int) -> void:
 	if container == null:
 		push_error("[FloorManager] No container for floor %d" % floor_idx)
 		return
+	var floor_y: float = get_floor_y(floor_idx)
+	print("[FloorManager]   _npcs_spawned=%s _robots_spawned=%s" % [str(_npcs_spawned), str(_robots_spawned)])
 
 	# Build on-demand if not yet built (player navigated here before deferred build ran)
 	if not _built_floors.has(floor_idx):
@@ -251,14 +256,25 @@ func _show_floor(floor_idx: int) -> void:
 	_checkout_counters = container.get_checkout_counters()
 
 	# Spawn NPCs and robots if not already done
+	print("[FloorManager] _show_floor(%d) check: _npcs_spawned.has(%d)=%s _robots_spawned.has(%d)=%s allowed=%s" % [
+		floor_idx, floor_idx, str(_npcs_spawned.has(floor_idx)),
+		floor_idx, str(_robots_spawned.has(floor_idx)),
+		str(_is_spawning_allowed_for_floor(floor_idx))
+	])
 	if not _npcs_spawned.has(floor_idx):
 		if _is_spawning_allowed_for_floor(floor_idx):
+			print("[FloorManager] -> calling spawn_floor_npcs(%d)" % floor_idx)
 			spawn_floor_npcs(floor_idx, container)
+		else:
+			print("[FloorManager] -> SKIP spawn_floor_npcs (not allowed)")
 		_npcs_spawned[floor_idx] = true
 
 	if not _robots_spawned.has(floor_idx):
 		if _is_spawning_allowed_for_floor(floor_idx):
+			print("[FloorManager] -> calling spawn_floor_robots(%d)" % floor_idx)
 			spawn_floor_robots(floor_idx, container)
+		else:
+			print("[FloorManager] -> SKIP spawn_floor_robots (not allowed)")
 		_robots_spawned[floor_idx] = true
 
 	# Update HUD
@@ -276,7 +292,28 @@ func _show_floor(floor_idx: int) -> void:
 		prox.refresh_from_floor_manager()
 
 	floor_activated.emit(floor_idx)
-	print("[FloorManager] Showing floor %d" % floor_idx)
+	var npcs_arr: Array = _main.get("_npcs")
+	var robots_arr: Array = _main.get("_robots")
+	var npc_count: int = npcs_arr.size() if npcs_arr != null else 0
+	var robot_count: int = robots_arr.size() if robots_arr != null else 0
+	print("[FloorManager] Showing floor %d (floor_y=%.0f, npcs=%d, robots=%d)" % [floor_idx, floor_y, npc_count, robot_count])
+	if npcs_arr != null:
+		var staff_n := 0
+		var cust_n := 0
+		for n in npcs_arr:
+			if n.name.begins_with("Staff_"):
+				staff_n += 1
+			elif n.name.begins_with("Customer_") or n.name.begins_with("GroupLeader_") or n.name.begins_with("Group_"):
+				cust_n += 1
+		print("  NPCs on _main: %d staff + %d customers (total %d)" % [staff_n, cust_n, npc_count])
+		for n in npcs_arr:
+			if is_instance_valid(n):
+				print("    - %s @ (%.0f, %.0f)" % [n.name, n.position.x, n.position.y])
+	if robots_arr != null:
+		print("  Robots on _main (total %d):" % robot_count)
+		for r in robots_arr:
+			if is_instance_valid(r):
+				print("    - %s @ (%.0f, %.0f)" % [r.name, r.position.x, r.position.y])
 
 func _hide_floor(floor_idx: int) -> void:
 	var container: Node2D = _floor_containers.get(floor_idx)
@@ -382,19 +419,22 @@ func _get_floor_spawn_config(floor_idx: int) -> Dictionary:
 	}
 
 func spawn_floor_npcs(floor_idx: int, container: Node2D) -> void:
+	print("[FloorManager] spawn_floor_npcs(%d) ENTRY" % floor_idx)
 	var main_spawner = _main.get("_main_spawner")
+	print("[FloorManager]   main_spawner=%s" % ("null" if main_spawner == null else "ok"))
 	if main_spawner == null:
 		print("[FloorManager] Warning: main_spawner not found")
 		return
 
 	var fd: FloorConfig.FloorDef = FloorConfig.get_floor(floor_idx)
+	print("[FloorManager]   fd=%s" % ("null" if fd == null else "ok"))
 	if fd == null:
 		return
 
 	var floor_y: float = get_floor_y(floor_idx)
 	var floor_config = _get_floor_spawn_config_obj(floor_idx)
-	var customer_types: Array = [0, 1, 2]
-	var customer_count: int = 3
+	print("[FloorManager]   floor_config=%s" % ("null" if floor_config == null else "ok"))
+	var customer_count: int = 5
 
 	# Use actual spawn positions from FloorNConfig when available
 	var npc_spawns := []
@@ -409,8 +449,9 @@ func spawn_floor_npcs(floor_idx: int, container: Node2D) -> void:
 		print("[FloorManager] Spawning %d NPCs for Floor %d from config" % [npc_spawns.size(), floor_idx])
 		for spawn in npc_spawns:
 			var world_pos: Vector2 = floor_config.get_spawn_world_pos(spawn)
-			# Add slight random offset for natural variation
+			world_pos.y += floor_y
 			world_pos += Vector2(randf_range(-20, 20), randf_range(-15, 15))
+			print("  [Staff] %s/%s at world(%.0f,%.0f) [floor_y=%.0f]" % [spawn.entity_type, spawn.role, world_pos.x, world_pos.y, floor_y])
 			var role_int: int = _role_name_to_int(spawn.role)
 			main_spawner.spawn_npc_staff(role_int, floor_idx, world_pos)
 	else:
@@ -418,8 +459,7 @@ func spawn_floor_npcs(floor_idx: int, container: Node2D) -> void:
 		var config := _get_floor_spawn_config(floor_idx)
 		var staff_roles: Array = config.get("staff_roles", [0, 1, 2])
 		var staff_count: int = config.get("staff_count", 3)
-		customer_types = config.get("customer_types", [0, 1, 2])
-		customer_count = config.get("customer_count", 3)
+		customer_count = config.get("customer_count", 5)
 
 		print("[FloorManager] Spawning NPCs for Floor %d: %d staff, %d customers (fallback)" % [floor_idx, staff_count, customer_count])
 
@@ -433,16 +473,8 @@ func spawn_floor_npcs(floor_idx: int, container: Node2D) -> void:
 			var pos := Vector2(pos_x + randf_range(-30, 30), floor_y + pos_y + randf_range(-20, 20))
 			main_spawner.spawn_npc_staff(role_idx, floor_idx, pos)
 
-	# Customer spawning (not in floor configs, always uses fallback positions)
-	var customer_spawn_x := [150.0, 350.0, 550.0, 750.0, 950.0]
-	var customer_spawn_y := [250.0, 400.0, 500.0]
-
-	for i in range(customer_count):
-		var group_type: int = customer_types[i % customer_types.size()]
-		var pos_x: float = customer_spawn_x[i % customer_spawn_x.size()]
-		var pos_y: float = customer_spawn_y[i % customer_spawn_y.size()]
-		var pos := Vector2(pos_x + randf_range(-40, 40), floor_y + pos_y + randf_range(-30, 30))
-		main_spawner.spawn_customer_group(group_type, floor_idx, pos)
+	# Customer spawning: random positions within the floor's available zones
+	main_spawner.spawn_random_customers_in_available_area(floor_idx, customer_count)
 
 func spawn_floor_robots(floor_idx: int, container: Node2D) -> void:
 	var main_spawner = _main.get("_main_spawner")
@@ -470,21 +502,33 @@ func spawn_floor_robots(floor_idx: int, container: Node2D) -> void:
 	if use_config_spawns:
 		print("[FloorManager] Spawning %d robots for Floor %d from config" % [robot_spawns.size(), floor_idx])
 		for spawn in robot_spawns:
+			print("  [Robot plan] %s/%s" % [spawn.entity_type, spawn.role])
 			var world_pos: Vector2 = floor_config.get_spawn_world_pos(spawn)
+			world_pos.y += floor_y
 			world_pos += Vector2(randf_range(-15, 15), randf_range(-10, 10))  # Small variation
-			var robot_role_int: int = _robot_role_name_to_enum(spawn.role)
-			# Determine robot type from entity_type
-			var rtype: int
-			if spawn.entity_type == "robot_humanoid":
-				rtype = robot_role_int  # Humanoid robots use their role
+
+			var world_patrol: Array = []
+			if floor_config.has_method("get_patrol_world_points"):
+				var raw_patrol: Array = floor_config.get_patrol_world_points(spawn)
+				for pp in raw_patrol:
+					world_patrol.append(Vector2(pp.x, pp.y + floor_y))
 			else:
-				rtype = robot_role_int  # Single-function robots
-			main_spawner.spawn_robot_single(rtype)
+				for pp in spawn.patrol_points:
+					world_patrol.append(Vector2(pp.x, pp.y + floor_y))
+
+			if spawn.entity_type == "robot_humanoid":
+				var staff_role_int: int = _role_name_to_int(spawn.role)
+				main_spawner.spawn_robot_humanoid(staff_role_int, world_patrol)
+			else:
+				var robot_role_int: int = _robot_role_name_to_enum(spawn.role)
+				main_spawner.spawn_robot_single(robot_role_int, world_patrol)
+
 			var all_robots: Array = _main.get("_robots")
 			if all_robots != null and all_robots.size() > 0:
 				var newest = all_robots[all_robots.size() - 1]
 				newest.position = world_pos
 				newest.name = "Robot_%s_Floor%d" % [spawn.role, floor_idx]
+				print("  [Robot] %s/%s at world(%.0f,%.0f)" % [spawn.entity_type, spawn.role, world_pos.x, world_pos.y])
 	else:
 		# Fallback to original type-based spawning
 		print("[FloorManager] Spawning robots for Floor %d (fallback)" % floor_idx)
