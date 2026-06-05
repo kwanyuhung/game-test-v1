@@ -269,6 +269,12 @@ static func _build_decor(parent: Node, floor_nodes: Array, cx: int, cy: int, cw:
 	match decor_type:
 		"dining_table":
 			_build_dining_table(parent, floor_nodes, cx, cy)
+		"dining_chair":
+			_build_dining_chair(parent, floor_nodes, cx, cy)
+		"dining_table_small":
+			_build_dining_table_small(parent, floor_nodes, cx, cy)
+		"dining_table_long":
+			_build_dining_table_long(parent, floor_nodes, cx, cy)
 		_:
 			# Default decor
 			var decor := ColorRect.new()
@@ -286,7 +292,7 @@ static func _build_dining_table(parent: Node, floor_nodes: Array, cx: int, cy: i
 	top.color = Color(0.52, 0.48, 0.42)
 	parent.add_child(top)
 	floor_nodes.append(top)
-	
+
 	# Chairs around table
 	var chair_offsets := [
 		Vector2i(-16, 0), Vector2i(48, 0),
@@ -301,3 +307,62 @@ static func _build_dining_table(parent: Node, floor_nodes: Array, cx: int, cy: i
 		chair.color = Color(0.45, 0.42, 0.40)
 		parent.add_child(chair)
 		floor_nodes.append(chair)
+
+static func _build_dining_chair(parent: Node, floor_nodes: Array, cx: int, cy: int) -> void:
+	# Seat (1x1 tile, 16x16 px)
+	var seat := ColorRect.new()
+	seat.position = Vector2(cx, cy + 4)
+	seat.size = Vector2(CELL_SIZE, CELL_SIZE - 4)
+	seat.color = Color(0.45, 0.42, 0.40)
+	parent.add_child(seat)
+	floor_nodes.append(seat)
+
+	# Backrest highlight (top edge, 2 px tall, slightly lighter)
+	var back := ColorRect.new()
+	back.position = Vector2(cx, cy)
+	back.size = Vector2(CELL_SIZE, 4)
+	back.color = Color(0.55, 0.52, 0.48)
+	parent.add_child(back)
+	floor_nodes.append(back)
+
+static func _build_dining_table_small(parent: Node, floor_nodes: Array, cx: int, cy: int) -> void:
+	# Table top (2x2 tiles, 32x32 px)
+	var top := ColorRect.new()
+	top.position = Vector2(cx, cy)
+	top.size = Vector2(CELL_SIZE * 2, CELL_SIZE * 2)
+	top.color = Color(0.52, 0.48, 0.42)
+	parent.add_child(top)
+	floor_nodes.append(top)
+
+	# Top edge highlight
+	var edge := ColorRect.new()
+	edge.position = Vector2(cx, cy)
+	edge.size = Vector2(CELL_SIZE * 2, 2)
+	edge.color = Color(0.62, 0.58, 0.50)
+	parent.add_child(edge)
+	floor_nodes.append(edge)
+
+static func _build_dining_table_long(parent: Node, floor_nodes: Array, cx: int, cy: int) -> void:
+	# Table top (8x2 tiles, 128x32 px)
+	var top := ColorRect.new()
+	top.position = Vector2(cx, cy)
+	top.size = Vector2(CELL_SIZE * 8, CELL_SIZE * 2)
+	top.color = Color(0.48, 0.42, 0.36)
+	parent.add_child(top)
+	floor_nodes.append(top)
+
+	# Top edge highlight
+	var edge := ColorRect.new()
+	edge.position = Vector2(cx, cy)
+	edge.size = Vector2(CELL_SIZE * 8, 2)
+	edge.color = Color(0.58, 0.52, 0.44)
+	parent.add_child(edge)
+	floor_nodes.append(edge)
+
+	# Center stripe (visual cue for a long communal table)
+	var stripe := ColorRect.new()
+	stripe.position = Vector2(cx + CELL_SIZE * 2, cy + CELL_SIZE - 1)
+	stripe.size = Vector2(CELL_SIZE * 4, 2)
+	stripe.color = Color(0.40, 0.34, 0.28)
+	parent.add_child(stripe)
+	floor_nodes.append(stripe)

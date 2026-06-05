@@ -356,42 +356,322 @@
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 64,
-				"y": 44,
-				"w": 16,
-				"h": 16,
+				"x": 140,
+				"y": 104,
+				"w": 1,
+				"h": 1,
 				"meta": {
-					"name": "dining_table"
+					"name": "dining_chair"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 136,
-				"y": 44,
-				"w": 16,
-				"h": 16,
+				"x": 144,
+				"y": 104,
+				"w": 1,
+				"h": 1,
 				"meta": {
-					"name": "dining_table"
+					"name": "dining_chair"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 208,
-				"y": 44,
-				"w": 16,
-				"h": 16,
+				"x": 148,
+				"y": 104,
+				"w": 1,
+				"h": 1,
 				"meta": {
-					"name": "dining_table"
+					"name": "dining_chair"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 280,
-				"y": 44,
-				"w": 16,
-				"h": 16,
+				"x": 158,
+				"y": 104,
+				"w": 1,
+				"h": 1,
 				"meta": {
-					"name": "dining_table"
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 168,
+				"y": 104,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 178,
+				"y": 104,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 188,
+				"y": 104,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 192,
+				"y": 104,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 140,
+				"y": 107,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_small"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 144,
+				"y": 107,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_small"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 148,
+				"y": 107,
+				"w": 8,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_long"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 158,
+				"y": 107,
+				"w": 8,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_long"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 168,
+				"y": 107,
+				"w": 8,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_long"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 178,
+				"y": 107,
+				"w": 8,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_long"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 188,
+				"y": 107,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_small"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 192,
+				"y": 107,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_small"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 140,
+				"y": 111,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_small"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 144,
+				"y": 111,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_small"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 148,
+				"y": 111,
+				"w": 8,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_long"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 158,
+				"y": 111,
+				"w": 8,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_long"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 168,
+				"y": 111,
+				"w": 8,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_long"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 178,
+				"y": 111,
+				"w": 8,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_long"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 188,
+				"y": 111,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_small"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 192,
+				"y": 111,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_small"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 140,
+				"y": 115,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 144,
+				"y": 115,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 148,
+				"y": 115,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 158,
+				"y": 115,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 168,
+				"y": 115,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 178,
+				"y": 115,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 188,
+				"y": 115,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 192,
+				"y": 115,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
 				}
 			},
 			{

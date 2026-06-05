@@ -22,7 +22,17 @@
       "Bash(python -c ' *)",
       "Bash(where godot *)",
       "Read(//c/Program Files/**)",
-      "Bash(xargs grep -l \"extend Node2D\")"
+      "Bash(xargs grep -l \"extend Node2D\")",
+      "Bash(powershell *)",
+      "Bash(/c/Users/User/Downloads/Godot_v4.6.2-stable_win64.exe --headless --quit-after 8 --path \"C:/Users/User/Documents/GitHub/game-test-v1\")",
+      "Bash(cmd //c \"\\\\\"C:\\\\\\\\Users\\\\\\\\User\\\\\\\\Downloads\\\\\\\\Godot_v4.6.2-stable_win64.exe\\\\\\\\Godot_v4.6.2-stable_win64.exe\\\\\" --headless --quit-after 5 --path \\\\\"C:\\\\\\\\Users\\\\\\\\User\\\\\\\\Documents\\\\\\\\GitHub\\\\\\\\game-test-v1\\\\\"\")",
+      "Bash(n\\\\\")",
+      "Bash(Select-String -Pattern 'map_panel|ERROR|SCRIPT|Parse')",
+      "Bash(Select-Object -First 30\")",
+      "Bash(python -c \"import json; data=json.load\\(open\\('scripts/floor_config_data.json', encoding='utf-8'\\)\\); floor0=next\\(f for f in data if f.get\\('id'\\)==0\\); decor_zones=[z for z in floor0['zones'] if z.get\\('type'\\)=='ZONE_DECOR']; print\\(f'ZONE_DECOR count: {len\\(decor_zones\\)}'\\); from collections import Counter; print\\('By name:', Counter\\(z.get\\('meta',{}\\).get\\('name','?'\\) for z in decor_zones\\)\\)\")",
+      "Bash(\"C:/Users/User/Downloads/Godot_v4.6.2-stable_win64.exe\" --headless --check-only --script \"res://scripts/ui/map_panel.gd\")",
+      "Bash(\"C:/Users/User/Downloads/Godot_v4.6.2-stable_win64.exe/Godot_v4.6.2-stable_win64_console.exe\" --headless --check-only --script \"res://scripts/ui/map_panel.gd\")",
+      "Bash(\"C:/Users/User/Downloads/Godot_v4.6.2-stable_win64.exe/Godot_v4.6.2-stable_win64_console.exe\" --headless --quit --check-only)"
     ]
   }
 }
