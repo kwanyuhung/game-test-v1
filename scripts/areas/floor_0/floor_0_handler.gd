@@ -34,6 +34,22 @@ const ZONE_PROMO_BOOTH := Floor0Config.ZONE_PROMO_BOOTH
 const ZONE_WAREHOUSE_STOCK_VIEW := Floor0Config.ZONE_WAREHOUSE_STOCK_VIEW
 const ZONE_LOST_FOUND := Floor0Config.ZONE_LOST_FOUND
 const ZONE_STORE_NEWS := Floor0Config.ZONE_STORE_NEWS
+const ZONE_CHECKOUT := Floor0Config.ZONE_CHECKOUT
+const ZONE_TROLLEY := Floor0Config.ZONE_TROLLEY
+const ZONE_FIRST_AID := Floor0Config.ZONE_FIRST_AID
+const ZONE_FRESH_PRODUCE := Floor0Config.ZONE_FRESH_PRODUCE
+const ZONE_MEAT := Floor0Config.ZONE_MEAT
+const ZONE_SEAFOOD := Floor0Config.ZONE_SEAFOOD
+const ZONE_FROZEN := Floor0Config.ZONE_FROZEN
+const ZONE_DAIRY := Floor0Config.ZONE_DAIRY
+const ZONE_BAKERY := Floor0Config.ZONE_BAKERY
+const ZONE_BEVERAGES := Floor0Config.ZONE_BEVERAGES
+const ZONE_PANTRY := Floor0Config.ZONE_PANTRY
+const ZONE_SNACKS := Floor0Config.ZONE_SNACKS
+const ZONE_HOUSEHOLD := Floor0Config.ZONE_HOUSEHOLD
+const ZONE_HEALTH := Floor0Config.ZONE_HEALTH
+const ZONE_BABY := Floor0Config.ZONE_BABY
+const ZONE_EXIT := Floor0Config.ZONE_EXIT
 
 # Area constants
 const AREA_LOBBY := Floor0Config.AREA_LOBBY
@@ -117,6 +133,12 @@ func build_floor_0(zones: Array) -> void:
 				MiscHandler.build_misc_area(_parent, zone, _floor_nodes, "ZONE_LOST_FOUND")
 			ZONE_STORE_NEWS:
 				MiscHandler.build_misc_area(_parent, zone, _floor_nodes, "ZONE_STORE_NEWS")
+			ZONE_CHECKOUT, ZONE_TROLLEY, ZONE_FIRST_AID:
+				MiscHandler.build_misc_area(_parent, zone, _floor_nodes, zone.type)
+			ZONE_FRESH_PRODUCE, ZONE_MEAT, ZONE_SEAFOOD, ZONE_FROZEN, ZONE_DAIRY, ZONE_BAKERY, ZONE_BEVERAGES, ZONE_PANTRY:
+				MiscHandler.build_misc_area(_parent, zone, _floor_nodes, zone.type)
+			ZONE_EXIT:
+				MiscHandler.build_misc_area(_parent, zone, _floor_nodes, "ZONE_EXIT")
 
 # ─── Area-Based Building ─────────────────────────────────────────────────
 # Build all zones belonging to a specific area
@@ -160,6 +182,12 @@ func _build_zone_for_area(zone: Dictionary, area_id: String) -> void:
 			MiscHandler.build_misc_area(_parent, zone, _floor_nodes, "ZONE_LOST_FOUND")
 		ZONE_STORE_NEWS:
 			MiscHandler.build_misc_area(_parent, zone, _floor_nodes, "ZONE_STORE_NEWS")
+		ZONE_CHECKOUT, ZONE_TROLLEY, ZONE_FIRST_AID:
+			MiscHandler.build_misc_area(_parent, zone, _floor_nodes, zone.type)
+		ZONE_FRESH_PRODUCE, ZONE_MEAT, ZONE_SEAFOOD, ZONE_FROZEN, ZONE_DAIRY, ZONE_BAKERY, ZONE_BEVERAGES, ZONE_PANTRY, ZONE_SNACKS, ZONE_HOUSEHOLD, ZONE_HEALTH, ZONE_BABY:
+			MiscHandler.build_misc_area(_parent, zone, _floor_nodes, zone.type)
+		ZONE_EXIT:
+			MiscHandler.build_misc_area(_parent, zone, _floor_nodes, "ZONE_EXIT")
 
 # ─── Spawn Point Access ─────────────────────────────────────────────────
 # Get spawn points for NPCs and robots organized by area

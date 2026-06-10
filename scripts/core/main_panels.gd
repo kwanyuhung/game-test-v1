@@ -14,8 +14,8 @@ func setup(main: Node2D) -> void:
 func build_elevator() -> void:
 	var elevator = preload("res://scripts/systems/elevator.gd").new()
 	elevator.name = "Elevator"
-	elevator.floor_reached.connect(_main._on_elevator_floor_reached)
-	elevator.travel_finished.connect(_main._on_elevator_travel_finished)
+	elevator.floor_reached.connect(_main._logic._on_elevator_floor_reached)
+	elevator.travel_finished.connect(_main._logic._on_elevator_travel_finished)
 	_main.add_child(elevator)
 	_main.set("_elevator", elevator)
 

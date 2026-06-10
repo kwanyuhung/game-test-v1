@@ -6,6 +6,7 @@ extends Node2D
 
 const Floors = preload("res://scripts/world/floors.gd")
 const FloorManager = preload("res://scripts/world/floor_manager.gd")
+const FloorConfig = preload("res://scripts/world/floor_config.gd")
 const PixelArt = preload("res://scripts/utils/pixel_art_generator.gd")
 const CELL_SIZE := 16
 
@@ -43,18 +44,23 @@ func _ready() -> void:
 	_target_floor = 0
 
 	# Shaft background sprite (vertical track behind car)
+	# Hidden in the new cosmetic-bank layout: the legacy car sits at SHAFT_X
+	# (tile 6) but the visible cabins are drawn by ElevatorHandler at the
+	# ZONE_ELEVATOR positions. The legacy nodes are kept for state/logic only.
 	var shaft_tex := PixelArt.make_elevator_shaft()
 	var shaft_sprite := Sprite2D.new()
 	shaft_sprite.texture = shaft_tex
 	shaft_sprite.position = Vector2(SHAFT_X - 16, 0)
 	shaft_sprite.region_enabled = true
 	shaft_sprite.region_rect = Rect2(0, 0, 32, 800)
+	shaft_sprite.visible = false
 	add_child(shaft_sprite)
 
 	# Car body using pixel art sprite
 	var car_tex := PixelArt.make_elevator_car()
 	_car = ColorRect.new()  # Keep as container for positioning
 	_car.size = Vector2(CAR_W, CAR_H)
+	_car.visible = false  # Visible cabins handled by ElevatorHandler at ZONE_ELEVATOR positions.
 	add_child(_car)
 
 	# Add car sprite on top of the ColorRect (for visual)
@@ -152,8 +158,41 @@ func get_car_world_y() -> float:
 	return _car.position.y
 
 func is_nearby(world_pos: Vector2) -> bool:
+	# Cosmetic-bank behaviour: the player can interact from any visible
+	# ZONE_ELEVATOR cabin on the current floor. All cabins share this one
+	# Elevator backend (single floor-selector UI / single travel animation),
+	# so proximity to ANY cabin counts as "near the elevator".
+	#
+	# A fallback radius-check around the legacy car position is kept so
+	# rooftop / parking layouts that don't define ZONE_ELEVATOR zones still
+	# function until they're migrated.
+	var floor_def = FloorConfig.get_floor(_current_floor)
+	if floor_def != null:
+		var floor_y: float = FloorManager.get_floor_y(_current_floor)
+		var near_radius: float = CELL_SIZE * 3.0  # ~3 tiles around each cabin
+		for zone in floor_def.zones:
+			if zone.get("type", "") != FloorConfig.ZONE_ELEVATOR:
+				continue
+			var cx: float = zone.get("x", 0) * CELL_SIZE
+			var cy: float = zone.get("y", 0) * CELL_SIZE + floor_y
+			var cw: float = zone.get("w", 1) * CELL_SIZE
+			var ch: float = zone.get("h", 1) * CELL_SIZE
+			var center := Vector2(cx + cw * 0.5, cy + ch * 0.5)
+			if world_pos.distance_to(center) < (max(cw, ch) * 0.5 + near_radius):
+				return true
+		# Current floor had cabins but player isn't near any of them.
+		# Return false rather than falling through to the legacy radius,
+		# otherwise the hint would falsely show across the whole floor.
+		var has_any_cabin := false
+		for zone in floor_def.zones:
+			if zone.get("type", "") == FloorConfig.ZONE_ELEVATOR:
+				has_any_cabin = true
+				break
+		if has_any_cabin:
+			return false
+
+	# Fallback for floors without ZONE_ELEVATOR data.
 	var car_center := Vector2(SHAFT_X + CAR_W * 0.5, _car.position.y + CAR_H * 0.5)
-	# Increased detection radius to cover larger area including areas outside the bounding box
 	return world_pos.distance_to(car_center) < CELL_SIZE * 15.0
 
 func is_traveling() -> bool:

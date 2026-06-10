@@ -1,5 +1,9 @@
 # truck_dock_system.gd
-# Truck dock visual and unload logic.
+# Truck dock visual and unload logic (Floor G).
+# Flow:
+#   1. E press with no truck: trigger_delivery() + spawn_truck() — truck appears immediately
+#   2. E press with truck at dock: consume_pending_delivery() + receive_delivery() — stock updated, truck hidden
+# ═══════════════════════════════════════════════════════════════════════
 extends Node
 
 var _main: Node2D = null
@@ -66,46 +70,48 @@ func spawn_truck() -> void:
 func do_unload() -> void:
 	if _warehouse == null:
 		return
+
 	if not _truck_arrived:
-		# No truck yet — trigger delivery if none pending
-		if not _warehouse.is_delivery_pending():
-			_warehouse.trigger_delivery()
+		# No truck yet — order one. trigger_delivery() builds _delivery_contents
+		# inside WarehouseSystem. We then spawn the truck visual immediately.
+		# (No timer for now — can be added later for realism.)
+		if _warehouse.is_delivery_pending():
 			if _toasts:
 				_toasts.toast_info("Truck ordered! Will arrive shortly...")
-		else:
-			if _toasts:
-				_toasts.toast_info("No delivery to unload.")
+			return
+		_warehouse.trigger_delivery()
+		spawn_truck()
 		return
 
+	# Truck is at dock — consume the pending delivery and apply to stock.
+	var pending: Dictionary = _warehouse.consume_pending_delivery()
+	if pending.is_empty():
+		_truck_arrived = false
+		_main.set("_truck_arrived", false)
+		if _truck_dock_node != null:
+			_truck_dock_node.visible = false
+		if _toasts:
+			_toasts.toast_warning("No delivery to unload.")
+		return
+
+	# Apply stock, then hide truck.
+	_warehouse.receive_delivery(pending)
 	_truck_arrived = false
 	_main.set("_truck_arrived", false)
-
-	# Hide truck visual
 	if _truck_dock_node != null:
 		_truck_dock_node.visible = false
 
-	# Receive the pending delivery
-	if _warehouse.is_delivery_pending():
-		var pending = _warehouse.get_delivery_contents()
-		if pending.size() > 0:
-			var item_count = pending.values().reduce(func(a, b): return a + b, 0)
-			_warehouse.receive_delivery(pending)
-
-			# Bonus rewards for unloading
-			var bonus_xp = mini(item_count * 2, 50)
-			var bonus_cash = clamp(float(item_count) * 0.1, 1.0, 10.0)
-			if _player_stats != null:
-				_player_stats.add_xp(bonus_xp)
-				_player_stats.add_cash(bonus_cash)
-			if _toasts:
-				_toasts.toast_success("Truck unloaded! +%d XP + $%.2f bonus!" % [bonus_xp, bonus_cash])
-		else:
-			_warehouse.receive_delivery(pending)
-			if _toasts:
-				_toasts.toast_success("Truck unloaded! Stock updated.")
-	else:
-		if _toasts:
-			_toasts.toast_warning("No delivery to unload.")
+	# Bonus rewards for unloading — count total items across all sections.
+	var item_count: int = 0
+	for qty in pending.values():
+		item_count += int(qty)
+	var bonus_xp: int = mini(item_count * 2, 50)
+	var bonus_cash: float = clampf(float(item_count) * 0.1, 1.0, 10.0)
+	if _player_stats != null:
+		_player_stats.add_xp(bonus_xp)
+		_player_stats.add_cash(bonus_cash)
+	if _toasts:
+		_toasts.toast_success("Truck unloaded! +%d XP + $%.2f bonus!" % [bonus_xp, bonus_cash])
 
 func is_truck_arrived() -> bool:
 	return _truck_arrived

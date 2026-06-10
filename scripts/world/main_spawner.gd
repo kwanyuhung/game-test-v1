@@ -9,8 +9,12 @@ var _main: Node2D = null
 var _config: MainConfig = null
 var _cell_size: int = 16
 var _npc_count: int = 0
-var _npc_spawned: bool = false  # Track if a single NPC has been spawned
-var _robot_spawned: bool = false  # Track if a single robot has been spawned
+# Per-category spawn flags. Each test helper allows one spawn per category
+# so the dev can test customers, staff, and robots independently without one
+# of them blocking the others.
+var _test_customer_spawned: bool = false
+var _test_staff_spawned: bool = false
+var _robot_spawned: bool = false
 
 # Helper to get world Y position for a floor
 func _get_floor_world_y(floor_idx: int) -> float:
@@ -38,15 +42,21 @@ func set_npc_count(v: int) -> void:
 	_npc_count = v
 
 # ── Staff NPC ─────────────────────────────────────────────────────────────────
-func spawn_npc_staff(role: int, floor_idx: int, pos: Vector2) -> void:
+func spawn_npc_staff(role: int, floor_idx: int, pos: Vector2, patrol_points: Array = []) -> void:
 	# 🔥 空值防护
 	if _main == null: return
 	var npc_scene = preload("res://scripts/entities/npc_controller.gd")
 	var npc = npc_scene.new()
 	var actor = ActorData.Actor.random_staff(role)
 	actor.current_floor = floor_idx
+	# Movement bounds: STANDBY anchors to spawn pos; FIXED_RANGE takes the
+	# supplied patrol points. FREE leaves bounds.waypoints empty.
+	_apply_movement_bounds(actor, pos, patrol_points)
 	npc.configure(actor)
 	npc.position = pos
+	# Tell the NPC controller whether it should stay at its anchor. STANDBY
+	# roles route to _start_stationary_work() in _choose_staff_behavior.
+	npc._is_stationary = (actor.movement_bounds.mode == ActorData.MovementMode.STANDBY)
 	npc.name = "Staff_%s_%d" % [actor.display_name.replace(" ", "_"), _npc_count]
 	_main.add_child(npc)
 	var npcs: Array = _main.get("_npcs")
@@ -57,6 +67,26 @@ func spawn_npc_staff(role: int, floor_idx: int, pos: Vector2) -> void:
 		chat_mgr.register_npc(npc)
 	_npc_count += 1
 	print("    [Spawn] %s -> role=%d floor=%d world=(%.0f,%.0f) total_npcs=%d" % [npc.name, role, floor_idx, pos.x, pos.y, _npc_count])
+
+# Populates the actor's movement_bounds based on its role's default mode
+# plus the spawn-time data:
+#   STANDBY     → anchor = pos (wherever this actor was placed)
+#   FIXED_RANGE → waypoints = patrol_points (if provided) else [pos]
+#   FREE        → unchanged
+func _apply_movement_bounds(actor: ActorData.Actor, pos: Vector2, patrol_points: Array) -> void:
+	var b: ActorData.MovementBounds = actor.movement_bounds
+	match b.mode:
+		ActorData.MovementMode.STANDBY:
+			b.anchor = pos
+		ActorData.MovementMode.FIXED_RANGE:
+			if patrol_points.is_empty():
+				# No waypoints supplied — fall back to a single anchor so the
+				# actor still stays put, rather than roaming freely.
+				b.waypoints = [pos]
+			else:
+				b.waypoints = patrol_points.duplicate()
+		_:
+			pass  # FREE — leave empty
 
 # ── Single customer ───────────────────────────────────────────────────────────
 func spawn_customer(group_type: int, floor_idx: int, pos: Vector2) -> void:
@@ -119,8 +149,8 @@ func spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void
 		actor.current_floor = floor_idx
 
 		if i >= 2 and (has_baby or has_toddler or has_kids):
-			actor.appearance.top_style = randi() % 2
-			actor.appearance.bottom_style = randi() % 2
+			actor.appearance.top.style = randi() % 2
+			actor.appearance.bottom.style = randi() % 2
 			actor.appearance.shoes_style = randi() % 2
 
 		if has_baby and i == 2:
@@ -141,10 +171,13 @@ func spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void
 		var npcs: Array = _main.get("_npcs")
 		if npcs != null:
 			npcs.append(npc)
+		var chat_mgr = _main.get("_chat_manager")
+		if chat_mgr != null:
+			chat_mgr.register_npc(npc)
 
 		if i == 0:
 			leader = npc
-		elif leader != null: 
+		elif leader != null:
 			npc.set_group_leader(leader)
 			var leader_actor: ActorData.Actor = leader.get_actor()
 			# 🔥 直接使用（无需判断，属性已存在）
@@ -215,6 +248,34 @@ func build_npcs() -> void:
 		"GREETER": ActorData.StaffRole.GREETER,
 		"MANAGER": ActorData.StaffRole.MANAGER,
 		"FLOOR_STAFF": ActorData.StaffRole.FLOOR_STAFF,
+		"SCAN_GO": ActorData.StaffRole.SCAN_GO,
+		"SHOP_STAFF": ActorData.StaffRole.SHOP_STAFF,
+		"FOOD_STAFF": ActorData.StaffRole.FOOD_STAFF,
+		"CLEAN_STAFF": ActorData.StaffRole.CLEAN_STAFF,
+		"RECEPTIONIST": ActorData.StaffRole.RECEPTIONIST,
+		"MAINTENANCE_STAFF": ActorData.StaffRole.MAINTENANCE_STAFF,
+		"DELIVERY_STAFF": ActorData.StaffRole.DELIVERY_STAFF,
+		"CUSTOMER_SERVICE": ActorData.StaffRole.CUSTOMER_SERVICE,
+	}
+
+	# Role -> default floor. Used so a role's NPC lands on a sensible floor
+	# rather than always F0..F4 in round-robin. Falls back to current_floor.
+	var role_default_floor := {
+		ActorData.StaffRole.CASHIER: 0,
+		ActorData.StaffRole.SHELF_STOCKER: 0,
+		ActorData.StaffRole.CLEANER: 0,
+		ActorData.StaffRole.SECURITY: 0,
+		ActorData.StaffRole.GREETER: 0,
+		ActorData.StaffRole.MANAGER: 9,
+		ActorData.StaffRole.FLOOR_STAFF: 1,
+		ActorData.StaffRole.SCAN_GO: 0,
+		ActorData.StaffRole.SHOP_STAFF: 1,
+		ActorData.StaffRole.FOOD_STAFF: 0,
+		ActorData.StaffRole.CLEAN_STAFF: 6,
+		ActorData.StaffRole.RECEPTIONIST: 0,
+		ActorData.StaffRole.MAINTENANCE_STAFF: 14,
+		ActorData.StaffRole.DELIVERY_STAFF: 11,
+		ActorData.StaffRole.CUSTOMER_SERVICE: 0,
 	}
 
 	# Spawn staff only for current floor
@@ -222,15 +283,16 @@ func build_npcs() -> void:
 		var role = role_map.get(role_name, ActorData.StaffRole.CASHIER)
 		var count := 2 if role == ActorData.StaffRole.SHELF_STOCKER else 1
 		for c in range(count):
-			var floor_idx := c % 5
+			var floor_idx: int = role_default_floor.get(role, current_floor)
 			# Only spawn if floor matches current floor
 			if floor_idx != current_floor:
 				continue
 			var spawns = staff_spawns.get(str(floor_idx), {"x": [30], "y": [10]})
-			var sx = spawns["x"][c % spawns["x"].size()] * _cell_size
-			# Convert relative Y to absolute world Y based on floor
-			var rel_y = spawns["y"][c % spawns["y"].size()]
-			var sy = _get_floor_world_y(floor_idx) + rel_y * _cell_size
+			# Pick a random spawn point on this floor to avoid overlap clustering
+			var pick := randi() % int(spawns["x"].size())
+			var sx: float = float(spawns["x"][pick]) * float(_cell_size)
+			var rel_y: int = int(spawns["y"][pick])
+			var sy: float = _get_floor_world_y(floor_idx) + float(rel_y) * float(_cell_size)
 			spawn_npc_staff(role, floor_idx, Vector2(sx, sy))
 
 	var customer_spawns: Array = _config.get_customer_spawns()
@@ -294,7 +356,7 @@ func build_npcs() -> void:
 			spawn_customer_group(gtype, floor_idx, Vector2(px, py))
 			
 # ── Humanoid robot ───────────────────────────────────────────────────────────
-func spawn_robot_humanoid(staff_role: ActorData.StaffRole, patrol_points: Array = []) -> void:
+func spawn_robot_humanoid(staff_role: ActorData.StaffRole, patrol_points: Array = [], floor_idx: int = 0) -> void:
 	# 🔥 空值防护
 	if _main == null: return
 	var spawn_pos := Vector2.ZERO
@@ -309,7 +371,7 @@ func spawn_robot_humanoid(staff_role: ActorData.StaffRole, patrol_points: Array 
 		ActorData.StaffRole.MANAGER:     spawn_pos = Vector2(500, 300)
 
 	var robot := preload("res://scripts/entities/robot_controller.gd").new()
-	robot.configure_humanoid(staff_role, spawn_pos, patrol_points)
+	robot.configure_humanoid(staff_role, spawn_pos, patrol_points, floor_idx)
 	robot.name = "Robot_Humanoid_%s" % _assigned_role_name(staff_role)
 	_main.add_child(robot)
 	var robots: Array = _main.get("_robots")
@@ -318,7 +380,7 @@ func spawn_robot_humanoid(staff_role: ActorData.StaffRole, patrol_points: Array 
 	print("    [Spawn] %s -> humanoid staff_role=%d spawn_default=(%.0f,%.0f) patrol_pts=%d" % [robot.name, staff_role, spawn_pos.x, spawn_pos.y, patrol_points.size()])
 
 # ── Single-function robot ──────────────────────────────────────────────────────
-func spawn_robot_single(rrole: ActorData.RobotRole, patrol_points: Array = []) -> void:
+func spawn_robot_single(rrole: ActorData.RobotRole, patrol_points: Array = [], floor_idx: int = 0) -> void:
 	# 🔥 空值防护
 	if _main == null: return
 	var spawn_pos := Vector2.ZERO
@@ -330,7 +392,7 @@ func spawn_robot_single(rrole: ActorData.RobotRole, patrol_points: Array = []) -
 		ActorData.RobotRole.SHELF_ROBOT:     spawn_pos = Vector2(200, 300)
 
 	var robot := preload("res://scripts/entities/robot_controller.gd").new()
-	robot.configure_single_function(rrole, spawn_pos, patrol_points)
+	robot.configure_single_function(rrole, spawn_pos, patrol_points, floor_idx)
 	# Include unique ID in name to prevent duplicates
 	robot.name = "Robot_Single_%s_%d" % [_assigned_robot_role_name(rrole), _npc_count]
 	_main.add_child(robot)
@@ -393,6 +455,13 @@ func _assigned_role_name(role: ActorData.StaffRole) -> String:
 		ActorData.StaffRole.MANAGER: return "Manager"
 		ActorData.StaffRole.FLOOR_STAFF: return "FloorStaff"
 		ActorData.StaffRole.SCAN_GO: return "ScanGo"
+		ActorData.StaffRole.SHOP_STAFF: return "ShopStaff"
+		ActorData.StaffRole.FOOD_STAFF: return "FoodStaff"
+		ActorData.StaffRole.CLEAN_STAFF: return "CleanStaff"
+		ActorData.StaffRole.RECEPTIONIST: return "Receptionist"
+		ActorData.StaffRole.MAINTENANCE_STAFF: return "Maintenance"
+		ActorData.StaffRole.DELIVERY_STAFF: return "Delivery"
+		ActorData.StaffRole.CUSTOMER_SERVICE: return "CustomerService"
 	return "Unknown"
 
 func _assigned_robot_role_name(rrole: ActorData.RobotRole) -> String:
@@ -405,42 +474,37 @@ func _assigned_robot_role_name(rrole: ActorData.RobotRole) -> String:
 	return "Unknown"
 
 # ── Scan & Go companion ───────────────────────────────────────────────────────
-# ── Scan & Go companion ───────────────────────────────────────────────────────
 func spawn_scan_go_companion() -> void:
-	# 🔥 空值防护
 	if _main == null: return
 	var player: Node2D = _main.get("_player")
 	if player == null:
 		return
 	var spawn_pos := player.position + Vector2(40, 0)
-	var actor := ActorData.Actor.new()
-	actor.role = ActorData.Role.STAFF
-	actor.staff_role = ActorData.StaffRole.SCAN_GO
+
+	# Build a fully-formed actor via the standard factory so the appearance
+	# is randomized the same way as other staff. random_staff already sets
+	# SCAN_GO uniform colors (see actor_data.gd).
+	var actor := ActorData.Actor.random_staff(ActorData.StaffRole.SCAN_GO)
 	actor.life_stage = ActorData.LifeStage.ADULT
-	var floor_idx: int = _main.get("_current_floor_idx")
+	var floor_idx: int = int(_main.get("_current_floor_idx"))
 	actor.current_floor = floor_idx
-	actor.position = spawn_pos
-	
-	# 🔥 修复：直接使用已定义的常量
-	actor.speed = ActorData.Actor.SPEED_ADULT
-	
-	var app := ActorData.Appearance.new()
-	# 🔥 修复：直接使用已定义的静态数组
-	app.skin_tone = ActorData.Appearance.SKINS[randi() % ActorData.Appearance.SKINS.size()]
-	app.top_color = Color(0.20, 0.50, 0.80)
-	app.bottom_color = Color(0.15, 0.15, 0.30)
-	app.hair_color = ActorData.Appearance.HAIR_COLORS[randi() % ActorData.Appearance.HAIR_COLORS.size()]
-	actor.appearance = app
-	
+
 	var npc := preload("res://scripts/entities/npc_controller.gd").new()
+	# configure() must run before the override below so the sprite, label,
+	# collision, and bounds are set up. Then jump straight into the
+	# companion state and bind to the player.
+	npc.configure(actor)
 	npc._player_reference = player
+	npc._state = NPCController.BehaviorState.SCAN_GO_COMPANION
 	npc.position = spawn_pos
-	npc._state = preload("res://scripts/entities/npc_controller.gd").BehaviorState.SCAN_GO_COMPANION
 	npc.name = "ScanGoCompanion"
 	_main.add_child(npc)
 	var npcs: Array = _main.get("_npcs")
 	if npcs != null and npcs is Array:
 		npcs.append(npc)
+	var chat_mgr = _main.get("_chat_manager")
+	if chat_mgr != null:
+		chat_mgr.register_npc(npc)
 
 func remove_scan_go_companion() -> void:
 	if _main == null: return
@@ -452,27 +516,29 @@ func spawn_player() -> void:
 	# 🔥 空值防护
 	if _main == null: return
 	var player: Node2D = preload("res://scripts/entities/player.gd").new()
-	# Spawn near elevator (tile 6, y=12 tiles = 192 pixels from floor base)
-	# Floor base at y=512, player at y=512 + 192 = 704, which is within lobby zone
+	# Spawn at the supermarket entry corridor (tile 250, 10) — just below the entry gate
+	# and inside the "Supermarket Floor" moveable area, in the corridor between the
+	# trolley band (y=2-8) and the service row (y=12-40).
 	var floor_y: float = _get_floor_world_y(0)  # Floor 0 world Y
-	player.position = Vector2(6 * _cell_size + 7 * _cell_size, floor_y + 12 * _cell_size)
+	player.position = Vector2(250 * _cell_size, floor_y + 10 * _cell_size)
 	_main.add_child(player)
 	player.set_world(_main)
-	player.cart_updated.connect(_main._on_cart_updated)
+	player.cart_updated.connect(_main._logic._on_cart_updated)
 	player.interact_requested.connect(_main._on_player_interact)
-	player.cart_dropped.connect(_main._on_cart_dropped)
-	player.cart_grabbed.connect(_main._on_cart_grabbed)
+	player.cart_dropped.connect(_main._logic._on_cart_dropped)
+	player.cart_grabbed.connect(_main._logic._on_cart_grabbed)
 	#player.tab_pressed.connect(_main._on_tab_pressed)
 	_main.set("_player", player)
 
 # ── Test helpers ───────────────────────────────────────────────────────────────
 func spawn_test_customers(count: int) -> void:
 	if _main == null: return
-	# Limit to only 1 NPC spawn total (ignore count, spawn just 1)
-	if _npc_spawned:
-		print("[MainSpawner] NPC already spawned, skipping test customer")
+	# Each test helper allows one spawn per category so a customer test
+	# does not block a staff test, and vice versa.
+	if _test_customer_spawned:
+		print("[MainSpawner] Test customer already spawned, skipping")
 		return
-	_npc_spawned = true
+	_test_customer_spawned = true
 	# Spawn just 1 NPC for testing
 	var npc: Node = preload("res://scripts/entities/npc_controller.gd").new()
 	npc.position = Vector2(300.0 + randf_range(-50, 50), 500.0 + randf_range(-30, 30))
@@ -487,11 +553,10 @@ func spawn_test_customers(count: int) -> void:
 
 func spawn_test_staff(count: int) -> void:
 	if _main == null: return
-	# Limit to only 1 NPC spawn total (ignore count, spawn just 1)
-	if _npc_spawned:
-		print("[MainSpawner] NPC already spawned, skipping test staff")
+	if _test_staff_spawned:
+		print("[MainSpawner] Test staff already spawned, skipping")
 		return
-	_npc_spawned = true
+	_test_staff_spawned = true
 	# Spawn just 1 NPC for testing
 	var npc: Node = preload("res://scripts/entities/npc_controller.gd").new()
 	npc.position = Vector2(350.0 + randf_range(-50, 50), 300.0 + randf_range(-30, 30))
@@ -556,25 +621,27 @@ func spawn_truck_at_dock() -> void:
 	truck_dock_node.add_child(dock_lbl)
 
 # ── Spawn limit helpers ────────────────────────────────────────────────────────
-# Reset NPC spawn flag (allows spawning 1 NPC again)
+# Reset test-customer spawn flag (allows spawning 1 test customer again)
 func reset_npc_spawn() -> void:
-	_npc_spawned = false
-	print("[MainSpawner] NPC spawn limit reset")
+	_test_customer_spawned = false
+	_test_staff_spawned = false
+	print("[MainSpawner] Test NPC spawn limits reset")
 
 # Reset robot spawn flag (allows spawning 1 robot again)
 func reset_robot_spawn() -> void:
 	_robot_spawned = false
 	print("[MainSpawner] Robot spawn limit reset")
 
-# Reset both NPC and robot spawn flags
+# Reset all test spawn flags
 func reset_all_spawns() -> void:
-	_npc_spawned = false
+	_test_customer_spawned = false
+	_test_staff_spawned = false
 	_robot_spawned = false
 	print("[MainSpawner] All spawn limits reset")
 
-# Check if an NPC has been spawned
+# Check if a test NPC has been spawned
 func has_npc_spawned() -> bool:
-	return _npc_spawned
+	return _test_customer_spawned or _test_staff_spawned
 
 # Check if a robot has been spawned
 func has_robot_spawned() -> bool:

@@ -14,10 +14,12 @@ var _target_floor: int = 1  # Which floor it connects to
 
 # Movement settings
 const MOVE_SPEED := 120.0  # Pixels per second - escalator belt speed
-const FLOOR_TRANSITION_THRESHOLD := 100.0  # Distance before triggering floor change
+const FLOOR_TRANSITION_THRESHOLD_DEFAULT := 100.0  # Fallback when the zone is taller than this
+# Actual threshold is derived from zone size in _build_visuals — see _transition_threshold.
 
 # Zone bounds
 var _zone_rect: Rect2 = Rect2(0, 0, 0, 0)
+var _transition_threshold: float = FLOOR_TRANSITION_THRESHOLD_DEFAULT  # Computed from zone size at build time
 
 # State
 var _player_on_escalator: bool = false
@@ -56,6 +58,10 @@ func configure(zone: Dictionary, escalator_id: String, floor_idx: int) -> void:
 		zone.w * CELL_SIZE,
 		zone.h * CELL_SIZE
 	)
+	# Trigger the floor change when the player traverses ~85% of the escalator
+	# (or the constant default, whichever is smaller). A fixed 100px threshold
+	# would never fire on a short rightsized escalator (e.g. 6 tiles = 96px).
+	_transition_threshold = min(FLOOR_TRANSITION_THRESHOLD_DEFAULT, _zone_rect.size.y * 0.85)
 
 func _ready() -> void:
 	_build_visuals()
@@ -214,7 +220,7 @@ func _check_transition() -> void:
 	var current_y: float = _player.position.y
 	var distance_moved := absf(current_y - entry_y)
 	
-	if distance_moved >= FLOOR_TRANSITION_THRESHOLD:
+	if distance_moved >= _transition_threshold:
 		_start_floor_transition()
 
 func _start_floor_transition() -> void:

@@ -102,6 +102,20 @@ const CELL_SIZE := FloorConfig.CELL_SIZE
 const WORLD_W  := FloorConfig.WORLD_W
 const WORLD_H  := FloorConfig.WORLD_H
 
+# Zone types that should get product rectangles stocked on their shelves.
+# Everything else (lobby, warehouse, food stalls, decor, racks) keeps the
+# plain shelf-detail pass but no fake goods piled on top.
+const MERCHANDISE_ZONE_TYPES := [
+	"ZONE_FRESH_PRODUCE",
+	"ZONE_MEAT",
+	"ZONE_SEAFOOD",
+	"ZONE_FROZEN",
+	"ZONE_DAIRY",
+	"ZONE_BAKERY",
+	"ZONE_BEVERAGES",
+	"ZONE_PANTRY",
+]
+
 var _floor_def: FloorConfig.FloorDef
 var _parent: Node
 var _floor_idx: int = 0
@@ -142,13 +156,16 @@ func build(floor_def: FloorConfig.FloorDef, parent: Node, floor_idx: int = 0, st
 	_build_checkout_if_needed()
 	_build_floor_sign()
 	_build_shaft_visuals()
+	_verify_walk_rows()
 
 
 func _build_world_bg() -> void:
 	var bg := ColorRect.new()
 	bg.size = Vector2(WORLD_W * CELL_SIZE, WORLD_H * CELL_SIZE)
 	bg.position = Vector2.ZERO
-	bg.color = _floor_def.ambient_color.darkened(0.75)
+	# Visible walkable floor. Anywhere a zone does NOT draw on top stays this color
+	# and is walkable. Aisles intentionally add no sprite so the floor shows through.
+	bg.color = Color(0.93, 0.89, 0.78)
 	_parent.add_child(bg)
 	_floor_nodes.append(bg)
 
@@ -227,6 +244,34 @@ func _build_zone(zone: Dictionary) -> void:
 		FloorConfig.ZONE_TRUCK_DOCK: _build_zone_truck_dock(zone)
 		FloorConfig.ZONE_FORKLIFT: _build_zone_forklift(zone)
 		FloorConfig.ZONE_CONVEYOR: _build_zone_conveyor(zone)
+		# Supermarket merch zones (PRODUCE, MEAT, SEAFOOD, FROZEN, DAIRY, BAKERY,
+		# BEVERAGES, PANTRY) are rendered by _build_zone_sprites (base color +
+		# bay dividers) plus the SupermarketSection node (24x24 product sprites
+		# with their own shelf boards + pickup logic). The legacy _build_zone_*
+		# functions would draw a duplicate dark ColorRect + label on top, so
+		# we route them through the same generic builder that handles the
+		# walkable supermarket zones (CHECKOUT, TROLLEY, etc.).
+		FloorConfig.ZONE_CHECKOUT:      _build_zone_checkout(zone)
+		FloorConfig.ZONE_TROLLEY:       _build_zone_trolley(zone)
+		FloorConfig.ZONE_FIRST_AID:     _build_zone_first_aid(zone)
+		FloorConfig.ZONE_SNACKS:        _build_zone_snacks(zone)
+		FloorConfig.ZONE_HOUSEHOLD:     _build_zone_household(zone)
+		FloorConfig.ZONE_HEALTH:        _build_zone_health(zone)
+		FloorConfig.ZONE_BABY:          _build_zone_baby(zone)
+		FloorConfig.ZONE_EXIT:          _build_zone_exit_lane(zone)
+		# Merch zones are handled by _build_zone_sprites + SupermarketSection.
+		# Their _build_zone_* legacy handlers are kept defined but no longer
+		# called from this match (see commented lines below for the original
+		# routing).
+		#
+		# FloorConfig.ZONE_FRESH_PRODUCE: _build_zone_fresh_produce(zone)
+		# FloorConfig.ZONE_MEAT:          _build_zone_meat(zone)
+		# FloorConfig.ZONE_SEAFOOD:       _build_zone_seafood(zone)
+		# FloorConfig.ZONE_FROZEN:        _build_zone_frozen(zone)
+		# FloorConfig.ZONE_DAIRY:         _build_zone_dairy(zone)
+		# FloorConfig.ZONE_BAKERY:        _build_zone_bakery(zone)
+		# FloorConfig.ZONE_BEVERAGES:     _build_zone_beverages(zone)
+		# FloorConfig.ZONE_PANTRY:        _build_zone_pantry(zone)
 		# Unknown types are silently skipped (extensible)
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -241,13 +286,11 @@ func _build_zone_wall(zone: Dictionary) -> void:
 	_parent.add_child(r)
 	_floor_nodes.append(r)
 
-func _build_zone_aisle(zone: Dictionary) -> void:
-	var r := ColorRect.new()
-	r.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
-	r.size = Vector2(zone.w * CELL_SIZE, zone.h * CELL_SIZE)
-	r.color = Color(0.20, 0.19, 0.18)
-	_parent.add_child(r)
-	_floor_nodes.append(r)
+func _build_zone_aisle(_zone: Dictionary) -> void:
+	# Aisles intentionally render no sprite. They are walkable corridors carved
+	# through shelf zones; letting the world-bg floor show through is the cue
+	# that the player can walk here. Collision and audit still respect the zone.
+	pass
 
 func _build_zone_lobby(zone: Dictionary) -> void:
 	# Delegate to LobbyHandler
@@ -1006,6 +1049,58 @@ func _build_zone_warehouse_stock_view(zone: Dictionary) -> void:
 	# Delegate to WarehouseHandler
 	WarehouseHandler.build_warehouse_area(_parent, zone, _floor_nodes, "ZONE_WAREHOUSE_STOCK_VIEW")
 
+# ─── Supermarket zone builders (data + handler routing only) ──────────
+# Each zone is rendered with a tinted floor + label; richer visuals can be
+# added later by replacing the body of any of these functions.
+
+func _build_zone_checkout(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "CHECKOUT", Color(0.80, 0.55, 0.35))
+
+func _build_zone_trolley(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "TROLLEY BAY", Color(0.45, 0.60, 0.75))
+
+func _build_zone_first_aid(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "FIRST AID", Color(0.85, 0.30, 0.30))
+
+func _build_zone_fresh_produce(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "PRODUCE", Color(0.55, 0.78, 0.45))
+
+func _build_zone_meat(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "MEAT & DELI", Color(0.80, 0.45, 0.45))
+
+func _build_zone_seafood(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "SEAFOOD", Color(0.40, 0.65, 0.80))
+
+func _build_zone_frozen(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "FROZEN", Color(0.50, 0.72, 0.92))
+
+func _build_zone_dairy(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "DAIRY", Color(0.85, 0.85, 0.78))
+
+func _build_zone_bakery(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "BAKERY", Color(0.78, 0.58, 0.35))
+
+func _build_zone_beverages(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "BEVERAGES", Color(0.45, 0.72, 0.95))
+
+func _build_zone_pantry(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "PANTRY & SNACKS", Color(0.78, 0.65, 0.42))
+
+func _build_zone_snacks(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "SNACKS", Color(0.85, 0.62, 0.42))
+
+func _build_zone_household(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "HOUSEHOLD", Color(0.55, 0.68, 0.62))
+
+func _build_zone_health(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "HEALTH", Color(0.62, 0.78, 0.72))
+
+func _build_zone_baby(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "BABY & KIDS", Color(0.85, 0.72, 0.85))
+
+func _build_zone_exit_lane(zone: Dictionary) -> void:
+	_build_generic_zone(zone, "EXIT", Color(0.30, 0.55, 0.40))
+
 func _build_generic_zone(zone: Dictionary, label: String, base_color: Color) -> void:
 	var bg := ColorRect.new()
 	bg.position = Vector2(zone.x * CELL_SIZE, zone.y * CELL_SIZE)
@@ -1033,49 +1128,33 @@ func _build_section_zone(sz: Dictionary) -> void:
 	if def == null:
 		return
 
+	# Single base color for the whole section. The Section node used to draw
+	# its own duplicate of this same area (same color, same size), plus its
+	# own frame, sign, light, and 4 white outline borders — all of which
+	# overlapped with the version drawn here. The section now only owns
+	# what only it can own: the Area2D for pickup detection and the 28
+	# product sprites.
 	var bg := ColorRect.new()
 	bg.position = Vector2(sz.x * CELL_SIZE, sz.y * CELL_SIZE)
 	bg.size = Vector2(sz.w * CELL_SIZE, sz.h * CELL_SIZE)
 	bg.color = _get_section_floor(def.style)
 	_parent.add_child(bg); _floor_nodes.append(bg)
 
-	var wc := _get_section_wall_color(def.style)
-	var tw := ColorRect.new()
-	tw.position = Vector2(sz.x * CELL_SIZE, sz.y * CELL_SIZE)
-	tw.size = Vector2(sz.w * CELL_SIZE, 2)
-	tw.color = wc; _parent.add_child(tw); _floor_nodes.append(tw)
-
-	var bw := ColorRect.new()
-	bw.position = Vector2(sz.x * CELL_SIZE, (sz.y + sz.h - 1) * CELL_SIZE)
-	bw.size = Vector2(sz.w * CELL_SIZE, 2)
-	bw.color = wc.darkened(0.15); _parent.add_child(bw); _floor_nodes.append(bw)
-
-	var lw := ColorRect.new()
-	lw.position = Vector2(sz.x * CELL_SIZE, sz.y * CELL_SIZE)
-	lw.size = Vector2(2, sz.h * CELL_SIZE)
-	lw.color = wc.darkened(0.1); _parent.add_child(lw); _floor_nodes.append(lw)
-
-	var rw := ColorRect.new()
-	rw.position = Vector2((sz.x + sz.w - 1) * CELL_SIZE, sz.y * CELL_SIZE)
-	rw.size = Vector2(2, sz.h * CELL_SIZE)
-	rw.color = wc.darkened(0.2); _parent.add_child(rw); _floor_nodes.append(rw)
-
-	var glow := Sprite2D.new()
-	glow.position = Vector2((sz.x + sz.w * 0.5) * CELL_SIZE, (sz.y - 6) * CELL_SIZE)
-	glow.texture = _make_glow(def.light_color)
-	_parent.add_child(glow); _floor_nodes.append(glow)
-
-	var sign := _make_sign(def, sz.w, sz.h)
-	sign.position = Vector2((sz.x + sz.w * 0.5) * CELL_SIZE, (sz.y + 1) * CELL_SIZE)
-	_parent.add_child(sign); _floor_nodes.append(sign)
-
 	var sec := preload("res://scripts/world/section.gd").new()
 	sec.configure(def)
+	# def.ww/wh is the section's static catalog size. The actual rendered
+	# section_zone (this dict's w/h) is larger because it includes the
+	# aisle below the merch shelf. The section node needs the rendered
+	# size to spread its 28 product slots across the full shelf width
+	# and to size the pickup Area2D correctly.
+	sec.set_layout_size(sz.w, sz.h)
 	sec.position = Vector2(sz.x * CELL_SIZE, sz.y * CELL_SIZE)
 	sec.name = "Section_%s" % def.id
 	_parent.add_child(sec)
 	_sections.append(sec)
 
+	# Single label below the section. The Section node used to draw its
+	# own label sprite above the shelf as well — that one is gone now.
 	var lbl := Label.new()
 	lbl.text = def.name
 	lbl.position = Vector2((sz.x + 1) * CELL_SIZE, (sz.y + sz.h + 1) * CELL_SIZE)
@@ -1167,52 +1246,6 @@ func _get_section_floor(style: int) -> Color:
 		StoreData.SectionStyle.SPORT_AREA: return Color(0.15, 0.17, 0.16)
 	return Color(0.18, 0.17, 0.16)
 
-func _get_section_wall_color(style: int) -> Color:
-	match style:
-		StoreData.SectionStyle.FRIDGE:   return Color(0.60, 0.78, 0.95)
-		StoreData.SectionStyle.PRODUCE:  return Color(0.60, 0.82, 0.50)
-		StoreData.SectionStyle.BAKERY:   return Color(0.82, 0.62, 0.38)
-		StoreData.SectionStyle.SHELF:    return Color(0.72, 0.65, 0.55)
-		StoreData.SectionStyle.DELI:     return Color(0.88, 0.55, 0.52)
-		StoreData.SectionStyle.FREEZER:  return Color(0.55, 0.78, 0.95)
-		StoreData.SectionStyle.SHOES_RACK: return Color(0.75, 0.60, 0.55)
-		StoreData.SectionStyle.DRESS_RACK: return Color(0.72, 0.58, 0.68)
-		StoreData.SectionStyle.SPORT_AREA: return Color(0.55, 0.72, 0.65)
-	return Color(0.65, 0.60, 0.50)
-
-func _make_glow(col: Color) -> Texture2D:
-	var sz := 48
-	var img := Image.create(sz, sz, false, Image.FORMAT_RGBA8)
-	img.fill(Color(0, 0, 0, 0))
-	var c := col.darkened(0.2)
-	for y in range(sz):
-		for x in range(sz):
-			var d := Vector2(x - sz * 0.5, y - sz * 0.5).length() / (sz * 0.5)
-			if d < 1.0:
-				var a := (1.0 - d) * 0.35 * c.a
-				img.set_pixel(x, y, Color(c.r, c.g, c.b, a))
-	return ImageTexture.create_from_image(img)
-
-func _make_sign(def, w: int, h: int) -> Sprite2D:
-	var img := Image.create(80, 12, false, Image.FORMAT_RGBA8)
-	img.fill(Color(0, 0, 0, 0))
-	_fill_sign_rect(img, 0, 0, 80, 12, _get_section_wall_color(def.style).darkened(0.3))
-	_fill_sign_rect(img, 0, 0, 80, 1, def.light_color.darkened(0.2))
-	_fill_sign_rect(img, 0, 11, 80, 1, def.light_color.darkened(0.4))
-	_fill_sign_rect(img, 0, 0, 1, 12, def.light_color.darkened(0.2))
-	_fill_sign_rect(img, 79, 0, 1, 12, def.light_color.darkened(0.4))
-	var spr := Sprite2D.new()
-	spr.texture = ImageTexture.create_from_image(img)
-	spr.z_index = 5
-	return spr
-
-func _fill_sign_rect(img: Image, x: int, y: int, w: int, h: int, col: Color) -> void:
-	x = clampi(x, 0, 80); y = clampi(y, 0, 12)
-	w = clampi(w, 0, 80 - x); h = clampi(h, 0, 12 - y)
-	for px in range(x, x + w):
-		for py in range(y, y + h):
-			img.set_pixel(px, py, col)
-
 func _make_plush_texture(col: Color) -> Texture2D:
 	var sz := 12
 	var img := Image.create(sz, sz, false, Image.FORMAT_RGBA8)
@@ -1302,32 +1335,140 @@ func _build_tilemap() -> void:
 	_build_zone_sprites()
 
 func _build_zone_sprites() -> void:
-	# Create colored sprite (ColorRect) for each zone
-	# Zones use pixel coordinates: x, y, w, h in tile units (multiply by CELL_SIZE)
+	# Per-zone background rectangle.
+	# Visual contract:
+	#   - AISLE: skipped entirely. The world-bg floor shows through and the
+	#     player reads it as walkable space.
+	#   - WALKABLE AMENITY (trolley, exit, checkout, service): semi-transparent
+	#     tint so the floor color still bleeds through. Labels these as
+	#     functional without making them dominate the screen.
+	#   - NON-WALKABLE (shelves, kiosks, decor): full opaque theme color via
+	#     _get_zone_color so each section is identifiable at a glance, plus a
+	#     gondola-shelf detail overlay (horizontal levels + vertical dividers)
+	#     so merchandise sections read as actual shelving instead of flat
+	#     colored blocks.
+	# Nothing is painted black here. Black is reserved for outlines / signage.
 	for zone in _floor_def.zones:
 		var zone_type: String = zone.get("type", "")
+		if zone_type == "ZONE_AISLE":
+			continue
+
 		var x: int = zone.get("x", 0)
 		var y: int = zone.get("y", 0)
 		var w: int = zone.get("w", 1)
 		var h: int = zone.get("h", 1)
 
-		# Get color from zone meta, or use default based on zone type
 		var color: Color = _get_zone_color(zone)
+		var is_walkable: bool = _is_walkable_zone(zone_type)
+		if is_walkable:
+			# Soft overlay: keep the hue but let the floor underneath show through.
+			color.a = 0.45
 
-		# Create ColorRect as the zone sprite
-		var zone_sprite := ColorRect.new()
-		zone_sprite.size = Vector2(w * CELL_SIZE, h * CELL_SIZE)
-		zone_sprite.position = Vector2(x * CELL_SIZE, y * CELL_SIZE)
-		zone_sprite.color = color
-		zone_sprite.z_index = 0  # Render below other elements
+		# Merch zones: skip the base color rect here. The Section node
+		# (_build_section_zones) draws its own (larger) background that
+		# covers this area, so a duplicate rect just adds z-fighting at z=0.
+		if zone_type not in MERCHANDISE_ZONE_TYPES:
+			var zone_sprite := ColorRect.new()
+			zone_sprite.size = Vector2(w * CELL_SIZE, h * CELL_SIZE)
+			zone_sprite.position = Vector2(x * CELL_SIZE, y * CELL_SIZE)
+			zone_sprite.color = color
+			zone_sprite.z_index = 0
+			_parent.add_child(zone_sprite)
+			_floor_nodes.append(zone_sprite)
 
-		_parent.add_child(zone_sprite)
-		_floor_nodes.append(zone_sprite)
+		# Gondola shelf detail for merchandise sections. Skipped automatically
+		# on small zones (decor, single-tile pieces) so they stay clean.
+		# Only supermarket shelves get the gondola structure (bay dividers +
+		# mid-shelf line). The actual product sprites are drawn by the
+		# SupermarketSection node (see _build_section_zones) so each product
+		# is interactive (pickup) and the inventory is correct per section.
+		if not is_walkable and zone_type in MERCHANDISE_ZONE_TYPES:
+			_build_shelf_detail(x, y, w, h, color)
 
-		# Add zone label
 		_add_zone_label(zone, x, y, w, h)
 
 	print("[FloorBuilder] Built ", _floor_def.zones.size(), " zone sprites for floor ", _floor_idx)
+
+func _build_shelf_detail(x: int, y: int, w: int, h: int, base_color: Color) -> void:
+	# Adds bay dividers on top of a non-walkable merchandise zone. Vertical
+	# dividers every 14 tiles (224px) split the zone into 14-tile bays so the
+	# shelf reads as a series of sections aligned with the SupermarketSection
+	# bay layout (5 products × 5 rows per bay, 6 bays per 84-tile section).
+	#
+	# Min size: 8 tiles wide. Smaller zones get a no-op.
+	if w < 8:
+		return
+
+	var x_px: int = x * CELL_SIZE
+	var y_px: int = y * CELL_SIZE
+	var w_px: int = w * CELL_SIZE
+	var h_px: int = h * CELL_SIZE
+
+	var div_color: Color = base_color.darkened(0.72)
+
+	# Vertical gondola dividers — every 14 tiles (224px)
+	var gondola_w_px: int = 14 * CELL_SIZE
+	var num_gondolas: int = int(w_px / gondola_w_px)
+	for i in range(1, num_gondolas):
+		var div_x: int = x_px + i * gondola_w_px - 1
+		var div := ColorRect.new()
+		div.position = Vector2(div_x, y_px)
+		div.size = Vector2(2, h_px)
+		div.color = div_color
+		div.z_index = 1
+		_parent.add_child(div)
+		_floor_nodes.append(div)
+
+func _is_walkable_zone(zone_type: String) -> bool:
+	# Mirrors the WALKABLE_ZONE_TYPES set in main.gd so visual and collision
+	# logic agree. Aisles are not rendered here (they use _build_zone_aisle).
+	return zone_type == "ZONE_TROLLEY" \
+		or zone_type == "ZONE_EXIT" \
+		or zone_type == "ZONE_CHECKOUT" \
+		or zone_type == "ZONE_CUSTOMER_SERVICE"
+
+func _verify_walk_rows() -> void:
+	# Audit: every tile inside a ZONE_AISLE must resolve to walkable under the
+	# same nested-zone rule that main.gd uses, otherwise the visible "walk row"
+	# is a lie and the player will collide with whatever zone contains it.
+	if _floor_def == null:
+		return
+	var aisle_count := 0
+	var fail_count := 0
+	for aisle in _floor_def.zones:
+		if aisle.get("type", "") != "ZONE_AISLE":
+			continue
+		aisle_count += 1
+		var ax: int = aisle.get("x", 0)
+		var ay: int = aisle.get("y", 0)
+		var aw: int = aisle.get("w", 1)
+		var ah: int = aisle.get("h", 1)
+		for ty in range(ay, ay + ah):
+			for tx in range(ax, ax + aw):
+				if not _is_tile_walkable(tx, ty):
+					push_warning("[FloorBuilder] Walk row blocked: tile(%d,%d) inside aisle y=%d on floor %d" % [tx, ty, ay, _floor_idx])
+					fail_count += 1
+	if aisle_count == 0:
+		print("[FloorBuilder] No ZONE_AISLE rows defined on floor ", _floor_idx)
+	else:
+		print("[FloorBuilder] Verified ", aisle_count, " walk rows on floor ", _floor_idx, " (blocked tiles: ", fail_count, ")")
+
+func _is_tile_walkable(tx: int, ty: int) -> bool:
+	# Mirror of main.gd:is_position_blocked nested-walkable rule.
+	# A tile is walkable when no zone contains it, OR when at least one
+	# containing zone is of a walkable type (walkable wins over parent).
+	var inside_non_walkable := false
+	for zone in _floor_def.zones:
+		var zx: int = zone.get("x", 0)
+		var zy: int = zone.get("y", 0)
+		var zw: int = zone.get("w", 1)
+		var zh: int = zone.get("h", 1)
+		if tx >= zx and tx < zx + zw and ty >= zy and ty < zy + zh:
+			var zt: String = zone.get("type", "")
+			if zt == "ZONE_TROLLEY" or zt == "ZONE_EXIT" or zt == "ZONE_CHECKOUT" or zt == "ZONE_AISLE" or zt == "ZONE_CUSTOMER_SERVICE":
+				return true
+			inside_non_walkable = true
+	return not inside_non_walkable
 
 func _add_zone_label(zone: Dictionary, x: int, y: int, w: int, h: int) -> void:
 	# Get zone name from meta.name or generate from zone type
@@ -1342,10 +1483,17 @@ func _add_zone_label(zone: Dictionary, x: int, y: int, w: int, h: int) -> void:
 		else:
 			zone_name = zone_type.replace("_", " ")
 
+	# Merch zones: put the label ABOVE the shelf, not inside it, so it doesn't
+	# sit on top of the top-row products. Other zones keep the label inside.
+	var zone_type: String = zone.get("type", "")
+	var label_y: int = y
+	if zone_type in MERCHANDISE_ZONE_TYPES:
+		label_y = y - 1  # one tile above the shelf
+
 	# Create label centered in zone
 	var label := Label.new()
 	label.text = zone_name
-	label.position = Vector2(x * CELL_SIZE + 4, y * CELL_SIZE + 4)
+	label.position = Vector2(x * CELL_SIZE + 4, label_y * CELL_SIZE + 4)
 	label.z_index = 1  # Above zone color
 
 	# Style the label
@@ -1364,32 +1512,62 @@ func _add_zone_label(zone: Dictionary, x: int, y: int, w: int, h: int) -> void:
 		_floor_nodes.append(label)
 
 func _get_zone_color(zone: Dictionary) -> Color:
-	# Use zone's meta color if available
+	# Per-zone meta.color wins so a specific instance can override the palette.
 	if zone.has("meta") and zone["meta"].has("color"):
 		return zone["meta"]["color"]
 
-	# Default colors by zone type (simple solid colors)
-	var zone_type: String = zone.get("type", "").to_lower()
-	var normalized := zone_type
-	if zone_type.begins_with("ZONE_"):
-		normalized = zone_type.substr(5).to_lower()
+	# Normalize type to lowercase short form: "ZONE_FRESH_PRODUCE" -> "fresh_produce".
+	# Earlier version checked begins_with("ZONE_") AFTER to_lower(), which never
+	# matched — so every zone fell through to the default gray. Fix: strip prefix
+	# from the original-cased string before lowering.
+	var raw: String = zone.get("type", "")
+	var normalized: String = raw
+	if normalized.begins_with("ZONE_"):
+		normalized = normalized.substr(5)
+	normalized = normalized.to_lower()
 
 	var color_map = {
-		"lobby": Color(0.85, 0.80, 0.70),
-		"common": Color(0.75, 0.75, 0.72),
-		"food_court": Color(0.90, 0.85, 0.75),
-		"food_stall": Color(0.88, 0.82, 0.72),
-		"warehouse": Color(0.70, 0.68, 0.65),
-		"wc": Color(0.80, 0.85, 0.90),
-		"elevator_shaft": Color(0.20, 0.20, 0.22),
-		"stairs": Color(0.25, 0.25, 0.27),
-		"escalator": Color(0.30, 0.28, 0.25),
-		"parking": Color(0.50, 0.50, 0.52),
-		"rooftop": Color(0.78, 0.85, 0.75),
-		"section": Color(0.75, 0.75, 0.72),
+		# Supermarket sections — saturated theme color per section so the player
+		# can read "this is the meat aisle" at a glance.
+		"fresh_produce":     Color(0.55, 0.78, 0.45),
+		"meat":              Color(0.85, 0.45, 0.45),
+		"seafood":           Color(0.45, 0.65, 0.85),
+		"bakery":            Color(0.82, 0.62, 0.40),
+		"frozen":            Color(0.65, 0.85, 0.92),
+		"dairy":             Color(0.96, 0.92, 0.68),
+		"vending":           Color(0.65, 0.55, 0.78),
+		"vending_machine":   Color(0.65, 0.55, 0.78),
+		"atm":               Color(0.50, 0.55, 0.68),
+		"first_aid":         Color(0.92, 0.62, 0.62),
+		"wc":                Color(0.75, 0.85, 0.92),
+		"loyalty_kiosk":     Color(0.95, 0.78, 0.45),
+		"gift_wrap":         Color(0.92, 0.68, 0.82),
+		"info_desk":         Color(0.85, 0.82, 0.92),
+
+		# Walkable amenities (rendered with alpha=0.45 by caller).
+		"trolley":           Color(0.70, 0.82, 0.92),
+		"exit":              Color(0.70, 0.92, 0.70),
+		"checkout":          Color(0.95, 0.90, 0.55),
+		"customer_service":  Color(0.85, 0.78, 0.95),
+
+		# Larger functional areas.
+		"lobby":             Color(0.88, 0.84, 0.74),
+		"common":            Color(0.80, 0.78, 0.72),
+		"food_court":        Color(0.92, 0.85, 0.72),
+		"food_stall":        Color(0.88, 0.78, 0.62),
+		"warehouse":         Color(0.72, 0.68, 0.62),
+		"parking":           Color(0.55, 0.55, 0.58),
+		"rooftop":           Color(0.78, 0.88, 0.78),
+		"section":           Color(0.78, 0.78, 0.72),
+
+		# Transit / structural — stay dark by intent (these are openings).
+		"elevator_shaft":    Color(0.22, 0.22, 0.25),
+		"elevator":          Color(0.22, 0.22, 0.25),
+		"stairs":            Color(0.28, 0.28, 0.30),
+		"escalator":         Color(0.32, 0.30, 0.28),
 	}
 
-	return color_map.get(normalized, Color(0.60, 0.60, 0.58))
+	return color_map.get(normalized, Color(0.78, 0.72, 0.62))
 
 # Get center position of office desk zone (for price terminal proximity)
 func get_office_desk_zone_center() -> Vector2:

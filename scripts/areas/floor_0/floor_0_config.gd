@@ -143,6 +143,22 @@ const ZONE_PROMO_BOOTH := "promo_booth"
 const ZONE_WAREHOUSE_STOCK_VIEW := "wh_stock_view"
 const ZONE_LOST_FOUND := "lost_found"
 const ZONE_STORE_NEWS := "store_news"
+const ZONE_CHECKOUT := "checkout"
+const ZONE_TROLLEY := "trolley"
+const ZONE_FIRST_AID := "first_aid"
+const ZONE_FRESH_PRODUCE := "fresh_produce"
+const ZONE_MEAT := "meat"
+const ZONE_SEAFOOD := "seafood"
+const ZONE_FROZEN := "frozen"
+const ZONE_DAIRY := "dairy"
+const ZONE_BAKERY := "bakery"
+const ZONE_BEVERAGES := "beverages"
+const ZONE_PANTRY := "pantry"
+const ZONE_SNACKS := "snacks"
+const ZONE_HOUSEHOLD := "household"
+const ZONE_HEALTH := "health"
+const ZONE_BABY := "baby"
+const ZONE_EXIT := "exit_lane"
 
 # ═══════════════════════════════════════════════════════════════════════════
 # ENTITY SPAWN DEFINITIONS
@@ -200,29 +216,29 @@ class AreaDef:
 
 const CELL_SIZE := 16
 
-# Lobby area bounds (tiles)
-const LOBBY_X := 0
+# Supermarket shopping area bounds (tiles) — customer-facing floor
+const LOBBY_X := 128
 const LOBBY_Y := 2
-const LOBBY_W := 80
-const LOBBY_H := 13
+const LOBBY_W := 352
+const LOBBY_H := 136
 
-# Food Court area bounds (tiles) - multiple rows of stalls
-const FOOD_COURT_X := 0
-const FOOD_COURT_Y := 2
-const FOOD_COURT_W := 80
-const FOOD_COURT_H := 33
+# Food court sub-area (tiles) — stalls + dining seating
+const FOOD_COURT_X := 128
+const FOOD_COURT_Y := 100
+const FOOD_COURT_W := 352
+const FOOD_COURT_H := 28
 
-# Warehouse area bounds (tiles)
+# Warehouse area bounds (tiles) — staff only
 const WAREHOUSE_X := 0
-const WAREHOUSE_Y := 35
-const WAREHOUSE_W := 120
-const WAREHOUSE_H := 14
+const WAREHOUSE_Y := 140
+const WAREHOUSE_W := 480
+const WAREHOUSE_H := 56
 
-# Transit area bounds (tiles) - elevator, stairs, escalator
-const TRANSIT_X := 0
-const TRANSIT_Y := 2
-const TRANSIT_W := 32
-const TRANSIT_H := 47
+# Transit area bounds (tiles) — elevator, stairs, escalator (vertical strip on the left)
+const TRANSIT_X := 24
+const TRANSIT_Y := 8
+const TRANSIT_W := 104
+const TRANSIT_H := 132
 
 # ═══════════════════════════════════════════════════════════════════════════
 # AREA INSTANCES
@@ -230,6 +246,12 @@ const TRANSIT_H := 47
 # ═══════════════════════════════════════════════════════════════════════════
 
 var _areas: Dictionary = {}
+
+# MovementBounds waypoint sets. Populated by _setup_areas() in world-pixel
+# space (same scale as EntitySpawnDef.patrol_points). Public getters expose
+# them for spawn code that needs to constrain actors to an area.
+var _warehouse_waypoints: Array = []
+var _lobby_service_waypoints: Array = []
 
 func _init() -> void:
 	_setup_areas()
@@ -250,7 +272,7 @@ func _setup_areas() -> void:
 		EntitySpawnDef.new("npc_staff", "SHOP_STAFF", AREA_LOBBY, 28, 5, [
 			Vector2(448, 80), Vector2(528, 80), Vector2(528, 140), Vector2(448, 140), Vector2(448, 80)
 		]),
-		EntitySpawnDef.new("npc_staff", "INFO_DESK", AREA_LOBBY, 40, 3, [
+		EntitySpawnDef.new("npc_staff", "CUSTOMER_SERVICE", AREA_LOBBY, 40, 3, [
 			Vector2(640, 48), Vector2(720, 48), Vector2(720, 96), Vector2(640, 96), Vector2(640, 48)
 		]),
 		EntitySpawnDef.new("npc_staff", "SHOP_STAFF", AREA_LOBBY, 3, 3, [
@@ -277,7 +299,8 @@ func _setup_areas() -> void:
 		"Lobby",
 		[ZONE_LOBBY, ZONE_INFO_DESK, ZONE_CUSTOMER_SERVICE, ZONE_LOYALTY_KIOSK,
 		 ZONE_GIFT_WRAP, ZONE_DIGITAL_KIOSK, ZONE_AD, ZONE_ATM, ZONE_LOST_FOUND,
-		 ZONE_STORE_NEWS, ZONE_DECOR, ZONE_PROMO_BOOTH],
+		 ZONE_STORE_NEWS, ZONE_DECOR, ZONE_PROMO_BOOTH,
+		 ZONE_TROLLEY, ZONE_FIRST_AID, ZONE_EXIT],
 		lobby_spawns,
 		{"x": LOBBY_X, "y": LOBBY_Y, "w": LOBBY_W, "h": LOBBY_H}
 	)
@@ -306,7 +329,12 @@ func _setup_areas() -> void:
 	_areas[AREA_FOOD_COURT] = AreaDef.new(
 		AREA_FOOD_COURT,
 		"Food Court",
-		[ZONE_FOOD_STALL, ZONE_DECOR, ZONE_VENDING_MACHINE],
+		[ZONE_FOOD_STALL, ZONE_DECOR, ZONE_VENDING_MACHINE,
+		 ZONE_FRESH_PRODUCE, ZONE_MEAT, ZONE_SEAFOOD,
+		 ZONE_FROZEN, ZONE_DAIRY, ZONE_BAKERY,
+		 ZONE_BEVERAGES, ZONE_PANTRY, ZONE_SNACKS,
+		 ZONE_HOUSEHOLD, ZONE_HEALTH, ZONE_BABY,
+		 ZONE_CHECKOUT],
 		food_court_spawns,
 		{"x": FOOD_COURT_X, "y": FOOD_COURT_Y, "w": FOOD_COURT_W, "h": FOOD_COURT_H}
 	)
@@ -315,7 +343,7 @@ func _setup_areas() -> void:
 	# Truck dock, forklift zone, conveyor, storage shelves, stock view
 	# NOTE: spawn x/y are TILES → pixel via tile_to_pixel(); patrol_points are PIXELS
 	var warehouse_spawns := [
-		# NPC Staff spawns (3 total)
+		# NPC Staff spawns (5 total — stock + delivery + manager)
 		EntitySpawnDef.new("npc_staff", "SHELF_STOCKER", AREA_WAREHOUSE, 10, 40, [
 			Vector2(160, 640), Vector2(320, 640), Vector2(480, 640), Vector2(640, 640), Vector2(160, 800)
 		]),
@@ -325,8 +353,14 @@ func _setup_areas() -> void:
 		EntitySpawnDef.new("npc_staff", "MANAGER", AREA_WAREHOUSE, 60, 42, [
 			Vector2(960, 672), Vector2(1120, 672), Vector2(1120, 800), Vector2(960, 800), Vector2(960, 672)
 		]),
+		EntitySpawnDef.new("npc_staff", "DELIVERY_STAFF", AREA_WAREHOUSE, 25, 41, [
+			Vector2(400, 656), Vector2(720, 656), Vector2(1040, 656), Vector2(1360, 656), Vector2(400, 816)
+		]),
+		EntitySpawnDef.new("npc_staff", "DELIVERY_STAFF", AREA_WAREHOUSE, 75, 41, [
+			Vector2(1200, 656), Vector2(1440, 656), Vector2(1600, 656), Vector2(1440, 816), Vector2(1200, 656)
+		]),
 
-		# Robot spawns (3 total)
+		# Robot spawns (4 total — delivery, shelf, security, stocker)
 		EntitySpawnDef.new("robot_single", "DELIVERY_ROBOT", AREA_WAREHOUSE, 10, 38, [
 			Vector2(160, 608), Vector2(640, 608), Vector2(640, 752), Vector2(160, 752), Vector2(160, 608)
 		]),
@@ -335,6 +369,9 @@ func _setup_areas() -> void:
 		]),
 		EntitySpawnDef.new("robot_humanoid", "SECURITY", AREA_WAREHOUSE, 30, 39, [
 			Vector2(480, 624), Vector2(640, 624), Vector2(640, 752), Vector2(480, 752), Vector2(480, 624)
+		]),
+		EntitySpawnDef.new("robot_humanoid", "SHELF_STOCKER", AREA_WAREHOUSE, 65, 39, [
+			Vector2(1040, 624), Vector2(1200, 624), Vector2(1200, 752), Vector2(1040, 752), Vector2(1040, 624)
 		]),
 	]
 
@@ -357,6 +394,32 @@ func _setup_areas() -> void:
 		EntitySpawnDef.new("robot_humanoid", "SECURITY", AREA_TRANSIT, 12, 25, [
 			Vector2(192, 400), Vector2(400, 400), Vector2(400, 640), Vector2(192, 640), Vector2(192, 400)
 		]),
+	]
+
+	# ─── STORAGE / WAREHOUSE BOUNDARY WAYPOINTS ───────────────────────────
+	# Used by FIXED_RANGE staff and robots in the warehouse. Same world-pixel
+	# coordinate space as EntitySpawnDef.patrol_points (no scale applied).
+	# Covers storage shelves, conveyor, truck dock, forklift area, stock view.
+	_warehouse_waypoints = [
+		Vector2(160, 640),    # Storage shelf row 1
+		Vector2(480, 640),    # Storage shelf row 2
+		Vector2(800, 640),    # Storage shelf row 3
+		Vector2(1120, 640),   # Storage shelf row 4
+		Vector2(160, 800),    # Truck dock
+		Vector2(800, 800),    # Conveyor
+		Vector2(1280, 800),   # Forklift area
+		Vector2(1440, 800),   # Stock view
+	]
+
+	# ─── LOBBY SERVICE CLUSTER WAYPOINTS ────────────────────────────────
+	# Used by CUSTOMER_SERVICE and other lobby service-desk staff. Walks
+	# between info desk, customer service, loyalty, gift wrap, digital kiosk.
+	_lobby_service_waypoints = [
+		Vector2(640, 48),     # Info Desk
+		Vector2(192, 48),     # Customer Service
+		Vector2(416, 48),     # Loyalty Center
+		Vector2(672, 48),     # Gift Wrapping
+		Vector2(928, 176),    # Digital Kiosk
 	]
 
 	_areas[AREA_TRANSIT] = AreaDef.new(
@@ -384,28 +447,28 @@ var _player_moveable_areas: Array = []
 
 func _setup_player_areas() -> void:
 	_player_moveable_areas = [
-		# Lobby - main customer area (accessible to all)
-		MoveableArea.new("Lobby Main", 0, 2, 80, 13,
-			"Main lobby area with info desk, customer service, loyalty kiosk"),
+		# Supermarket shopping floor - main customer area
+		MoveableArea.new("Supermarket Floor", 128, 2, 352, 136,
+			"Main supermarket: trolley bay, services, fresh, chilled, food court, checkout, exit lane"),
 
-		# Food Court - customer dining area
-		MoveableArea.new("Food Court", 0, 2, 80, 33,
-			"Food court with 10 stalls and dining tables"),
+		# Trolley bay (top of supermarket, near entry)
+		MoveableArea.new("Trolley Bay", 128, 2, 352, 10,
+			"Trolley bay, basket stand, and entry/exit gates"),
 
-		# Warehouse - staff only area
-		MoveableArea.new("Warehouse", 0, 35, 120, 14,
-			"Warehouse floor with truck dock, conveyor, storage (staff only)"),
+		# Food court - dining area
+		MoveableArea.new("Food Court", 128, 100, 352, 28,
+			"Food court stalls and dining seating"),
 
 		# Elevator shaft - accessible via elevator
-		MoveableArea.new("Elevator Area", 6, 2, 14, 47,
+		MoveableArea.new("Elevator Area", 24, 8, 56, 132,
 			"Elevator shaft area"),
 
 		# Stairs - accessible via stairs
-		MoveableArea.new("Stairs Area", 20, 2, 6, 47,
+		MoveableArea.new("Stairs Area", 80, 8, 24, 132,
 			"Staircase area"),
 
 		# Escalator - accessible via escalator
-		MoveableArea.new("Escalator Area", 26, 2, 6, 47,
+		MoveableArea.new("Escalator Area", 104, 8, 24, 132,
 			"Escalator area"),
 	]
 
@@ -568,6 +631,19 @@ func get_all_zone_types() -> Array:
 			if not ztype in types:
 				types.append(ztype)
 	return types
+
+# ═══════════════════════════════════════════════════════════════════════════
+# MOVEMENT BOUNDS WAYPOINTS
+# Reusable waypoint sets for MovementBounds.FIXED_RANGE actors. Returned in
+# world-pixel coordinates (no scale applied) so spawn code can use them
+# directly. Duplicated on each call so callers can mutate freely.
+# ═══════════════════════════════════════════════════════════════════════════
+
+func get_warehouse_waypoints() -> Array:
+	return _warehouse_waypoints.duplicate()
+
+func get_lobby_service_waypoints() -> Array:
+	return _lobby_service_waypoints.duplicate()
 
 # ═══════════════════════════════════════════════════════════════════════════
 # PLAYER MOVEABLE AREA API

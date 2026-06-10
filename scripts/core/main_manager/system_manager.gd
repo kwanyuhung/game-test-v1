@@ -654,8 +654,7 @@ func _navigate_to_floor(floor_idx: int) -> void:
 	if floor_manager != null:
 		floor_manager.on_floor_changed(floor_idx)
 	if player != null:
-		var floor_y = FloorManagerScript.get_floor_y(floor_idx)
-		player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, floor_y + 8 * CELL_SIZE)
+		player.position = _main.elevator_arrival_position(floor_idx)
 	if _minimap != null:
 		_minimap.set_floor(floor_idx)
 	var fname = "Ground" if floor_idx == 0 else "Floor " + str(floor_idx)
@@ -803,8 +802,7 @@ func jump_to_floor(floor_idx: int) -> void:
 	if camera != null and camera.has_method("update_camera_limits"):
 		camera.update_camera_limits(floor_idx)
 	if player != null:
-		var floor_y = FloorManagerScript.get_floor_y(floor_idx)
-		player.position = Vector2(6 * CELL_SIZE + 7 * CELL_SIZE, floor_y + 20 * CELL_SIZE)
+		player.position = _main.elevator_arrival_position(floor_idx)
 	if _minimap != null:
 		_minimap.set_floor(floor_idx)
 	if _map_panel != null:

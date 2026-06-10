@@ -1,0 +1,237 @@
+{
+  "_comment": "Pixel Supermarket — full category taxonomy. Three-tier hierarchy: main > sub > other. Synced with store_data.gd SECTIONS + CATALOG.",
+
+  "mains": [
+    {
+      "id": "grocery",
+      "name": "Grocery",
+      "floor_range": "0",
+      "description": "Fresh and packaged supermarket aisles. Walk-around shopping floor.",
+      "sections": [
+        {
+          "id": "produce",
+          "name": "Produce",
+          "style": "PRODUCE",
+          "subs": ["Fruits", "Vegetables", "Herbs"]
+        },
+        {
+          "id": "bakery",
+          "name": "Bakery",
+          "style": "BAKERY",
+          "subs": ["Bread", "Pastries", "Cakes"]
+        },
+        {
+          "id": "dairy",
+          "name": "Dairy & Eggs",
+          "style": "FRIDGE",
+          "subs": ["Milk", "Cheese", "Yogurt", "Butter", "Cream", "Eggs", "Dairy"]
+        },
+        {
+          "id": "beverages",
+          "name": "Beverages",
+          "style": "FRIDGE",
+          "subs": ["Water", "Juice", "Soda", "Energy", "Coffee", "Tea"]
+        },
+        {
+          "id": "meat",
+          "name": "Meat & Deli",
+          "style": "DELI",
+          "subs": ["Beef", "Chicken", "Pork", "Lamb", "Poultry", "Deli"]
+        },
+        {
+          "id": "seafood",
+          "name": "Seafood",
+          "style": "FRIDGE",
+          "subs": ["Fish", "Shellfish"]
+        },
+        {
+          "id": "frozen",
+          "name": "Frozen",
+          "style": "FREEZER",
+          "subs": ["Ice Cream", "Meals", "Vegetables", "Fish", "Breakfast"]
+        },
+        {
+          "id": "pantry",
+          "name": "Pantry & Snacks",
+          "style": "SHELF",
+          "subs": [
+            "Rice", "Pasta", "Baking", "Oil", "Condiments",
+            "Chips", "Cookies", "Candy", "Chocolate", "Nuts", "Bars", "Dips",
+            "Canned", "Soup", "Breakfast"
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "apparel",
+      "name": "Apparel & Footwear",
+      "floor_range": "1-2",
+      "description": "Clothing and shoe departments organized by customer segment.",
+      "sections": [
+        {
+          "id": "shoes_ladies",
+          "name": "Ladies Shoes",
+          "subs": ["Heels", "Flats", "Boots", "Sneakers", "Sandals"]
+        },
+        {
+          "id": "shoes_mens",
+          "name": "Mens Shoes",
+          "subs": ["Dress", "Casual", "Sneakers", "Boots", "Sandals"]
+        },
+        {
+          "id": "shoes_kids",
+          "name": "Kids Shoes",
+          "subs": ["Sneakers", "Boots", "Flats", "Sandals"]
+        },
+        {
+          "id": "shoes_sport",
+          "name": "Sport Shoes",
+          "subs": ["Running", "Training", "Basketball", "Hiking"]
+        },
+        {
+          "id": "ladies_wear",
+          "name": "Ladies Wear",
+          "subs": ["Tops", "Bottoms", "Dresses"]
+        },
+        {
+          "id": "mens_wear",
+          "name": "Mens Wear",
+          "subs": ["Shirts", "Pants", "Suits"]
+        },
+        {
+          "id": "kids_wear",
+          "name": "Kids Wear",
+          "subs": ["Tops", "Pants", "Dresses"]
+        }
+      ]
+    },
+
+    {
+      "id": "sports",
+      "name": "Sports & Active",
+      "floor_range": "3",
+      "description": "Sporting goods, gym equipment, and activewear.",
+      "sections": [
+        {
+          "id": "gym",
+          "name": "Gym Equipment",
+          "subs": ["Cardio", "Weights", "Fitness"]
+        },
+        {
+          "id": "sports_gear",
+          "name": "Sports Gear",
+          "subs": ["Basketball", "Football", "Soccer", "Tennis", "Golf", "Swimming"]
+        },
+        {
+          "id": "activewear",
+          "name": "Activewear",
+          "subs": ["Men", "Women", "Unisex"]
+        }
+      ]
+    },
+
+    {
+      "id": "household",
+      "name": "Household & Stationery",
+      "floor_range": "5-6",
+      "description": "Home essentials, cleaning supplies, paper goods.",
+      "sections": [
+        {
+          "id": "frozen",
+          "name": "Frozen (overflow)",
+          "subs": []
+        },
+        {
+          "id": "clean",
+          "name": "Cleaning",
+          "subs": ["Laundry", "Dish", "Surface", "Bathroom"]
+        },
+        {
+          "id": "paper",
+          "name": "Paper Goods",
+          "subs": ["Tissue", "Towels", "Bags", "Wraps"]
+        }
+      ]
+    },
+
+    {
+      "id": "health_beauty",
+      "name": "Health & Beauty",
+      "floor_range": "7",
+      "description": "Pharmacy, beauty, and personal care.",
+      "sections": [
+        {
+          "id": "pharm",
+          "name": "Pharmacy",
+          "subs": ["OTC", "Vitamins", "First Aid", "Personal Care"]
+        },
+        {
+          "id": "beauty",
+          "name": "Beauty",
+          "subs": ["Skincare", "Makeup", "Hair", "Fragrance"]
+        }
+      ]
+    },
+
+    {
+      "id": "lifestyle",
+      "name": "Lifestyle & Hobbies",
+      "floor_range": "8-13",
+      "description": "Toys, electronics, cafe, pets, and other lifestyle categories.",
+      "sections": [
+        {
+          "id": "toys",
+          "name": "Toys",
+          "subs": ["Action", "Plush", "Board Games", "Outdoor", "Educational"]
+        },
+        {
+          "id": "cafe",
+          "name": "Cafe",
+          "subs": ["Hot Drinks", "Cold Drinks", "Pastries", "Sandwiches"]
+        },
+        {
+          "id": "pet",
+          "name": "Pet Paradise",
+          "subs": [
+            "Dog Food", "Cat Food", "Bird Food", "Fish Food", "Small Pet",
+            "Pet Toys"
+          ]
+        }
+      ]
+    }
+  ],
+
+  "cross_cutting": {
+    "_comment": "Categories that span floors / don't fit a single main.",
+    "food_court": {
+      "floor": 0,
+      "subs": ["Rice", "Noodles", "Meat dishes", "Veg dishes", "Drinks", "Fruit", "Seating"]
+    },
+    "services": {
+      "subs": [
+        "Customer Service", "Loyalty Kiosk", "Gift Wrap", "Digital Kiosk",
+        "ATM", "Vending", "Promo Booth", "Lost & Found", "Store News",
+        "Info Desk", "First Aid", "Trolley Bay", "Checkout"
+      ]
+    }
+  },
+
+  "summary": {
+    "total_mains": 6,
+    "total_sections": 28,
+    "total_products": 302,
+    "by_floor": {
+      "0":  ["produce", "bakery", "dairy", "beverages", "meat", "seafood", "frozen", "pantry", "food_court", "services"],
+      "1":  ["shoes_ladies", "shoes_mens", "shoes_kids", "shoes_sport", "shoes_sandals"],
+      "2":  ["ladies_wear", "mens_wear", "kids_wear"],
+      "3":  ["gym", "sports_gear", "activewear"],
+      "5":  ["frozen", "clean", "paper"],
+      "6":  ["clean", "paper"],
+      "7":  ["pharm", "beauty"],
+      "8":  ["toys"],
+      "10": ["cafe"],
+      "13": ["pet"]
+    }
+  }
+}

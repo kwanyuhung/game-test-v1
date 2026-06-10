@@ -2,7 +2,7 @@
 	{
 		"id": 0,
 		"label": "G",
-		"theme": "lobby",
+		"theme": "supermarket",
 		"ambient_color": [
 			0.42,
 			0.44,
@@ -10,248 +10,653 @@
 		],
 		"zones": [
 			{
-				"type": "ZONE_LOBBY",
-				"x": 0,
+				"type": "ZONE_STAIRS",
+				"x": 8,
 				"y": 8,
-				"w": 320,
-				"h": 52
+				"w": 7,
+				"h": 4,
+				"meta": {
+					"name": "STAIRS"
+				}
 			},
 			{
-				"type": "ZONE_INFO_DESK",
-				"x": 160,
-				"y": 12,
-				"w": 64,
-				"h": 28
+				"type": "ZONE_ESCALATOR",
+				"x": 17,
+				"y": 8,
+				"w": 3,
+				"h": 6,
+				"meta": {
+					"escalator_id": "esc_main",
+					"direction": 1,
+					"name": "ESCALATOR"
+				}
+			},
+			{
+				"type": "ZONE_ELEVATOR",
+				"x": 22,
+				"y": 8,
+				"w": 4,
+				"h": 5,
+				"meta": {
+					"elevator_id": "elev_1",
+					"name": "ELEVATOR 1"
+				}
+			},
+			{
+				"type": "ZONE_ELEVATOR",
+				"x": 27,
+				"y": 8,
+				"w": 4,
+				"h": 5,
+				"meta": {
+					"elevator_id": "elev_2",
+					"name": "ELEVATOR 2"
+				}
+			},
+			{
+				"type": "ZONE_ELEVATOR",
+				"x": 32,
+				"y": 8,
+				"w": 4,
+				"h": 5,
+				"meta": {
+					"elevator_id": "elev_3",
+					"name": "ELEVATOR 3"
+				}
+			},
+			{
+				"type": "ZONE_TROLLEY",
+				"x": 128,
+				"y": 2,
+				"w": 96,
+				"h": 6,
+				"meta": {
+					"name": "TROLLEY BAY"
+				}
+			},
+			{
+				"type": "ZONE_EXIT",
+				"x": 224,
+				"y": 2,
+				"w": 48,
+				"h": 6,
+				"meta": {
+					"name": "ENTRY"
+				}
+			},
+			{
+				"type": "ZONE_TROLLEY",
+				"x": 272,
+				"y": 2,
+				"w": 96,
+				"h": 6,
+				"meta": {
+					"name": "BASKET STAND"
+				}
+			},
+			{
+				"type": "ZONE_EXIT",
+				"x": 368,
+				"y": 2,
+				"w": 48,
+				"h": 6,
+				"meta": {
+					"name": "EXIT"
+				}
 			},
 			{
 				"type": "ZONE_WC",
-				"x": 272,
-				"y": 12,
-				"w": 48,
-				"h": 28
-			},
-			{
-				"type": "ZONE_AD",
-				"x": 224,
+				"x": 128,
 				"y": 12,
 				"w": 16,
-				"h": 20,
+				"h": 16,
 				"meta": {
-					"color": [
-						1.0,
-						0.4,
-						0.2
-					],
-					"name": "ad_color"
+					"name": "WC"
 				}
 			},
 			{
-				"type": "ZONE_AD",
-				"x": 224,
-				"y": 36,
-				"w": 16,
-				"h": 20,
+				"type": "ZONE_FIRST_AID",
+				"x": 152,
+				"y": 12,
+				"w": 8,
+				"h": 8,
 				"meta": {
-					"color": [
-						0.2,
-						0.6,
-						1.0
-					],
-					"name": "ad_color"
+					"name": "FIRST AID"
 				}
-			},
-			{
-				"type": "ZONE_ATM",
-				"x": 232,
-				"y": 16,
-				"w": 16,
-				"h": 20
-			},
-			{
-				"type": "ZONE_ATM",
-				"x": 232,
-				"y": 112,
-				"w": 16,
-				"h": 20
 			},
 			{
 				"type": "ZONE_CUSTOMER_SERVICE",
-				"x": 32,
+				"x": 168,
 				"y": 12,
-				"w": 64,
-				"h": 28,
+				"w": 24,
+				"h": 12,
 				"meta": {
-					"color": [
-						0.5,
-						0.55,
-						0.7
-					],
-					"name": "CUSTOMER SERVICE"
+					"name": "SERVICE CENTER"
 				}
 			},
 			{
 				"type": "ZONE_LOYALTY_KIOSK",
-				"x": 104,
+				"x": 200,
 				"y": 12,
-				"w": 56,
-				"h": 28,
+				"w": 8,
+				"h": 8,
 				"meta": {
-					"color": [
-						0.6,
-						0.5,
-						0.75
-					],
-					"name": "LOYALTY CENTER"
+					"name": "LOYALTY"
 				}
 			},
 			{
 				"type": "ZONE_GIFT_WRAP",
-				"x": 168,
+				"x": 216,
 				"y": 12,
-				"w": 56,
-				"h": 28,
+				"w": 8,
+				"h": 8,
 				"meta": {
-					"color": [
-						0.72,
-						0.55,
-						0.7
-					],
-					"name": "GIFT WRAPPING"
+					"name": "GIFT WRAP"
 				}
 			},
 			{
-				"type": "ZONE_DIGITAL_KIOSK",
-				"x": 232,
+				"type": "ZONE_FRESH_PRODUCE",
+				"x": 130,
+				"y": 32,
+				"w": 84,
+				"h": 6,
+				"meta": {
+					"color": [0.55, 0.78, 0.42],
+					"name": "PRODUCE"
+				}
+			},
+			{
+				"type": "ZONE_BAKERY",
+				"x": 218,
+				"y": 32,
+				"w": 84,
+				"h": 6,
+				"meta": {
+					"color": [0.95, 0.78, 0.45],
+					"name": "BAKERY"
+				}
+			},
+			{
+				"type": "ZONE_DAIRY",
+				"x": 306,
+				"y": 32,
+				"w": 84,
+				"h": 6,
+				"meta": {
+					"color": [0.70, 0.88, 1.00],
+					"name": "DAIRY"
+				}
+			},
+			{
+				"type": "ZONE_BEVERAGES",
+				"x": 394,
+				"y": 32,
+				"w": 84,
+				"h": 6,
+				"meta": {
+					"color": [0.45, 0.72, 0.95],
+					"name": "BEVERAGES"
+				}
+			},
+			{
+				"type": "ZONE_AISLE",
+				"x": 130,
 				"y": 44,
+				"w": 84,
+				"h": 16,
+				"meta": {
+					"name": "PRODUCE FRONT AISLE"
+				}
+			},
+			{
+				"type": "ZONE_AISLE",
+				"x": 218,
+				"y": 44,
+				"w": 84,
+				"h": 16,
+				"meta": {
+					"name": "BAKERY FRONT AISLE"
+				}
+			},
+			{
+				"type": "ZONE_AISLE",
+				"x": 306,
+				"y": 44,
+				"w": 84,
+				"h": 16,
+				"meta": {
+					"name": "DAIRY FRONT AISLE"
+				}
+			},
+			{
+				"type": "ZONE_AISLE",
+				"x": 394,
+				"y": 44,
+				"w": 84,
+				"h": 16,
+				"meta": {
+					"name": "BEVERAGES FRONT AISLE"
+				}
+			},
+			{
+				"type": "ZONE_AISLE",
+				"x": 128,
+				"y": 60,
+				"w": 352,
+				"h": 4,
+				"meta": {
+					"name": "MAIN AISLE (FRESH)"
+				}
+			},
+			{
+				"type": "ZONE_MEAT",
+				"x": 130,
+				"y": 64,
+				"w": 84,
+				"h": 6,
+				"meta": {
+					"color": [0.92, 0.55, 0.55],
+					"name": "MEAT & DELI"
+				}
+			},
+			{
+				"type": "ZONE_SEAFOOD",
+				"x": 218,
+				"y": 64,
+				"w": 84,
+				"h": 6,
+				"meta": {
+					"color": [0.40, 0.72, 0.88],
+					"name": "SEAFOOD"
+				}
+			},
+			{
+				"type": "ZONE_FROZEN",
+				"x": 306,
+				"y": 64,
+				"w": 84,
+				"h": 6,
+				"meta": {
+					"color": [0.78, 0.92, 1.00],
+					"name": "FROZEN"
+				}
+			},
+			{
+				"type": "ZONE_PANTRY",
+				"x": 394,
+				"y": 64,
+				"w": 84,
+				"h": 6,
+				"meta": {
+					"color": [0.88, 0.78, 0.55],
+					"name": "PANTRY & SNACKS"
+				}
+			},
+			{
+				"type": "ZONE_AISLE",
+				"x": 130,
+				"y": 76,
+				"w": 84,
+				"h": 12,
+				"meta": {
+					"name": "MEAT FRONT AISLE"
+				}
+			},
+			{
+				"type": "ZONE_AISLE",
+				"x": 218,
+				"y": 76,
+				"w": 84,
+				"h": 12,
+				"meta": {
+					"name": "SEAFOOD FRONT AISLE"
+				}
+			},
+			{
+				"type": "ZONE_AISLE",
+				"x": 306,
+				"y": 76,
+				"w": 84,
+				"h": 12,
+				"meta": {
+					"name": "FROZEN FRONT AISLE"
+				}
+			},
+			{
+				"type": "ZONE_AISLE",
+				"x": 394,
+				"y": 76,
+				"w": 84,
+				"h": 12,
+				"meta": {
+					"name": "PANTRY FRONT AISLE"
+				}
+			},
+			{
+				"type": "ZONE_VENDING_MACHINE",
+				"x": 128,
+				"y": 92,
+				"w": 32,
+				"h": 8,
+				"meta": {
+					"name": "Energy Drink $3.00"
+				}
+			},
+			{
+				"type": "ZONE_ATM",
+				"x": 168,
+				"y": 92,
+				"w": 40,
+				"h": 8
+			},
+			{
+				"type": "ZONE_AISLE",
+				"x": 128,
+				"y": 89,
+				"w": 352,
+				"h": 3,
+				"meta": {
+					"name": "MAIN AISLE (CASH)"
+				}
+			},
+			{
+				"type": "ZONE_FOOD_STALL",
+				"x": 128,
+				"y": 100,
+				"w": 48,
+				"h": 28,
+				"meta": {
+					"name": "canteen_rice"
+				}
+			},
+			{
+				"type": "ZONE_FOOD_STALL",
+				"x": 176,
+				"y": 100,
+				"w": 48,
+				"h": 28,
+				"meta": {
+					"name": "canteen_noodle"
+				}
+			},
+			{
+				"type": "ZONE_FOOD_STALL",
+				"x": 224,
+				"y": 100,
+				"w": 48,
+				"h": 28,
+				"meta": {
+					"name": "canteen_meat"
+				}
+			},
+			{
+				"type": "ZONE_FOOD_STALL",
+				"x": 272,
+				"y": 100,
+				"w": 48,
+				"h": 28,
+				"meta": {
+					"name": "canteen_veg"
+				}
+			},
+			{
+				"type": "ZONE_FOOD_STALL",
+				"x": 320,
+				"y": 100,
 				"w": 32,
 				"h": 28,
 				"meta": {
-					"color": [
-						0.4,
-						0.65,
-						0.8
-					],
-					"name": "INFO KIOSK"
+					"name": "canteen_drinks"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 8,
-				"y": 12,
-				"w": 56,
-				"h": 32,
-				"meta": {
-					"name": "jp_ramen"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 72,
-				"y": 12,
-				"w": 56,
-				"h": 32,
-				"meta": {
-					"name": "jp_sushi"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 136,
-				"y": 12,
-				"w": 56,
-				"h": 32,
-				"meta": {
-					"name": "jp_takoyaki"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 200,
-				"y": 12,
-				"w": 56,
-				"h": 32,
-				"meta": {
-					"name": "thai"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 264,
-				"y": 12,
-				"w": 56,
-				"h": 32,
-				"meta": {
-					"name": "indian"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 8,
-				"y": 60,
-				"w": 56,
-				"h": 32,
-				"meta": {
-					"name": "chinese"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 72,
-				"y": 60,
-				"w": 56,
-				"h": 32,
-				"meta": {
-					"name": "korean"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 136,
-				"y": 60,
-				"w": 56,
-				"h": 32,
-				"meta": {
-					"name": "turkish"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 200,
-				"y": 60,
-				"w": 56,
-				"h": 32,
-				"meta": {
-					"name": "vietnamese"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 264,
-				"y": 60,
-				"w": 56,
-				"h": 32,
-				"meta": {
-					"name": "italian"
-				}
-			},
-			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 8,
+				"x": 352,
 				"y": 100,
-				"w": 56,
-				"h": 32,
+				"w": 32,
+				"h": 28,
 				"meta": {
-					"name": "mexican"
+					"name": "canteen_fruit"
 				}
 			},
 			{
-				"type": "ZONE_FOOD_STALL",
-				"x": 72,
+				"type": "ZONE_DECOR",
+				"x": 392,
 				"y": 100,
-				"w": 56,
-				"h": 32,
+				"w": 88,
+				"h": 28,
 				"meta": {
-					"name": "drinks"
+					"name": "dining_seating"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 400,
+				"y": 104,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 404,
+				"y": 104,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 408,
+				"y": 104,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 412,
+				"y": 104,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 416,
+				"y": 104,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 420,
+				"y": 104,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 400,
+				"y": 122,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 404,
+				"y": 122,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 408,
+				"y": 122,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 412,
+				"y": 122,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 416,
+				"y": 122,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 420,
+				"y": 122,
+				"w": 1,
+				"h": 1,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 432,
+				"y": 104,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_small"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 448,
+				"y": 104,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_small"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 464,
+				"y": 104,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_small"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 432,
+				"y": 122,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_small"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 448,
+				"y": 122,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_small"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 464,
+				"y": 122,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_small"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 404,
+				"y": 111,
+				"w": 8,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_long"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 420,
+				"y": 111,
+				"w": 8,
+				"h": 2,
+				"meta": {
+					"name": "dining_table_long"
+				}
+			},
+			{
+				"type": "ZONE_AISLE",
+				"x": 128,
+				"y": 114,
+				"w": 352,
+				"h": 3,
+				"meta": {
+					"name": "MAIN AISLE (FOOD COURT)"
+				}
+			},
+			{
+				"type": "ZONE_CHECKOUT",
+				"x": 128,
+				"y": 128,
+				"w": 264,
+				"h": 10,
+				"meta": {
+					"name": "CHECKOUT COUNTERS"
+				}
+			},
+			{
+				"type": "ZONE_EXIT",
+				"x": 392,
+				"y": 128,
+				"w": 88,
+				"h": 10,
+				"meta": {
+					"name": "EXIT LANE"
 				}
 			},
 			{
@@ -330,386 +735,6 @@
 				}
 			},
 			{
-				"type": "ZONE_ELEVATOR",
-				"x": 24,
-				"y": 8,
-				"w": 56,
-				"h": 188
-			},
-			{
-				"type": "ZONE_STAIRS",
-				"x": 80,
-				"y": 8,
-				"w": 24,
-				"h": 188
-			},
-			{
-				"type": "ZONE_ESCALATOR",
-				"x": 104,
-				"y": 8,
-				"w": 24,
-				"h": 188,
-				"meta": {
-					"escalator_id": "esc_main",
-					"direction": 1
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 140,
-				"y": 104,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 144,
-				"y": 104,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 148,
-				"y": 104,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 158,
-				"y": 104,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 168,
-				"y": 104,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 178,
-				"y": 104,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 188,
-				"y": 104,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 192,
-				"y": 104,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 140,
-				"y": 107,
-				"w": 2,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_small"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 144,
-				"y": 107,
-				"w": 2,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_small"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 148,
-				"y": 107,
-				"w": 8,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_long"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 158,
-				"y": 107,
-				"w": 8,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_long"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 168,
-				"y": 107,
-				"w": 8,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_long"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 178,
-				"y": 107,
-				"w": 8,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_long"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 188,
-				"y": 107,
-				"w": 2,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_small"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 192,
-				"y": 107,
-				"w": 2,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_small"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 140,
-				"y": 111,
-				"w": 2,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_small"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 144,
-				"y": 111,
-				"w": 2,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_small"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 148,
-				"y": 111,
-				"w": 8,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_long"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 158,
-				"y": 111,
-				"w": 8,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_long"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 168,
-				"y": 111,
-				"w": 8,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_long"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 178,
-				"y": 111,
-				"w": 8,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_long"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 188,
-				"y": 111,
-				"w": 2,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_small"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 192,
-				"y": 111,
-				"w": 2,
-				"h": 2,
-				"meta": {
-					"name": "dining_table_small"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 140,
-				"y": 115,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 144,
-				"y": 115,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 148,
-				"y": 115,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 158,
-				"y": 115,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 168,
-				"y": 115,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 178,
-				"y": 115,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 188,
-				"y": 115,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 192,
-				"y": 115,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_VENDING_MACHINE",
-				"x": 280,
-				"y": 12,
-				"w": 40,
-				"h": 40,
-				"meta": {
-					"name": "Energy Drink $3.00"
-				}
-			},
-			{
-				"type": "ZONE_VENDING_MACHINE",
-				"x": 280,
-				"y": 80,
-				"w": 40,
-				"h": 40,
-				"meta": {
-					"name": "Energy Drink $3.00"
-				}
-			},
-			{
-				"type": "ZONE_PROMO_BOOTH",
-				"x": 12,
-				"y": 12,
-				"w": 48,
-				"h": 32,
-				"meta": {
-					"color": [
-						0.8,
-						0.55,
-						0.2
-					],
-					"name": "DAILY DEALS"
-				}
-			},
-			{
 				"type": "ZONE_WAREHOUSE_STOCK_VIEW",
 				"x": 464,
 				"y": 140,
@@ -723,41 +748,68 @@
 					],
 					"name": "STOCK STATUS"
 				}
-			},
-			{
-				"type": "ZONE_LOST_FOUND",
-				"x": 88,
-				"y": 12,
-				"w": 48,
-				"h": 28,
-				"meta": {
-					"color": [
-						0.6,
-						0.5,
-						0.65
-					],
-					"name": "LOST & FOUND"
-				}
-			},
-			{
-				"type": "ZONE_STORE_NEWS",
-				"x": 144,
-				"y": 12,
-				"w": 48,
-				"h": 28,
-				"meta": {
-					"color": [
-						0.45,
-						0.65,
-						0.8
-					],
-					"name": "STORE NEWS"
-				}
 			}
 		],
-		"sections": [],
-		"has_shopping": false,
-		"has_checkout": false,
+		"sections": [
+			{
+				"id": "produce",
+				"x": 130,
+				"y": 32,
+				"w": 84,
+				"h": 28
+			},
+			{
+				"id": "bakery",
+				"x": 218,
+				"y": 32,
+				"w": 84,
+				"h": 28
+			},
+			{
+				"id": "dairy",
+				"x": 306,
+				"y": 32,
+				"w": 84,
+				"h": 28
+			},
+			{
+				"id": "beverages",
+				"x": 394,
+				"y": 32,
+				"w": 84,
+				"h": 28
+			},
+			{
+				"id": "meat",
+				"x": 130,
+				"y": 64,
+				"w": 84,
+				"h": 24
+			},
+			{
+				"id": "seafood",
+				"x": 218,
+				"y": 64,
+				"w": 84,
+				"h": 24
+			},
+			{
+				"id": "frozen",
+				"x": 306,
+				"y": 64,
+				"w": 84,
+				"h": 24
+			},
+			{
+				"id": "pantry",
+				"x": 394,
+				"y": 64,
+				"w": 84,
+				"h": 24
+			}
+		],
+		"has_shopping": true,
+		"has_checkout": true,
 		"has_elevator": true,
 		"has_stairs": true,
 		"is_staff_only": false,

@@ -31,7 +31,7 @@ const WORLD_PIXEL_H := WORLD_W * CELL_SIZE   # 1536
 
 # ── Zone type constants ─────────────────────────────────────────
 const ZONE_WALL          := "wall"
-const ZONE_AISLE         := "aisle_floor"
+const ZONE_AISLE         := "ZONE_AISLE"
 const ZONE_SECTION       := "section"
 const ZONE_LOBBY         := "lobby"
 const ZONE_FOOD_STALL    := "food_stall"
@@ -101,6 +101,22 @@ const ZONE_WAREHOUSE_STOCK_VIEW := "wh_stock_view"
 const ZONE_STORE_NEWS          := "store_news"
 const ZONE_LOST_FOUND           := "lost_found"
 const ZONE_VENDING_MACHINE := "vending_machine"
+const ZONE_CHECKOUT          := "checkout"
+const ZONE_TROLLEY           := "trolley"
+const ZONE_FIRST_AID         := "first_aid"
+const ZONE_FRESH_PRODUCE     := "fresh_produce"
+const ZONE_MEAT              := "meat"
+const ZONE_SEAFOOD           := "seafood"
+const ZONE_FROZEN            := "frozen"
+const ZONE_DAIRY             := "dairy"
+const ZONE_BAKERY            := "bakery"
+const ZONE_BEVERAGES         := "beverages"
+const ZONE_PANTRY            := "pantry"
+const ZONE_SNACKS            := "snacks"
+const ZONE_HOUSEHOLD         := "household"
+const ZONE_HEALTH            := "health"
+const ZONE_BABY              := "baby"
+const ZONE_EXIT              := "exit_lane"
 
 # ── Zone class ───────────────────────────────────────────────────
 class Zone:
@@ -373,9 +389,22 @@ static func get_tile_for_zone(zone_type: String) -> Dictionary:
 		"darts_board": {"tile_id": 0, "layer": 0},   # blocked (board)
 		"entertainment": {"tile_id": 2, "layer": 0}, # floor_common
 		"aisle_floor": {"tile_id": 2, "layer": 0},   # floor_common
+		"ZONE_AISLE":   {"tile_id": 2, "layer": 0},   # floor_common (matches JSON casing)
 		# Additional zone types from JSON
 		"entry_gate": {"tile_id": 2, "layer": 0},    # floor_common
 		"packing_station": {"tile_id": 0, "layer": 0}, # blocked (station)
+		# Supermarket-specific (render as walkable floor; visuals come from meta color)
+		"checkout":     {"tile_id": 2, "layer": 0},   # floor_common
+		"trolley":      {"tile_id": 2, "layer": 0},   # floor_common
+		"first_aid":    {"tile_id": 2, "layer": 0},   # floor_common
+		"fresh_produce":{"tile_id": 2, "layer": 0},   # floor_common
+		"meat":         {"tile_id": 2, "layer": 0},   # floor_common
+		"seafood":      {"tile_id": 2, "layer": 0},   # floor_common
+		"frozen":       {"tile_id": 2, "layer": 0},   # floor_common
+		"dairy":        {"tile_id": 2, "layer": 0},   # floor_common
+		"bakery":       {"tile_id": 2, "layer": 0},   # floor_common
+		"exit_lane":    {"tile_id": 2, "layer": 0},   # floor_common
+		"aisle":        {"tile_id": 2, "layer": 0},   # floor_common
 	}
 	var result = mapping.get(normalized_type, null)
 	if result != null:

@@ -1,4 +1,4 @@
-﻿# warehouse_system.gd
+# warehouse_system.gd
 # Central warehouse — receives stock, holds inventory, ships to sections.
 # Sections pull from warehouse stock. When warehouse is depleted, sections
 # go "out of stock". The player or staff can trigger a delivery.
@@ -8,8 +8,10 @@ extends Node
 
 const StoreData = preload("res://scripts/world/store_data.gd")
 
+# delivery_arrived is reserved for "truck has arrived at the dock" events
+# (emitted by TruckDockSystem, not by this class). Receive_delivery here
+# only emits stock_updated per section.
 signal stock_updated(section_id: String, new_count: int)
-signal delivery_arrived(delivery: Dictionary)
 signal low_stock_warning(section_id: String)
 
 # ─── Warehouse Inventory ──────────────────────────────────────────
@@ -17,7 +19,12 @@ signal low_stock_warning(section_id: String)
 var _stock: Dictionary = {}
 var _section_min_stock: Dictionary = {}  # reorder threshold per section
 var _delivery_pending: bool = false
-var _delivery_contents: Array = []
+var _delivery_contents: Array = []  # [{section: k, qty: v}]
+
+# Throttle: low_stock_warning only emitted once per (section_id, hour_key)
+# Reset on day change. Hour key passed in via _reset_low_stock_throttle.
+var _low_stock_warned: Dictionary = {}
+var _low_stock_throttle_key: int = -1
 
 # ─── Initialization ───────────────────────────────────────────────
 
@@ -26,7 +33,7 @@ func _ready() -> void:
 
 func _initialize_stock() -> void:
 	# Initialize warehouse with starting stock for each section
-	# Format: {section_id: {"qty": int, "capacity": int}}
+	# Format: {section_id: {"qty": int, "capacity": int, "min": int}}
 	var section_configs := {
 		"produce":  {"capacity": 200, "min": 30},
 		"dairy":    {"capacity": 150, "min": 20},
@@ -50,11 +57,11 @@ func _initialize_stock() -> void:
 	for sec_id in section_configs:
 		var cfg: Dictionary = section_configs[sec_id]
 		_stock[sec_id] = {
-			"qty": cfg["capacity"] * randf_range(0.6, 0.9),  # start at 60-90% capacity
-			"capacity": cfg["capacity"],
-			"min": cfg["min"],
+			"qty": int(cfg["capacity"] * randf_range(0.6, 0.9)),  # start at 60-90% capacity
+			"capacity": int(cfg["capacity"]),
+			"min": int(cfg["min"]),
 		}
-		_section_min_stock[sec_id] = cfg["min"]
+		_section_min_stock[sec_id] = int(cfg["min"])
 
 # ─── Stock Access ─────────────────────────────────────────────────
 
@@ -100,9 +107,9 @@ func consume_stock(section_id: String, amount: int = 1) -> bool:
 	_check_low_stock(section_id)
 	return true
 
-# Called when warehouse receives a delivery
+# Called when warehouse receives a delivery from a truck unload.
+# contents: {section_id: qty, ...}
 func receive_delivery(contents: Dictionary) -> void:
-	# contents: {section_id: qty, ...}
 	for sec_id in contents:
 		if not _stock.has(sec_id):
 			continue
@@ -111,8 +118,15 @@ func receive_delivery(contents: Dictionary) -> void:
 		var cap := int(_stock[sec_id]["capacity"])
 		_stock[sec_id]["qty"] = mini(current + add_qty, cap)
 		stock_updated.emit(sec_id, int(_stock[sec_id]["qty"]))
-	_delivery_pending = false
-	delivery_arrived.emit(contents)
+
+# Staff R-restock: instant top-up, no truck queue. Emits stock_updated only.
+func direct_restock(section_id: String, qty: int) -> void:
+	if not _stock.has(section_id):
+		return
+	var current := int(_stock[section_id]["qty"])
+	var cap := int(_stock[section_id]["capacity"])
+	_stock[section_id]["qty"] = mini(current + qty, cap)
+	stock_updated.emit(section_id, int(_stock[section_id]["qty"]))
 
 # ─── Reorder / Delivery ───────────────────────────────────────────
 
@@ -123,7 +137,7 @@ func check_and_order() -> int:
 	for sec_id in all_sections:
 		if get_stock(sec_id) < _section_min_stock[sec_id]:
 			sections_to_order.append(sec_id)
-			low_stock_warning.emit(sec_id)
+			_emit_low_stock_throttled(sec_id)
 	return sections_to_order.size()
 
 func trigger_delivery() -> void:
@@ -144,23 +158,48 @@ func trigger_delivery() -> void:
 	_delivery_contents = []
 	for k in contents:
 		_delivery_contents.append({"section": k, "qty": contents[k]})
-	# Simulate delivery arriving after a delay (handled externally via timer)
+
+# Returns the pending delivery as {section_id: qty} dict and clears pending.
+# Use this from TruckDockSystem.do_unload() instead of the old Array form.
+func consume_pending_delivery() -> Dictionary:
+	if not _delivery_pending:
+		return {}
+	var result: Dictionary = {}
+	for entry in _delivery_contents:
+		result[entry["section"]] = int(entry["qty"])
+	_delivery_contents = []
+	_delivery_pending = false
+	return result
 
 func is_delivery_pending() -> bool:
 	return _delivery_pending
 
-func get_delivery_contents() -> Array:
-	return _delivery_contents
-
 # ─── Stock Status ─────────────────────────────────────────────────
 
 func _check_low_stock(section_id: String) -> void:
+	if not _stock.has(section_id):
+		return
 	var qty := int(_stock[section_id]["qty"])
-	var min_qty :int= _section_min_stock.get(section_id, 10)
-	if qty <= min_qty and qty > 0:
+	var min_qty: int = int(_section_min_stock.get(section_id, 10))
+	if qty <= min_qty:
+		_emit_low_stock_throttled(section_id)
+
+# Emit low_stock_warning at most once per (section_id, throttle_key).
+# throttle_key is the in-game hour; reset on day change.
+func _emit_low_stock_throttled(section_id: String) -> void:
+	if _low_stock_throttle_key < 0:
+		# No clock set yet — emit unconditionally.
 		low_stock_warning.emit(section_id)
-	elif qty == 0:
-		low_stock_warning.emit(section_id)  # emit for out-of-stock too
+		return
+	var key: String = "%d_%s" % [_low_stock_throttle_key, section_id]
+	if _low_stock_warned.has(key):
+		return
+	_low_stock_warned[key] = true
+	low_stock_warning.emit(section_id)
+
+func reset_low_stock_throttle(hour_key: int) -> void:
+	_low_stock_throttle_key = hour_key
+	_low_stock_warned.clear()
 
 func is_section_in_stock(section_id: String) -> bool:
 	return get_stock(section_id) > 0
@@ -187,3 +226,28 @@ func player_request_restock(section_id: String) -> bool:
 		return false  # delivery already in transit
 	trigger_delivery()
 	return true
+
+# ─── Save / Load (called by SaveSystem via duck-typing) ───────────
+
+# Returns a dict suitable for JSON serialization.
+func get_serializable_dict() -> Dictionary:
+	return {
+		"stock": _stock.duplicate(true),
+		"section_min_stock": _section_min_stock.duplicate(true),
+		"delivery_pending": _delivery_pending,
+		"delivery_contents": _delivery_contents.duplicate(true),
+	}
+
+# Restores from the dict produced by get_serializable_dict.
+# Missing keys are tolerated; extra keys in the dict are ignored.
+func apply_dict(data: Dictionary) -> void:
+	if data.is_empty():
+		return
+	if "stock" in data and typeof(data["stock"]) == TYPE_DICTIONARY:
+		_stock = (data["stock"] as Dictionary).duplicate(true)
+	if "section_min_stock" in data and typeof(data["section_min_stock"]) == TYPE_DICTIONARY:
+		_section_min_stock = (data["section_min_stock"] as Dictionary).duplicate(true)
+	if "delivery_pending" in data:
+		_delivery_pending = bool(data["delivery_pending"])
+	if "delivery_contents" in data and typeof(data["delivery_contents"]) == TYPE_ARRAY:
+		_delivery_contents = (data["delivery_contents"] as Array).duplicate(true)

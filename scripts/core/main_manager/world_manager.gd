@@ -87,6 +87,8 @@ func build_floor(idx: int) -> void:
 			sec.player_entered.connect(_on_section_entered)
 		if sec.has_signal("player_exited"):
 			sec.player_exited.connect(_on_section_exited)
+		if sec.has_signal("interact_requested"):
+			sec.interact_requested.connect(_on_section_interact_requested)
 
 	# Ambient
 	_floor_ambient = fd.ambient_color
@@ -278,6 +280,15 @@ func _on_section_exited(section_id: String) -> void:
 	if _game_state.nearby_section != null and _game_state.nearby_section.get_def().id == section_id:
 		_game_state.nearby_section = null
 		section_exited.emit(section_id)
+
+func _on_section_interact_requested(section_id: String) -> void:
+	# Mouse click on a nearby section — open the buy panel via SystemManager.
+	for sec in _sections:
+		if sec.get_def().id == section_id:
+			var sm = _main.get("_system_manager")
+			if sm != null and sm.has_method("_open_section_browse"):
+				sm.call("_open_section_browse", sec)
+			return
 
 func _on_stall_interact_requested(stall_id: String) -> void:
 	if _floor_builder == null:

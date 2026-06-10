@@ -20,9 +20,12 @@ static func build_stairs(parent: Node, zone: Dictionary, floor_nodes: Array) -> 
 	parent.add_child(bg)
 	floor_nodes.append(bg)
 	
-	# Draw stairs steps
-	var n_steps: int = 12
-	var step_h: int = ch / n_steps
+	# Draw stairs steps.
+	# Old impl hardcoded 12 steps regardless of zone height — at 4 tiles tall
+	# (64px) that gave ~5px steps with 1px depth, unreadable. Scale instead so
+	# each step is ~8px tall (one half-tile) with a 3-step minimum.
+	var n_steps: int = max(3, ch / 8)
+	var step_h: int = max(2, ch / n_steps)
 	var step_color_normal := Color(0.45, 0.42, 0.38)
 	var step_color_dark := Color(0.35, 0.32, 0.28)
 	

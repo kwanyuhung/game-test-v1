@@ -3,10 +3,10 @@
 	"dairy": "DAIRY",
 	"produce": "PRODUCE",
 	"bakery": "BAKERY",
-	"drinks": "DRINKS",
-	"snacks": "SNACKS",
-	"meat": "MEAT / DELI",
+	"beverages": "BEVERAGES",
 	"pantry": "PANTRY",
+	"meat": "MEAT / DELI",
+	"seafood": "SEAFOOD",
 	"frozen": "FROZEN"
   },
   "staff_spawns": {
@@ -33,7 +33,9 @@
 	{ "type": "FAMILY_EXTENDED", "floor": 1, "x": 600, "y": 150 }
   ],
   "staff_roles": [
-	"CASHIER", "SHELF_STOCKER", "CLEANER", "SECURITY", "GREETER", "MANAGER", "FLOOR_STAFF"
+	"CASHIER", "SHELF_STOCKER", "CLEANER", "SECURITY", "GREETER", "MANAGER", "FLOOR_STAFF",
+	"SCAN_GO", "SHOP_STAFF", "FOOD_STAFF", "CLEAN_STAFF",
+	"RECEPTIONIST", "MAINTENANCE_STAFF", "DELIVERY_STAFF", "CUSTOMER_SERVICE"
   ],
   "robot_humanoid_roles": [
 	"GREETER", "CLEANER"

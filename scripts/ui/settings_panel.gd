@@ -75,8 +75,7 @@ func _t(key: String) -> String:
 var _controls := [
 	{"key": "W/A/S/D", "desc": "move"},
 	{"key": "E", "desc": "interact"},
-	{"key": "G", "desc": "drop_grab_cart"},
-	{"key": "K", "desc": "toggle_staff_mode"},
+	{"key": "G / Tab", "desc": "drop_grab_cart"},
 	{"key": "M", "desc": "toggle_map"},
 	{"key": "V", "desc": "floor_panel"},
 	{"key": "L", "desc": "shopping_list"},

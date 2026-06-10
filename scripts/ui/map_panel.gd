@@ -64,7 +64,7 @@ const _ZONE_COLORS := {
 	"lobby": Color(0.38, 0.42, 0.40, 0.85),
 	"entry_gate": Color(0.36, 0.40, 0.45, 0.85),
 	# Transport
-	"elevator_shaft": Color(0.50, 0.72, 0.95, 0.90),
+	"elevator": Color(0.50, 0.72, 0.95, 0.90),
 	"stairs": Color(0.62, 0.50, 0.70, 0.90),
 	"escalator": Color(0.62, 0.50, 0.70, 0.90),
 	# Service desks and kiosks
@@ -118,6 +118,19 @@ const _ZONE_COLORS := {
 	"outdoor_living": Color(0.55, 0.72, 0.55, 0.85),
 	"organization": Color(0.65, 0.60, 0.55, 0.85),
 	"lighting": Color(0.78, 0.72, 0.55, 0.85),
+	# Supermarket grocery aisles (fallbacks when meta has no color)
+	"fresh_produce": Color(0.55, 0.78, 0.42, 0.85),
+	"meat": Color(0.92, 0.55, 0.55, 0.85),
+	"seafood": Color(0.40, 0.72, 0.88, 0.85),
+	"frozen": Color(0.78, 0.92, 1.00, 0.85),
+	"dairy": Color(0.70, 0.88, 1.00, 0.85),
+	"bakery": Color(0.95, 0.78, 0.45, 0.85),
+	"beverages": Color(0.45, 0.72, 0.95, 0.85),
+	"pantry": Color(0.88, 0.78, 0.55, 0.85),
+	"snacks": Color(0.85, 0.62, 0.42, 0.85),
+	"household": Color(0.55, 0.68, 0.62, 0.85),
+	"health": Color(0.62, 0.78, 0.72, 0.85),
+	"baby": Color(0.85, 0.72, 0.85, 0.85),
 	# Staff / back-of-house
 	"staff_lounge": Color(0.48, 0.52, 0.58, 0.85),
 	"training": Color(0.50, 0.55, 0.60, 0.85),
@@ -149,7 +162,7 @@ const _ZONE_NAMES := {
 	"common": "WALKWAY",
 	"lobby": "LOBBY",
 	"entry_gate": "ENTRY",
-	"elevator_shaft": "ELEVATOR",
+	"elevator": "ELEVATOR",
 	"stairs": "STAIRS",
 	"escalator": "ESCALATOR",
 	"info_desk": "INFO DESK",
@@ -195,6 +208,19 @@ const _ZONE_NAMES := {
 	"outdoor_living": "OUTDOOR",
 	"organization": "ORGANIZE",
 	"lighting": "LIGHTING",
+	# Supermarket grocery aisles
+	"fresh_produce": "PRODUCE",
+	"meat": "MEAT & DELI",
+	"seafood": "SEAFOOD",
+	"frozen": "FROZEN",
+	"dairy": "DAIRY",
+	"bakery": "BAKERY",
+	"beverages": "BEVERAGES",
+	"pantry": "PANTRY",
+	"snacks": "SNACKS",
+	"household": "HOUSEHOLD",
+	"health": "HEALTH",
+	"baby": "BABY & KIDS",
 	"staff_lounge": "STAFF LOUNGE",
 	"training": "TRAINING",
 	"office_desk": "OFFICE",
@@ -634,11 +660,10 @@ func _draw_zones(fd) -> void:
 		var color := _color_for_zone(ztype, zmeta, fd.ambient_color)
 		var display_name := _name_for_zone(ztype, zmeta)
 		var norm: String = _normalize_zone_type(ztype)
-		var is_transport := norm in [
-			FloorConfig.ZONE_ELEVATOR,
-			FloorConfig.ZONE_STAIRS,
-			FloorConfig.ZONE_ESCALATOR,
-		]
+		# Compare against the normalized JSON keys (e.g. "elevator"), not
+		# the FloorConfig constant values (e.g. "elevator_shaft"), which
+		# don't always line up.
+		var is_transport := norm in ["elevator", "stairs", "escalator"]
 		var is_base := _ZONE_BASE.has(norm)
 
 		# Filled rectangle

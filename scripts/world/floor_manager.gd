@@ -90,10 +90,10 @@ static func _role_name_to_int(role_name: String) -> int:
 		"RECEPTIONIST": return 12
 		"MAINTENANCE_STAFF": return 13
 		"DELIVERY_STAFF": return 14
+		"CUSTOMER_SERVICE": return 15
 		# Role aliases (more descriptive names that map to existing roles)
-		"CUSTOMER_SERVICE": return 12  # RECEPTIONIST
 		"LOYALTY_KIOSK": return 9       # SHOP_STAFF
-		"INFO_DESK": return 12          # RECEPTIONIST
+		"INFO_DESK": return 15          # CUSTOMER_SERVICE
 		"PROMO_BOOTH": return 9         # SHOP_STAFF
 		"LOST_FOUND": return 12          # RECEPTIONIST
 		"STORE_NEWS": return 9          # SHOP_STAFF
@@ -451,9 +451,19 @@ func spawn_floor_npcs(floor_idx: int, container: Node2D) -> void:
 			var world_pos: Vector2 = floor_config.get_spawn_world_pos(spawn)
 			world_pos.y += floor_y
 			world_pos += Vector2(randf_range(-20, 20), randf_range(-15, 15))
-			print("  [Staff] %s/%s at world(%.0f,%.0f) [floor_y=%.0f]" % [spawn.entity_type, spawn.role, world_pos.x, world_pos.y, floor_y])
+			# Pull patrol points out of the EntitySpawnDef so spawn_npc_staff
+			# can use them to populate FIXED_RANGE movement_bounds.waypoints.
+			var staff_patrol: Array = []
+			if floor_config.has_method("get_patrol_world_points"):
+				var raw_patrol: Array = floor_config.get_patrol_world_points(spawn)
+				for pp in raw_patrol:
+					staff_patrol.append(Vector2(pp.x, pp.y + floor_y))
+			else:
+				for pp in spawn.patrol_points:
+					staff_patrol.append(Vector2(pp.x, pp.y + floor_y))
+			print("  [Staff] %s/%s at world(%.0f,%.0f) [floor_y=%.0f] patrol_pts=%d" % [spawn.entity_type, spawn.role, world_pos.x, world_pos.y, floor_y, staff_patrol.size()])
 			var role_int: int = _role_name_to_int(spawn.role)
-			main_spawner.spawn_npc_staff(role_int, floor_idx, world_pos)
+			main_spawner.spawn_npc_staff(role_int, floor_idx, world_pos, staff_patrol)
 	else:
 		# Fallback to theme-based config if no floor config available
 		var config := _get_floor_spawn_config(floor_idx)

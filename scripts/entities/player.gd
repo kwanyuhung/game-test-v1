@@ -4,6 +4,8 @@ extends CharacterBody2D
 
 const SPEED := 90.0
 const CELL_SIZE := 16
+const WORLD_PIXEL_W := 512 * CELL_SIZE   # matches FloorConfig.WORLD_W
+const WORLD_PIXEL_H := 3200 * CELL_SIZE  # matches FloorConfig.WORLD_H (all floors)
 
 var _min_x := 0.0
 var _max_x := 2048.0
@@ -30,6 +32,13 @@ var _bottom_border: ColorRect = null
 var _left_border: ColorRect = null
 var _right_border: ColorRect = null
 
+# Blocked-state logging throttle — spamming the editor Output at 60 Hz
+# freezes the editor. Log only on state change and once per 500 ms while
+# still blocked.
+const _BLOCKED_LOG_INTERVAL_MS := 500
+var _was_blocked: bool = false
+var _last_blocked_log_ms: int = -1
+
 # Debug: check point markers (4 corners of collision box)
 var _check_points: Array = []
 var _check_point_labels: Array = []
@@ -37,7 +46,6 @@ var _check_point_labels: Array = []
 signal cart_updated(count: int)
 signal zone_changed(zone_name: String)
 signal interact_requested
-signal tab_pressed
 signal staff_mode_changed(is_staff: bool)
 signal cart_grabbed
 signal cart_dropped
@@ -278,6 +286,20 @@ func _set_pixel(x: int, y: int, col: Color, img: Image) -> void:
 	if x >= 0 and x < 16 and y >= 0 and y < 16:
 		img.set_pixel(x, y, col)
 
+func _log_blocked(new_pos: Vector2, floor_idx: int) -> void:
+	# Always log when transitioning from unblocked → blocked.
+	# While still blocked, log at most once per _BLOCKED_LOG_INTERVAL_MS.
+	var now_ms := Time.get_ticks_msec()
+	var state_changed := not _was_blocked
+	var interval_elapsed := now_ms - _last_blocked_log_ms >= _BLOCKED_LOG_INTERVAL_MS
+	if not state_changed and not interval_elapsed:
+		return
+	_was_blocked = true
+	_last_blocked_log_ms = now_ms
+	var tile_x := int(new_pos.x / CELL_SIZE)
+	var tile_y := int(new_pos.y / CELL_SIZE)
+	print("[Player] BLOCKED at world(%.0f, %.0f) tile(%d, %d) floor=%d" % [new_pos.x, new_pos.y, tile_x, tile_y, floor_idx])
+
 func _physics_process(delta: float) -> void:
 	if _world_ref != null and _world_ref.has_method("is_input_blocked"):
 		if _world_ref.is_input_blocked():
@@ -292,6 +314,14 @@ func _physics_process(delta: float) -> void:
 		input_dir = input_dir.normalized()
 		var new_pos = position + input_dir * SPEED * delta
 
+		# Clamp to the world rectangle first. Without this, a player holding
+		# left/up against the world edge drifts to negative tile coordinates
+		# (e.g. tile x=-1), and is_position_blocked() reports "not inside any
+		# zone" — producing a BLOCKED log at the edge of the world rather than
+		# at the boundary of the walkable area.
+		new_pos.x = clampf(new_pos.x, 0.0, WORLD_PIXEL_W - 1.0)
+		new_pos.y = clampf(new_pos.y, 0.0, WORLD_PIXEL_H - 1.0)
+
 		# Check if new position is in a blocked zone
 		var can_move := true
 		var floor_idx: int = 0
@@ -301,52 +331,34 @@ func _physics_process(delta: float) -> void:
 			# Check only center point first
 			if _world_ref.is_position_blocked(floor_idx, new_pos.x, new_pos.y):
 				can_move = false
-				# Print world pos AND tile pos for easier debugging
-				var tile_x := int(new_pos.x / CELL_SIZE)
-				var tile_y := int(new_pos.y / CELL_SIZE)
-				print("[Player] BLOCKED at world(%.0f, %.0f) tile(%d, %d) floor=%d" % [new_pos.x, new_pos.y, tile_x, tile_y, floor_idx])
+				_log_blocked(new_pos, floor_idx)
 
 		if can_move:
 			position = new_pos
+			_was_blocked = false
 		else:
-			var from_tile_x := int(position.x / CELL_SIZE)
-			var from_tile_y := int(position.y / CELL_SIZE)
-			var to_tile_x := int(new_pos.x / CELL_SIZE)
-			var to_tile_y := int(new_pos.y / CELL_SIZE)
-			print("[Player] Move blocked from tile(%d, %d) to tile(%d, %d)" % [from_tile_x, from_tile_y, to_tile_x, to_tile_y])
-	elif position != Vector2.ZERO:
-		# Show player position when not moving
-		pass  # Could add periodic debug here
+			# Sliding against the wall: keep the player at the last valid
+			# position. The earlier code "Move blocked from tile A to tile B"
+			# ran every frame and flooded the editor Output panel.
+			pass
 
-		_cart_sprite.position = _cart_sprite.position.lerp(_cart_offset, 0.15)
+	_cart_sprite.position = _cart_sprite.position.lerp(_cart_offset, 0.15)
 
-		if absf(input_dir.x) > 0.1:
-			_sprite.flip_h = input_dir.x < 0.0
+	if absf(input_dir.x) > 0.1:
+		_sprite.flip_h = input_dir.x < 0.0
 
-		var t = Time.get_ticks_msec() / 1000.0
-		var bob = sin(t * 10.0) * 0.04
-		_sprite.scale = Vector2(1.0, 1.0 + bob)
+	var t = Time.get_ticks_msec() / 1000.0
+	var bob = sin(t * 10.0) * 0.04
+	_sprite.scale = Vector2(1.0, 1.0 + bob)
 
 	if Input.is_action_just_pressed("interact"):
 		interact_requested.emit()
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
-		tab_pressed.emit()
-	if event is InputEventKey and event.pressed and event.keycode == KEY_K:
-		_toggle_staff_mode_input()
+		toggle_cart()
 	if event is InputEventKey and event.pressed and event.keycode == KEY_G:
 		toggle_cart()
-
-func _toggle_staff_mode_input() -> void:
-	if _world_ref != null and _world_ref.has_method("can_toggle_staff_mode"):
-		if _world_ref.can_toggle_staff_mode():
-			toggle_staff_mode()
-			if _world_ref.has_method("on_staff_mode_toggled"):
-				_world_ref.on_staff_mode_toggled(_staff_mode)
-		else:
-			if _world_ref.has_method("show_staff_only_hint"):
-				_world_ref.show_staff_only_hint()
 
 func set_nearby_section(section) -> void:
 	_nearby_section = section

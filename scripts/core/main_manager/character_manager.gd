@@ -38,10 +38,10 @@ func setup(main: Node2D, game_state: GameState) -> void:
 
 	# Wire SectionBrowse signals back to main (if section browse exists)
 	if _section_browse != null:
-		if not _section_browse.item_added.is_connected(_main._on_item_added_to_cart):
-			_section_browse.item_added.connect(_main._on_item_added_to_cart)
-		if not _section_browse.closed.is_connected(_main._on_browse_closed):
-			_section_browse.closed.connect(_main._on_browse_closed)
+		if not _section_browse.item_added.is_connected(_main._logic._on_item_added_to_cart):
+			_section_browse.item_added.connect(_main._logic._on_item_added_to_cart)
+		if not _section_browse.closed.is_connected(_main._logic._on_browse_closed):
+			_section_browse.closed.connect(_main._logic._on_browse_closed)
 
 	print_debug("[CharacterManager] Setup complete")
 

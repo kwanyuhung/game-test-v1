@@ -107,16 +107,16 @@ func _collect_sprites() -> void:
 	for app in appearances:
 		var actor: ActorData.Actor = ActorData.Actor.new()
 		actor.appearance = ActorData.Appearance.new()
-		actor.appearance.top_color = app["top"]
-		actor.appearance.bottom_color = app["bottom"]
+		actor.appearance.top.color = app["top"]
+		actor.appearance.bottom.color = app["bottom"]
 		actor.appearance.skin_tone = app["skin"]
-		actor.appearance.hair_color = app["hair"]
+		actor.appearance.hair.color = app["hair"]
 		actor.appearance.shoes_color = Color(0.18, 0.18, 0.18)
-		actor.appearance.hair_style = 0
+		actor.appearance.hair.style = 0
 		actor.appearance.has_glasses = false
 		actor.appearance.shoes_style = 0
-		actor.appearance.bottom_style = 0
-		actor.appearance.top_style = 0
+		actor.appearance.bottom.style = 0
+		actor.appearance.top.style = 0
 		var life: int = app["life"]
 		var tex: Texture2D = NPCSprite.make_actor_texture(actor.appearance, 16, life)
 		npc_sprites.append({"name": app["name"], "texture": tex})

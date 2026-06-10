@@ -19,32 +19,35 @@ static func make_actor_texture(appearance: ActorData.Appearance, scale: int = 16
 	_draw_shadow(img, sz, life_stage)
 	if life_stage == ActorData.LifeStage.CHILD:
 		_draw_shoes_child(img, appearance.shoes_color, sz)
-		_draw_lower_body_child(img, appearance.bottom_color, appearance.bottom_style, sz)
-		_draw_upper_body_child(img, appearance.top_color, appearance.top_style, sz)
+		_draw_lower_body_child(img, appearance.bottom.color, appearance.bottom.style, sz)
+		_draw_upper_body_child(img, appearance.top.color, appearance.top.style, sz)
 		_draw_head_child(img, appearance.skin_tone, false, Color.WHITE, sz)
-		_draw_hair(img, appearance.hair_color, appearance.hair_style, sz)
+		_draw_hair(img, appearance.hair.color, appearance.hair.style, sz)
+		_draw_accessory(img, appearance.top.accessory.type, appearance.top.color, appearance.top.accessory.color, sz)
 	elif life_stage == ActorData.LifeStage.TEEN:
 		_draw_shoes(img, appearance.shoes_color, appearance.shoes_style, sz)
-		_draw_lower_body_teen(img, appearance.bottom_color, appearance.bottom_style, sz)
-		_draw_upper_body_teen(img, appearance.top_color, appearance.top_style, sz)
+		_draw_lower_body_teen(img, appearance.bottom.color, appearance.bottom.style, sz)
+		_draw_upper_body_teen(img, appearance.top.color, appearance.top.style, sz)
 		_draw_head_teen(img, appearance.skin_tone, appearance.has_glasses, Color.WHITE, sz)
-		_draw_hair(img, appearance.hair_color, appearance.hair_style, sz)
-		_draw_phone_in_hand(img, appearance.top_color, sz)
+		_draw_hair(img, appearance.hair.color, appearance.hair.style, sz)
+		_draw_accessory(img, appearance.top.accessory.type, appearance.top.color, appearance.top.accessory.color, sz)
+		_draw_phone_in_hand(img, appearance.top.color, sz)
 		_draw_makeup(img, appearance.skin_tone, appearance.makeup_intensity, sz)
 	elif life_stage == ActorData.LifeStage.SENIOR:
 		_draw_shoes_senior(img, appearance.shoes_color, sz)
-		_draw_lower_body_senior(img, appearance.bottom_color, appearance.bottom_style, sz)
-		_draw_upper_body_senior(img, appearance.top_color, appearance.top_style, sz)
+		_draw_lower_body_senior(img, appearance.bottom.color, appearance.bottom.style, sz)
+		_draw_upper_body_senior(img, appearance.top.color, appearance.top.style, sz)
 		_draw_head_senior(img, appearance.skin_tone, appearance.has_glasses, Color.WHITE, sz)
-		_draw_hair_senior(img, appearance.hair_color, appearance.hair_style, sz)
+		_draw_hair_senior(img, appearance.hair.color, appearance.hair.style, sz)
+		_draw_accessory(img, appearance.top.accessory.type, appearance.top.color, appearance.top.accessory.color, sz)
 		_draw_walking_stick(img, Color(0.45, 0.30, 0.18), sz)
 	else:
 		_draw_shoes(img, appearance.shoes_color, appearance.shoes_style, sz)
-		_draw_lower_body(img, appearance.bottom_color, appearance.bottom_style, sz)
-		_draw_upper_body(img, appearance.top_color, appearance.top_style, sz)
+		_draw_lower_body(img, appearance.bottom.color, appearance.bottom.style, sz)
+		_draw_upper_body(img, appearance.top.color, appearance.top.style, sz)
 		_draw_head(img, appearance.skin_tone, appearance.has_glasses, Color.WHITE, sz)
-		_draw_hair(img, appearance.hair_color, appearance.hair_style, sz)
-		_draw_accessory(img, appearance.accessory, appearance.top_color, sz)
+		_draw_hair(img, appearance.hair.color, appearance.hair.style, sz)
+		_draw_accessory(img, appearance.top.accessory.type, appearance.top.color, appearance.top.accessory.color, sz)
 		_draw_makeup(img, appearance.skin_tone, appearance.makeup_intensity, sz)
 	return ImageTexture.create_from_image(img)
 
@@ -217,7 +220,7 @@ static func _draw_hair(img: Image, col: Color, style: int, sz: int) -> void:
 
 # ─── Accessory ─────────────────────────────────────────────
 
-static func _draw_accessory(img: Image, acc: int, top_col: Color, sz: int) -> void:
+static func _draw_accessory(img: Image, acc: int, top_col: Color, acc_color: Color, sz: int) -> void:
 	var sc := float(sz) / 16.0
 	match acc:
 		1:  # handbag / shoulder bag
@@ -232,6 +235,25 @@ static func _draw_accessory(img: Image, acc: int, top_col: Color, sz: int) -> vo
 			_fill_img(img, int(13*sc), int(8*sc), int(3*sc), int(2*sc), top_col.lightened(0.1), sz)
 			_fill_img(img, int(14*sc), int(7*sc), int(1*sc), int(1*sc), top_col.darkened(0.3), sz)
 			_set_img(img, int(14*sc), int(8*sc), Color(0.88, 0.78, 0.28), sz)
+		4:  # necktie
+			_fill_img(img, int(7*sc), int(6*sc), int(2*sc), int(1*sc), acc_color, sz)
+			_fill_img(img, int(7*sc), int(7*sc), int(2*sc), int(3*sc), acc_color.darkened(0.15), sz)
+		5:  # name tag
+			_fill_img(img, int(5*sc), int(9*sc), int(2*sc), int(2*sc), acc_color, sz)
+			_set_img(img, int(4*sc), int(9*sc), acc_color.darkened(0.3), sz)
+			_set_img(img, int(7*sc), int(10*sc), acc_color.darkened(0.3), sz)
+		6:  # scarf
+			_fill_img(img, int(4*sc), int(6*sc), int(8*sc), int(1*sc), acc_color, sz)
+			_fill_img(img, int(5*sc), int(7*sc), int(6*sc), int(1*sc), acc_color.darkened(0.2), sz)
+		7:  # apron
+			_fill_img(img, int(4*sc), int(8*sc), int(8*sc), int(4*sc), acc_color, sz)
+			_fill_img(img, int(4*sc), int(8*sc), int(8*sc), int(1*sc), acc_color.darkened(0.15), sz)
+			_fill_img(img, int(3*sc), int(8*sc), int(1*sc), int(4*sc), acc_color.darkened(0.25), sz)
+			_fill_img(img, int(12*sc), int(8*sc), int(1*sc), int(4*sc), acc_color.darkened(0.25), sz)
+		8:  # badge
+			_fill_img(img, int(5*sc), int(8*sc), int(2*sc), int(2*sc), acc_color, sz)
+			_set_img(img, int(5*sc), int(8*sc), acc_color.darkened(0.3), sz)
+			_set_img(img, int(6*sc), int(9*sc), acc_color.lightened(0.3), sz)
 
 # ─── Makeup ────────────────────────────────────────────────
 
@@ -263,9 +285,10 @@ static func _draw_makeup(img: Image, skin: Color, intensity: int, sz: int) -> vo
 
 static func _draw_baby(img: Image, child: ActorData.ChildData, sz: int) -> void:
 	var sc := float(sz) / 12.0
+	var outfit := child.outfit.color
 	# Baby body
-	_fill_img(img, int(3*sc), int(4*sc), int(6*sc), int(4*sc), child.outfit_color, sz)
-	_fill_img(img, int(4*sc), int(3*sc), int(4*sc), int(2*sc), child.outfit_color, sz)
+	_fill_img(img, int(3*sc), int(4*sc), int(6*sc), int(4*sc), outfit, sz)
+	_fill_img(img, int(4*sc), int(3*sc), int(4*sc), int(2*sc), outfit, sz)
 	# Baby head
 	_fill_img(img, int(4*sc), int(1*sc), int(4*sc), int(3*sc), child.skin_tone, sz)
 	_fill_img(img, int(4*sc), int(3*sc), int(4*sc), int(1*sc), child.skin_tone.darkened(0.1), sz)
@@ -280,8 +303,8 @@ static func _draw_baby(img: Image, child: ActorData.ChildData, sz: int) -> void:
 		1: _fill_img(img, int(3*sc), int(0*sc), int(6*sc), int(2*sc), child.hair_color, sz)
 		2: _fill_img(img, int(4*sc), int(0*sc), int(4*sc), int(2*sc), child.hair_color, sz)
 	# Baby hat
-	if child.accessory == 2:
-		_fill_img(img, int(3*sc), int(0*sc), int(6*sc), int(2*sc), child.outfit_color.lightened(0.2), sz)
+	if child.hair_accessory.type == ActorData.HAIR_ACC_HAT:
+		_fill_img(img, int(3*sc), int(0*sc), int(6*sc), int(2*sc), child.hair_accessory.color, sz)
 	# Baby legs
 	_fill_img(img, int(4*sc), int(8*sc), int(2*sc), int(3*sc), child.skin_tone, sz)
 	_fill_img(img, int(6*sc), int(8*sc), int(2*sc), int(3*sc), child.skin_tone, sz)
@@ -301,7 +324,7 @@ static func _draw_stroller(img: Image, child: ActorData.ChildData, sz: int) -> v
 	_fill_img(img, int(2*sc), int(4*sc), int(16*sc), int(4*sc), child.cart_color.lightened(0.3), sz)
 	_fill_img(img, int(2*sc), int(4*sc), int(16*sc), int(1*sc), child.cart_color, sz)
 	# Baby inside (tiny)
-	_fill_img(img, int(6*sc), int(10*sc), int(8*sc), int(4*sc), child.outfit_color, sz)
+	_fill_img(img, int(6*sc), int(10*sc), int(8*sc), int(4*sc), child.outfit.color, sz)
 	_fill_img(img, int(7*sc), int(8*sc), int(6*sc), int(3*sc), child.skin_tone, sz)
 
 # ─── Child Sprite (short, round, bright) ───────────────────────

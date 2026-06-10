@@ -444,6 +444,9 @@ func _make_plush_sprite(col: Color) -> Texture2D:
 # ── External control ──────────────────────────────────────────────
 # Called by main.gd when player presses E on this machine
 
+func start_game() -> bool:
+	return start_round()
+
 func start_round() -> bool:
 	"""Returns true if round started, false if can't play."""
 	if _state != State.IDLE:

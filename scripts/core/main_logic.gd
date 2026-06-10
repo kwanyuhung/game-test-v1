@@ -75,6 +75,8 @@ func _build_floor(idx: int) -> void:
 			sec.player_entered.connect(_on_section_entered)
 		if sec.has_signal("player_exited"):
 			sec.player_exited.connect(_on_section_exited)
+		if sec.has_signal("interact_requested"):
+			sec.interact_requested.connect(_on_section_interact_requested)
 
 	# Ambient
 	_main._floor_ambient = fd.ambient_color
@@ -845,6 +847,13 @@ func _on_section_entered(section_id: String) -> void:
 func _on_section_exited(section_id: String) -> void:
 	if _main._nearby_section != null and _main._nearby_section.get_def().id == section_id:
 		_main._nearby_section = null
+
+func _on_section_interact_requested(section_id: String) -> void:
+	# Mouse click on a nearby section — open the buy panel.
+	for sec in _main._sections:
+		if sec.get_def().id == section_id:
+			_open_section_browse(sec)
+			return
 
 # ── Player E-key interact ───────────────────────────────────────
 func handle_player_interact() -> void:
