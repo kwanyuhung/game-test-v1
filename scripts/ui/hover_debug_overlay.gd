@@ -67,7 +67,7 @@ func _scale() -> float:
 	var vp := get_viewport()
 	if vp == null:
 		return 1.0
-	return maxf(1.0, vp.get_visible_rect().size.x / 1920.0)
+	return maxf(1.0, vp.get_visible_rect().size.x / 1280.0)
 
 func _process(_delta: float) -> void:
 	if not _enabled:

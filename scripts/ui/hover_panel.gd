@@ -19,8 +19,18 @@ const SPRITE_SIZE := 32.0
 const SPRITE_PAD := 4.0
 const MARGIN := 14.0
 
-# Base design resolution the constants above are tuned for.
-const BASE_VIEWPORT_W := 1920.0
+# Vertical room for non-appearance text (name + role + AI + padding).
+# When appearance text is present, the entry grows below this floor.
+const ENTRY_BODY_H := 56.0
+# Pixel height per line of appearance text, used to grow each entry
+# to fit whatever the actor's get_hover_info() reports.
+const APPEARANCE_LINE_H := 12.0
+# Cap to keep a single NPC's panel from running off the screen.
+const ENTRY_MAX_LINES := 14
+
+# Base design resolution. Lower = bigger panel at any given viewport.
+# 1280 gives a 1.5x multiplier at 1920×1080 and ~1.55x at 1987×1222.
+const BASE_VIEWPORT_W := 1280.0
 
 func _scale() -> float:
 	# Scale panel dims with the viewport so a 1987x1222 window doesn't
@@ -260,14 +270,39 @@ func _refresh_layout() -> void:
 		return
 	var s: float = _scale()
 	var ew: float = _entry_w()
-	var eh: float = _entry_h()
 	var eg: float = _entry_gap()
 	var ss: float = _sprite_size()
 	var sp: float = _sprite_pad()
 	var mg: float = _margin()
+	var body_h: float = ENTRY_BODY_H * s
+	var line_h: float = APPEARANCE_LINE_H * s
+
+	# Per-entry height: body + enough room for the appearance text
+	# inside this specific entry. Bounded below by body_h and above by
+	# body_h + ENTRY_MAX_LINES * line_h so a long actor doesn't push
+	# the panel off-screen.
+	var entry_heights: Array[float] = []
+	for e in _entries:
+		var line_count := 1
+		if is_instance_valid(e.appearance_lbl):
+			# Prefer the Label's wrapped line count, fall back to the
+			# raw newline count + 1 when the layout pass hasn't run
+			# yet (Label.get_line_count() is 0 before first draw).
+			var wrapped: int = e.appearance_lbl.get_line_count()
+			if wrapped <= 0 and e.appearance_lbl.text != null:
+				wrapped = e.appearance_lbl.text.count("\n") + 1
+			line_count = maxi(1, wrapped)
+		var h: float = body_h + float(line_count) * line_h
+		var max_h: float = body_h + float(ENTRY_MAX_LINES) * line_h
+		entry_heights.append(clampf(h, body_h, max_h))
+
+	var total_h: float = 0.0
+	for h in entry_heights:
+		total_h += h
+	total_h += float(_entries.size() - 1) * eg
+
 	var mouse_pos := get_viewport().get_mouse_position()
 	var screen_size := get_viewport().get_visible_rect().size
-	var total_h: float = float(_entries.size()) * eh + float(_entries.size() - 1) * eg
 	var px: float = mouse_pos.x + mg
 	var py: float = mouse_pos.y + mg
 	if px + ew > screen_size.x:
@@ -284,9 +319,12 @@ func _refresh_layout() -> void:
 	_bg.position = Vector2(px, py)
 	_bg.size = Vector2(ew, total_h)
 
+	# Stack entries with their own heights.
+	var running_y: float = py
 	for i in range(_entries.size()):
 		var e: Entry = _entries[i]
-		var ey: float = py + float(i) * (eh + eg)
+		var ey: float = running_y
+		var eh: float = entry_heights[i]
 		e.frame.position = Vector2(px, ey)
 		e.frame.size = Vector2(ew, eh)
 		e.sprite_bg.position = Vector2(px + sp, ey + sp)
@@ -295,23 +333,20 @@ func _refresh_layout() -> void:
 		e.sprite.size = Vector2(ss, ss)
 		var text_x: float = px + sp * 3 + ss
 		var text_w: float = ew - (text_x - px) - 4
-		# Rows: name, role, appearance (multi-line), AI.
-		var name_y: float = ey + 2
-		var role_y: float = name_y + eh * 0.13
-		var ap_y: float = role_y + eh * 0.13
-		var ai_y: float = ey + eh * 0.72
-		var name_h: float = eh * 0.13
-		var role_h: float = eh * 0.13
-		var ap_h: float = eh * 0.59
-		var ai_h: float = eh * 0.26
-		e.name_lbl.position = Vector2(text_x, name_y)
-		e.name_lbl.size = Vector2(text_w, name_h)
-		e.role_lbl.position = Vector2(text_x, role_y)
-		e.role_lbl.size = Vector2(text_w, role_h)
-		e.appearance_lbl.position = Vector2(text_x, ap_y)
-		e.appearance_lbl.size = Vector2(text_w, ap_h)
-		e.ai_lbl.position = Vector2(text_x, ai_y)
-		e.ai_lbl.size = Vector2(text_w, ai_h)
+		# Row heights: name + role pinned to top, AI pinned to bottom,
+		# appearance fills the middle and grows with the entry.
+		var header_h: float = eh * 0.16
+		var footer_h: float = eh * 0.16
+		var middle_h: float = eh - header_h - footer_h
+		e.name_lbl.position = Vector2(text_x, ey + 2)
+		e.name_lbl.size = Vector2(text_w, header_h * 0.6)
+		e.role_lbl.position = Vector2(text_x, ey + 2 + header_h * 0.6)
+		e.role_lbl.size = Vector2(text_w, header_h * 0.4)
+		e.appearance_lbl.position = Vector2(text_x, ey + header_h)
+		e.appearance_lbl.size = Vector2(text_w, middle_h)
+		e.ai_lbl.position = Vector2(text_x, ey + eh - footer_h)
+		e.ai_lbl.size = Vector2(text_w, footer_h)
+		running_y += eh + eg
 
 func _mouse_to_world() -> Vector2:
 	var vp := get_viewport()
