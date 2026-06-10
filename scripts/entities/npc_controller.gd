@@ -124,6 +124,7 @@ const STAFF_TASK_TEMPLATES = {
 # Instance Data
 var _actor: ActorData.Actor
 var _chat_brain: AIChatBrain
+var _is_in_chat: bool = false
 var _state: BehaviorState = BehaviorState.IDLE
 var _target_pos: Vector2 = Vector2.ZERO
 var _elevator_target: int = -1
@@ -293,6 +294,14 @@ func _ready() -> void:
 # Main Loop
 func _physics_process(delta: float) -> void:
 	_state_timer -= delta
+	if _is_in_chat:
+		# Chat brain still ticks (cooldowns etc.) but behavior is paused
+		# and no movement is applied — the NPC stands still facing the
+		# chat partner.
+		if _chat_brain != null:
+			_chat_brain.process(delta)
+		_tick_ambient_bubble(delta)
+		return
 	_update_behavior(delta)
 	if _chat_brain != null:
 		_chat_brain.process(delta)
@@ -1265,6 +1274,26 @@ func _update_status_label() -> void:
 # Public API
 func get_actor() -> ActorData.Actor:
 	return _actor
+
+func get_chat_brain() -> AIChatBrain:
+	return _chat_brain
+
+func is_in_chat() -> bool:
+	return _is_in_chat
+
+func set_in_chat(v: bool) -> void:
+	_is_in_chat = v
+
+func face_towards(world_pos: Vector2) -> void:
+	if _body_sprite == null:
+		return
+	# Use the existing sprite flip convention: face left when target is
+	# to the left of the NPC. Mirrors the same flip logic used during
+	# normal walking so chat-facing matches in-game facing.
+	var dx: float = world_pos.x - global_position.x
+	if absf(dx) < 0.5:
+		return
+	_body_sprite.flip_h = dx < 0.0
 
 func set_group_leader(leader: NPCController) -> void:
 	_group_leader = leader

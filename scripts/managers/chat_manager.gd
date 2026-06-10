@@ -89,42 +89,49 @@ func _are_valid_for_chat(npc_a: Node, npc_b: Node) -> bool:
 	return actor_a != null and actor_b != null and actor_a.is_active and actor_b.is_active
 
 func _start_npc_chat(npc_a: Node, npc_b: Node) -> void:
-	# 双重安全校验：实例有效 + 拥有获取大脑的方法
-	var brain_a: AIChatBrain = null
-	if is_instance_valid(npc_a) && npc_a.has_method("get_chat_brain"):
-		brain_a = npc_a.get_chat_brain()
-
-	var brain_b: AIChatBrain = null
-	if is_instance_valid(npc_b) && npc_b.has_method("get_chat_brain"):
-		brain_b = npc_b.get_chat_brain()
-	
-	# 任意一个大脑为空，直接退出
+	# Both NPCs must be valid and expose get_chat_brain() (NPCController does)
+	if not is_instance_valid(npc_a) or not is_instance_valid(npc_b):
+		return
+	var brain_a: AIChatBrain = npc_a.get_chat_brain()
+	var brain_b: AIChatBrain = npc_b.get_chat_brain()
 	if brain_a == null or brain_b == null:
 		return
 
 	if not brain_a.should_initiate_chat():
 		return
 
+	# Lock both NPCs in place and have them face each other
+	npc_a.set_in_chat(true)
+	npc_b.set_in_chat(true)
+	npc_a.face_towards(npc_b.global_position)
+	npc_b.face_towards(npc_a.global_position)
+
 	var topic := _pick_npc_topic(npc_a, npc_b)
 	var greeting := brain_a.trigger_autonomous_chat()
-	_show_npc_bubble(npc_a, greeting)
+	_show_pair_bubble(npc_a, npc_b, greeting)
 
 	# NPC B 延迟回复
 	await get_tree().create_timer(1.5).timeout
 	if not is_instance_valid(npc_a) or not is_instance_valid(npc_b):
 		return
+	if not npc_a.is_in_chat() or not npc_b.is_in_chat():
+		return
 	var response := brain_b.generate_response(greeting)
-	_show_npc_bubble(npc_b, response)
+	_show_pair_bubble(npc_a, npc_b, response)
 
 	# 随机追加对话
 	if randf() < 0.5:
 		await get_tree().create_timer(2.0).timeout
 		if not is_instance_valid(npc_a) or not is_instance_valid(npc_b):
 			return
+		if not npc_a.is_in_chat() or not npc_b.is_in_chat():
+			return
 		var reply := brain_a.generate_response(response)
-		_show_npc_bubble(npc_a, reply)
+		_show_pair_bubble(npc_a, npc_b, reply)
 
 	await get_tree().create_timer(1.5).timeout
+	if is_instance_valid(npc_a): npc_a.set_in_chat(false)
+	if is_instance_valid(npc_b): npc_b.set_in_chat(false)
 
 func _pick_npc_topic(npc_a: Node, npc_b: Node) -> String:
 	var topics := ["hello", "food", "arcade", "products", "family", "weather"]
@@ -140,3 +147,17 @@ func _show_npc_bubble(npc: Node, text: String) -> void:
 		bubble.display(text, 3.5)
 	else:
 		return
+
+# Show a single shared bubble that sits at the midpoint of two NPCs'
+# heads and tracks them every frame, with tail lines pointing to each.
+func _show_pair_bubble(npc_a: Node, npc_b: Node, text: String) -> void:
+	if not is_instance_valid(npc_a) or not is_instance_valid(npc_b):
+		return
+	var parent: Node = npc_a.get_parent()
+	if parent == null or npc_b.get_parent() != parent:
+		# Pair must share a parent (the world / a floor) for shared space coords
+		return
+	var bubble := ChatBubble.new()
+	parent.add_child(bubble)
+	bubble.set_anchor_pair(npc_a, npc_b)
+	bubble.display(text, 3.5)
