@@ -5,21 +5,20 @@ extends CharacterBody2D
 const ActorData = preload("res://scripts/entities/actor_data.gd")
 const AIChatBrain = preload("res://scripts/entities/ai_chat_brain.gd")
 const NPCSprite = preload("res://scripts/entities/npc_sprite.gd")
+const FloorConfig = preload("res://scripts/world/floor_config.gd")
+const FloorManagerScript = preload("res://scripts/world/floor_manager.gd")
 
 # Speed Constants
 const SPEED_CUSTOMER := 55.0
 const SPEED_STAFF   := 62.0
 const SPEED_SENIOR   := 38.0
 const SPEED_CHILD    := 45.0
-const SPEED_TEEN     := 68.0  
+const SPEED_TEEN     := 68.0
 
 const CELL_SIZE := 16.0
-
-# Floor Bounds
-const BOUNDS := {
-	0: { "min": Vector2(64.0, 64.0), "max": Vector2(1248.0, 752.0) },
-	1: { "min": Vector2(64.0, 64.0), "max": Vector2(1248.0, 752.0) },
-}
+# Horizontal world extent — NPCs can roam anywhere on the current floor
+# but not off the left/right edges of the world.
+const WORLD_PIXEL_W := 512 * CELL_SIZE
 
 # State Machine
 enum BehaviorState {
@@ -113,6 +112,13 @@ const STAFF_TASK_TEMPLATES = {
 		{"name": "Warehouse dock", "floor": 11, "x": 1300, "y": 600, "urgency": 1},
 		{"name": "Loading area", "floor": 11, "x": 1100, "y": 500, "urgency": 0},
 	],
+	ActorData.StaffRole.CUSTOMER_SERVICE: [
+		{"name": "Info desk", "floor": 0, "x": 640, "y": 48, "urgency": 1},
+		{"name": "Customer service", "floor": 0, "x": 500, "y": 96, "urgency": 1},
+		{"name": "Loyalty center", "floor": 0, "x": 416, "y": 48, "urgency": 0},
+		{"name": "Gift wrapping", "floor": 0, "x": 672, "y": 48, "urgency": 0},
+		{"name": "Digital kiosk", "floor": 0, "x": 928, "y": 176, "urgency": 0},
+	],
 }
 
 # Instance Data
@@ -121,6 +127,10 @@ var _chat_brain: AIChatBrain
 var _state: BehaviorState = BehaviorState.IDLE
 var _target_pos: Vector2 = Vector2.ZERO
 var _elevator_target: int = -1
+# Whether the actor is locked to its anchor (STANDBY). When true, the
+# _choose_staff_behavior loop will route to _start_stationary_work() instead
+# of _start_patrol()/_start_staff_task().
+var _is_stationary: bool = false
 var _elevator_at_floor: int = 0
 var _state_timer: float = 0.0
 var _current_task_idx: int = 0
@@ -135,6 +145,9 @@ var _needs_help_at_checkout: bool = false
 var _help_received: bool = false
 var _assisting_staff: NPCController = null
 var _speech_bubble: Label = null
+# Timer for ambient thought bubbles (independent of _state_timer which is
+# tied to behavior state, not transient UI text).
+var _ambient_bubble_timer: float = 0.0
 
 # Shopping cart
 var _has_cart: bool = false
@@ -159,6 +172,9 @@ var _bottom_border: ColorRect = null
 var _left_border: ColorRect = null
 var _right_border: ColorRect = null
 var _bounds_visible: bool = true
+
+# Mouse-hover Area2D — feeds the floating hover panel.
+var _hover_area: Area2D = null
 
 # Freeze state for FloorManager LOD system
 var _frozen: bool = false
@@ -229,7 +245,9 @@ func configure(actor: ActorData.Actor) -> void:
 	col.position = Vector2.ZERO
 	add_child(col)
 
-	# Bounding box debug visualization (always visible)
+	# Bounding box debug visualization (always visible).
+	# ColorRects default to MOUSE_FILTER_STOP and would intercept the
+	# cursor, blocking the Area2D-based hover picker.
 	var border_color := Color(1.0, 1.0, 1.0, 0.6)
 	# Top border
 	_top_border = ColorRect.new()
@@ -237,6 +255,7 @@ func configure(actor: ActorData.Actor) -> void:
 	_top_border.position = Vector2(-8, -8)
 	_top_border.color = border_color
 	_top_border.z_index = 100
+	_top_border.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_top_border)
 	# Bottom border
 	_bottom_border = ColorRect.new()
@@ -244,6 +263,7 @@ func configure(actor: ActorData.Actor) -> void:
 	_bottom_border.position = Vector2(-8, 7)
 	_bottom_border.color = border_color
 	_bottom_border.z_index = 100
+	_bottom_border.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_bottom_border)
 	# Left border
 	_left_border = ColorRect.new()
@@ -251,6 +271,7 @@ func configure(actor: ActorData.Actor) -> void:
 	_left_border.position = Vector2(-8, -8)
 	_left_border.color = border_color
 	_left_border.z_index = 100
+	_left_border.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_left_border)
 	# Right border
 	_right_border = ColorRect.new()
@@ -258,9 +279,16 @@ func configure(actor: ActorData.Actor) -> void:
 	_right_border.position = Vector2(7, -8)
 	_right_border.color = border_color
 	_right_border.z_index = 100
+	_right_border.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_right_border)
 
 	_start_idle(randf_range(1.0, 3.0))
+
+# Built after the node is in the tree so the Area2D mouse signals
+# actually register with the scene's picker.
+func _ready() -> void:
+	_build_hover_area()
+	add_to_group("hoverable")
 
 # Main Loop
 func _physics_process(delta: float) -> void:
@@ -268,10 +296,42 @@ func _physics_process(delta: float) -> void:
 	_update_behavior(delta)
 	if _chat_brain != null:
 		_chat_brain.process(delta)
+	_tick_ambient_bubble(delta)
 	_apply_movement(delta)
+	_clamp_to_world()
 
 	if _has_stroller and _stroller_sprite != null:
 		_stroller_sprite.position = Vector2(-8, 8)
+
+func _clamp_to_world() -> void:
+	# move_and_collide only respects physics colliders. Without an explicit
+	# world-edge clamp, NPCs can drift past x=0 or x=WORLD_W into the void,
+	# or walk up to y=0 (the top of the world) when they should be limited
+	# to the Y range of their current floor.
+	global_position.x = clampf(global_position.x, 0.0, WORLD_PIXEL_W - 1.0)
+	var y_range := _current_floor_y_range()
+	global_position.y = clampf(global_position.y, y_range.x, y_range.y)
+
+func _current_floor_y_range() -> Vector2:
+	# Returns the [min_world_y, max_world_y] of the actor's current floor
+	# in pixels. Computed from the actor's world Y position, then refined
+	# by the floor's zone bounds.
+	var floor_count := FloorConfig.floor_count()
+	if floor_count <= 0:
+		return Vector2(0.0, WORLD_PIXEL_W)
+	# Container Y for floor 0 is FLOOR_0_BASE_Y; each subsequent floor is
+	# FLOOR_Y_OFFSET pixels above. floor_idx is the one whose container is
+	# just above the actor.
+	var raw_idx := int(round(
+		(FloorManagerScript.FLOOR_0_BASE_Y - global_position.y) \
+		/ float(FloorManagerScript.FLOOR_Y_OFFSET)
+	))
+	var floor_idx: int = clamp(raw_idx, 0, floor_count - 1)
+	var container_y: float = FloorManagerScript.get_floor_y(floor_idx)
+	var zone_bounds: Dictionary = FloorConfig.get_floor_zone_bounds(floor_idx)
+	var min_world_y: float = container_y + float(zone_bounds.min_y) * CELL_SIZE
+	var max_world_y: float = container_y + float(zone_bounds.max_y) * CELL_SIZE
+	return Vector2(min_world_y, max_world_y)
 
 # 🔥 修复1：实现缺失的 _apply_movement 函数
 func _apply_movement(delta: float) -> void:
@@ -448,6 +508,11 @@ func _choose_customer_behavior() -> void:
 		_leave_store()
 
 func _choose_staff_behavior() -> void:
+	# STANDBY roles (cashier, greeter, receptionist, scan&go) stay at their
+	# anchor and never leave. Route them straight to stationary work.
+	if _is_stationary:
+		_start_stationary_work()
+		return
 	match _actor.staff_role:
 		ActorData.StaffRole.CASHIER:
 			_go_to_checkout_lane()
@@ -507,8 +572,46 @@ func _choose_staff_behavior() -> void:
 				_start_delivery_task()
 			else:
 				_start_patrol()
+		ActorData.StaffRole.CUSTOMER_SERVICE:
+			if randf() < 0.5:
+				_start_customer_service_task()
+			else:
+				_start_patrol()
 		_:
 			_start_wander()
+
+# Pick a target Vector2 constrained by movement_bounds:
+#   STANDBY     → always returns bounds.anchor
+#   FIXED_RANGE → returns a random waypoint (with anchor as fallback)
+#   FREE        → returns the proposed target unchanged
+func _constrain_to_bounds(proposed: Vector2) -> Vector2:
+	var b: ActorData.MovementBounds = _actor.movement_bounds
+	match b.mode:
+		ActorData.MovementMode.STANDBY:
+			return b.anchor
+		ActorData.MovementMode.FIXED_RANGE:
+			if b.waypoints.is_empty():
+				return b.anchor if b.anchor != Vector2.ZERO else proposed
+			return b.waypoints[randi() % b.waypoints.size()]
+		_:
+			return proposed
+
+# Standby behavior — actor stays at its anchor, does work animations, and
+# picks the next thing to do (ambient thought, idle) without ever moving.
+func _start_stationary_work() -> void:
+	var b: ActorData.MovementBounds = _actor.movement_bounds
+	if b.anchor != Vector2.ZERO:
+		_target_pos = b.anchor
+	# If we are not already at the anchor, walk there once.
+	if global_position.distance_to(_target_pos) > b.arrival_radius:
+		_state = BehaviorState.STAFF_WORKING
+		_state_timer = randf_range(2.0, 5.0)
+	else:
+		_state = BehaviorState.STAFF_WORKING
+		_state_timer = randf_range(3.0, 7.0)
+		var thought := _pick_ambient_thought()
+		if thought != "":
+			_show_ambient_thought(thought)
 
 # Behavior Implementations
 func _start_idle(duration: float) -> void:
@@ -619,6 +722,18 @@ func _start_receptionist_task() -> void:
 	_current_task_idx = 0
 	_start_staff_task()
 
+func _start_customer_service_task() -> void:
+	var templates = STAFF_TASK_TEMPLATES.get(ActorData.StaffRole.CUSTOMER_SERVICE, [])
+	if templates.is_empty():
+		_start_wander()
+		return
+	var task: Dictionary = templates[randi() % templates.size()]
+	var t = ActorData.StaffTask.new(task["name"], task["floor"], task["x"], task["y"], task["urgency"])
+	_tasks.clear()
+	_tasks.append(t)
+	_current_task_idx = 0
+	_start_staff_task()
+
 func _start_maintenance_task() -> void:
 	var templates = STAFF_TASK_TEMPLATES.get(ActorData.StaffRole.MAINTENANCE_STAFF, [])
 	if templates.is_empty():
@@ -655,21 +770,35 @@ func _start_staff_task() -> void:
 		_state = BehaviorState.WALKING_TO_TARGET
 		_state_timer = 10.0
 	else:
-		_target_pos = Vector2(task.zone_x, task.zone_y)
+		var proposed := Vector2(task.zone_x, task.zone_y)
+		_target_pos = _constrain_to_bounds(proposed)
 		_state = BehaviorState.STAFF_WORKING
 		_state_timer = randf_range(4.0, 10.0)
 		task.done = true
 		_current_task_idx += 1
+		var thought := _pick_ambient_thought()
+		if thought != "":
+			_show_ambient_thought(thought)
 
 func _start_patrol() -> void:
 	var templates = STAFF_TASK_TEMPLATES.get(_actor.staff_role, [])
 	if templates.is_empty():
-		_start_wander()
+		# No templates — pick a target from bounds (FIXED_RANGE waypoint,
+		# STANDBY anchor, or random for FREE).
+		_target_pos = _constrain_to_bounds(global_position)
+		_state = BehaviorState.STAFF_PATROLLING
+		_state_timer = randf_range(3.0, 7.0)
+		var thought := _pick_ambient_thought()
+		if thought != "":
+			_show_ambient_thought(thought)
 		return
 	var task: Dictionary = templates[randi() % templates.size()]
-	_target_pos = Vector2(task["x"], task["y"])
+	_target_pos = _constrain_to_bounds(Vector2(task["x"], task["y"]))
 	_state = BehaviorState.STAFF_PATROLLING
 	_state_timer = randf_range(3.0, 7.0)
+	var thought := _pick_ambient_thought()
+	if thought != "":
+		_show_ambient_thought(thought)
 
 func _go_to_checkout_lane() -> void:
 	_did_checkout = true  
@@ -1012,6 +1141,77 @@ func _hide_speech_bubble() -> void:
 	if _speech_bubble != null:
 		_speech_bubble.text = ""
 
+# Ambient thought: shows a short role-themed line above the NPC and clears
+# it after `duration` seconds. Used to surface what staff are doing so
+# players can see the supermarket "alive" without needing a chat prompt.
+func _show_ambient_thought(text: String, duration: float = 2.5) -> void:
+	_show_speech_bubble(text)
+	_ambient_bubble_timer = duration
+
+const AMBIENT_THOUGHTS := {
+	ActorData.StaffRole.CASHIER: [
+		"Next, please!", "Receipt ready.", "Card or cash?",
+	],
+	ActorData.StaffRole.SHELF_STOCKER: [
+		"Time to restock.", "Almost done here.", "Need more on shelf.",
+	],
+	ActorData.StaffRole.CLEANER: [
+		"Aisle needs mopping.", "Spill on floor 3.", "Bagging up trash.",
+	],
+	ActorData.StaffRole.SECURITY: [
+		"Patrolling.", "All clear.", "Watching the exits.",
+	],
+	ActorData.StaffRole.GREETER: [
+		"Welcome!", "Need a cart?", "Have a great visit!",
+	],
+	ActorData.StaffRole.MANAGER: [
+		"Checking inventory.", "Team meeting soon.", "Floor looks good.",
+	],
+	ActorData.StaffRole.FLOOR_STAFF: [
+		"Can I help you find something?", "Restocking labels.", "On it.",
+	],
+	ActorData.StaffRole.SCAN_GO: [
+		"Scanning...", "Item found.", "Receipt, please.",
+	],
+	ActorData.StaffRole.SHOP_STAFF: [
+		"Fitting room ready.", "Size? Let me check.", "Great choice!",
+	],
+	ActorData.StaffRole.FOOD_STAFF: [
+		"Order up!", "Fresh today.", "Anything else?",
+	],
+	ActorData.StaffRole.CLEAN_STAFF: [
+		"Restocking bags.", "Wiping down counters.", "Spotted clean.",
+	],
+	ActorData.StaffRole.RECEPTIONIST: [
+		"How can I help?", "Information desk ready.", "Welcome!",
+	],
+	ActorData.StaffRole.MAINTENANCE_STAFF: [
+		"Checking equipment.", "Repair queued.", "All systems go.",
+	],
+	ActorData.StaffRole.DELIVERY_STAFF: [
+		"Loading dock next.", "Stock incoming.", "Pallets ready.",
+	],
+	ActorData.StaffRole.CUSTOMER_SERVICE: [
+		"How can I help?", "Info desk open.", "Need a hand?",
+		"Loyalty sign-up?", "Gift wrap, please!",
+	],
+}
+
+func _pick_ambient_thought() -> String:
+	if _actor == null:
+		return ""
+	var pool: Array = AMBIENT_THOUGHTS.get(_actor.staff_role, [])
+	if pool.is_empty():
+		return ""
+	return pool[randi() % pool.size()]
+
+func _tick_ambient_bubble(delta: float) -> void:
+	if _ambient_bubble_timer <= 0.0:
+		return
+	_ambient_bubble_timer -= delta
+	if _ambient_bubble_timer <= 0.0:
+		_hide_speech_bubble()
+
 func _get_preferred_floors() -> Array:
 	match _actor.life_stage:
 		ActorData.LifeStage.CHILD:
@@ -1234,3 +1434,301 @@ func set_bounds_visible(visible: bool) -> void:
 		_left_border.visible = visible
 	if _right_border != null:
 		_right_border.visible = visible
+
+# Hover Panel Integration
+
+func _build_hover_area() -> void:
+	# Shape intentionally larger than the body sprite so the player can
+	# hover on the name/status label area above the sprite and still
+	# trigger the panel.
+	_hover_area = Area2D.new()
+	_hover_area.input_pickable = true
+	_hover_area.monitoring = false
+	_hover_area.monitorable = true
+	var hover_shape := CollisionShape2D.new()
+	var hover_rect := RectangleShape2D.new()
+	hover_rect.size = Vector2(32, 40)
+	hover_shape.shape = hover_rect
+	_hover_area.add_child(hover_shape)
+	_hover_area.mouse_entered.connect(_on_hover_entered)
+	_hover_area.mouse_exited.connect(_on_hover_exited)
+	add_child(_hover_area)
+
+func _on_hover_entered() -> void:
+	print("[hover] NPC entered: %s at world=(%d,%d)" % [_actor.display_name, int(global_position.x), int(global_position.y)])
+	var panel := get_tree().get_first_node_in_group("hover_panel")
+	if panel != null:
+		panel.show_for(self)
+
+func _on_hover_exited() -> void:
+	var panel := get_tree().get_first_node_in_group("hover_panel")
+	if panel != null:
+		panel.hide_for(self)
+
+# Used by HoverPanel to detect overlaps without re-triggering mouse events.
+# Returns true if `world_point` lies inside the hover Area2D's rectangle.
+func contains_world_point(world_point: Vector2) -> bool:
+	if _hover_area == null:
+		return false
+	for child in _hover_area.get_children():
+		if child is CollisionShape2D and child.shape is RectangleShape2D:
+			var local: Vector2 = _hover_area.global_transform.affine_inverse() * world_point
+			var half: Vector2 = (child.shape as RectangleShape2D).size * 0.5
+			return absf(local.x) <= half.x and absf(local.y) <= half.y
+	return false
+
+# Dictionary consumed by HoverPanel — keep keys stable.
+func get_hover_info() -> Dictionary:
+	if _actor == null:
+		return {}
+	var role_text := ""
+	match _actor.role:
+		ActorData.Role.STAFF:
+			role_text = "Staff — " + _hover_role_name(_actor.staff_role)
+		ActorData.Role.CUSTOMER:
+			role_text = "Customer — " + _hover_life_stage_name(_actor.life_stage)
+		_:
+			role_text = "Person"
+
+	var appearance_lines: Array = []
+	appearance_lines.append("Stage: %s" % _hover_life_stage_name(_actor.life_stage))
+	appearance_lines.append("Energy: %d%%" % int(_actor.energy * 100.0))
+	appearance_lines.append("Happy: %d%%" % int(_actor.happiness * 100.0))
+	for line in _hover_appearance_breakdown():
+		appearance_lines.append(line)
+	if _has_cart:
+		appearance_lines.append("Cart: %d items" % _actor.cart_item_count)
+	if _has_stroller:
+		appearance_lines.append("Stroller: yes")
+
+	var bounds: ActorData.MovementBounds = _actor.movement_bounds
+	var mode_int: int = ActorData.MovementMode.FREE
+	var waypoint_count := 0
+	var anchor := Vector2.ZERO
+	if bounds != null:
+		mode_int = bounds.mode
+		waypoint_count = bounds.waypoints.size()
+		anchor = bounds.anchor
+
+	return {
+		"name": _actor.display_name,
+		"role": role_text,
+		"appearance": "\n".join(appearance_lines),
+		"sprite": (_body_sprite.texture if _body_sprite != null else null),
+		"movement_mode": mode_int,
+		"waypoint_count": waypoint_count,
+		"anchor": anchor,
+		"state": _hover_state_name(_state),
+		"floor": _actor.current_floor,
+	}
+
+func _hover_role_name(p_role: int) -> String:
+	match p_role:
+		ActorData.StaffRole.CASHIER: return "Cashier"
+		ActorData.StaffRole.SHELF_STOCKER: return "Stocker"
+		ActorData.StaffRole.CLEANER: return "Cleaner"
+		ActorData.StaffRole.SECURITY: return "Security"
+		ActorData.StaffRole.GREETER: return "Greeter"
+		ActorData.StaffRole.MANAGER: return "Manager"
+		ActorData.StaffRole.FLOOR_STAFF: return "Floor Staff"
+		ActorData.StaffRole.SCAN_GO: return "Scan & Go"
+		ActorData.StaffRole.SHOP_STAFF: return "Shop Staff"
+		ActorData.StaffRole.FOOD_STAFF: return "Food Staff"
+		ActorData.StaffRole.CLEAN_STAFF: return "Clean Staff"
+		ActorData.StaffRole.RECEPTIONIST: return "Receptionist"
+		ActorData.StaffRole.MAINTENANCE_STAFF: return "Maintenance"
+		ActorData.StaffRole.DELIVERY_STAFF: return "Delivery"
+		ActorData.StaffRole.CUSTOMER_SERVICE: return "Customer Service"
+	return "Worker"
+
+func _hover_life_stage_name(p_stage: int) -> String:
+	match p_stage:
+		ActorData.LifeStage.ADULT: return "Adult"
+		ActorData.LifeStage.ADULT_MID: return "Mid Adult"
+		ActorData.LifeStage.SENIOR: return "Senior"
+		ActorData.LifeStage.TEEN: return "Teen"
+		ActorData.LifeStage.CHILD: return "Child"
+		ActorData.LifeStage.TODDLER: return "Toddler"
+		ActorData.LifeStage.INFANT: return "Infant"
+	return "?"
+
+# Short labels for visible appearance details (glasses, accessories,
+# uniform pieces). Surfaced in the hover panel so the player can read
+# what they see on the sprite.
+func _hover_appearance_traits() -> Array:
+	# Kept for back-compat; new code uses _hover_appearance_breakdown.
+	var out: Array = []
+	if _actor == null or _actor.appearance == null:
+		return out
+	var ap: ActorData.Appearance = _actor.appearance
+	if ap.has_glasses:
+		out.append("glasses")
+	if ap.hair != null and ap.hair.accessory != null and not ap.hair.accessory.is_none():
+		match ap.hair.accessory.type:
+			ActorData.HAIR_ACC_HAIRBAND: out.append("hairband")
+			ActorData.HAIR_ACC_BOW: out.append("bow")
+			ActorData.HAIR_ACC_HAT: out.append("hat")
+			ActorData.HAIR_ACC_HAIRNET: out.append("hairnet")
+			ActorData.HAIR_ACC_HEADBAND: out.append("headband")
+	if ap.top != null and ap.top.accessory != null and not ap.top.accessory.is_none():
+		match ap.top.accessory.type:
+			ActorData.TOP_ACC_BAG: out.append("bag")
+			ActorData.TOP_ACC_BACKPACK: out.append("backpack")
+			ActorData.TOP_ACC_HANDBAG: out.append("handbag")
+			ActorData.TOP_ACC_NECKTIE: out.append("tie")
+			ActorData.TOP_ACC_NAME_TAG: out.append("name tag")
+			ActorData.TOP_ACC_SCARF: out.append("scarf")
+			ActorData.TOP_ACC_APRON: out.append("apron")
+			ActorData.TOP_ACC_BADGE: out.append("badge")
+	return out
+
+# Each returned line describes one slot (hair, top, bottom, shoes) with
+# style + color, followed by an "Accessories" line summarising every
+# worn item (glasses, hairband, apron, badge, etc.).
+func _hover_appearance_breakdown() -> Array:
+	var out: Array = []
+	if _actor == null or _actor.appearance == null:
+		return out
+	var ap: ActorData.Appearance = _actor.appearance
+
+	if ap.hair != null:
+		var hair_style := _hover_hair_style_name(ap.hair.style)
+		var hair_color := _hover_color_name(ap.hair.color)
+		out.append("Hair: %s (%s)" % [hair_style, hair_color])
+
+	if ap.top != null:
+		var top_style := _hover_top_style_name(ap.top.style)
+		var top_color := _hover_color_name(ap.top.color)
+		out.append("Top: %s (%s)" % [top_style, top_color])
+
+	if ap.bottom != null:
+		var bot_style := _hover_bottom_style_name(ap.bottom.style)
+		var bot_color := _hover_color_name(ap.bottom.color)
+		out.append("Bottom: %s (%s)" % [bot_style, bot_color])
+
+	var shoe_style := _hover_shoe_style_name(ap.shoes_style)
+	var shoe_color := _hover_color_name(ap.shoes_color)
+	out.append("Shoes: %s (%s)" % [shoe_style, shoe_color])
+
+	var accessories: Array = []
+	if ap.has_glasses:
+		accessories.append("glasses")
+	if ap.hair != null and ap.hair.accessory != null and not ap.hair.accessory.is_none():
+		match ap.hair.accessory.type:
+			ActorData.HAIR_ACC_HAIRBAND: accessories.append("hairband")
+			ActorData.HAIR_ACC_BOW: accessories.append("bow")
+			ActorData.HAIR_ACC_HAT: accessories.append("hat")
+			ActorData.HAIR_ACC_HAIRNET: accessories.append("hairnet")
+			ActorData.HAIR_ACC_HEADBAND: accessories.append("headband")
+	if ap.top != null and ap.top.accessory != null and not ap.top.accessory.is_none():
+		match ap.top.accessory.type:
+			ActorData.TOP_ACC_BAG: accessories.append("bag")
+			ActorData.TOP_ACC_BACKPACK: accessories.append("backpack")
+			ActorData.TOP_ACC_HANDBAG: accessories.append("handbag")
+			ActorData.TOP_ACC_NECKTIE: accessories.append("tie")
+			ActorData.TOP_ACC_NAME_TAG: accessories.append("name tag")
+			ActorData.TOP_ACC_SCARF: accessories.append("scarf")
+			ActorData.TOP_ACC_APRON: accessories.append("apron")
+			ActorData.TOP_ACC_BADGE: accessories.append("badge")
+	if ap.bottom != null and ap.bottom.accessory != null and not ap.bottom.accessory.is_none():
+		match ap.bottom.accessory.type:
+			ActorData.BOTTOM_ACC_BELT: accessories.append("belt")
+			ActorData.BOTTOM_ACC_HOLSTER: accessories.append("tool holster")
+			ActorData.BOTTOM_ACC_CHAIN: accessories.append("chain")
+	if not accessories.is_empty():
+		out.append("Accessories: " + ", ".join(accessories))
+
+	return out
+
+func _hover_hair_style_name(s: int) -> String:
+	match s:
+		0: return "bob"
+		1: return "long"
+		2: return "short"
+		3: return "buzz"
+	return "?"
+
+func _hover_top_style_name(s: int) -> String:
+	match s:
+		0: return "t-shirt"
+		1: return "shirt"
+		2: return "sweater"
+		3: return "jacket"
+		4: return "tank"
+	return "?"
+
+func _hover_bottom_style_name(s: int) -> String:
+	match s:
+		0: return "pants"
+		1: return "skirt"
+		2: return "shorts"
+		3: return "dress"
+	return "?"
+
+func _hover_shoe_style_name(s: int) -> String:
+	match s:
+		0: return "sneakers"
+		1: return "formal"
+		2: return "sandals"
+		3: return "boots"
+	return "?"
+
+# Bucket a color into a short, human-friendly name. We pick the dominant
+# channel — saturation > 0.2 → named hue, else dark/mid/light/white.
+func _hover_color_name(c: Color) -> String:
+	var r: float = c.r
+	var g: float = c.g
+	var b: float = c.b
+	var max_c: float = maxf(r, maxf(g, b))
+	var min_c: float = minf(r, minf(g, b))
+	var sat: float = 0.0
+	if max_c > 0.0:
+		sat = (max_c - min_c) / max_c
+
+	# Low saturation → greyscale names
+	if sat < 0.18:
+		if max_c > 0.92: return "white"
+		if max_c > 0.72: return "light grey"
+		if max_c > 0.45: return "grey"
+		if max_c > 0.22: return "dark grey"
+		return "black"
+
+	# Otherwise pick a named hue by dominant channel
+	if r > g and r > b:
+		if g > 0.45 and b < 0.30: return "orange"
+		if g < 0.30 and b < 0.30: return "red"
+		if b > 0.40: return "magenta"
+		return "pink"
+	if g > r and g > b:
+		if r > 0.40 and b < 0.30: return "olive"
+		if b > 0.40: return "teal"
+		return "green"
+	# Blue dominant
+	if r > 0.30 and g > 0.30: return "sky blue"
+	if r > 0.20: return "navy"
+	return "blue"
+
+func _hover_state_name(p_state: int) -> String:
+	match p_state:
+		BehaviorState.IDLE: return "Idle"
+		BehaviorState.WALKING_TO_TARGET: return "Walking"
+		BehaviorState.BROWSING_SECTION: return "Browsing"
+		BehaviorState.USING_ELEVATOR: return "Elevator"
+		BehaviorState.STAFF_WORKING: return "Working"
+		BehaviorState.STAFF_PATROLLING: return "Patrolling"
+		BehaviorState.RESTOCKING: return "Restocking"
+		BehaviorState.CLEANING: return "Cleaning"
+		BehaviorState.AT_CHECKOUT: return "At Checkout"
+		BehaviorState.WAITING_FOR_GROUP: return "Waiting"
+		BehaviorState.ENTERING_STORE: return "Entering"
+		BehaviorState.LEAVING_STORE: return "Leaving"
+		BehaviorState.GOING_TO_CART_PICKUP: return "To Cart"
+		BehaviorState.AT_CART_PICKUP: return "Cart Pickup"
+		BehaviorState.SHOPPING_SECTION: return "Shopping"
+		BehaviorState.GOING_TO_CHECKOUT_NPC: return "To Checkout"
+		BehaviorState.AT_CHECKOUT_NPC: return "At Checkout"
+		BehaviorState.RECEIVING_HELP: return "Needs Help"
+		BehaviorState.ASSISTING_ELDER: return "Helping"
+		BehaviorState.SCAN_GO_COMPANION: return "Scan & Go"
+		BehaviorState.PLAYING_IN_AREA: return "Playing"
+	return "?"
