@@ -182,7 +182,7 @@ func _ensure_entry(target: Node) -> void:
 	e.appearance_lbl.add_theme_color_override("font_color", Color(0.85, 0.82, 0.72))
 	e.appearance_lbl.add_theme_font_size_override("font_size", small_fs)
 	e.appearance_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	e.appearance_lbl.vertical_alignment = TextServer.VERTICAL_ALIGN_TOP
+	e.appearance_lbl.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	e.appearance_lbl.z_index = 4
 	add_child(e.appearance_lbl)
 
