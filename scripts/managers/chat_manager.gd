@@ -100,6 +100,35 @@ func _start_npc_chat(npc_a: Node, npc_b: Node) -> void:
 	if not brain_a.should_initiate_chat():
 		return
 
+	# Walk both NPCs to within ~0.5 character widths of each other so the
+	# shared bubble sits naturally between them. If either can't be
+	# commanded (frozen, already in chat, etc.) skip the step.
+	const TARGET_GAP := 16.0
+	var pos_a: Vector2 = npc_a.global_position
+	var pos_b: Vector2 = npc_b.global_position
+	var mid: Vector2 = (pos_a + pos_b) * 0.5
+	var diff: Vector2 = pos_b - pos_a
+	var dist: float = diff.length()
+	if dist > 0.001:
+		var dir: Vector2 = diff / dist
+		var goal_a: Vector2 = mid - dir * TARGET_GAP * 0.5
+		var goal_b: Vector2 = mid + dir * TARGET_GAP * 0.5
+		npc_a.walk_to_position(goal_a, 3.0)
+		npc_b.walk_to_position(goal_b, 3.0)
+
+	# Wait for them to arrive (or for the walk timeout to elapse).
+	# Polling at 0.1s gives a snappy start without busy-waiting.
+	var waited := 0.0
+	const ARRIVE_TOL := 6.0
+	const MAX_WAIT := 3.5
+	while waited < MAX_WAIT:
+		await get_tree().create_timer(0.1).timeout
+		if not is_instance_valid(npc_a) or not is_instance_valid(npc_b):
+			return
+		if npc_a.is_at_target(ARRIVE_TOL) and npc_b.is_at_target(ARRIVE_TOL):
+			break
+		waited += 0.1
+
 	# Lock both NPCs in place and have them face each other
 	npc_a.set_in_chat(true)
 	npc_b.set_in_chat(true)

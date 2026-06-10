@@ -1295,6 +1295,20 @@ func face_towards(world_pos: Vector2) -> void:
 		return
 	_body_sprite.flip_h = dx < 0.0
 
+# External command: walk to a world position. Returns true if the NPC
+# accepted the command (not frozen / in chat / in elevator).
+func walk_to_position(world_pos: Vector2, max_seconds: float = 4.0) -> bool:
+	if _is_in_chat or _frozen:
+		return false
+	_target_pos = world_pos
+	_state = BehaviorState.WALKING_TO_TARGET
+	# Generous timeout so a stuck path still gives up gracefully.
+	_state_timer = maxf(0.5, max_seconds)
+	return true
+
+func is_at_target(tolerance: float = 6.0) -> bool:
+	return global_position.distance_to(_target_pos) < tolerance
+
 func set_group_leader(leader: NPCController) -> void:
 	_group_leader = leader
 
