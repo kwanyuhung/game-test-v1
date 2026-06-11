@@ -125,6 +125,13 @@ const STAFF_TASK_TEMPLATES = {
 var _actor: ActorData.Actor
 var _chat_brain: AIChatBrain
 var _is_in_chat: bool = false
+# Per-NPC randomization: height scale, speed multiplier, and life-stage
+# accessory flags. Rolled in configure(); consumed by NPCSprite on texture
+# build and by _get_speed() each frame.
+var _height_scale: float = 1.0
+var _speed_scale: float = 1.0
+var _has_phone: bool = false
+var _has_cane: bool = false
 var _state: BehaviorState = BehaviorState.IDLE
 var _target_pos: Vector2 = Vector2.ZERO
 var _elevator_target: int = -1
@@ -204,8 +211,13 @@ func configure(actor: ActorData.Actor) -> void:
 	_chat_brain = AIChatBrain.new()
 	_chat_brain.configure(actor)
 
+	_roll_personalization(actor.life_stage)
+
 	_body_sprite = Sprite2D.new()
-	_body_sprite.texture = NPCSprite.make_actor_texture(actor.appearance, 16, actor.life_stage)
+	_body_sprite.texture = NPCSprite.make_actor_texture(
+		actor.appearance, 16, actor.life_stage,
+		_height_scale, _has_phone, _has_cane
+	)
 	_body_sprite.z_index = 3
 	add_child(_body_sprite)
 
@@ -1229,22 +1241,53 @@ func _get_preferred_floors() -> Array:
 			return [4, 3, 8, 1]
 		ActorData.LifeStage.SENIOR:
 			return [0, 1, 10, 4]
-		ActorData.LifeStage.ADULT, ActorData.LifeStage.ADULT_MID:
+		ActorData.LifeStage.ADULT:
 			return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 		_:
 			return [0, 1, 4, 8]
 
 # Helpers
 func _get_speed() -> float:
+	var base: float = SPEED_CUSTOMER
 	if _actor.role == ActorData.Role.STAFF:
-		return SPEED_STAFF
-	if _actor.life_stage == ActorData.LifeStage.SENIOR:
-		return SPEED_SENIOR
-	if _actor.life_stage == ActorData.LifeStage.TEEN:
-		return SPEED_TEEN
-	if _actor.life_stage == ActorData.LifeStage.CHILD:
-		return SPEED_CHILD
-	return SPEED_CUSTOMER
+		base = SPEED_STAFF
+	elif _actor.life_stage == ActorData.LifeStage.SENIOR:
+		base = SPEED_SENIOR
+	elif _actor.life_stage == ActorData.LifeStage.TEEN:
+		base = SPEED_TEEN
+	elif _actor.life_stage == ActorData.LifeStage.CHILD:
+		base = SPEED_CHILD
+	return base * _speed_scale
+
+# Per-instance randomization: vary height, speed, and the
+# life-stage-specific cosmetic accessories so no two of the same kind
+# look or move identically. Accessory flags are *purely cosmetic*
+# placeholders — a future "phone distraction" or "cane slow-turn" can
+# hook into them.
+func _roll_personalization(life_stage: int) -> void:
+	match life_stage:
+		ActorData.LifeStage.TEEN:
+			_height_scale = randf_range(0.90, 1.00)
+			_speed_scale = randf_range(0.95, 1.10)
+			_has_phone = randf() < 0.60
+			_has_cane = false
+		ActorData.LifeStage.SENIOR:
+			_height_scale = randf_range(0.92, 1.00)
+			_speed_scale = randf_range(0.90, 1.10)
+			_has_phone = false
+			_has_cane = randf() < 0.50
+		ActorData.LifeStage.CHILD:
+			_height_scale = randf_range(0.62, 0.72)
+			_speed_scale = randf_range(0.85, 1.00)
+			_has_phone = false
+			_has_cane = false
+		_:
+			# ADULT and other unhandled stages: tiny height variation
+			# for visual variety; speed stays close to baseline.
+			_height_scale = randf_range(0.95, 1.05)
+			_speed_scale = randf_range(0.95, 1.05)
+			_has_phone = false
+			_has_cane = false
 
 func _flip_sprite(dir_x: float) -> void:
 	if _body_sprite != null and absf(dir_x) > 0.1:
@@ -1587,7 +1630,6 @@ func _hover_role_name(p_role: int) -> String:
 func _hover_life_stage_name(p_stage: int) -> String:
 	match p_stage:
 		ActorData.LifeStage.ADULT: return "Adult"
-		ActorData.LifeStage.ADULT_MID: return "Mid Adult"
 		ActorData.LifeStage.SENIOR: return "Senior"
 		ActorData.LifeStage.TEEN: return "Teen"
 		ActorData.LifeStage.CHILD: return "Child"

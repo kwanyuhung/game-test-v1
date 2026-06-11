@@ -11,9 +11,24 @@ extends Node
 const ActorData = preload("res://scripts/entities/actor_data.gd")
 
 # ─── Textures ────────────────────────────────────────────────
-
-static func make_actor_texture(appearance: ActorData.Appearance, scale: int = 16, life_stage: int = -1) -> Texture2D:
-	var sz := scale
+# Per-NPC variance is controlled by:
+#   height_scale  — multiplies the texture size. 0.7 = 70% as tall.
+#                   1.0 = baseline. Drives actual on-screen height.
+#   has_phone     — TEEN only. Cosmetic accessory slot; future
+#                   "distracted phone" gameplay can hook into this flag.
+#   has_cane      — SENIOR only. Cosmetic accessory slot; future
+#                   "cane slow-turn" or mobility aids can hook in.
+static func make_actor_texture(
+		appearance: ActorData.Appearance,
+		scale: int = 16,
+		life_stage: int = -1,
+		height_scale: float = 1.0,
+		has_phone: bool = false,
+		has_cane: bool = false
+) -> Texture2D:
+	var sz: int = int(round(float(scale) * height_scale))
+	if sz < 4:
+		sz = 4
 	var img := Image.create(sz, sz, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	_draw_shadow(img, sz, life_stage)
@@ -31,7 +46,8 @@ static func make_actor_texture(appearance: ActorData.Appearance, scale: int = 16
 		_draw_head_teen(img, appearance.skin_tone, appearance.has_glasses, Color.WHITE, sz)
 		_draw_hair(img, appearance.hair.color, appearance.hair.style, sz)
 		_draw_accessory(img, appearance.top.accessory.type, appearance.top.color, appearance.top.accessory.color, sz)
-		_draw_phone_in_hand(img, appearance.top.color, sz)
+		if has_phone:
+			_draw_phone_in_hand(img, appearance.top.color, sz)
 		_draw_makeup(img, appearance.skin_tone, appearance.makeup_intensity, sz)
 	elif life_stage == ActorData.LifeStage.SENIOR:
 		_draw_shoes_senior(img, appearance.shoes_color, sz)
@@ -40,7 +56,8 @@ static func make_actor_texture(appearance: ActorData.Appearance, scale: int = 16
 		_draw_head_senior(img, appearance.skin_tone, appearance.has_glasses, Color.WHITE, sz)
 		_draw_hair_senior(img, appearance.hair.color, appearance.hair.style, sz)
 		_draw_accessory(img, appearance.top.accessory.type, appearance.top.color, appearance.top.accessory.color, sz)
-		_draw_walking_stick(img, Color(0.45, 0.30, 0.18), sz)
+		if has_cane:
+			_draw_walking_stick(img, Color(0.45, 0.30, 0.18), sz)
 	else:
 		_draw_shoes(img, appearance.shoes_color, appearance.shoes_style, sz)
 		_draw_lower_body(img, appearance.bottom.color, appearance.bottom.style, sz)
@@ -332,22 +349,24 @@ static func _draw_stroller(img: Image, child: ActorData.ChildData, sz: int) -> v
 static func _draw_shoes_child(img: Image, col: Color, sz: int) -> void:
 	var sc := float(sz) / 12.0  # child is ~12px scale
 	var shoes_dark := col.darkened(0.3)
-	_fill_img(img, int(2*sc), int(10*sc), int(4*sc), int(2*sc), col, sz)
-	_fill_img(img, int(6*sc), int(10*sc), int(4*sc), int(2*sc), col, sz)
-	_fill_img(img, int(2*sc), int(10*sc), int(4*sc), int(1*sc), shoes_dark, sz)
-	_fill_img(img, int(6*sc), int(10*sc), int(4*sc), int(1*sc), shoes_dark, sz)
+	# Tucked under the short legs (y=9-10, not y=10-12) so the sprite
+	# stays compact and the head reads as the largest part.
+	_fill_img(img, int(2*sc), int(9*sc), int(4*sc), int(2*sc), col, sz)
+	_fill_img(img, int(6*sc), int(9*sc), int(4*sc), int(2*sc), col, sz)
+	_fill_img(img, int(2*sc), int(9*sc), int(4*sc), int(1*sc), shoes_dark, sz)
+	_fill_img(img, int(6*sc), int(9*sc), int(4*sc), int(1*sc), shoes_dark, sz)
 
 static func _draw_lower_body_child(img: Image, col: Color, style: int, sz: int) -> void:
 	var sc := float(sz) / 12.0
-	# Short chubby legs
-	_fill_img(img, int(2*sc), int(7*sc), int(3*sc), int(3*sc), col, sz)
-	_fill_img(img, int(6*sc), int(7*sc), int(4*sc), int(3*sc), col, sz)
-	_fill_img(img, int(2*sc), int(8*sc), int(3*sc), int(2*sc), col.darkened(0.15), sz)
-	_fill_img(img, int(6*sc), int(8*sc), int(3*sc), int(2*sc), col.darkened(0.15), sz)
+	# Short stubby legs (tucked up so the head reads as bigger)
+	_fill_img(img, int(2*sc), int(8*sc), int(3*sc), int(2*sc), col, sz)
+	_fill_img(img, int(6*sc), int(8*sc), int(4*sc), int(2*sc), col, sz)
+	_fill_img(img, int(2*sc), int(9*sc), int(3*sc), int(1*sc), col.darkened(0.15), sz)
+	_fill_img(img, int(6*sc), int(9*sc), int(3*sc), int(1*sc), col.darkened(0.15), sz)
 
 static func _draw_upper_body_child(img: Image, col: Color, style: int, sz: int) -> void:
 	var sc := float(sz) / 12.0
-	# Round chubby torso
+	# Round chubby torso — pushed up so the head dominates the sprite
 	_fill_img(img, int(2*sc), int(4*sc), int(8*sc), int(4*sc), col, sz)
 	_fill_img(img, int(1*sc), int(5*sc), int(2*sc), int(2*sc), col.darkened(0.1), sz)
 	_fill_img(img, int(9*sc), int(5*sc), int(2*sc), int(2*sc), col.darkened(0.1), sz)

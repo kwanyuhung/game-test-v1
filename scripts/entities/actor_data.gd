@@ -78,7 +78,6 @@ enum MovementMode {
 # ─── Life Stage ────────────────────────────────────────────────
 enum LifeStage {
 	ADULT,          # 18-64
-	ADULT_MID,     # 35-60 (sub-category)
 	SENIOR,         # 60+ (includes 60-65+)
 	TEEN,           # 13-19
 	CHILD,          # 6-12
@@ -502,9 +501,9 @@ class Actor:
 				a.life_stage = LifeStage.ADULT
 			_:
 				var roll := randi() % 100
-				if roll < 3:
+				if roll < 7:
 					a.life_stage = LifeStage.TEEN
-				elif roll < 15:
+				elif roll < 19:
 					a.life_stage = LifeStage.SENIOR
 				else:
 					a.life_stage = LifeStage.ADULT
@@ -762,7 +761,6 @@ class Actor:
 		else:
 			var stage_names := {
 				LifeStage.ADULT: "Adult",
-				LifeStage.ADULT_MID: "Adult",
 				LifeStage.SENIOR: "Senior",
 				LifeStage.TEEN: "Teen",
 				LifeStage.CHILD: "Child",
