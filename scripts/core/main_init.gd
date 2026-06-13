@@ -1,4 +1,4 @@
-﻿# main_init.gd
+# main_init.gd
 # All game system initialization extracted from main.gd _ready().
 # main.gd's _ready() calls init_all(self) once.
 extends Node
@@ -35,6 +35,13 @@ func init_all() -> void:
 	system_manager.name = "SystemManager"
 	m.add_child(system_manager)
 	m.set("_system_manager", system_manager)
+
+	# DEV_MODE-only Map Edit Mode (U key). Created lazily only when DEV_MODE is on.
+	if m.DEV_MODE:
+		var map_edit_mode = preload("res://scripts/core/main_manager/map_edit_mode.gd").new()
+		map_edit_mode.name = "MapEditMode"
+		m.add_child(map_edit_mode)
+		m.set("_map_edit_mode", map_edit_mode)
 
 	var ui_manager = preload("res://scripts/core/main_manager/ui_manager.gd").new()
 	ui_manager.name = "UIManager"
@@ -128,7 +135,6 @@ func init_all() -> void:
 	# ── Warehouse System ────────────────────────────────────────────────────────
 	var warehouse = preload("res://scripts/systems/warehouse_system.gd").new()
 	m.add_child(warehouse)
-	warehouse.delivery_arrived.connect(m._logic._on_warehouse_delivery_arrived)
 	warehouse.low_stock_warning.connect(m._logic._on_warehouse_low_stock)
 	m.set("_warehouse", warehouse)
 
@@ -305,11 +311,20 @@ func init_all() -> void:
 	m.add_child(hover_panel)
 	m.set("_hover_panel", hover_panel)
 
-	# ── Hover Debug Overlay (F8 to toggle) ─────────────────────────────────────
+	# ── Hover Debug Overlay (F3 to toggle) ─────────────────────────────────────
 	var hover_debug = preload("res://scripts/ui/hover_debug_overlay.gd").new()
 	hover_debug.name = "HoverDebugOverlay"
 	m.add_child(hover_debug)
 	m.set("_hover_debug", hover_debug)
+
+	# ── Count Overlay (F3 to toggle, shown with hover debug) ────────────────
+	# Lists how many characters are alive in the world, broken down by
+	# life stage, role, and gender. Shares the F3 binding with the
+	# hover debug overlay.
+	var count_overlay = preload("res://scripts/ui/count_overlay.gd").new()
+	count_overlay.name = "CountOverlay"
+	m.add_child(count_overlay)
+	m.set("_count_overlay", count_overlay)
 
 	# ── Debug Bounds System ───────────────────────────────────────────────────
 	var debug_bounds = preload("res://scripts/utils/debug_bounds.gd").new()
@@ -360,12 +375,15 @@ func init_all() -> void:
 	PanelManager.register("shelf", shelf_panel, PanelManager.Policy.ALONE)
 
 	# ── PHASE 7: Manager setup (AFTER all systems exist) ───────────────────────
-	# Get game_state that was created at the top
-	var gs: GameState = m.get("_game_state")
-	world_manager.setup(m, gs)
-	character_manager.setup(m, gs)
-	system_manager.setup(m, gs)
-	ui_manager.setup(m, gs)
+	world_manager.setup(m, game_state)
+	character_manager.setup(m, game_state)
+	system_manager.setup(m, game_state)
+	ui_manager.setup(m, game_state)
+
+	if m.DEV_MODE:
+		var map_edit_mode = m.get("_map_edit_mode")
+		if map_edit_mode != null:
+			map_edit_mode.setup(m, world_manager, game_state)
 
 	# Wire WorldManager to SystemManager (for checkout signal routing)
 	world_manager.set_system_manager(system_manager)

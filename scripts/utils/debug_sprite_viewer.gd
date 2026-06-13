@@ -63,7 +63,7 @@ func _build_ui() -> void:
 	
 	# Subtitle
 	var subtitle := Label.new()
-	subtitle.text = "Press F9 to close  |  All procedural sprites"
+	subtitle.text = "Press F4 to close  |  All procedural sprites"
 	subtitle.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	subtitle.position = Vector2(0, 35)
 	subtitle.add_theme_color_override("font_color", Color(0.50, 0.50, 0.55))
@@ -322,5 +322,5 @@ func _display_sprites_in_grid(grid: VBoxContainer) -> void:
 # Input handling
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_F9:
+		if event.keycode == KEY_F4:
 			toggle()

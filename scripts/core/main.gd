@@ -163,6 +163,7 @@ var _business_mode: BusinessMode = null
 var _robots: Array = []
 var _robot_panel_system: Node = null
 var _robot_panel: Control = null
+var _map_edit_mode: MapEditMode = null
 var _temp_order_mode: String = ""
 var _temp_order_items: Array = []
 
@@ -353,21 +354,24 @@ func _input(event: InputEvent) -> void:
 			# C ── Chat with nearby NPC
 			KEY_C:
 				_logic._open_npc_chat()
-			# F3 ── Dev Tools
-			KEY_F3:
+			# F1 ── Dev Tools
+			KEY_F1:
 				if DEV_MODE:
 					PanelManager.toggle("dev_tools")
-			# F5 ── Quick Save
-			KEY_F5:
+			# F2 ── Quick Save
+			KEY_F2:
 				SaveSystem.save_game(self)
 				if _toasts != null: _toasts.toast_success("Game Saved!")
-			# F8 ── Hover debug overlay
-			KEY_F8:
+			# F3 ── Hover debug overlay + count overlay (toggle both)
+			KEY_F3:
 				var dbg := get_tree().get_first_node_in_group("hover_debug_overlay")
 				if dbg != null:
 					dbg.toggle()
-			# F9 ── Debug Sprite Viewer (if DEV_MODE) or Quick Load
-			KEY_F9:
+				var cnt := get_tree().get_first_node_in_group("count_overlay")
+				if cnt != null:
+					cnt.toggle()
+			# F4 ── Debug Sprite Viewer (if DEV_MODE) or Quick Load
+			KEY_F4:
 				if DEV_MODE and _debug_viewer != null:
 					_debug_viewer.toggle()
 				else:
@@ -416,6 +420,10 @@ func _input(event: InputEvent) -> void:
 			# P ── Pause / Resume
 			KEY_P:
 				_logic._toggle_pause()
+			# U ── Map Edit Mode (DEV_MODE only)
+			KEY_U:
+				if DEV_MODE and _map_edit_mode != null:
+					_map_edit_mode.toggle()
 		# 1-8 ── Quick order / loyalty
 		if _temp_order_mode != "":
 			var key_map := {
@@ -490,7 +498,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				cam.position = _player.position
 
 func _process(_delta: float) -> void:
-	# Center camera on player when not in elevator
+	# Center camera on player when not in elevator. Map Edit Mode drives the
+	# camera via WASD, so let it own the camera while it is open.
+	if _map_edit_mode != null and _map_edit_mode.is_open():
+		return
 	var cam = _logic._camera if _logic != null else null
 	if cam != null and _player != null and not _in_elevator:
 		cam.position = _player.position

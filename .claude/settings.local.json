@@ -59,7 +59,11 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(git commit *)",
-      "Bash(awk NR==158 {for\\(i=1;i<=length\\($0\\);i++\\){c=substr\\($0,i,1\\); if\\(c==\"\\\\t\"\\) printf \"TAB\"; else { printf \"[%s]\",c; break } } print \"\" } *)"
+      "Bash(awk NR==158 {for\\(i=1;i<=length\\($0\\);i++\\){c=substr\\($0,i,1\\); if\\(c==\"\\\\t\"\\) printf \"TAB\"; else { printf \"[%s]\",c; break } } print \"\" } *)",
+      "Bash(where godot4 *)",
+      "Read(//c//**)",
+      "Bash(grep -n \": ActorData\\\\.\\\\|: ActorData$\\\\|as ActorData\\\\.\\\\|is ActorData\\\\.\" scripts/ -r)",
+      "Bash(awk NR==71 || NR==89 *)"
     ]
   }
 }

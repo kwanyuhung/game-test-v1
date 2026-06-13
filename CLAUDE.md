@@ -67,6 +67,7 @@ This file has two layers: Default Rules and On-Demand Modes.
 - **Static methods**: `FloorManagerScript.get_floor_y()` is static, but `FloorConfigScript.get_floor_y()` does not exist. Verify the correct class before calling.
 - **Private method calls**: `_private_method()` cannot be called with dot syntax on another object. Use `other_object.call("_private_method")` instead.
 - Before setting properties that were writable in Godot 3, check the Godot 4 API docs — many read-only restrictions apply.
+- **Dictionary / Array element access returns `Variant`**: `dict["x"]` and `arr[i]` are untyped even when the runtime values are `int` or `float`. Mixing a Variant with typed arithmetic in a `:=` expression fails inference (`Cannot infer the type of "x"`). When reading from a `Dictionary` or untyped `Array` into math, either cast explicitly (`float(dict["x"])` / `int(dict["w"])`) or annotate the receiving variable's type (`var cx: float = ...`). The same applies to `JSON.parse_result()` values and any `Object.get()` / `Object.set()` lookups.
 
 ### Initialization & Null Safety
 

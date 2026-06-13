@@ -200,8 +200,26 @@ func _pick(arr: Array) -> String:
 func should_initiate_chat() -> bool:
 	if _chat_cooldown > 0.0:
 		return false
+	# Earphones suppress chat triggers — the wearer is engaged with their
+	# own audio and won't engage in a face-to-face conversation.
+	if _actor != null and _actor.has_item(ActorData.ItemType.EARPHONES):
+		return false
 	_chat_cooldown = randf_range(8.0, 20.0)
 	return randf() < 0.3  # 30% chance per check
+
+# Phone-only: gate on having a phone in inventory. Lower base rate
+# than face-to-face because the call is a special, longer-range event
+# and we don't want it to dominate the chat manager's random pick.
+# Returns true to let ChatManager start a long-range phone call.
+func should_initiate_call() -> bool:
+	if _actor == null:
+		return false
+	if not _actor.has_item(ActorData.ItemType.PHONE):
+		return false
+	if _chat_cooldown > 0.0:
+		return false
+	_chat_cooldown = randf_range(12.0, 24.0)
+	return randf() < 0.15
 
 func trigger_autonomous_chat() -> String:
 	var topics := ["hello", "food", "arcade", "products", "family"]

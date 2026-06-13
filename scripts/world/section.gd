@@ -7,7 +7,7 @@ const StoreData = preload("res://scripts/world/store_data.gd")
 signal section_interacted(section_id: String)
 signal player_entered(section_id: String)
 signal player_exited(section_id: String)
-signal interact_requested(section_id: String)
+signal interact_requested(section_id: String, bay_index: int)
 
 const CELL_SIZE := 16
 
@@ -27,6 +27,11 @@ const ROW_GAP := 2
 const LEVEL_H := STACK_VISUAL_H + SHELF_STRIP_H + ROW_GAP  # 18
 const MAX_LEVELS := 5
 const SLOT_PITCH := PRODUCT_W + SHELF_GAP  # 14
+# Actual shelf-strip + products span per bay (68px), centered with a
+# margin (78px) on each side of the bay. Hover overlay matches this so
+# the green outline + bubble tightly hug the visible shelf content.
+const SLOTS_USED_W := SLOTS_PER_BAY * PRODUCT_W + (SLOTS_PER_BAY - 1) * SHELF_GAP  # 68
+const BAY_SIDE_MARGIN := (BAY_W - SLOTS_USED_W) / 2  # 78
 
 var _def = null
 # Section_zone size from floor_config_data.json. Differs from _def.ww/wh
@@ -36,6 +41,7 @@ var _layout_ww: int = 0
 var _layout_wh: int = 0
 var _slots = []
 var _player_inside := false
+var _player_ref = null  # Cached on body_entered, used by _facing_bay for E-key
 var _interaction_area: Area2D
 var _prod_sprites = []
 
@@ -43,6 +49,11 @@ var _prod_sprites = []
 # Bubble + outline only show when player is nearby AND mouse hovers that bay.
 var _bay_overlays: Array = []
 var _hover_bay := -1
+
+# Debug overlay (toggled via F3 alongside debug_bounds): shows the three
+# collision/interaction layers — JSON blocking zone, Area2D, bay hover.
+var _debug_overlay: Node2D = null
+var _debug_visible: bool = false
 
 var _frozen: bool = false
 
@@ -66,7 +77,15 @@ func set_layout_size(ww: int, wh: int) -> void:
 	_layout_ww = ww
 	_layout_wh = wh
 
+func set_debug_visible(visible: bool) -> void:
+	_debug_visible = visible
+	if _debug_overlay == null:
+		_build_debug_overlay()
+	if _debug_overlay != null:
+		_debug_overlay.visible = visible
+
 func _ready() -> void:
+	add_to_group("section_debug")
 	_build_visuals()
 	_generate_slots()
 
@@ -112,12 +131,13 @@ func _build_bay_overlays() -> void:
 	var bubble_tex := _make_bubble_tex()
 
 	for bay_i in range(num_bays):
-		var bx: int = bay_i * BAY_W
+		var bx: int = bay_i * BAY_W + BAY_SIDE_MARGIN
+		var bw: int = SLOTS_USED_W
 
 		var top := ColorRect.new()
 		top.color = color
 		top.position = Vector2(bx, 0)
-		top.size = Vector2(BAY_W, thickness)
+		top.size = Vector2(bw, thickness)
 		top.z_index = 50
 		top.visible = false
 		add_child(top)
@@ -125,7 +145,7 @@ func _build_bay_overlays() -> void:
 		var bottom := ColorRect.new()
 		bottom.color = color
 		bottom.position = Vector2(bx, bay_h - thickness)
-		bottom.size = Vector2(BAY_W, thickness)
+		bottom.size = Vector2(bw, thickness)
 		bottom.z_index = 50
 		bottom.visible = false
 		add_child(bottom)
@@ -140,14 +160,14 @@ func _build_bay_overlays() -> void:
 
 		var right := ColorRect.new()
 		right.color = color
-		right.position = Vector2(bx + BAY_W - thickness, 0)
+		right.position = Vector2(bx + bw - thickness, 0)
 		right.size = Vector2(thickness, bay_h)
 		right.z_index = 50
 		right.visible = false
 		add_child(right)
 
 		var bubble := Node2D.new()
-		bubble.position = Vector2(bx + BAY_W * 0.5, -14)
+		bubble.position = Vector2(bx + bw * 0.5, -14)
 		bubble.z_index = 60
 		bubble.visible = false
 		add_child(bubble)
@@ -167,7 +187,7 @@ func _build_bay_overlays() -> void:
 
 		_bay_overlays.append({
 			"x": bx,
-			"w": BAY_W,
+			"w": bw,
 			"h": bay_h,
 			"outline": [top, bottom, left, right],
 			"bubble": bubble,
@@ -197,6 +217,48 @@ func _make_bubble_tex() -> ImageTexture:
 		img.set_pixel(cx, d - 1 - i, border)
 	return ImageTexture.create_from_image(img)
 
+func _build_debug_overlay() -> void:
+	# Two wireframe layers drawn over the section, hidden by default.
+	# - Blue  : Section Area2D proximity box (full _layout_ww × _layout_wh)
+	# - Green : Per-bay hover hitbox (one outline per bay, matches shelf strip)
+	if _debug_overlay != null:
+		return
+	_debug_overlay = Node2D.new()
+	_debug_overlay.name = "DebugOverlay"
+	_debug_overlay.z_index = 999
+	add_child(_debug_overlay)
+
+	var full_w := _layout_ww * CELL_SIZE
+	var full_h := _layout_wh * CELL_SIZE
+
+	_add_wireframe(0, 0, full_w, full_h, Color(0.35, 0.65, 1.0, 0.85), "AREA2D")
+
+	for i in range(_bay_overlays.size()):
+		var ov: Dictionary = _bay_overlays[i]
+		_add_wireframe(ov["x"], 0, ov["w"], ov["h"], Color(0.30, 0.95, 0.40, 0.85), "BAY %d" % i)
+
+	_debug_overlay.visible = _debug_visible
+
+func _add_wireframe(x: int, y: int, w: int, h: int, color: Color, label: String) -> void:
+	var corners := [
+		[Vector2(x, y), Vector2(x + w, y)],
+		[Vector2(x + w, y), Vector2(x + w, y + h)],
+		[Vector2(x + w, y + h), Vector2(x, y + h)],
+		[Vector2(x, y + h), Vector2(x, y)],
+	]
+	for edge in corners:
+		var line := Line2D.new()
+		line.points = edge
+		line.default_color = color
+		line.width = 1
+		_debug_overlay.add_child(line)
+	var lbl := Label.new()
+	lbl.text = label
+	lbl.global_position = Vector2(x, y - 10)
+	lbl.add_theme_color_override("font_color", color)
+	lbl.add_theme_font_size_override("font_size", 8)
+	_debug_overlay.add_child(lbl)
+
 func _generate_slots() -> void:
 	if _def == null:
 		return
@@ -212,22 +274,19 @@ func _generate_slots() -> void:
 	# (bay, level) sits behind the slots in that bay; bay dividers from
 	# FloorBuilder (z=1, at 14-tile boundaries) visually separate bays.
 
-	var slots_used_w: int = SLOTS_PER_BAY * PRODUCT_W + (SLOTS_PER_BAY - 1) * SHELF_GAP  # 68
-	var bay_side_margin: int = (BAY_W - slots_used_w) / 2  # 78
-
 	var num_bays: int = _compute_bay_count()
 	var num_levels: int = _compute_level_count()
 	if num_bays <= 0 or num_levels <= 0:
 		return
 
-	var shelf_tex = _make_shelf_strip_tex(slots_used_w, SHELF_STRIP_H)
+	var shelf_tex = _make_shelf_strip_tex(SLOTS_USED_W, SHELF_STRIP_H)
 	for level_i in range(num_levels):
 		for bay_i in range(num_bays):
 			var shelf = Sprite2D.new()
 			shelf.texture = shelf_tex
 			shelf.centered = false
 			shelf.position = Vector2(
-				bay_i * BAY_W + bay_side_margin,
+				bay_i * BAY_W + BAY_SIDE_MARGIN,
 				level_i * LEVEL_H + TOP_MARGIN + STACK_VISUAL_H
 			)
 			shelf.z_index = 2
@@ -237,7 +296,7 @@ func _generate_slots() -> void:
 	for level_i in range(num_levels):
 		for bay_i in range(num_bays):
 			for col_i in range(SLOTS_PER_BAY):
-				var px: int = bay_i * BAY_W + bay_side_margin + col_i * SLOT_PITCH
+				var px: int = bay_i * BAY_W + BAY_SIDE_MARGIN + col_i * SLOT_PITCH
 				var py: int = level_i * LEVEL_H + TOP_MARGIN
 				var product = products_in_section[idx % products_in_section.size()]
 				var slot = {
@@ -249,6 +308,7 @@ func _generate_slots() -> void:
 					"empty": false,
 					"respawn_timer": 0.0,
 					"sprites": [],
+					"bay_index": bay_i,
 				}
 				_slots.append(slot)
 				_spawn_product_stack(slot)
@@ -395,9 +455,38 @@ func _unhandled_input(event: InputEvent) -> void:
 		var mb := event as InputEventMouseButton
 		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
 			var world_pt := _mouse_to_world()
-			if _bay_at_world_point(world_pt) >= 0:
-				interact_requested.emit(_def.id)
+			var bay_idx := _bay_at_world_point(world_pt)
+			if bay_idx >= 0:
+				interact_requested.emit(_def.id, bay_idx)
 				get_viewport().set_input_as_handled()
+	elif event is InputEventKey:
+		var ke := event as InputEventKey
+		if ke.pressed and not ke.echo and ke.keycode == KEY_E:
+			# Standing inside the section: open the browse panel.
+			# The bay the player is facing is the one closest in x.
+			var facing_bay := _facing_bay()
+			if facing_bay >= 0:
+				_hover_bay = facing_bay
+				interact_requested.emit(_def.id, facing_bay)
+			else:
+				interact_requested.emit(_def.id, 0)
+			get_viewport().set_input_as_handled()
+
+func _facing_bay() -> int:
+	# Index of the bay whose outline is closest to the player in x, or -1.
+	if _player_ref == null or not is_instance_valid(_player_ref):
+		return -1
+	var local_x := to_local(_player_ref.global_position).x
+	var best := -1
+	var best_dx := INF
+	for i in range(_bay_overlays.size()):
+		var ov: Dictionary = _bay_overlays[i]
+		var cx: float = float(ov["x"]) + float(ov["w"]) * 0.5
+		var dx: float = absf(local_x - cx)
+		if dx < best_dx:
+			best_dx = dx
+			best = i
+	return best
 
 func contains_world_point(world_pt: Vector2) -> bool:
 	var local := to_local(world_pt)
@@ -412,11 +501,14 @@ func contains_world_point(world_pt: Vector2) -> bool:
 func _on_body_entered(body) -> void:
 	if body is Player:
 		_player_inside = true
+		_player_ref = body
 		player_entered.emit(_def.id)
 
 func _on_body_exited(body) -> void:
 	if body is Player:
 		_player_inside = false
+		if _player_ref == body:
+			_player_ref = null
 		player_exited.emit(_def.id)
 		# Hide whatever bay is currently shown — player left the section.
 		_set_bay_overlay_visible(_hover_bay, false)
@@ -434,6 +526,25 @@ func get_all_products():
 		if not slot["empty"]:
 			result.append(slot["product"])
 	return result
+
+# Products in a single bay, in stack order. Returns an empty array if
+# the bay index is out of range.
+func get_bay_products(bay_index: int) -> Array:
+	var result: Array = []
+	for slot in _slots:
+		if int(slot.get("bay_index", -1)) == bay_index and not slot["empty"]:
+			result.append(slot["product"])
+	return result
+
+# World-space rectangles for each bay's blocking surface. The merch zone
+# is walkable, but the actual shelf sprite (bay outline) is a hard barrier
+# the player walks up against before interacting.
+func get_bay_block_rects() -> Array:
+	var rects := []
+	var wp := global_position
+	for ov in _bay_overlays:
+		rects.append(Rect2(wp + Vector2(ov["x"], 0), Vector2(ov["w"], ov["h"])))
+	return rects
 
 func pickup_random_product():
 	var candidates = []

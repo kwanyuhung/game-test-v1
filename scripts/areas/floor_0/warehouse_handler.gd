@@ -151,33 +151,46 @@ static func _build_forklift_zone(parent: Node, floor_nodes: Array, cx: int, cy: 
 	floor_nodes.append(forks)
 
 static func _build_conveyor(parent: Node, floor_nodes: Array, cx: int, cy: int, cw: int, ch: int, zone_color: Color, zone_name: String) -> void:
-	# Conveyor base
-	var conveyor := ColorRect.new()
-	conveyor.position = Vector2(cx, cy)
-	conveyor.size = Vector2(cw, ch)
-	conveyor.color = Color(0.45, 0.45, 0.50)
-	parent.add_child(conveyor)
-	floor_nodes.append(conveyor)
-	
-	# Conveyor belt lines (moving effect)
+	# Track (conveyor belt) — background is transparent so the track blends
+	# with the floor; only the belt segments remain visible. Belt segments
+	# are scaled up (thicker, wider spacing) to read as a real industrial track.
+	# Belt rail (thin metallic edges on top and bottom of the track)
+	var rail_color := Color(0.55, 0.55, 0.60)
+	for rail_y in [cy, cy + ch - 2]:
+		var rail := ColorRect.new()
+		rail.position = Vector2(cx, rail_y)
+		rail.size = Vector2(cw, 2)
+		rail.color = rail_color
+		parent.add_child(rail)
+		floor_nodes.append(rail)
+
+	# Belt segments (scaled up: 16 px wide, 28 px spacing)
 	var belt_color := Color(0.35, 0.35, 0.40)
-	for i in range(0, cw, 20):
-		var line := ColorRect.new()
-		line.position = Vector2(cx + i, cy)
-		line.size = Vector2(10, ch)
-		line.color = belt_color
-		parent.add_child(line)
-		floor_nodes.append(line)
-	
-	# Belt arrows (direction)
+	var belt_highlight := Color(0.50, 0.50, 0.55)
+	for i in range(0, cw, 28):
+		var seg := ColorRect.new()
+		seg.position = Vector2(cx + i, cy + 4)
+		seg.size = Vector2(16, ch - 8)
+		seg.color = belt_color
+		parent.add_child(seg)
+		floor_nodes.append(seg)
+		# Top highlight on each segment for a chunky-belt look
+		var hl := ColorRect.new()
+		hl.position = Vector2(cx + i, cy + 4)
+		hl.size = Vector2(16, 2)
+		hl.color = belt_highlight
+		parent.add_child(hl)
+		floor_nodes.append(hl)
+
+	# Direction arrow at the right end
 	var arrow_lbl := Label.new()
-	arrow_lbl.text = "→ → →"
-	arrow_lbl.position = Vector2(cx + cw / 2 - 20, cy + ch / 2 - 6)
-	arrow_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7))
+	arrow_lbl.text = "▶▶▶"
+	arrow_lbl.position = Vector2(cx + cw - 50, cy + ch / 2 - 6)
+	arrow_lbl.add_theme_color_override("font_color", Color(0.65, 0.65, 0.75))
 	arrow_lbl.add_theme_font_size_override("font_size", 10)
 	parent.add_child(arrow_lbl)
 	floor_nodes.append(arrow_lbl)
-	
+
 	# Label
 	var conv_lbl := Label.new()
 	conv_lbl.text = zone_name

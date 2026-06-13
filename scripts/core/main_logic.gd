@@ -39,6 +39,23 @@ const WALKABLE_ZONE_TYPES := [
 	"ZONE_CHECKOUT",
 	"ZONE_AISLE",
 	"ZONE_CUSTOMER_SERVICE",
+	"ZONE_FRESH_PRODUCE",
+	"ZONE_MEAT",
+	"ZONE_SEAFOOD",
+	"ZONE_FROZEN",
+	"ZONE_DAIRY",
+	"ZONE_BAKERY",
+	"ZONE_BEVERAGES",
+	"ZONE_PANTRY",
+	# Back-of-house warehouse zones are walkable so the player can navigate
+	# from the transit strip into the warehouse and exercise the AutoDoor.
+	# The AutoDoor itself is visual-only (no StaticBody2D blocker).
+	"ZONE_WAREHOUSE",
+	"ZONE_TRUCK_DOCK",
+	"ZONE_FORKLIFT",
+	"ZONE_CONVEYOR",
+	"ZONE_STORAGE_SHELF",
+	"ZONE_WAREHOUSE_STOCK_VIEW",
 ]
 
 func _build_floor(idx: int) -> void:
@@ -103,6 +120,18 @@ func _build_floor(idx: int) -> void:
 	# Initialize warehouse floor controller (Floor 11)
 	_main._warehouse_floor = WarehouseFloorScript.new()
 	_main.add_child(_main._warehouse_floor)
+	var wh_zone: Dictionary = {}
+	var floor11 = FloorConfigScript.get_floor(11)
+	if floor11 != null:
+		for z in floor11.zones:
+			var zt: String = z.get("type", "")
+			if zt.begins_with("ZONE_"):
+				zt = zt.substr(5)
+			if zt.to_lower() == FloorConfigScript.ZONE_WAREHOUSE:
+				wh_zone = z
+				break
+	if not wh_zone.is_empty():
+		_main._warehouse_floor.configure(wh_zone)
 	_main._warehouse_floor.set_staff_mode(false)
 
 	# Spawn AI robot staff across the store
@@ -358,9 +387,10 @@ func update_camera_limits(floor_idx: int) -> void:
 		return
 	var container_y: float = FloorManagerScript.get_floor_y(floor_idx)
 	var zone_bounds: Dictionary = _get_floor_zone_bounds(floor_idx)
+	var floor_size: Vector2 = FloorConfigScript.get_floor_pixel_size(floor_idx)
 	_camera.limit_left = 0
 	_camera.limit_top = int(container_y + zone_bounds.min_y * CELL_SIZE)
-	_camera.limit_right = int(WORLD_W * CELL_SIZE)
+	_camera.limit_right = int(floor_size.x)
 	_camera.limit_bottom = int(container_y + zone_bounds.max_y * CELL_SIZE)
 
 func _get_floor_zone_bounds(floor_idx: int) -> Dictionary:
@@ -409,7 +439,17 @@ func is_position_blocked(floor_idx: int, world_x: float, world_y: float) -> bool
 				return false
 			inside_non_walkable = true
 
-	return inside_non_walkable
+	if inside_non_walkable:
+		return true
+
+	# Per-bay shelf collision: the merch zone above is walkable, but the
+	# actual shelf sprite (bay outline) is a hard barrier. Bays are checked
+	# in pixel space since they don't align to tile boundaries.
+	var wm = _main.get("_world_manager")
+	if wm != null and wm.has_method("is_world_pos_blocked_by_bay"):
+		if wm.is_world_pos_blocked_by_bay(world_x, world_y):
+			return true
+	return false
 
 func get_current_floor_idx() -> int:
 	return _main._current_floor_idx
@@ -450,9 +490,6 @@ func _spawn_customer(group_type: int, floor_idx: int, pos: Vector2) -> void:
 func _spawn_customer_group(group_type: int, floor_idx: int, pos: Vector2) -> void:
 	_main._main_spawner.spawn_customer_group(group_type, floor_idx, pos)
 	return
-func _on_warehouse_delivery_arrived(_contents: Dictionary) -> void:
-	# Spawn truck at dock on Floor G
-	_main._truck_dock_system.spawn_truck()
 
 func _on_warehouse_low_stock(section_id: String) -> void:
 	var section_name := section_id.to_upper()
@@ -848,11 +885,11 @@ func _on_section_exited(section_id: String) -> void:
 	if _main._nearby_section != null and _main._nearby_section.get_def().id == section_id:
 		_main._nearby_section = null
 
-func _on_section_interact_requested(section_id: String) -> void:
+func _on_section_interact_requested(section_id: String, bay_index: int) -> void:
 	# Mouse click on a nearby section — open the buy panel.
 	for sec in _main._sections:
 		if sec.get_def().id == section_id:
-			_open_section_browse(sec)
+			_open_section_browse(sec, bay_index)
 			return
 
 # ── Player E-key interact ───────────────────────────────────────
@@ -1173,18 +1210,17 @@ func _restock_nearby_section() -> void:
 	if top_up <= 0:
 		top_up = capacity - current
 	if top_up > 0:
-		var contents := {sec_id: top_up}
-		_main._warehouse.receive_delivery(contents)
+		_main._warehouse.direct_restock(sec_id, top_up)
 		if _main._player_stats:
 			_main._player_stats.complete_staff_task()
 			_main._player_stats.add_staff_xp(8, "Restocked %s" % sec_def.name)
 		if _main._toasts:
 			_main._toasts.toast_success("Restocked %s with %d units! +8 Staff XP" % [sec_def.name, top_up])
 
-func _open_section_browse(section) -> void:
+func _open_section_browse(section, bay_index: int = -1) -> void:
 	if _main._section_browse == null:
 		return
-	_main._section_browse.open_section(section)
+	_main._section_browse.open_section(section, bay_index)
 	_main._current_section_browse = _main._section_browse
 
 # ── Price terminal proximity (Phase 6) ───────────────────────────

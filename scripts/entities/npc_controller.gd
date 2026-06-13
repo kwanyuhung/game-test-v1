@@ -43,6 +43,14 @@ enum BehaviorState {
 	ASSISTING_ELDER,
 	SCAN_GO_COMPANION,
 	PLAYING_IN_AREA,
+	# Item-gated states. The actor only enters these when the matching
+	# item is in `actor.inventory`. ChatManager is responsible for
+	# entering MAKING_PHONE_CALL externally; the others are entered
+	# from `_choose_next_behavior()` based on inventory contents.
+	MAKING_PHONE_CALL,
+	RIDING_SKATEBOARD,
+	WORKING_ON_LAPTOP,
+	LISTENING_TO_MUSIC,
 }
 
 const ZONE_KIDS_PLAY := "kids_play"
@@ -125,13 +133,13 @@ const STAFF_TASK_TEMPLATES = {
 var _actor: ActorData.Actor
 var _chat_brain: AIChatBrain
 var _is_in_chat: bool = false
-# Per-NPC randomization: height scale, speed multiplier, and life-stage
-# accessory flags. Rolled in configure(); consumed by NPCSprite on texture
-# build and by _get_speed() each frame.
+# Per-NPC randomization: height scale, speed multiplier, and the items
+# the actor spawns with. Items live in `actor.inventory` (not on the
+# controller) so a future re-roll or transfer can edit them without
+# controller-specific hooks. Consumed by NPCSprite on texture build and
+# by `_choose_next_behavior()` for item-gated BehaviorState roll-ins.
 var _height_scale: float = 1.0
 var _speed_scale: float = 1.0
-var _has_phone: bool = false
-var _has_cane: bool = false
 var _state: BehaviorState = BehaviorState.IDLE
 var _target_pos: Vector2 = Vector2.ZERO
 var _elevator_target: int = -1
@@ -216,7 +224,7 @@ func configure(actor: ActorData.Actor) -> void:
 	_body_sprite = Sprite2D.new()
 	_body_sprite.texture = NPCSprite.make_actor_texture(
 		actor.appearance, 16, actor.life_stage,
-		_height_scale, _has_phone, _has_cane
+		_height_scale, actor.inventory
 	)
 	_body_sprite.z_index = 3
 	add_child(_body_sprite)
@@ -458,6 +466,18 @@ func _update_behavior(delta: float) -> void:
 		BehaviorState.AT_CHECKOUT_NPC:
 			_do_at_checkout_npc(delta)
 
+		BehaviorState.MAKING_PHONE_CALL:
+			_do_making_phone_call(delta)
+
+		BehaviorState.RIDING_SKATEBOARD:
+			_do_riding_skateboard(delta)
+
+		BehaviorState.WORKING_ON_LAPTOP:
+			_do_working_on_laptop(delta)
+
+		BehaviorState.LISTENING_TO_MUSIC:
+			_do_listening_to_music(delta)
+
 	_update_status_label()
 
 func _choose_next_behavior() -> void:
@@ -467,6 +487,20 @@ func _choose_next_behavior() -> void:
 		_choose_customer_behavior()
 
 func _choose_customer_behavior() -> void:
+	# Item-gated random branches first — if the actor has a phone,
+	# skateboard, or laptop in inventory, give those actions a chance
+	# to fire before falling into the normal shopping/roam roll.
+	# (Earphones are passive: their chat suppression lives in
+	# AIChatBrain.should_initiate_chat().)
+	if _actor.has_item(ActorData.ItemType.SKATEBOARD) and randf() < 0.25:
+		_start_ride_skateboard()
+		return
+	if _actor.has_item(ActorData.ItemType.LAPTOP) and randf() < 0.10:
+		_start_work_on_laptop()
+		return
+	if _actor.has_item(ActorData.ItemType.EARPHONES) and randf() < 0.30:
+		_start_listening_to_music()
+		return
 	if _actor.role == ActorData.Role.CUSTOMER and not _actor.shopping_list.is_empty() and not _has_cart:
 		_go_to_cart_pickup()
 		return
@@ -1086,6 +1120,98 @@ func _do_at_checkout_npc(delta: float) -> void:
 		_hide_cart()
 		_leave_store()
 
+# ─── Item-Gated Behaviors ───────────────────────────────────────
+# These four states are entered either by the NPC's own
+# `_choose_next_behavior()` (skateboard / laptop / earphones) or by
+# the chat manager pulling a phone-equipped NPC into a call
+# (MAKING_PHONE_CALL).
+
+# Phone call: NPC stands in place, facing the partner, with the chat
+# bubble rendered by ChatManager. The actual call flow is owned by
+# ChatManager; here we just stay still, face the partner (already set
+# by ChatManager), and let the brain keep ticking. set_in_chat(true)
+# short-circuits `_update_behavior` upstream, so this handler is a
+# safety net for the case where state was set without the in-chat lock.
+func _start_make_phone_call() -> void:
+	_state = BehaviorState.MAKING_PHONE_CALL
+	_state_timer = 6.0
+
+func _do_making_phone_call(_delta: float) -> void:
+	# No movement; wait for ChatManager to set_in_chat(false) which
+	# will return control to normal _choose_next_behavior.
+	pass
+
+# Skateboard: faster movement between random waypoints. Speed is
+# boosted in `_get_speed()` only while in this state. We use a longer
+# state_timer (30s) so the actor visibly zooms around for a while.
+func _start_ride_skateboard() -> void:
+	var base_y := 64.0 + _actor.current_floor * 800.0
+	_target_pos = Vector2(
+		randf_range(64.0, 1248.0),
+		randf_range(base_y, base_y + 752.0)
+	)
+	_state = BehaviorState.RIDING_SKATEBOARD
+	_state_timer = randf_range(8.0, 20.0)
+
+func _do_riding_skateboard(delta: float) -> void:
+	var speed := _get_speed() * 1.6
+	var to_target := _target_pos - global_position
+	var dist := to_target.length()
+	if dist < 6.0:
+		_start_ride_skateboard()
+		return
+	if _state_timer <= 0.0:
+		_start_idle(randf_range(1.0, 3.0))
+		return
+	var dir := to_target / dist
+	move_and_collide(dir * speed * delta)
+	_flip_sprite(dir.x)
+	# Animate the body with a fast bob to suggest rolling
+	if _body_sprite != null:
+		var t := Time.get_ticks_msec() / 1000.0
+		var bob := sin(t * 12.0) * 0.04
+		_body_sprite.scale = Vector2(1.0 + bob, 1.0 - bob * 0.5)
+
+# Laptop work: stand in place and gently bob; the "thinking" overlay
+# is purely cosmetic. After 5s the actor picks a new behavior.
+func _start_work_on_laptop() -> void:
+	_state = BehaviorState.WORKING_ON_LAPTOP
+	_state_timer = 5.0
+	if _body_sprite != null:
+		_body_sprite.flip_h = false
+	_show_ambient_thought("Working...", 4.5)
+
+func _do_working_on_laptop(_delta: float) -> void:
+	if _state_timer <= 0.0:
+		_hide_speech_bubble()
+		_start_idle(randf_range(1.0, 3.0))
+		return
+	# Subtle typing bob
+	if _body_sprite != null:
+		var t := Time.get_ticks_msec() / 1000.0
+		var bob := sin(t * 8.0) * 0.02
+		_body_sprite.position = Vector2(bob * 1.5, 0.0)
+
+# Earphones: idle in place with a small "♪" thought bubble popping up.
+# The chat suppression lives in AIChatBrain.should_initiate_chat() —
+# the brain checks actor.inventory for earphones and returns false.
+func _start_listening_to_music() -> void:
+	_state = BehaviorState.LISTENING_TO_MUSIC
+	_state_timer = randf_range(4.0, 8.0)
+	if randf() < 0.5:
+		_show_ambient_thought("♪ ♫ ♪", 3.0)
+
+func _do_listening_to_music(_delta: float) -> void:
+	if _state_timer <= 0.0:
+		_hide_speech_bubble()
+		_start_idle(randf_range(1.0, 3.0))
+		return
+	# Subtle head bob
+	if _body_sprite != null:
+		var t := Time.get_ticks_msec() / 1000.0
+		var bob := sin(t * 5.0) * 0.02
+		_body_sprite.position = Vector2(0.0, bob * 1.5)
+
 # Elder Assistance
 func _show_speech_bubble(text: String) -> void:
 	if _speech_bubble == null:
@@ -1259,35 +1385,62 @@ func _get_speed() -> float:
 		base = SPEED_CHILD
 	return base * _speed_scale
 
-# Per-instance randomization: vary height, speed, and the
-# life-stage-specific cosmetic accessories so no two of the same kind
-# look or move identically. Accessory flags are *purely cosmetic*
-# placeholders — a future "phone distraction" or "cane slow-turn" can
-# hook into them.
+# Per-instance randomization: vary height, speed, and the items
+# the actor spawns with so no two of the same kind look or move
+# identically. Items live in `actor.inventory` and are consumed by
+# NPCSprite (for the visual) and by `_choose_next_behavior()` (for
+# the action gating).
 func _roll_personalization(life_stage: int) -> void:
+	_actor.inventory.clear()
+	# Re-apply the staff card if this actor came in as a STAFF. The
+	# card was already assigned by ActorData.random_staff() and lives
+	# on the actor's own state, so we only re-add it here when the
+	# role+credentials line up; customers/non-staff never get one.
+	if _actor.role == ActorData.Role.STAFF and _actor.staff_card_level > 0:
+		_actor.add_item(ActorData.ItemType.STAFF_CARD)
 	match life_stage:
 		ActorData.LifeStage.TEEN:
 			_height_scale = randf_range(0.90, 1.00)
 			_speed_scale = randf_range(0.95, 1.10)
-			_has_phone = randf() < 0.60
-			_has_cane = false
+			# TEEN: 60% phone, 20% earphones, 10% skateboard
+			if randf() < 0.60:
+				_actor.add_item(ActorData.ItemType.PHONE)
+			elif randf() < 0.20 / 0.40:
+				_actor.add_item(ActorData.ItemType.EARPHONES)
+			elif randf() < 0.10 / 0.20:
+				_actor.add_item(ActorData.ItemType.SKATEBOARD)
 		ActorData.LifeStage.SENIOR:
 			_height_scale = randf_range(0.92, 1.00)
 			_speed_scale = randf_range(0.90, 1.10)
-			_has_phone = false
-			_has_cane = randf() < 0.50
+			# SENIOR: 50% cane (rolled into inventory, not a separate
+			# flag — sprite draw reads inventory.has(CANE)). 10% earphones.
+			if randf() < 0.50:
+				_actor.add_item(ActorData.ItemType.CANE)
+			if randf() < 0.10:
+				_actor.add_item(ActorData.ItemType.EARPHONES)
 		ActorData.LifeStage.CHILD:
 			_height_scale = randf_range(0.62, 0.72)
 			_speed_scale = randf_range(0.85, 1.00)
-			_has_phone = false
-			_has_cane = false
+			# CHILD: 8% skateboard
+			if randf() < 0.08:
+				_actor.add_item(ActorData.ItemType.SKATEBOARD)
 		_:
 			# ADULT and other unhandled stages: tiny height variation
 			# for visual variety; speed stays close to baseline.
 			_height_scale = randf_range(0.95, 1.05)
 			_speed_scale = randf_range(0.95, 1.05)
-			_has_phone = false
-			_has_cane = false
+			# ADULT: 15% phone, 10% earphones, 5% laptop, 3% skateboard.
+			# Mutually exclusive per slot (multi-slot allowed but not
+			# all four at once).
+			var r := randf()
+			if r < 0.15:
+				_actor.add_item(ActorData.ItemType.PHONE)
+			elif r < 0.25:
+				_actor.add_item(ActorData.ItemType.EARPHONES)
+			elif r < 0.30:
+				_actor.add_item(ActorData.ItemType.LAPTOP)
+			elif r < 0.33:
+				_actor.add_item(ActorData.ItemType.SKATEBOARD)
 
 func _flip_sprite(dir_x: float) -> void:
 	if _body_sprite != null and absf(dir_x) > 0.1:
@@ -1326,6 +1479,15 @@ func is_in_chat() -> bool:
 
 func set_in_chat(v: bool) -> void:
 	_is_in_chat = v
+
+# Returns a copy of the actor's inventory list. Callers (chat manager,
+# hover panel, AI brain) read this to decide action gating and what
+# to display. Returns a fresh array so external code can't mutate the
+# actor's inventory by accident.
+func get_inventory() -> Array:
+	if _actor == null:
+		return []
+	return _actor.inventory.duplicate()
 
 func face_towards(world_pos: Vector2) -> void:
 	if _body_sprite == null:
@@ -1606,6 +1768,10 @@ func get_hover_info() -> Dictionary:
 		"anchor": anchor,
 		"state": _hover_state_name(_state),
 		"floor": _actor.current_floor,
+		"gender": _actor.gender,
+		"inventory": _actor.inventory.duplicate(),
+		"staff_card_level": _actor.staff_card_level,
+		"staff_allowed_areas": _actor.staff_allowed_areas.duplicate(),
 	}
 
 func _hover_role_name(p_role: int) -> String:
@@ -1816,4 +1982,8 @@ func _hover_state_name(p_state: int) -> String:
 		BehaviorState.ASSISTING_ELDER: return "Helping"
 		BehaviorState.SCAN_GO_COMPANION: return "Scan & Go"
 		BehaviorState.PLAYING_IN_AREA: return "Playing"
+		BehaviorState.MAKING_PHONE_CALL: return "On Phone"
+		BehaviorState.RIDING_SKATEBOARD: return "Skating"
+		BehaviorState.WORKING_ON_LAPTOP: return "Working"
+		BehaviorState.LISTENING_TO_MUSIC: return "Music"
 	return "?"

@@ -13,6 +13,7 @@ const FoodStallHandler = preload("res://scripts/areas/floor_0/food_stall_handler
 const ServiceAreaHandler = preload("res://scripts/areas/floor_0/service_area_handler.gd")
 const WCHandler = preload("res://scripts/areas/shared/wc_handler.gd")
 const WarehouseHandler = preload("res://scripts/areas/floor_0/warehouse_handler.gd")
+const WarehouseTestObjects = preload("res://scripts/areas/floor_0/warehouse_test_objects.gd")
 const MiscHandler = preload("res://scripts/areas/floor_0/misc_handler.gd")
 const Floor0Handler = preload("res://scripts/areas/floor_0/floor_0_handler.gd")
 
@@ -72,7 +73,6 @@ const RooftopCommonHandler = preload("res://scripts/areas/floor_10/rooftop_commo
 
 # Floor 11 handlers (Warehouse)
 const Floor11Handler = preload("res://scripts/areas/floor_11/floor_11_handler.gd")
-const WarehouseFloorHandler = preload("res://scripts/areas/floor_11/warehouse_floor_handler.gd")
 const TruckDockHandler = preload("res://scripts/areas/floor_11/truck_dock_handler.gd")
 const ConveyorHandler = preload("res://scripts/areas/floor_11/conveyor_handler.gd")
 

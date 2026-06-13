@@ -180,6 +180,8 @@ func setup(main: Node2D, game_state: GameState) -> void:
 
 # ── _process(delta) — main game loop ─────────────────────────────────────────────
 func _process(delta: float) -> void:
+	if _game_state == null:
+		return
 	if _proximity_system != null and is_instance_valid(_proximity_system):
 		_proximity_system.update_all()
 
@@ -195,6 +197,8 @@ func _process(delta: float) -> void:
 # ── E-key interact router (reads proximity from GameState) ──────────────────────────
 func on_player_interact() -> void:
 	var gs = _game_state
+	if gs == null:
+		return
 	if gs.current_section_browse != null and gs.current_section_browse.visible:
 		return
 	if gs.checkout_receipt_visible:
@@ -373,10 +377,10 @@ func _open_stall_browse(stall) -> void:
 	_food_stall_browse.open(stall_def, cart)
 
 # ── Section browse ──────────────────────────────────────────────────────────────
-func _open_section_browse(section) -> void:
+func _open_section_browse(section, bay_index: int = -1) -> void:
 	if _section_browse == null:
 		return
-	_section_browse.open_section(section)
+	_section_browse.open_section(section, bay_index)
 	_game_state.current_section_browse = _section_browse
 
 # ── Claw machine ────────────────────────────────────────────────────────────────
@@ -390,6 +394,8 @@ func _on_claw_played(prize_name: String, won: bool, _machine) -> void:
 
 # ── Checkout ──────────────────────────────────────────────────────────────────
 func _on_checkout_interacted(_checkout_id: int, _checkout_type) -> void:
+	if _game_state == null:
+		return
 	if _game_state.nearby_checkout != null:
 		_checkout_system.do_checkout(_game_state.nearby_checkout)
 
@@ -442,8 +448,7 @@ func restock_nearby_section() -> void:
 	if top_up <= 0:
 		top_up = capacity - current
 	if top_up > 0:
-		var contents = {sec_id: top_up}
-		_warehouse.receive_delivery(contents)
+		_warehouse.direct_restock(sec_id, top_up)
 		if _player_stats:
 			_player_stats.complete_staff_task()
 			_player_stats.add_staff_xp(8, "Restocked %s" % sec_def.name)
@@ -924,10 +929,6 @@ func toggle_shelf_panel() -> void:
 # ── Input blocked ──────────────────────────────────────────────────────────────
 func is_input_blocked() -> bool:
 	return PanelManager.is_input_blocked()
-
-# ── Warehouse delivery ──────────────────────────────────────────────────────────
-func on_warehouse_delivery_arrived(_contents: Dictionary) -> void:
-	_truck_dock_system.spawn_truck()
 
 func on_warehouse_low_stock(section_id: String) -> void:
 	if _game_state.current_floor_idx == 12:

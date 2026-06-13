@@ -1,13 +1,13 @@
 # debug_bounds.gd
 # Debug bounding box visualization system like Unity Gizmos.
-# Press F3 to toggle debug bounds display.
+# Press F1 to toggle debug bounds display.
 extends Node2D
 
 var _main: Node2D = null
 var _debug_enabled: bool = false
 var _bounds_layer: Node2D = null
 var _labels_layer: Node2D = null
-var _f3_was_pressed: bool = false
+var _f1_was_pressed: bool = false
 
 # Color palette for different object types (white/light colors for visibility)
 const COLORS = {
@@ -59,15 +59,24 @@ func setup(main: Node2D) -> void:
 func _process(_delta: float) -> void:
 	if _debug_enabled:
 		_update_debug_view()
-	
-	# Toggle debug with F3 (check each frame to avoid input issues)
-	if Input.is_key_pressed(KEY_F3) and not _f3_was_pressed:
-		_f3_was_pressed = true
+
+	# Toggle debug with F1 (check each frame to avoid input issues)
+	if Input.is_key_pressed(KEY_F1) and not _f1_was_pressed:
+		_f1_was_pressed = true
 		_debug_enabled = !_debug_enabled
 		_refresh_debug_view()
+		_set_section_debug_visible(_debug_enabled)
 		print("Debug Bounds: ", "ON" if _debug_enabled else "OFF")
-	elif not Input.is_key_pressed(KEY_F3):
-		_f3_was_pressed = false
+	elif not Input.is_key_pressed(KEY_F1):
+		_f1_was_pressed = false
+
+func _set_section_debug_visible(visible: bool) -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	for sec in tree.get_nodes_in_group("section_debug"):
+		if is_instance_valid(sec) and sec.has_method("set_debug_visible"):
+			sec.set_debug_visible(visible)
 
 # ── Add objects to debug visualization ──────────────────────────────────────
 

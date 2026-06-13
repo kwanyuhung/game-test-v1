@@ -11,6 +11,7 @@
 extends CanvasLayer
 
 const ActorData = preload("res://scripts/entities/actor_data.gd")
+const StaffAccess = preload("res://scripts/systems/staff_access.gd")
 
 const ENTRY_W := 224.0
 const ENTRY_H := 88.0
@@ -57,6 +58,7 @@ class Entry:
 	var sprite: TextureRect
 	var name_lbl: Label
 	var role_lbl: Label
+	var item_lbl: Label       # shows "Holds: phone, earphones" etc.
 	var appearance_lbl: Label
 	var ai_lbl: Label
 
@@ -182,6 +184,12 @@ func _ensure_entry(target: Node) -> void:
 	e.role_lbl.z_index = 4
 	add_child(e.role_lbl)
 
+	e.item_lbl = Label.new()
+	e.item_lbl.add_theme_color_override("font_color", Color(0.95, 0.85, 0.55))
+	e.item_lbl.add_theme_font_size_override("font_size", small_fs)
+	e.item_lbl.z_index = 4
+	add_child(e.item_lbl)
+
 	e.ai_lbl = Label.new()
 	e.ai_lbl.add_theme_color_override("font_color", Color(0.70, 0.95, 0.70))
 	e.ai_lbl.add_theme_font_size_override("font_size", small_fs)
@@ -211,6 +219,7 @@ func _free_entry(e: Entry) -> void:
 	if is_instance_valid(e.sprite): e.sprite.queue_free()
 	if is_instance_valid(e.name_lbl): e.name_lbl.queue_free()
 	if is_instance_valid(e.role_lbl): e.role_lbl.queue_free()
+	if is_instance_valid(e.item_lbl): e.item_lbl.queue_free()
 	if is_instance_valid(e.ai_lbl): e.ai_lbl.queue_free()
 	if is_instance_valid(e.appearance_lbl): e.appearance_lbl.queue_free()
 
@@ -228,6 +237,7 @@ func _refresh_font_sizes() -> void:
 	for e in _entries:
 		if is_instance_valid(e.name_lbl): e.name_lbl.add_theme_font_size_override("font_size", name_fs)
 		if is_instance_valid(e.role_lbl): e.role_lbl.add_theme_font_size_override("font_size", small_fs)
+		if is_instance_valid(e.item_lbl): e.item_lbl.add_theme_font_size_override("font_size", small_fs)
 		if is_instance_valid(e.ai_lbl): e.ai_lbl.add_theme_font_size_override("font_size", small_fs)
 		if is_instance_valid(e.appearance_lbl): e.appearance_lbl.add_theme_font_size_override("font_size", small_fs)
 
@@ -239,13 +249,42 @@ func _refresh_info() -> void:
 		if info.is_empty():
 			e.name_lbl.text = ""
 			e.role_lbl.text = ""
+			e.item_lbl.text = ""
 			e.ai_lbl.text = ""
 			e.appearance_lbl.text = ""
 			e.sprite.texture = null
 			continue
 		e.sprite.texture = info.get("sprite", null)
 		e.name_lbl.text = String(info.get("name", ""))
-		e.role_lbl.text = String(info.get("role", ""))
+		# Role line gets a gender tag suffix when gender info is present.
+		var role_text: String = String(info.get("role", ""))
+		var g_int: int = int(info.get("gender", -1))
+		if g_int >= 0:
+			role_text += "  ·  " + ActorData.gender_short(g_int)
+		e.role_lbl.text = role_text
+		# Item line: list every held item (or hide if empty).
+		var inv: Array = info.get("inventory", [])
+		var item_text := ""
+		if not inv.is_empty():
+			var names: Array = []
+			for it in inv:
+				names.append(ActorData.item_name(int(it)))
+			item_text = "Holds: " + ", ".join(names)
+		# Staff-card line: card level + the list of areas the card
+		# unlocks. Appended under "Holds:" so the meta row stays
+		# one block of related text.
+		var card_lvl: int = int(info.get("staff_card_level", 0))
+		if card_lvl > 0:
+			var allowed: Array = info.get("staff_allowed_areas", [])
+			var area_labels: Array = []
+			for a in allowed:
+				area_labels.append(StaffAccess.area_label(String(a)))
+			if item_text != "":
+				item_text += "  ·  "
+			item_text += "Card Lv%d" % card_lvl
+			if not area_labels.is_empty():
+				item_text += "  ·  " + ", ".join(area_labels)
+		e.item_lbl.text = item_text
 		e.appearance_lbl.text = String(info.get("appearance", ""))
 		e.ai_lbl.text = _format_ai(info)
 
@@ -333,16 +372,20 @@ func _refresh_layout() -> void:
 		e.sprite.size = Vector2(ss, ss)
 		var text_x: float = px + sp * 3 + ss
 		var text_w: float = ew - (text_x - px) - 4
-		# Row heights: name + role pinned to top, AI pinned to bottom,
-		# appearance fills the middle and grows with the entry.
+		# Row heights: name + role pinned to top, a thin item row under
+		# them, AI pinned to bottom, appearance fills the middle and
+		# grows with the entry.
 		var header_h: float = eh * 0.16
+		var meta_h: float = eh * 0.10
 		var footer_h: float = eh * 0.16
-		var middle_h: float = eh - header_h - footer_h
+		var middle_h: float = eh - header_h - meta_h - footer_h
 		e.name_lbl.position = Vector2(text_x, ey + 2)
-		e.name_lbl.size = Vector2(text_w, header_h * 0.6)
-		e.role_lbl.position = Vector2(text_x, ey + 2 + header_h * 0.6)
-		e.role_lbl.size = Vector2(text_w, header_h * 0.4)
-		e.appearance_lbl.position = Vector2(text_x, ey + header_h)
+		e.name_lbl.size = Vector2(text_w, header_h * 0.55)
+		e.role_lbl.position = Vector2(text_x, ey + 2 + header_h * 0.55)
+		e.role_lbl.size = Vector2(text_w, header_h * 0.45)
+		e.item_lbl.position = Vector2(text_x, ey + header_h)
+		e.item_lbl.size = Vector2(text_w, meta_h)
+		e.appearance_lbl.position = Vector2(text_x, ey + header_h + meta_h)
 		e.appearance_lbl.size = Vector2(text_w, middle_h)
 		e.ai_lbl.position = Vector2(text_x, ey + eh - footer_h)
 		e.ai_lbl.size = Vector2(text_w, footer_h)

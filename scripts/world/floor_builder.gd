@@ -20,6 +20,7 @@ const FoodStallHandler = preload("res://scripts/areas/floor_0/food_stall_handler
 const ServiceAreaHandler = preload("res://scripts/areas/floor_0/service_area_handler.gd")
 const WCHandler = preload("res://scripts/areas/shared/wc_handler.gd")
 const WarehouseHandler = preload("res://scripts/areas/floor_0/warehouse_handler.gd")
+const WarehouseTestObjects = preload("res://scripts/areas/floor_0/warehouse_test_objects.gd")
 const MiscHandler = preload("res://scripts/areas/floor_0/misc_handler.gd")
 const Floor0Handler = preload("res://scripts/areas/floor_0/floor_0_handler.gd")
 
@@ -79,7 +80,6 @@ const RooftopCommonHandler = preload("res://scripts/areas/floor_10/rooftop_commo
 
 # Floor 11 handlers (Warehouse)
 const Floor11Handler = preload("res://scripts/areas/floor_11/floor_11_handler.gd")
-const WarehouseFloorHandler = preload("res://scripts/areas/floor_11/warehouse_floor_handler.gd")
 const TruckDockHandler = preload("res://scripts/areas/floor_11/truck_dock_handler.gd")
 const ConveyorHandler = preload("res://scripts/areas/floor_11/conveyor_handler.gd")
 
@@ -161,11 +161,12 @@ func build(floor_def: FloorConfig.FloorDef, parent: Node, floor_idx: int = 0, st
 
 func _build_world_bg() -> void:
 	var bg := ColorRect.new()
-	bg.size = Vector2(WORLD_W * CELL_SIZE, WORLD_H * CELL_SIZE)
+	bg.size = Vector2(_floor_def.width_tiles * CELL_SIZE, _floor_def.height_tiles * CELL_SIZE)
 	bg.position = Vector2.ZERO
 	# Visible walkable floor. Anywhere a zone does NOT draw on top stays this color
 	# and is walkable. Aisles intentionally add no sprite so the floor shows through.
 	bg.color = Color(0.93, 0.89, 0.78)
+	print("[DEBUG] _build_world_bg floor=%d w_tiles=%d h_tiles=%d bg_size=%s" % [_floor_idx, _floor_def.width_tiles, _floor_def.height_tiles, str(bg.size)])
 	_parent.add_child(bg)
 	_floor_nodes.append(bg)
 
@@ -175,7 +176,15 @@ func _build_zones() -> void:
 		_build_zone(zone)
 
 func _build_zone(zone: Dictionary) -> void:
-	match zone.type:
+	# Normalize zone type so JSON's "ZONE_FOO" form matches the lowercase
+	# constants on FloorConfig. Without this the match silently falls through
+	# and zone-specific builders (warehouse, dock, forklift, …) never run.
+	# Mirrors the same normalization used in _get_zone_color().
+	var zt: String = zone.get("type", "")
+	if zt.begins_with("ZONE_"):
+		zt = zt.substr(5)
+	zt = zt.to_lower()
+	match zt:
 		FloorConfig.ZONE_WALL:         _build_zone_wall(zone)
 		FloorConfig.ZONE_AISLE:        _build_zone_aisle(zone)
 		FloorConfig.ZONE_LOBBY:        _build_zone_lobby(zone)
@@ -679,6 +688,9 @@ func _make_pet_sprite(pet_type: int) -> Texture2D:
 func _build_zone_warehouse(zone: Dictionary) -> void:
 	# Delegate to WarehouseHandler
 	WarehouseHandler.build_warehouse_area(_parent, zone, _floor_nodes, "ZONE_WAREHOUSE")
+	# Test-only: place truck / forklift / cargo inside the warehouse area
+	# so the truck dock + warehouse systems can be exercised on Floor G.
+	WarehouseTestObjects.build_test_objects(_parent, zone, _floor_nodes)
 
 func _make_crate_texture(rack_idx: int, row_idx: int) -> Texture2D:
 	var W := 12; var H := 12
@@ -1422,10 +1434,13 @@ func _build_shelf_detail(x: int, y: int, w: int, h: int, base_color: Color) -> v
 func _is_walkable_zone(zone_type: String) -> bool:
 	# Mirrors the WALKABLE_ZONE_TYPES set in main.gd so visual and collision
 	# logic agree. Aisles are not rendered here (they use _build_zone_aisle).
+	# Merch zones (top of each section) are walkable so the player can step
+	# up to the shelf to inspect products.
 	return zone_type == "ZONE_TROLLEY" \
 		or zone_type == "ZONE_EXIT" \
 		or zone_type == "ZONE_CHECKOUT" \
-		or zone_type == "ZONE_CUSTOMER_SERVICE"
+		or zone_type == "ZONE_CUSTOMER_SERVICE" \
+		or zone_type in MERCHANDISE_ZONE_TYPES
 
 func _verify_walk_rows() -> void:
 	# Audit: every tile inside a ZONE_AISLE must resolve to walkable under the
@@ -1457,6 +1472,8 @@ func _is_tile_walkable(tx: int, ty: int) -> bool:
 	# Mirror of main.gd:is_position_blocked nested-walkable rule.
 	# A tile is walkable when no zone contains it, OR when at least one
 	# containing zone is of a walkable type (walkable wins over parent).
+	# Merch zones (top of each section) are walkable so the player can
+	# step up to the shelf to inspect products.
 	var inside_non_walkable := false
 	for zone in _floor_def.zones:
 		var zx: int = zone.get("x", 0)
@@ -1465,7 +1482,7 @@ func _is_tile_walkable(tx: int, ty: int) -> bool:
 		var zh: int = zone.get("h", 1)
 		if tx >= zx and tx < zx + zw and ty >= zy and ty < zy + zh:
 			var zt: String = zone.get("type", "")
-			if zt == "ZONE_TROLLEY" or zt == "ZONE_EXIT" or zt == "ZONE_CHECKOUT" or zt == "ZONE_AISLE" or zt == "ZONE_CUSTOMER_SERVICE":
+			if zt == "ZONE_TROLLEY" or zt == "ZONE_EXIT" or zt == "ZONE_CHECKOUT" or zt == "ZONE_AISLE" or zt == "ZONE_CUSTOMER_SERVICE" or zt in MERCHANDISE_ZONE_TYPES:
 				return true
 			inside_non_walkable = true
 	return not inside_non_walkable

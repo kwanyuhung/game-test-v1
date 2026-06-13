@@ -3,6 +3,8 @@
 		"id": 0,
 		"label": "G",
 		"theme": "supermarket",
+		"width": 1008,
+		"height": 392,
 		"ambient_color": [
 			0.42,
 			0.44,
@@ -11,20 +13,20 @@
 		"zones": [
 			{
 				"type": "ZONE_STAIRS",
-				"x": 8,
-				"y": 8,
-				"w": 7,
-				"h": 4,
+				"x": 16,
+				"y": 16,
+				"w": 14,
+				"h": 8,
 				"meta": {
 					"name": "STAIRS"
 				}
 			},
 			{
 				"type": "ZONE_ESCALATOR",
-				"x": 17,
-				"y": 8,
-				"w": 3,
-				"h": 6,
+				"x": 34,
+				"y": 16,
+				"w": 6,
+				"h": 12,
 				"meta": {
 					"escalator_id": "esc_main",
 					"direction": 1,
@@ -33,10 +35,10 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 22,
-				"y": 8,
-				"w": 4,
-				"h": 5,
+				"x": 44,
+				"y": 16,
+				"w": 8,
+				"h": 10,
 				"meta": {
 					"elevator_id": "elev_1",
 					"name": "ELEVATOR 1"
@@ -44,10 +46,10 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 27,
-				"y": 8,
-				"w": 4,
-				"h": 5,
+				"x": 54,
+				"y": 16,
+				"w": 8,
+				"h": 10,
 				"meta": {
 					"elevator_id": "elev_2",
 					"name": "ELEVATOR 2"
@@ -55,10 +57,10 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 32,
-				"y": 8,
-				"w": 4,
-				"h": 5,
+				"x": 64,
+				"y": 16,
+				"w": 8,
+				"h": 10,
 				"meta": {
 					"elevator_id": "elev_3",
 					"name": "ELEVATOR 3"
@@ -66,595 +68,627 @@
 			},
 			{
 				"type": "ZONE_TROLLEY",
-				"x": 128,
-				"y": 2,
-				"w": 96,
-				"h": 6,
+				"x": 256,
+				"y": 4,
+				"w": 192,
+				"h": 12,
 				"meta": {
 					"name": "TROLLEY BAY"
 				}
 			},
 			{
 				"type": "ZONE_EXIT",
-				"x": 224,
-				"y": 2,
-				"w": 48,
-				"h": 6,
+				"x": 448,
+				"y": 4,
+				"w": 96,
+				"h": 12,
 				"meta": {
 					"name": "ENTRY"
 				}
 			},
 			{
 				"type": "ZONE_TROLLEY",
-				"x": 272,
-				"y": 2,
-				"w": 96,
-				"h": 6,
+				"x": 544,
+				"y": 4,
+				"w": 192,
+				"h": 12,
 				"meta": {
 					"name": "BASKET STAND"
 				}
 			},
 			{
 				"type": "ZONE_EXIT",
-				"x": 368,
-				"y": 2,
-				"w": 48,
-				"h": 6,
+				"x": 736,
+				"y": 4,
+				"w": 96,
+				"h": 12,
 				"meta": {
 					"name": "EXIT"
 				}
 			},
 			{
 				"type": "ZONE_WC",
-				"x": 128,
-				"y": 12,
-				"w": 16,
-				"h": 16,
+				"x": 256,
+				"y": 24,
+				"w": 32,
+				"h": 32,
 				"meta": {
 					"name": "WC"
 				}
 			},
 			{
 				"type": "ZONE_FIRST_AID",
-				"x": 152,
-				"y": 12,
-				"w": 8,
-				"h": 8,
+				"x": 304,
+				"y": 24,
+				"w": 16,
+				"h": 16,
 				"meta": {
 					"name": "FIRST AID"
 				}
 			},
 			{
 				"type": "ZONE_CUSTOMER_SERVICE",
-				"x": 168,
-				"y": 12,
-				"w": 24,
-				"h": 12,
+				"x": 336,
+				"y": 24,
+				"w": 48,
+				"h": 24,
 				"meta": {
 					"name": "SERVICE CENTER"
 				}
 			},
 			{
 				"type": "ZONE_LOYALTY_KIOSK",
-				"x": 200,
-				"y": 12,
-				"w": 8,
-				"h": 8,
+				"x": 400,
+				"y": 24,
+				"w": 16,
+				"h": 16,
 				"meta": {
 					"name": "LOYALTY"
 				}
 			},
 			{
 				"type": "ZONE_GIFT_WRAP",
-				"x": 216,
-				"y": 12,
-				"w": 8,
-				"h": 8,
+				"x": 432,
+				"y": 24,
+				"w": 16,
+				"h": 16,
 				"meta": {
 					"name": "GIFT WRAP"
 				}
 			},
 			{
 				"type": "ZONE_FRESH_PRODUCE",
-				"x": 130,
-				"y": 32,
-				"w": 84,
-				"h": 6,
+				"x": 260,
+				"y": 64,
+				"w": 168,
+				"h": 12,
 				"meta": {
-					"color": [0.55, 0.78, 0.42],
+					"color": [
+						0.55,
+						0.78,
+						0.42
+					],
 					"name": "PRODUCE"
 				}
 			},
 			{
 				"type": "ZONE_BAKERY",
-				"x": 218,
-				"y": 32,
-				"w": 84,
-				"h": 6,
+				"x": 436,
+				"y": 64,
+				"w": 168,
+				"h": 12,
 				"meta": {
-					"color": [0.95, 0.78, 0.45],
+					"color": [
+						0.95,
+						0.78,
+						0.45
+					],
 					"name": "BAKERY"
 				}
 			},
 			{
 				"type": "ZONE_DAIRY",
-				"x": 306,
-				"y": 32,
-				"w": 84,
-				"h": 6,
+				"x": 612,
+				"y": 64,
+				"w": 168,
+				"h": 12,
 				"meta": {
-					"color": [0.70, 0.88, 1.00],
+					"color": [
+						0.7,
+						0.88,
+						1.0
+					],
 					"name": "DAIRY"
 				}
 			},
 			{
 				"type": "ZONE_BEVERAGES",
-				"x": 394,
-				"y": 32,
-				"w": 84,
-				"h": 6,
+				"x": 788,
+				"y": 64,
+				"w": 168,
+				"h": 12,
 				"meta": {
-					"color": [0.45, 0.72, 0.95],
+					"color": [
+						0.45,
+						0.72,
+						0.95
+					],
 					"name": "BEVERAGES"
 				}
 			},
 			{
 				"type": "ZONE_AISLE",
-				"x": 130,
-				"y": 44,
-				"w": 84,
-				"h": 16,
+				"x": 260,
+				"y": 88,
+				"w": 168,
+				"h": 32,
 				"meta": {
 					"name": "PRODUCE FRONT AISLE"
 				}
 			},
 			{
 				"type": "ZONE_AISLE",
-				"x": 218,
-				"y": 44,
-				"w": 84,
-				"h": 16,
+				"x": 436,
+				"y": 88,
+				"w": 168,
+				"h": 32,
 				"meta": {
 					"name": "BAKERY FRONT AISLE"
 				}
 			},
 			{
 				"type": "ZONE_AISLE",
-				"x": 306,
-				"y": 44,
-				"w": 84,
-				"h": 16,
+				"x": 612,
+				"y": 88,
+				"w": 168,
+				"h": 32,
 				"meta": {
 					"name": "DAIRY FRONT AISLE"
 				}
 			},
 			{
 				"type": "ZONE_AISLE",
-				"x": 394,
-				"y": 44,
-				"w": 84,
-				"h": 16,
+				"x": 788,
+				"y": 88,
+				"w": 168,
+				"h": 32,
 				"meta": {
 					"name": "BEVERAGES FRONT AISLE"
 				}
 			},
 			{
 				"type": "ZONE_AISLE",
-				"x": 128,
-				"y": 60,
-				"w": 352,
-				"h": 4,
+				"x": 256,
+				"y": 120,
+				"w": 704,
+				"h": 8,
 				"meta": {
 					"name": "MAIN AISLE (FRESH)"
 				}
 			},
 			{
 				"type": "ZONE_MEAT",
-				"x": 130,
-				"y": 64,
-				"w": 84,
-				"h": 6,
+				"x": 260,
+				"y": 128,
+				"w": 168,
+				"h": 12,
 				"meta": {
-					"color": [0.92, 0.55, 0.55],
+					"color": [
+						0.92,
+						0.55,
+						0.55
+					],
 					"name": "MEAT & DELI"
 				}
 			},
 			{
 				"type": "ZONE_SEAFOOD",
-				"x": 218,
-				"y": 64,
-				"w": 84,
-				"h": 6,
+				"x": 436,
+				"y": 128,
+				"w": 168,
+				"h": 12,
 				"meta": {
-					"color": [0.40, 0.72, 0.88],
+					"color": [
+						0.4,
+						0.72,
+						0.88
+					],
 					"name": "SEAFOOD"
 				}
 			},
 			{
 				"type": "ZONE_FROZEN",
-				"x": 306,
-				"y": 64,
-				"w": 84,
-				"h": 6,
+				"x": 612,
+				"y": 128,
+				"w": 168,
+				"h": 12,
 				"meta": {
-					"color": [0.78, 0.92, 1.00],
+					"color": [
+						0.78,
+						0.92,
+						1.0
+					],
 					"name": "FROZEN"
 				}
 			},
 			{
 				"type": "ZONE_PANTRY",
-				"x": 394,
-				"y": 64,
-				"w": 84,
-				"h": 6,
+				"x": 788,
+				"y": 128,
+				"w": 168,
+				"h": 12,
 				"meta": {
-					"color": [0.88, 0.78, 0.55],
+					"color": [
+						0.88,
+						0.78,
+						0.55
+					],
 					"name": "PANTRY & SNACKS"
 				}
 			},
 			{
 				"type": "ZONE_AISLE",
-				"x": 130,
-				"y": 76,
-				"w": 84,
-				"h": 12,
+				"x": 260,
+				"y": 152,
+				"w": 168,
+				"h": 24,
 				"meta": {
 					"name": "MEAT FRONT AISLE"
 				}
 			},
 			{
 				"type": "ZONE_AISLE",
-				"x": 218,
-				"y": 76,
-				"w": 84,
-				"h": 12,
+				"x": 436,
+				"y": 152,
+				"w": 168,
+				"h": 24,
 				"meta": {
 					"name": "SEAFOOD FRONT AISLE"
 				}
 			},
 			{
 				"type": "ZONE_AISLE",
-				"x": 306,
-				"y": 76,
-				"w": 84,
-				"h": 12,
+				"x": 612,
+				"y": 152,
+				"w": 168,
+				"h": 24,
 				"meta": {
 					"name": "FROZEN FRONT AISLE"
 				}
 			},
 			{
 				"type": "ZONE_AISLE",
-				"x": 394,
-				"y": 76,
-				"w": 84,
-				"h": 12,
+				"x": 788,
+				"y": 152,
+				"w": 168,
+				"h": 24,
 				"meta": {
 					"name": "PANTRY FRONT AISLE"
 				}
 			},
 			{
 				"type": "ZONE_VENDING_MACHINE",
-				"x": 128,
-				"y": 92,
-				"w": 32,
-				"h": 8,
+				"x": 256,
+				"y": 184,
+				"w": 64,
+				"h": 16,
 				"meta": {
 					"name": "Energy Drink $3.00"
 				}
 			},
 			{
 				"type": "ZONE_ATM",
-				"x": 168,
-				"y": 92,
-				"w": 40,
-				"h": 8
+				"x": 336,
+				"y": 184,
+				"w": 80,
+				"h": 16
 			},
 			{
 				"type": "ZONE_AISLE",
-				"x": 128,
-				"y": 89,
-				"w": 352,
-				"h": 3,
+				"x": 256,
+				"y": 178,
+				"w": 704,
+				"h": 6,
 				"meta": {
 					"name": "MAIN AISLE (CASH)"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 128,
-				"y": 100,
-				"w": 48,
-				"h": 28,
+				"x": 256,
+				"y": 200,
+				"w": 96,
+				"h": 56,
 				"meta": {
 					"name": "canteen_rice"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 176,
-				"y": 100,
-				"w": 48,
-				"h": 28,
+				"x": 352,
+				"y": 200,
+				"w": 96,
+				"h": 56,
 				"meta": {
 					"name": "canteen_noodle"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 224,
-				"y": 100,
-				"w": 48,
-				"h": 28,
+				"x": 448,
+				"y": 200,
+				"w": 96,
+				"h": 56,
 				"meta": {
 					"name": "canteen_meat"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 272,
-				"y": 100,
-				"w": 48,
-				"h": 28,
+				"x": 544,
+				"y": 200,
+				"w": 96,
+				"h": 56,
 				"meta": {
 					"name": "canteen_veg"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 320,
-				"y": 100,
-				"w": 32,
-				"h": 28,
+				"x": 640,
+				"y": 200,
+				"w": 64,
+				"h": 56,
 				"meta": {
 					"name": "canteen_drinks"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 352,
-				"y": 100,
-				"w": 32,
-				"h": 28,
+				"x": 704,
+				"y": 200,
+				"w": 64,
+				"h": 56,
 				"meta": {
 					"name": "canteen_fruit"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 392,
-				"y": 100,
-				"w": 88,
-				"h": 28,
+				"x": 784,
+				"y": 200,
+				"w": 176,
+				"h": 56,
 				"meta": {
 					"name": "dining_seating"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 400,
-				"y": 104,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 404,
-				"y": 104,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 408,
-				"y": 104,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 412,
-				"y": 104,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 416,
-				"y": 104,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 420,
-				"y": 104,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 400,
-				"y": 122,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 404,
-				"y": 122,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 408,
-				"y": 122,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 412,
-				"y": 122,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 416,
-				"y": 122,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 420,
-				"y": 122,
-				"w": 1,
-				"h": 1,
-				"meta": {
-					"name": "dining_chair"
-				}
-			},
-			{
-				"type": "ZONE_DECOR",
-				"x": 432,
-				"y": 104,
+				"x": 800,
+				"y": 208,
 				"w": 2,
 				"h": 2,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 808,
+				"y": 208,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 816,
+				"y": 208,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 824,
+				"y": 208,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 832,
+				"y": 208,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 840,
+				"y": 208,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 800,
+				"y": 244,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 808,
+				"y": 244,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 816,
+				"y": 244,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 824,
+				"y": 244,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 832,
+				"y": 244,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 840,
+				"y": 244,
+				"w": 2,
+				"h": 2,
+				"meta": {
+					"name": "dining_chair"
+				}
+			},
+			{
+				"type": "ZONE_DECOR",
+				"x": 864,
+				"y": 208,
+				"w": 4,
+				"h": 4,
 				"meta": {
 					"name": "dining_table_small"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 448,
-				"y": 104,
-				"w": 2,
-				"h": 2,
+				"x": 896,
+				"y": 208,
+				"w": 4,
+				"h": 4,
 				"meta": {
 					"name": "dining_table_small"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 464,
-				"y": 104,
-				"w": 2,
-				"h": 2,
+				"x": 928,
+				"y": 208,
+				"w": 4,
+				"h": 4,
 				"meta": {
 					"name": "dining_table_small"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 432,
-				"y": 122,
-				"w": 2,
-				"h": 2,
+				"x": 864,
+				"y": 244,
+				"w": 4,
+				"h": 4,
 				"meta": {
 					"name": "dining_table_small"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 448,
-				"y": 122,
-				"w": 2,
-				"h": 2,
+				"x": 896,
+				"y": 244,
+				"w": 4,
+				"h": 4,
 				"meta": {
 					"name": "dining_table_small"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 464,
-				"y": 122,
-				"w": 2,
-				"h": 2,
+				"x": 928,
+				"y": 244,
+				"w": 4,
+				"h": 4,
 				"meta": {
 					"name": "dining_table_small"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 404,
-				"y": 111,
-				"w": 8,
-				"h": 2,
+				"x": 808,
+				"y": 222,
+				"w": 16,
+				"h": 4,
 				"meta": {
 					"name": "dining_table_long"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 420,
-				"y": 111,
-				"w": 8,
-				"h": 2,
+				"x": 840,
+				"y": 222,
+				"w": 16,
+				"h": 4,
 				"meta": {
 					"name": "dining_table_long"
 				}
 			},
 			{
 				"type": "ZONE_AISLE",
-				"x": 128,
-				"y": 114,
-				"w": 352,
-				"h": 3,
+				"x": 256,
+				"y": 228,
+				"w": 704,
+				"h": 6,
 				"meta": {
 					"name": "MAIN AISLE (FOOD COURT)"
 				}
 			},
 			{
 				"type": "ZONE_CHECKOUT",
-				"x": 128,
-				"y": 128,
-				"w": 264,
-				"h": 10,
+				"x": 256,
+				"y": 256,
+				"w": 528,
+				"h": 20,
 				"meta": {
 					"name": "CHECKOUT COUNTERS"
 				}
 			},
 			{
 				"type": "ZONE_EXIT",
-				"x": 392,
-				"y": 128,
-				"w": 88,
-				"h": 10,
+				"x": 784,
+				"y": 256,
+				"w": 176,
+				"h": 20,
 				"meta": {
 					"name": "EXIT LANE"
 				}
@@ -662,9 +696,9 @@
 			{
 				"type": "ZONE_WAREHOUSE",
 				"x": 0,
-				"y": 140,
-				"w": 480,
-				"h": 56,
+				"y": 280,
+				"w": 960,
+				"h": 112,
 				"meta": {
 					"color": [
 						0.55,
@@ -677,9 +711,9 @@
 			{
 				"type": "ZONE_TRUCK_DOCK",
 				"x": 0,
-				"y": 140,
-				"w": 88,
-				"h": 56,
+				"y": 280,
+				"w": 176,
+				"h": 112,
 				"meta": {
 					"color": [
 						0.5,
@@ -692,9 +726,9 @@
 			{
 				"type": "ZONE_FORKLIFT",
 				"x": 0,
-				"y": 168,
-				"w": 88,
-				"h": 28,
+				"y": 336,
+				"w": 176,
+				"h": 56,
 				"meta": {
 					"color": [
 						0.8,
@@ -706,10 +740,10 @@
 			},
 			{
 				"type": "ZONE_CONVEYOR",
-				"x": 88,
-				"y": 152,
-				"w": 200,
-				"h": 32,
+				"x": 176,
+				"y": 304,
+				"w": 400,
+				"h": 64,
 				"meta": {
 					"color": [
 						0.6,
@@ -721,10 +755,10 @@
 			},
 			{
 				"type": "ZONE_STORAGE_SHELF",
-				"x": 300,
-				"y": 140,
-				"w": 180,
-				"h": 56,
+				"x": 600,
+				"y": 280,
+				"w": 360,
+				"h": 112,
 				"meta": {
 					"color": [
 						0.6,
@@ -736,10 +770,10 @@
 			},
 			{
 				"type": "ZONE_WAREHOUSE_STOCK_VIEW",
-				"x": 464,
-				"y": 140,
-				"w": 40,
-				"h": 48,
+				"x": 928,
+				"y": 280,
+				"w": 80,
+				"h": 96,
 				"meta": {
 					"color": [
 						0.45,
@@ -819,6 +853,8 @@
 		"id": 1,
 		"label": "1",
 		"theme": "shoes",
+		"width": 640,
+		"height": 336,
 		"ambient_color": [
 			0.52,
 			0.45,
@@ -827,17 +863,17 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_SHOES_RACK",
-				"x": 8,
-				"y": 12,
-				"w": 96,
-				"h": 64,
+				"x": 16,
+				"y": 24,
+				"w": 192,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.82,
@@ -849,10 +885,10 @@
 			},
 			{
 				"type": "ZONE_SHOES_RACK",
-				"x": 112,
-				"y": 12,
-				"w": 96,
-				"h": 64,
+				"x": 224,
+				"y": 24,
+				"w": 192,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.55,
@@ -864,10 +900,10 @@
 			},
 			{
 				"type": "ZONE_SHOES_RACK",
-				"x": 216,
-				"y": 12,
-				"w": 96,
-				"h": 64,
+				"x": 432,
+				"y": 24,
+				"w": 192,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.7,
@@ -879,10 +915,10 @@
 			},
 			{
 				"type": "ZONE_SHOES_RACK",
-				"x": 8,
-				"y": 84,
-				"w": 152,
-				"h": 64,
+				"x": 16,
+				"y": 168,
+				"w": 304,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.55,
@@ -894,10 +930,10 @@
 			},
 			{
 				"type": "ZONE_SHOES_RACK",
-				"x": 168,
-				"y": 84,
-				"w": 144,
-				"h": 64,
+				"x": 336,
+				"y": 168,
+				"w": 288,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.85,
@@ -909,10 +945,10 @@
 			},
 			{
 				"type": "ZONE_AD",
-				"x": 264,
-				"y": 16,
-				"w": 16,
-				"h": 24,
+				"x": 528,
+				"y": 32,
+				"w": 32,
+				"h": 48,
 				"meta": {
 					"color": [
 						0.2,
@@ -924,17 +960,17 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 24,
-				"y": 8,
-				"w": 56,
-				"h": 160
+				"x": 48,
+				"y": 16,
+				"w": 112,
+				"h": 320
 			},
 			{
 				"type": "ZONE_STAIRS",
-				"x": 80,
-				"y": 8,
-				"w": 24,
-				"h": 160
+				"x": 160,
+				"y": 16,
+				"w": 48,
+				"h": 320
 			}
 		],
 		"sections": [
@@ -971,6 +1007,8 @@
 		"id": 2,
 		"label": "2",
 		"theme": "fashion",
+		"width": 640,
+		"height": 336,
 		"ambient_color": [
 			0.55,
 			0.42,
@@ -979,17 +1017,17 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_DRESS_RACK",
-				"x": 8,
-				"y": 12,
-				"w": 104,
-				"h": 72,
+				"x": 16,
+				"y": 24,
+				"w": 208,
+				"h": 144,
 				"meta": {
 					"color": [
 						0.88,
@@ -1001,10 +1039,10 @@
 			},
 			{
 				"type": "ZONE_DRESS_RACK",
-				"x": 120,
-				"y": 12,
-				"w": 104,
-				"h": 72,
+				"x": 240,
+				"y": 24,
+				"w": 208,
+				"h": 144,
 				"meta": {
 					"color": [
 						0.6,
@@ -1016,10 +1054,10 @@
 			},
 			{
 				"type": "ZONE_DRESS_RACK",
-				"x": 232,
-				"y": 12,
-				"w": 80,
-				"h": 72,
+				"x": 464,
+				"y": 24,
+				"w": 160,
+				"h": 144,
 				"meta": {
 					"color": [
 						0.72,
@@ -1031,10 +1069,10 @@
 			},
 			{
 				"type": "ZONE_DRESS_RACK",
-				"x": 8,
-				"y": 92,
-				"w": 152,
-				"h": 56,
+				"x": 16,
+				"y": 184,
+				"w": 304,
+				"h": 112,
 				"meta": {
 					"color": [
 						0.55,
@@ -1046,10 +1084,10 @@
 			},
 			{
 				"type": "ZONE_DRESS_RACK",
-				"x": 168,
-				"y": 92,
-				"w": 144,
-				"h": 56,
+				"x": 336,
+				"y": 184,
+				"w": 288,
+				"h": 112,
 				"meta": {
 					"color": [
 						0.5,
@@ -1061,10 +1099,10 @@
 			},
 			{
 				"type": "ZONE_AD",
-				"x": 272,
-				"y": 16,
-				"w": 16,
-				"h": 24,
+				"x": 544,
+				"y": 32,
+				"w": 32,
+				"h": 48,
 				"meta": {
 					"color": [
 						0.95,
@@ -1076,17 +1114,17 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 24,
-				"y": 8,
-				"w": 56,
-				"h": 160
+				"x": 48,
+				"y": 16,
+				"w": 112,
+				"h": 320
 			},
 			{
 				"type": "ZONE_STAIRS",
-				"x": 80,
-				"y": 8,
-				"w": 24,
-				"h": 160
+				"x": 160,
+				"y": 16,
+				"w": 48,
+				"h": 320
 			}
 		],
 		"sections": [
@@ -1123,6 +1161,8 @@
 		"id": 3,
 		"label": "3",
 		"theme": "sport",
+		"width": 640,
+		"height": 336,
 		"ambient_color": [
 			0.4,
 			0.5,
@@ -1131,17 +1171,17 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_SPORT_AREA",
-				"x": 8,
-				"y": 12,
-				"w": 96,
-				"h": 64,
+				"x": 16,
+				"y": 24,
+				"w": 192,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.55,
@@ -1153,10 +1193,10 @@
 			},
 			{
 				"type": "ZONE_SPORT_AREA",
-				"x": 112,
-				"y": 12,
-				"w": 96,
-				"h": 64,
+				"x": 224,
+				"y": 24,
+				"w": 192,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.65,
@@ -1168,10 +1208,10 @@
 			},
 			{
 				"type": "ZONE_SPORT_AREA",
-				"x": 216,
-				"y": 12,
-				"w": 96,
-				"h": 64,
+				"x": 432,
+				"y": 24,
+				"w": 192,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.7,
@@ -1183,10 +1223,10 @@
 			},
 			{
 				"type": "ZONE_SPORT_AREA",
-				"x": 8,
-				"y": 84,
-				"w": 152,
-				"h": 64,
+				"x": 16,
+				"y": 168,
+				"w": 304,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.55,
@@ -1198,10 +1238,10 @@
 			},
 			{
 				"type": "ZONE_SPORT_AREA",
-				"x": 168,
-				"y": 84,
-				"w": 144,
-				"h": 64,
+				"x": 336,
+				"y": 168,
+				"w": 288,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.6,
@@ -1213,10 +1253,10 @@
 			},
 			{
 				"type": "ZONE_AD",
-				"x": 280,
-				"y": 16,
-				"w": 16,
-				"h": 24,
+				"x": 560,
+				"y": 32,
+				"w": 32,
+				"h": 48,
 				"meta": {
 					"color": [
 						0.2,
@@ -1228,17 +1268,17 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 24,
-				"y": 8,
-				"w": 56,
-				"h": 160
+				"x": 48,
+				"y": 16,
+				"w": 112,
+				"h": 320
 			},
 			{
 				"type": "ZONE_STAIRS",
-				"x": 80,
-				"y": 8,
-				"w": 24,
-				"h": 160
+				"x": 160,
+				"y": 16,
+				"w": 48,
+				"h": 320
 			}
 		],
 		"sections": [
@@ -1275,6 +1315,8 @@
 		"id": 4,
 		"label": "4",
 		"theme": "outdoor",
+		"width": 720,
+		"height": 336,
 		"ambient_color": [
 			0.42,
 			0.55,
@@ -1283,17 +1325,17 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_OUTDOOR_AREA",
-				"x": 8,
-				"y": 12,
-				"w": 96,
-				"h": 64,
+				"x": 16,
+				"y": 24,
+				"w": 192,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.52,
@@ -1305,10 +1347,10 @@
 			},
 			{
 				"type": "ZONE_OUTDOOR_AREA",
-				"x": 112,
-				"y": 12,
-				"w": 96,
-				"h": 64,
+				"x": 224,
+				"y": 24,
+				"w": 192,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.6,
@@ -1320,10 +1362,10 @@
 			},
 			{
 				"type": "ZONE_OUTDOOR_AREA",
-				"x": 216,
-				"y": 12,
-				"w": 96,
-				"h": 64,
+				"x": 432,
+				"y": 24,
+				"w": 192,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.85,
@@ -1335,10 +1377,10 @@
 			},
 			{
 				"type": "ZONE_OUTDOOR_AREA",
-				"x": 8,
-				"y": 84,
-				"w": 152,
-				"h": 64,
+				"x": 16,
+				"y": 168,
+				"w": 304,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.68,
@@ -1350,10 +1392,10 @@
 			},
 			{
 				"type": "ZONE_OUTDOOR_AREA",
-				"x": 168,
-				"y": 84,
-				"w": 144,
-				"h": 64,
+				"x": 336,
+				"y": 168,
+				"w": 288,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.55,
@@ -1365,10 +1407,10 @@
 			},
 			{
 				"type": "ZONE_AD",
-				"x": 280,
-				"y": 16,
-				"w": 16,
-				"h": 24,
+				"x": 560,
+				"y": 32,
+				"w": 32,
+				"h": 48,
 				"meta": {
 					"color": [
 						0.4,
@@ -1380,17 +1422,17 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 320,
-				"y": 8,
-				"w": 16,
-				"h": 160
+				"x": 640,
+				"y": 16,
+				"w": 32,
+				"h": 320
 			},
 			{
 				"type": "ZONE_STAIRS",
-				"x": 336,
-				"y": 8,
-				"w": 24,
-				"h": 160
+				"x": 672,
+				"y": 16,
+				"w": 48,
+				"h": 320
 			}
 		],
 		"sections": [
@@ -1427,6 +1469,8 @@
 		"id": 5,
 		"label": "5",
 		"theme": "stationery",
+		"width": 720,
+		"height": 336,
 		"ambient_color": [
 			0.48,
 			0.55,
@@ -1435,17 +1479,17 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_STATIONERY",
-				"x": 8,
-				"y": 12,
-				"w": 144,
-				"h": 72,
+				"x": 16,
+				"y": 24,
+				"w": 288,
+				"h": 144,
 				"meta": {
 					"color": [
 						0.75,
@@ -1457,10 +1501,10 @@
 			},
 			{
 				"type": "ZONE_STATIONERY",
-				"x": 160,
-				"y": 12,
-				"w": 152,
-				"h": 72,
+				"x": 320,
+				"y": 24,
+				"w": 304,
+				"h": 144,
 				"meta": {
 					"color": [
 						0.7,
@@ -1472,10 +1516,10 @@
 			},
 			{
 				"type": "ZONE_PLANTS_AREA",
-				"x": 8,
-				"y": 92,
-				"w": 152,
-				"h": 56,
+				"x": 16,
+				"y": 184,
+				"w": 304,
+				"h": 112,
 				"meta": {
 					"color": [
 						0.55,
@@ -1487,10 +1531,10 @@
 			},
 			{
 				"type": "ZONE_PLANTS_AREA",
-				"x": 168,
-				"y": 92,
-				"w": 144,
-				"h": 56,
+				"x": 336,
+				"y": 184,
+				"w": 288,
+				"h": 112,
 				"meta": {
 					"color": [
 						0.68,
@@ -1502,10 +1546,10 @@
 			},
 			{
 				"type": "ZONE_AD",
-				"x": 288,
-				"y": 16,
-				"w": 16,
-				"h": 24,
+				"x": 576,
+				"y": 32,
+				"w": 32,
+				"h": 48,
 				"meta": {
 					"color": [
 						0.6,
@@ -1517,17 +1561,17 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 320,
-				"y": 8,
-				"w": 16,
-				"h": 160
+				"x": 640,
+				"y": 16,
+				"w": 32,
+				"h": 320
 			},
 			{
 				"type": "ZONE_STAIRS",
-				"x": 336,
-				"y": 8,
-				"w": 24,
-				"h": 160
+				"x": 672,
+				"y": 16,
+				"w": 48,
+				"h": 320
 			}
 		],
 		"sections": [
@@ -1557,6 +1601,8 @@
 		"id": 6,
 		"label": "6",
 		"theme": "staff_area",
+		"width": 720,
+		"height": 336,
 		"ambient_color": [
 			0.38,
 			0.38,
@@ -1565,17 +1611,17 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_LOCKER",
-				"x": 8,
-				"y": 12,
-				"w": 120,
-				"h": 80,
+				"x": 16,
+				"y": 24,
+				"w": 240,
+				"h": 160,
 				"meta": {
 					"color": [
 						0.45,
@@ -1587,10 +1633,10 @@
 			},
 			{
 				"type": "ZONE_STAFF_LOUNGE",
-				"x": 136,
-				"y": 12,
-				"w": 120,
-				"h": 80,
+				"x": 272,
+				"y": 24,
+				"w": 240,
+				"h": 160,
 				"meta": {
 					"color": [
 						0.52,
@@ -1602,10 +1648,10 @@
 			},
 			{
 				"type": "ZONE_TRAINING",
-				"x": 8,
-				"y": 100,
-				"w": 200,
-				"h": 56,
+				"x": 16,
+				"y": 200,
+				"w": 400,
+				"h": 112,
 				"meta": {
 					"color": [
 						0.4,
@@ -1617,17 +1663,17 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 320,
-				"y": 8,
-				"w": 16,
-				"h": 160
+				"x": 640,
+				"y": 16,
+				"w": 32,
+				"h": 320
 			},
 			{
 				"type": "ZONE_STAIRS",
-				"x": 336,
-				"y": 8,
-				"w": 24,
-				"h": 160
+				"x": 672,
+				"y": 16,
+				"w": 48,
+				"h": 320
 			}
 		],
 		"sections": [],
@@ -1642,6 +1688,8 @@
 		"id": 7,
 		"label": "7",
 		"theme": "back_office",
+		"width": 720,
+		"height": 336,
 		"ambient_color": [
 			0.4,
 			0.42,
@@ -1650,17 +1698,17 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_OFFICE_DESK",
-				"x": 8,
-				"y": 12,
-				"w": 152,
-				"h": 72,
+				"x": 16,
+				"y": 24,
+				"w": 304,
+				"h": 144,
 				"meta": {
 					"color": [
 						0.48,
@@ -1672,10 +1720,10 @@
 			},
 			{
 				"type": "ZONE_OFFICE_DESK",
-				"x": 168,
-				"y": 12,
-				"w": 144,
-				"h": 72,
+				"x": 336,
+				"y": 24,
+				"w": 288,
+				"h": 144,
 				"meta": {
 					"color": [
 						0.55,
@@ -1687,10 +1735,10 @@
 			},
 			{
 				"type": "ZONE_OFFICE_DESK",
-				"x": 8,
-				"y": 92,
-				"w": 312,
-				"h": 56,
+				"x": 16,
+				"y": 184,
+				"w": 624,
+				"h": 112,
 				"meta": {
 					"color": [
 						0.45,
@@ -1702,10 +1750,10 @@
 			},
 			{
 				"type": "ZONE_MONITOR_ROOM",
-				"x": 264,
-				"y": 12,
-				"w": 48,
-				"h": 140,
+				"x": 528,
+				"y": 24,
+				"w": 96,
+				"h": 280,
 				"meta": {
 					"color": [
 						0.2,
@@ -1717,17 +1765,17 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 320,
-				"y": 8,
-				"w": 16,
-				"h": 160
+				"x": 640,
+				"y": 16,
+				"w": 32,
+				"h": 320
 			},
 			{
 				"type": "ZONE_STAIRS",
-				"x": 336,
-				"y": 8,
-				"w": 24,
-				"h": 160
+				"x": 672,
+				"y": 16,
+				"w": 48,
+				"h": 320
 			}
 		],
 		"sections": [],
@@ -1742,6 +1790,8 @@
 		"id": 8,
 		"label": "8",
 		"theme": "arcade",
+		"width": 720,
+		"height": 336,
 		"ambient_color": [
 			0.22,
 			0.18,
@@ -1750,17 +1800,17 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_KIDS_PLAY",
-				"x": 40,
-				"y": 12,
-				"w": 120,
-				"h": 80,
+				"x": 80,
+				"y": 24,
+				"w": 240,
+				"h": 160,
 				"meta": {
 					"color": [
 						0.4,
@@ -1772,57 +1822,57 @@
 			},
 			{
 				"type": "ZONE_CLAW_MACHINE",
-				"x": 8,
-				"y": 12,
-				"w": 40,
-				"h": 56,
+				"x": 16,
+				"y": 24,
+				"w": 80,
+				"h": 112,
 				"meta": {
 					"name": "prize_pool"
 				}
 			},
 			{
 				"type": "ZONE_CLAW_MACHINE",
-				"x": 56,
-				"y": 12,
-				"w": 40,
-				"h": 56,
+				"x": 112,
+				"y": 24,
+				"w": 80,
+				"h": 112,
 				"meta": {
 					"name": "prize_pool"
 				}
 			},
 			{
 				"type": "ZONE_CLAW_MACHINE",
-				"x": 8,
-				"y": 80,
-				"w": 40,
-				"h": 56,
+				"x": 16,
+				"y": 160,
+				"w": 80,
+				"h": 112,
 				"meta": {
 					"name": "prize_pool"
 				}
 			},
 			{
 				"type": "ZONE_CLAW_MACHINE",
-				"x": 56,
-				"y": 80,
-				"w": 40,
-				"h": 56,
+				"x": 112,
+				"y": 160,
+				"w": 80,
+				"h": 112,
 				"meta": {
 					"name": "prize_pool"
 				}
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 320,
-				"y": 8,
-				"w": 16,
-				"h": 160
+				"x": 640,
+				"y": 16,
+				"w": 32,
+				"h": 320
 			},
 			{
 				"type": "ZONE_STAIRS",
-				"x": 336,
-				"y": 8,
-				"w": 24,
-				"h": 160
+				"x": 672,
+				"y": 16,
+				"w": 48,
+				"h": 320
 			}
 		],
 		"sections": [],
@@ -1837,6 +1887,8 @@
 		"id": 9,
 		"label": "9",
 		"theme": "staff_room",
+		"width": 672,
+		"height": 336,
 		"ambient_color": [
 			0.38,
 			0.42,
@@ -1845,17 +1897,17 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_OFFICE_DESK",
-				"x": 40,
-				"y": 12,
-				"w": 120,
-				"h": 80,
+				"x": 80,
+				"y": 24,
+				"w": 240,
+				"h": 160,
 				"meta": {
 					"color": [
 						0.4,
@@ -1867,10 +1919,10 @@
 			},
 			{
 				"type": "ZONE_STAFF_LOUNGE",
-				"x": 168,
-				"y": 12,
-				"w": 136,
-				"h": 80,
+				"x": 336,
+				"y": 24,
+				"w": 272,
+				"h": 160,
 				"meta": {
 					"color": [
 						0.45,
@@ -1882,10 +1934,10 @@
 			},
 			{
 				"type": "ZONE_TRAINING",
-				"x": 8,
-				"y": 100,
-				"w": 312,
-				"h": 56,
+				"x": 16,
+				"y": 200,
+				"w": 624,
+				"h": 112,
 				"meta": {
 					"color": [
 						0.38,
@@ -1897,10 +1949,10 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 320,
-				"y": 8,
-				"w": 16,
-				"h": 160
+				"x": 640,
+				"y": 16,
+				"w": 32,
+				"h": 320
 			}
 		],
 		"sections": [],
@@ -1915,6 +1967,8 @@
 		"id": 10,
 		"label": "10",
 		"theme": "rooftop",
+		"width": 720,
+		"height": 336,
 		"ambient_color": [
 			0.6,
 			0.55,
@@ -1923,27 +1977,27 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_CAFE_COUNTER",
-				"x": 40,
-				"y": 12,
-				"w": 80,
-				"h": 56,
+				"x": 80,
+				"y": 24,
+				"w": 160,
+				"h": 112,
 				"meta": {
 					"name": "Smoothie $5.50"
 				}
 			},
 			{
 				"type": "ZONE_AD",
-				"x": 288,
-				"y": 16,
-				"w": 16,
-				"h": 24,
+				"x": 576,
+				"y": 32,
+				"w": 32,
+				"h": 48,
 				"meta": {
 					"color": [
 						0.8,
@@ -1955,17 +2009,17 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 320,
-				"y": 8,
-				"w": 16,
-				"h": 160
+				"x": 640,
+				"y": 16,
+				"w": 32,
+				"h": 320
 			},
 			{
 				"type": "ZONE_STAIRS",
-				"x": 336,
-				"y": 8,
-				"w": 24,
-				"h": 160
+				"x": 672,
+				"y": 16,
+				"w": 48,
+				"h": 320
 			}
 		],
 		"sections": [],
@@ -1980,6 +2034,8 @@
 		"id": 11,
 		"label": "11",
 		"theme": "warehouse",
+		"width": 672,
+		"height": 336,
 		"ambient_color": [
 			0.55,
 			0.45,
@@ -1988,17 +2044,17 @@
 		"zones": [
 			{
 				"type": "ZONE_WAREHOUSE",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_TRUCK_DOCK",
-				"x": 8,
-				"y": 12,
-				"w": 80,
-				"h": 56,
+				"x": 16,
+				"y": 24,
+				"w": 160,
+				"h": 112,
 				"meta": {
 					"color": [
 						0.5,
@@ -2010,10 +2066,10 @@
 			},
 			{
 				"type": "ZONE_FORKLIFT",
-				"x": 8,
-				"y": 76,
-				"w": 80,
-				"h": 48,
+				"x": 16,
+				"y": 152,
+				"w": 160,
+				"h": 96,
 				"meta": {
 					"color": [
 						0.8,
@@ -2025,10 +2081,10 @@
 			},
 			{
 				"type": "ZONE_CONVEYOR",
-				"x": 96,
-				"y": 12,
-				"w": 120,
-				"h": 48,
+				"x": 192,
+				"y": 24,
+				"w": 240,
+				"h": 96,
 				"meta": {
 					"color": [
 						0.6,
@@ -2040,10 +2096,10 @@
 			},
 			{
 				"type": "ZONE_PACKING_STATION",
-				"x": 96,
-				"y": 76,
-				"w": 120,
-				"h": 48,
+				"x": 192,
+				"y": 152,
+				"w": 240,
+				"h": 96,
 				"meta": {
 					"color": [
 						0.4,
@@ -2055,10 +2111,10 @@
 			},
 			{
 				"type": "ZONE_AD",
-				"x": 240,
-				"y": 16,
-				"w": 16,
-				"h": 24,
+				"x": 480,
+				"y": 32,
+				"w": 32,
+				"h": 48,
 				"meta": {
 					"color": [
 						0.9,
@@ -2070,10 +2126,10 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 320,
-				"y": 8,
-				"w": 16,
-				"h": 160
+				"x": 640,
+				"y": 16,
+				"w": 32,
+				"h": 320
 			}
 		],
 		"sections": [],
@@ -2088,6 +2144,8 @@
 		"id": 12,
 		"label": "12",
 		"theme": "juice_bar",
+		"width": 720,
+		"height": 336,
 		"ambient_color": [
 			0.55,
 			0.72,
@@ -2096,17 +2154,17 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_JUICE_BAR",
-				"x": 8,
-				"y": 12,
-				"w": 120,
-				"h": 80,
+				"x": 16,
+				"y": 24,
+				"w": 240,
+				"h": 160,
 				"meta": {
 					"color": [
 						1.0,
@@ -2118,10 +2176,10 @@
 			},
 			{
 				"type": "ZONE_HEALTH_FOOD",
-				"x": 136,
-				"y": 12,
-				"w": 120,
-				"h": 80,
+				"x": 272,
+				"y": 24,
+				"w": 240,
+				"h": 160,
 				"meta": {
 					"color": [
 						0.55,
@@ -2133,10 +2191,10 @@
 			},
 			{
 				"type": "ZONE_SMOOTHIE",
-				"x": 8,
-				"y": 100,
-				"w": 120,
-				"h": 56,
+				"x": 16,
+				"y": 200,
+				"w": 240,
+				"h": 112,
 				"meta": {
 					"color": [
 						0.8,
@@ -2148,10 +2206,10 @@
 			},
 			{
 				"type": "ZONE_SALAD_BAR",
-				"x": 136,
-				"y": 100,
-				"w": 120,
-				"h": 56,
+				"x": 272,
+				"y": 200,
+				"w": 240,
+				"h": 112,
 				"meta": {
 					"color": [
 						0.6,
@@ -2163,10 +2221,10 @@
 			},
 			{
 				"type": "ZONE_AD",
-				"x": 264,
-				"y": 16,
-				"w": 16,
-				"h": 24,
+				"x": 528,
+				"y": 32,
+				"w": 32,
+				"h": 48,
 				"meta": {
 					"color": [
 						0.4,
@@ -2178,17 +2236,17 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 320,
-				"y": 8,
-				"w": 16,
-				"h": 160
+				"x": 640,
+				"y": 16,
+				"w": 32,
+				"h": 320
 			},
 			{
 				"type": "ZONE_STAIRS",
-				"x": 336,
-				"y": 8,
-				"w": 24,
-				"h": 160
+				"x": 672,
+				"y": 16,
+				"w": 48,
+				"h": 320
 			}
 		],
 		"sections": [
@@ -2218,6 +2276,8 @@
 		"id": 13,
 		"label": "13",
 		"theme": "kids_kingdom",
+		"width": 696,
+		"height": 336,
 		"ambient_color": [
 			0.72,
 			0.58,
@@ -2226,17 +2286,17 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_KIDS_PLAY",
-				"x": 8,
-				"y": 12,
-				"w": 112,
-				"h": 80,
+				"x": 16,
+				"y": 24,
+				"w": 224,
+				"h": 160,
 				"meta": {
 					"color": [
 						0.6,
@@ -2248,10 +2308,10 @@
 			},
 			{
 				"type": "ZONE_KIDS_CLUB",
-				"x": 128,
-				"y": 12,
-				"w": 96,
-				"h": 80,
+				"x": 256,
+				"y": 24,
+				"w": 192,
+				"h": 160,
 				"meta": {
 					"color": [
 						0.9,
@@ -2263,10 +2323,10 @@
 			},
 			{
 				"type": "ZONE_NURSING_ROOM",
-				"x": 232,
-				"y": 12,
-				"w": 80,
-				"h": 48,
+				"x": 464,
+				"y": 24,
+				"w": 160,
+				"h": 96,
 				"meta": {
 					"color": [
 						0.85,
@@ -2278,10 +2338,10 @@
 			},
 			{
 				"type": "ZONE_WC",
-				"x": 232,
-				"y": 68,
-				"w": 80,
-				"h": 48,
+				"x": 464,
+				"y": 136,
+				"w": 160,
+				"h": 96,
 				"meta": {
 					"color": [
 						0.7,
@@ -2293,17 +2353,17 @@
 			},
 			{
 				"type": "ZONE_STAIRS",
-				"x": 312,
-				"y": 8,
-				"w": 16,
-				"h": 160
+				"x": 624,
+				"y": 16,
+				"w": 32,
+				"h": 320
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 332,
-				"y": 8,
-				"w": 16,
-				"h": 160
+				"x": 664,
+				"y": 16,
+				"w": 32,
+				"h": 320
 			}
 		],
 		"sections": [
@@ -2326,6 +2386,8 @@
 		"id": 14,
 		"label": "14",
 		"theme": "electronics",
+		"width": 720,
+		"height": 336,
 		"ambient_color": [
 			0.35,
 			0.45,
@@ -2334,17 +2396,17 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_PHONE_GADGETS",
-				"x": 8,
-				"y": 12,
-				"w": 120,
-				"h": 72,
+				"x": 16,
+				"y": 24,
+				"w": 240,
+				"h": 144,
 				"meta": {
 					"color": [
 						0.35,
@@ -2356,10 +2418,10 @@
 			},
 			{
 				"type": "ZONE_SMART_HOME",
-				"x": 136,
-				"y": 12,
-				"w": 120,
-				"h": 72,
+				"x": 272,
+				"y": 24,
+				"w": 240,
+				"h": 144,
 				"meta": {
 					"color": [
 						0.4,
@@ -2371,10 +2433,10 @@
 			},
 			{
 				"type": "ZONE_ELECTRONICS",
-				"x": 8,
-				"y": 92,
-				"w": 152,
-				"h": 64,
+				"x": 16,
+				"y": 184,
+				"w": 304,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.45,
@@ -2386,10 +2448,10 @@
 			},
 			{
 				"type": "ZONE_REPAIR_COUNTER",
-				"x": 168,
-				"y": 92,
-				"w": 144,
-				"h": 64,
+				"x": 336,
+				"y": 184,
+				"w": 288,
+				"h": 128,
 				"meta": {
 					"color": [
 						0.6,
@@ -2401,10 +2463,10 @@
 			},
 			{
 				"type": "ZONE_AD",
-				"x": 264,
-				"y": 16,
-				"w": 16,
-				"h": 24,
+				"x": 528,
+				"y": 32,
+				"w": 32,
+				"h": 48,
 				"meta": {
 					"color": [
 						0.3,
@@ -2416,17 +2478,17 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 320,
-				"y": 8,
-				"w": 16,
-				"h": 160
+				"x": 640,
+				"y": 16,
+				"w": 32,
+				"h": 320
 			},
 			{
 				"type": "ZONE_STAIRS",
-				"x": 336,
-				"y": 8,
-				"w": 24,
-				"h": 160
+				"x": 672,
+				"y": 16,
+				"w": 48,
+				"h": 320
 			}
 		],
 		"sections": [],
@@ -2441,6 +2503,8 @@
 		"id": 15,
 		"label": "15",
 		"theme": "canteen",
+		"width": 720,
+		"height": 336,
 		"ambient_color": [
 			0.55,
 			0.5,
@@ -2449,17 +2513,17 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_CANTEEN",
-				"x": 8,
-				"y": 12,
-				"w": 304,
-				"h": 32,
+				"x": 16,
+				"y": 24,
+				"w": 608,
+				"h": 64,
 				"meta": {
 					"color": [
 						0.7,
@@ -2471,80 +2535,80 @@
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 8,
-				"y": 12,
-				"w": 48,
-				"h": 32,
+				"x": 16,
+				"y": 24,
+				"w": 96,
+				"h": 64,
 				"meta": {
 					"name": "canteen_rice"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 64,
-				"y": 12,
-				"w": 48,
-				"h": 32,
+				"x": 128,
+				"y": 24,
+				"w": 96,
+				"h": 64,
 				"meta": {
 					"name": "canteen_noodle"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 120,
-				"y": 12,
-				"w": 48,
-				"h": 32,
+				"x": 240,
+				"y": 24,
+				"w": 96,
+				"h": 64,
 				"meta": {
 					"name": "canteen_meat"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 176,
-				"y": 12,
-				"w": 48,
-				"h": 32,
+				"x": 352,
+				"y": 24,
+				"w": 96,
+				"h": 64,
 				"meta": {
 					"name": "canteen_veg"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 232,
-				"y": 12,
-				"w": 48,
-				"h": 32,
+				"x": 464,
+				"y": 24,
+				"w": 96,
+				"h": 64,
 				"meta": {
 					"name": "canteen_drinks"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 280,
-				"y": 12,
-				"w": 32,
-				"h": 32,
+				"x": 560,
+				"y": 24,
+				"w": 64,
+				"h": 64,
 				"meta": {
 					"name": "canteen_fruit"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 16,
-				"y": 56,
-				"w": 288,
-				"h": 88,
+				"x": 32,
+				"y": 112,
+				"w": 576,
+				"h": 176,
 				"meta": {
 					"name": "canteen_tables"
 				}
 			},
 			{
 				"type": "ZONE_ENTRY_GATE",
-				"x": 152,
-				"y": 12,
-				"w": 24,
-				"h": 20,
+				"x": 304,
+				"y": 24,
+				"w": 48,
+				"h": 40,
 				"meta": {
 					"color": [
 						0.8,
@@ -2556,17 +2620,17 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 320,
-				"y": 8,
-				"w": 16,
-				"h": 160
+				"x": 640,
+				"y": 16,
+				"w": 32,
+				"h": 320
 			},
 			{
 				"type": "ZONE_STAIRS",
-				"x": 336,
-				"y": 8,
-				"w": 24,
-				"h": 160
+				"x": 672,
+				"y": 16,
+				"w": 48,
+				"h": 320
 			}
 		],
 		"sections": [],
@@ -2581,6 +2645,8 @@
 		"id": 16,
 		"label": "16",
 		"theme": "food_court",
+		"width": 720,
+		"height": 336,
 		"ambient_color": [
 			0.58,
 			0.45,
@@ -2589,67 +2655,67 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 8,
-				"y": 12,
-				"w": 56,
-				"h": 32,
+				"x": 16,
+				"y": 24,
+				"w": 112,
+				"h": 64,
 				"meta": {
 					"name": "burger_king_style"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 72,
-				"y": 12,
-				"w": 56,
-				"h": 32,
+				"x": 144,
+				"y": 24,
+				"w": 112,
+				"h": 64,
 				"meta": {
 					"name": "pizza_hut_style"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 136,
-				"y": 12,
-				"w": 56,
-				"h": 32,
+				"x": 272,
+				"y": 24,
+				"w": 112,
+				"h": 64,
 				"meta": {
 					"name": "fried_chicken_style"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 200,
-				"y": 12,
-				"w": 56,
-				"h": 32,
+				"x": 400,
+				"y": 24,
+				"w": 112,
+				"h": 64,
 				"meta": {
 					"name": "hot_dog_style"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_STALL",
-				"x": 264,
-				"y": 12,
-				"w": 56,
-				"h": 32,
+				"x": 528,
+				"y": 24,
+				"w": 112,
+				"h": 64,
 				"meta": {
 					"name": "ice_cream_style"
 				}
 			},
 			{
 				"type": "ZONE_FOOD_COURT",
-				"x": 8,
-				"y": 56,
-				"w": 304,
-				"h": 88,
+				"x": 16,
+				"y": 112,
+				"w": 608,
+				"h": 176,
 				"meta": {
 					"color": [
 						0.6,
@@ -2661,57 +2727,57 @@
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 24,
-				"y": 56,
-				"w": 16,
-				"h": 16,
+				"x": 48,
+				"y": 112,
+				"w": 32,
+				"h": 32,
 				"meta": {
 					"name": "trash_bin"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 120,
-				"y": 56,
-				"w": 16,
-				"h": 16,
+				"x": 240,
+				"y": 112,
+				"w": 32,
+				"h": 32,
 				"meta": {
 					"name": "trash_bin"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 216,
-				"y": 56,
-				"w": 16,
-				"h": 16,
+				"x": 432,
+				"y": 112,
+				"w": 32,
+				"h": 32,
 				"meta": {
 					"name": "trash_bin"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 288,
-				"y": 56,
-				"w": 16,
-				"h": 16,
+				"x": 576,
+				"y": 112,
+				"w": 32,
+				"h": 32,
 				"meta": {
 					"name": "trash_bin"
 				}
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 320,
-				"y": 8,
-				"w": 16,
-				"h": 160
+				"x": 640,
+				"y": 16,
+				"w": 32,
+				"h": 320
 			},
 			{
 				"type": "ZONE_STAIRS",
-				"x": 336,
-				"y": 8,
-				"w": 24,
-				"h": 160
+				"x": 672,
+				"y": 16,
+				"w": 48,
+				"h": 320
 			}
 		],
 		"sections": [],
@@ -2726,6 +2792,8 @@
 		"id": 17,
 		"label": "17",
 		"theme": "entertainment",
+		"width": 720,
+		"height": 336,
 		"ambient_color": [
 			0.35,
 			0.25,
@@ -2734,17 +2802,17 @@
 		"zones": [
 			{
 				"type": "ZONE_COMMON",
-				"x": 8,
-				"y": 12,
-				"w": 312,
-				"h": 152
+				"x": 16,
+				"y": 24,
+				"w": 624,
+				"h": 304
 			},
 			{
 				"type": "ZONE_KARAOKE",
-				"x": 8,
-				"y": 12,
-				"w": 112,
-				"h": 80,
+				"x": 16,
+				"y": 24,
+				"w": 224,
+				"h": 160,
 				"meta": {
 					"color": [
 						0.25,
@@ -2756,10 +2824,10 @@
 			},
 			{
 				"type": "ZONE_POOL_TABLE",
-				"x": 128,
-				"y": 12,
-				"w": 80,
-				"h": 40,
+				"x": 256,
+				"y": 24,
+				"w": 160,
+				"h": 80,
 				"meta": {
 					"color": [
 						0.28,
@@ -2771,10 +2839,10 @@
 			},
 			{
 				"type": "ZONE_DARTS_BOARD",
-				"x": 128,
-				"y": 64,
-				"w": 40,
-				"h": 40,
+				"x": 256,
+				"y": 128,
+				"w": 80,
+				"h": 80,
 				"meta": {
 					"color": [
 						0.3,
@@ -2786,10 +2854,10 @@
 			},
 			{
 				"type": "ZONE_CLAW_MACHINE",
-				"x": 216,
-				"y": 12,
-				"w": 32,
-				"h": 32,
+				"x": 432,
+				"y": 24,
+				"w": 64,
+				"h": 64,
 				"meta": {
 					"color": [
 						0.5,
@@ -2801,10 +2869,10 @@
 			},
 			{
 				"type": "ZONE_CLAW_MACHINE",
-				"x": 216,
-				"y": 52,
-				"w": 32,
-				"h": 32,
+				"x": 432,
+				"y": 104,
+				"w": 64,
+				"h": 64,
 				"meta": {
 					"color": [
 						0.4,
@@ -2816,10 +2884,10 @@
 			},
 			{
 				"type": "ZONE_CLAW_MACHINE",
-				"x": 216,
-				"y": 92,
-				"w": 32,
-				"h": 32,
+				"x": 432,
+				"y": 184,
+				"w": 64,
+				"h": 64,
 				"meta": {
 					"color": [
 						0.7,
@@ -2831,30 +2899,30 @@
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 256,
-				"y": 12,
-				"w": 56,
-				"h": 56,
+				"x": 512,
+				"y": 24,
+				"w": 112,
+				"h": 112,
 				"meta": {
 					"name": "arcade_machines"
 				}
 			},
 			{
 				"type": "ZONE_DECOR",
-				"x": 256,
-				"y": 76,
-				"w": 56,
-				"h": 72,
+				"x": 512,
+				"y": 152,
+				"w": 112,
+				"h": 144,
 				"meta": {
 					"name": "lounge_seating"
 				}
 			},
 			{
 				"type": "ZONE_AD",
-				"x": 256,
-				"y": 12,
-				"w": 16,
-				"h": 20,
+				"x": 512,
+				"y": 24,
+				"w": 32,
+				"h": 40,
 				"meta": {
 					"color": [
 						0.8,
@@ -2866,17 +2934,17 @@
 			},
 			{
 				"type": "ZONE_ELEVATOR",
-				"x": 320,
-				"y": 8,
-				"w": 16,
-				"h": 160
+				"x": 640,
+				"y": 16,
+				"w": 32,
+				"h": 320
 			},
 			{
 				"type": "ZONE_STAIRS",
-				"x": 336,
-				"y": 8,
-				"w": 24,
-				"h": 160
+				"x": 672,
+				"y": 16,
+				"w": 48,
+				"h": 320
 			}
 		],
 		"sections": [],

@@ -470,6 +470,13 @@ func _setup_player_areas() -> void:
 		# Escalator - accessible via escalator
 		MoveableArea.new("Escalator Area", 104, 8, 24, 132,
 			"Escalator area"),
+
+		# Warehouse (Floor 0) — back-of-house, accessible from the transit strip
+		# (elevator / stairs / escalator). Lets the player walk into the
+		# warehouse and exercise the AutoDoor at the top of the storage shelf.
+		# Door is visual-only (no blocker) — player walks through freely.
+		MoveableArea.new("Warehouse", 0, 140, 480, 56,
+			"Back-of-house: truck dock, forklift zone, conveyor, storage shelves"),
 	]
 
 # ═══════════════════════════════════════════════════════════════════════════

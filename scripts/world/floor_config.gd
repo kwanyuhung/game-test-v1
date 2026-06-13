@@ -31,7 +31,7 @@ const WORLD_PIXEL_H := WORLD_W * CELL_SIZE   # 1536
 
 # ── Zone type constants ─────────────────────────────────────────
 const ZONE_WALL          := "wall"
-const ZONE_AISLE         := "ZONE_AISLE"
+const ZONE_AISLE         := "aisle"
 const ZONE_SECTION       := "section"
 const ZONE_LOBBY         := "lobby"
 const ZONE_FOOD_STALL    := "food_stall"
@@ -163,6 +163,8 @@ class FloorDef:
 	var label: String
 	var theme: String
 	var ambient_color: Color
+	var width_tiles: int
+	var height_tiles: int
 	var zones: Array
 	var section_zones: Array
 	var has_shopping: bool
@@ -174,11 +176,13 @@ class FloorDef:
 
 	func _init(
 		p_idx: int, p_label: String, p_theme: String, p_ambient: Color,
+		p_width: int, p_height: int,
 		p_zones: Array, p_sections: Array,
 		p_shopping: bool, p_checkout: bool, p_elevator: bool, p_stairs: bool,
 		p_staff: bool = false, p_rooftop: bool = false
 	):
 		index = p_idx; label = p_label; theme = p_theme; ambient_color = p_ambient
+		width_tiles = p_width; height_tiles = p_height
 		zones = p_zones; section_zones = p_sections
 		has_shopping = p_shopping; has_checkout = p_checkout
 		has_elevator = p_elevator; has_stairs = p_stairs
@@ -271,6 +275,7 @@ func _init_floors() -> void:
 			section_zones.append({"id": s["id"], "x": s["x"], "y": s["y"], "w": s["w"], "h": s["h"]})
 		FLOOR_DEFS.append(FloorDef.new(
 			floor_json["id"], floor_json["label"], floor_json["theme"], ambient,
+			int(floor_json.get("width", 128)), int(floor_json.get("height", 40)),
 			zones, section_zones,
 			floor_json.get("has_shopping", true),
 			floor_json.get("has_checkout", true),
@@ -293,9 +298,21 @@ static func get_floor(idx: int) -> FloorDef:
 		return _static_floors[0]
 	return _static_floors[idx]
 
+static func get_floor_pixel_size(idx: int) -> Vector2:
+	var fd = get_floor(idx)
+	return Vector2(fd.width_tiles * CELL_SIZE, fd.height_tiles * CELL_SIZE)
+
 static func floor_count() -> int:
 	_ensure_initialized()
 	return _static_floors.size()
+
+# Re-reads the JSON and rebuilds _static_floors. Used after clearing an override
+# so mutated FloorDef fields (width/height/ambient_color) revert to source values.
+static func reload_floors() -> void:
+	var temp = FloorConfig.new()
+	temp._init_floors()
+	_static_floors = temp.FLOOR_DEFS
+	_initialized = true
 
 static func get_stall_def(stall_id: String) -> Dictionary:
 	return FoodStallDef.get_stall(stall_id)

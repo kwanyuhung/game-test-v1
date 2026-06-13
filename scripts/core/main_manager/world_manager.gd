@@ -10,6 +10,7 @@ const FloorBuilderScript = preload("res://scripts/world/floor_builder.gd")
 const FloorManagerScript = preload("res://scripts/world/floor_manager.gd")
 const FoodStallBrowseScript = preload("res://scripts/systems/food_stall_browse.gd")
 const WarehouseFloorScript = preload("res://scripts/systems/warehouse_floor.gd")
+const FloorOverrideScript = preload("res://scripts/core/main_manager/floor_override.gd")
 
 const CELL_SIZE := FloorConfigScript.CELL_SIZE
 const WORLD_W  := FloorConfigScript.WORLD_W
@@ -66,6 +67,9 @@ func build_floor(idx: int) -> void:
 	if fd == null:
 		print_debug("[WorldManager] No floor def for floor ", idx)
 		return
+
+	# Apply dev override (user://floor_layout_override.json) if present.
+	FloorOverrideScript.apply_to_floor_def(fd)
 
 	# Create a dedicated container for this floor's content
 	var floor_content: Node2D = Node2D.new()
@@ -217,6 +221,73 @@ func _rebuild_floor_with_manager(idx: int) -> void:
 	_game_state.current_floor_idx = idx
 	floor_rebuilt.emit(idx)
 
+# True rebuild: clears the container's visual items AND rebuilds from the
+# (overridden) FloorDef. Used by MapEditMode so size/color override changes
+# actually take effect. Plain rebuild_floor() only refreshes references when
+# FloorManager is present, so visual content is not recreated.
+func force_rebuild_floor(idx: int) -> void:
+	var floor_manager = _main.get_node_or_null("FloorManager")
+	if floor_manager == null:
+		rebuild_floor(idx)
+		return
+
+	var container = floor_manager.call("get_floor_container", idx)
+	if container == null:
+		return
+
+	container.call("clear_content")
+
+	# Re-fetch FloorDef so the FloorOverride (user://floor_layout_override.json)
+	# is applied to the in-memory FloorDef before the builder consumes it.
+	var fd = FloorConfigScript.get_floor(idx)
+	if fd == null:
+		return
+	FloorOverrideScript.apply_to_floor_def(fd)
+
+	var stairs_sys = _main.get("_stairs_system")
+	var builder_script = preload("res://scripts/world/floor_builder.gd")
+	var builder: Node = builder_script.new()
+	container.add_child(builder)
+	builder.build(fd, container, idx, stairs_sys)
+
+	var sections: Array = builder.get_sections()
+	var food_stalls: Array = builder.get_food_stalls()
+	var claw_machines: Array = builder.get_claw_machines()
+	var escalators: Array = builder.get_escalators()
+	var checkout_counters: Array = builder.get_checkout_counters()
+	var floor_nodes: Array = builder.get_floor_nodes()
+
+	builder.queue_free()
+
+	container.call("store_objects", sections, food_stalls, claw_machines, escalators, checkout_counters, floor_nodes)
+
+	_sections = sections
+	_checkout_counters = checkout_counters
+	_aisle_labels.clear()
+	for child in container.get_children():
+		if child is Label:
+			_aisle_labels.append(child)
+
+	_game_state.current_floor_idx = idx
+	_apply_ambient_shift()
+	_update_floor_hud()
+
+	# Refresh player bounds since floor width/height may have changed.
+	var player = _game_state.player
+	if player != null and player.has_method("set_floor_bounds"):
+		player.set_floor_bounds(idx)
+
+	# Refresh proximity system references to the new floor's objects.
+	var prox = _main.get("_proximity_system")
+	if prox != null and prox.has_method("refresh_from_floor_manager"):
+		prox.refresh_from_floor_manager()
+
+	_main.set("_sections", _sections)
+	_main.set("_checkout_counters", _checkout_counters)
+
+	floor_rebuilt.emit(idx)
+	print_debug("[WorldManager] Force-rebuilt floor ", idx)
+
 func set_current_floor(idx: int) -> void:
 	_game_state.current_floor_idx = idx
 	floor_changed.emit(idx)
@@ -281,13 +352,13 @@ func _on_section_exited(section_id: String) -> void:
 		_game_state.nearby_section = null
 		section_exited.emit(section_id)
 
-func _on_section_interact_requested(section_id: String) -> void:
-	# Mouse click on a nearby section — open the buy panel via SystemManager.
+func _on_section_interact_requested(section_id: String, bay_index: int) -> void:
+	# Mouse click or E-press on a nearby bay — open the buy panel via SystemManager.
 	for sec in _sections:
 		if sec.get_def().id == section_id:
 			var sm = _main.get("_system_manager")
 			if sm != null and sm.has_method("_open_section_browse"):
-				sm.call("_open_section_browse", sec)
+				sm.call("_open_section_browse", sec, bay_index)
 			return
 
 func _on_stall_interact_requested(stall_id: String) -> void:
@@ -368,3 +439,18 @@ func get_main() -> Node2D:
 
 func get_game_state() -> GameState:
 	return _game_state
+
+# Pixel-space bay blocker: each bay outline is a hard barrier the player
+# walks up against. Consulted by main_logic.gd's is_position_blocked since
+# the player movement is tile-based and bays don't map cleanly to zones.
+func is_world_pos_blocked_by_bay(world_x: float, world_y: float) -> bool:
+	var pt := Vector2(world_x, world_y)
+	for sec in _sections:
+		if not is_instance_valid(sec):
+			continue
+		if not sec.has_method("get_bay_block_rects"):
+			continue
+		for rect in sec.get_bay_block_rects():
+			if rect.has_point(pt):
+				return true
+	return false

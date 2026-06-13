@@ -85,6 +85,49 @@ enum LifeStage {
 	INFANT,         # 0-1 (in baby cart)
 }
 
+# ─── Gender ────────────────────────────────────────────────────
+# 0=male, 1=female, 2=undisclosed. Used to bias appearance generation
+# (hair style / bottom style / first-name pool) and shown in hover panel.
+enum Gender {
+	MALE,
+	FEMALE,
+	UNDISCLOSED,
+}
+
+# ─── Item Type ─────────────────────────────────────────────────
+# Held items that an NPC spawned with. Each item has its own visual
+# rendering in NPCSprite and (potentially) an action-gated BehaviorState.
+# Stored on Actor.inventory as a typed array; multi-slot is allowed but
+# most actors will have 0-1 items.
+enum ItemType {
+	NONE,           # 0 — sentinel, never stored in inventory
+	PHONE,          # 1 — held in right hand; unlocks phone-call action
+	SKATEBOARD,     # 2 — at feet; faster movement
+	LAPTOP,         # 3 — held in left hand; pauses for "work" behavior
+	EARPHONES,      # 4 — on head; suppresses chat triggers
+	CANE,           # 5 — held in left hand; senior-only; cosmetic
+	STAFF_CARD,     # 6 — clipped to chest; grants access to staff areas + use of staff items (cashier, computer, etc.)
+}
+
+# Short symbols for compact display in the hover panel and debug overlay.
+# Returns "M" / "F" / "—" rather than the full word.
+static func gender_short(g: int) -> String:
+	match g:
+		Gender.MALE: return "M"
+		Gender.FEMALE: return "F"
+		_: return "—"
+
+# Short label for an item type. Used by hover panel and count overlay.
+static func item_name(it: int) -> String:
+	match it:
+		ItemType.PHONE: return "phone"
+		ItemType.SKATEBOARD: return "skateboard"
+		ItemType.LAPTOP: return "laptop"
+		ItemType.EARPHONES: return "earphones"
+		ItemType.CANE: return "cane"
+		ItemType.STAFF_CARD: return "staff card"
+		_: return "?"
+
 # ─── Accessory ────────────────────────────────────────────────
 # Generic accessory slot. `type` is 0 (none) or a slot-specific value;
 # `color` is the primary tint; `variant` is a sub-style within the type.
@@ -158,7 +201,7 @@ class HairPart:
 			Color(0.10, 0.10, 0.10),
 		]
 		h.color = hairs[randi() % hairs.size()]
-		h.style = randi() % 4
+		h.style = randi() % 8
 		# ~12% chance of a non-empty hair accessory
 		if randi() % 100 < 12:
 			var t := randi() % 3 + 1   # 1=hairband, 2=bow, 5=headband
@@ -264,14 +307,23 @@ class Appearance:
 		top = TopPart.new()
 		bottom = BottomPart.new()
 
-	static func random() -> Appearance:
+	# Random appearance with optional gender bias on hair style:
+	#   gender_bias == Gender.MALE        → style pool {2=short, 3=buzz, 7=curly}
+	#   gender_bias == Gender.FEMALE      → style pool {0=bob, 1=long, 4=ponytail, 5=braids, 6=bun, 7=curly}
+	#   gender_bias == Gender.UNDISCLOSED → any of 0-7
+	#   gender_bias == -1                 → any of 0-7 (back-compat default)
+	static func random(gender_bias: int = -1) -> Appearance:
 		var a := Appearance.new()
 		var skins := [
-			Color(0.96, 0.80, 0.65),
-			Color(0.88, 0.68, 0.48),
-			Color(0.72, 0.52, 0.38),
-			Color(0.55, 0.38, 0.28),
-			Color(0.42, 0.30, 0.22),
+			Color(0.98, 0.85, 0.72),  # 極淺 (added for more range)
+			Color(0.96, 0.80, 0.65),  # very light
+			Color(0.88, 0.68, 0.48),  # light
+			Color(0.78, 0.58, 0.42),  # 暖中
+			Color(0.72, 0.52, 0.38),  # medium
+			Color(0.55, 0.38, 0.28),  # tan
+			Color(0.42, 0.30, 0.22),  # deep
+			Color(0.32, 0.22, 0.16),  # 很深
+			Color(0.58, 0.40, 0.32),  # 冷中 — 微偏紅
 		]
 		var shoes := [
 			Color(0.18, 0.18, 0.18),
@@ -285,6 +337,17 @@ class Appearance:
 		a.has_glasses = (randi() % 4 == 0)
 		a.makeup_intensity = randi() % 3
 		a.hair = HairPart.random()
+		# Re-roll hair style into the gender-biased pool. Keep the color
+		# and any accessory roll that HairPart.random already produced.
+		var style_pool: Array = []
+		match gender_bias:
+			Gender.MALE:
+				style_pool = [2, 2, 3, 3, 7, 7]   # short / buzz / curly, weighted
+			Gender.FEMALE:
+				style_pool = [0, 0, 1, 1, 4, 5, 6, 7]
+			_:
+				style_pool = [0, 1, 2, 3, 4, 5, 6, 7]
+		a.hair.style = style_pool[randi() % style_pool.size()]
 		a.top = TopPart.random()
 		a.bottom = BottomPart.random()
 		return a
@@ -413,6 +476,14 @@ class Actor:
 	var is_active: bool
 	var group_members: Array = []
 	var movement_bounds: MovementBounds  # Where the actor is allowed to move
+	var gender: int          # Gender enum — biases appearance and name pool
+	var inventory: Array = []  # ItemType list — see enum above
+	# Staff-card credentials. 0 = no card; 1+ = clearance level.
+	# `staff_allowed_areas` lists the staff-area ids (e.g. "staff_area",
+	# "staff_lounge", "warehouse") the actor can enter. Used by future
+	# cashier / computer / door systems via can_access_staff_area().
+	var staff_card_level: int = 0
+	var staff_allowed_areas: Array = []   # Array[String] of area ids
 
 	func _init() -> void:
 		role = Role.CUSTOMER
@@ -431,6 +502,34 @@ class Actor:
 		target_floor = 0
 		is_active = true
 		movement_bounds = MovementBounds.new()
+		gender = Gender.UNDISCLOSED
+		inventory = []
+		staff_card_level = 0
+		staff_allowed_areas = []
+
+	# Inventory helpers — used by brain / chat / hover panel.
+	func has_item(item: int) -> bool:
+		return inventory.has(item)
+
+	func add_item(item: int) -> void:
+		if item == ItemType.NONE:
+			return
+		if not inventory.has(item):
+			inventory.append(item)
+
+	# Staff-card helpers. `has_staff_card()` is just shorthand for
+	# `level > 0`; `can_access_staff_area(area_id)` is the single
+	# check that door/cashier/computer systems should call.
+	func has_staff_card() -> bool:
+		return staff_card_level > 0
+
+	func can_access_staff_area(area_id: String) -> bool:
+		if not has_staff_card():
+			return false
+		# Managers (level 3+) can access every registered staff area.
+		if staff_card_level >= 3:
+			return true
+		return staff_allowed_areas.has(area_id)
 
 	static func new_test_customer() -> Actor:
 		var a := Actor.new()
@@ -479,11 +578,50 @@ class Actor:
 				b.mode = MovementMode.FREE
 		return b
 
+	# Default staff-card credentials by role. Each entry is a
+	# [card_level, [allowed_area_ids]] pair. The area ids are matched
+	# against the `area_id` field on doors / area volumes registered
+	# by the floor configs (e.g. "staff_area", "staff_lounge",
+	# "warehouse", "truck_dock", "manager_office").
+	#
+	# Card level 3 (MANAGER) is special: the manager bypasses this
+	# table and is granted access to every registered staff area.
+	static func _staff_card_defaults(p_role: StaffRole) -> Array:
+		match p_role:
+			StaffRole.MANAGER:
+				return [3, []]
+			StaffRole.SECURITY, StaffRole.MAINTENANCE_STAFF:
+				return [2, ["staff_area", "staff_lounge", "utility_room"]]
+			StaffRole.DELIVERY_STAFF:
+				return [2, ["staff_area", "warehouse", "truck_dock"]]
+			StaffRole.CASHIER, StaffRole.SCAN_GO:
+				return [1, ["staff_area", "checkout_back"]]
+			StaffRole.SHELF_STOCKER:
+				return [1, ["staff_area", "warehouse"]]
+			StaffRole.FOOD_STAFF:
+				return [1, ["staff_area", "food_prep"]]
+			StaffRole.RECEPTIONIST, StaffRole.CUSTOMER_SERVICE:
+				return [1, ["staff_area", "front_desk"]]
+			_:
+				# CLEANER, CLEAN_STAFF, FLOOR_STAFF, GREETER, SHOP_STAFF
+				return [1, ["staff_area"]]
+
+	# Apply the default card credentials to a freshly-built staff Actor.
+	# Mutates `a` in place. Called from random_staff() after the role's
+	# appearance has been set up.
+	static func _assign_staff_card(a: Actor, p_role: StaffRole) -> void:
+		var defs: Array = _staff_card_defaults(p_role)
+		a.staff_card_level = int(defs[0])
+		a.staff_allowed_areas = (defs[1] as Array).duplicate()
+		if a.staff_card_level > 0:
+			a.add_item(ItemType.STAFF_CARD)
+
 	static func random_customer(p_group: CustomerGroupType = CustomerGroupType.SOLO) -> Actor:
 		var a := Actor.new()
 		a.role = Role.CUSTOMER
 		a.group_type = p_group
-		a.appearance = Appearance.random()
+		a.gender = _roll_gender()
+		a.appearance = Appearance.random(a.gender)
 		a.energy = randf_range(0.5, 1.0)
 		a.hunger = randf_range(0.0, 0.5)
 		a.happiness = randf_range(0.6, 1.0)
@@ -508,9 +646,8 @@ class Actor:
 				else:
 					a.life_stage = LifeStage.ADULT
 
-		# Generate a random name
-		var first_names := ["Alex", "Jordan", "Sam", "Morgan", "Taylor", "Casey", "Riley", "Quinn", "Avery", "Blake", "Drew", "Reese", "Finley", "Sage", "River"]
-		a.display_name = first_names[randi() % first_names.size()]
+		# Generate a random name from a pool sized to gender
+		a.display_name = _pick_name(a.gender)
 
 		# Generate shopping list
 		a._generate_shopping_list()
@@ -527,11 +664,44 @@ class Actor:
 			if existing.is_empty():
 				shopping_list.append({"section_id": sec, "qty": randi() % 3 + 1, "fulfilled": 0})
 
+	# Gender roll: ~45/45/10 male/female/undisclosed.
+	static func _roll_gender() -> int:
+		var r := randi() % 100
+		if r < 45:
+			return Gender.MALE
+		if r < 90:
+			return Gender.FEMALE
+		return Gender.UNDISCLOSED
+
+	# Pick a first name from a pool sized to the actor's gender. Female
+	# pool is biased toward the FEMALE enum value, but a small overlap with
+	# the neutral pool keeps the names from feeling mechanically fixed.
+	static func _pick_name(g: int) -> String:
+		var neutral := ["Alex", "Jordan", "Sam", "Morgan", "Taylor", "Casey", "Riley", "Quinn", "Avery", "Blake", "Drew", "Reese", "Finley", "Sage", "River"]
+		var female := ["Emma", "Olivia", "Sophia", "Ava", "Mia", "Charlotte", "Amelia", "Harper", "Evelyn", "Luna", "Camila", "Aria"]
+		var male := ["Liam", "Noah", "James", "Oliver", "Elijah", "Lucas", "Mason", "Ethan", "Logan", "Henry", "Jackson", "Aiden"]
+		match g:
+			Gender.FEMALE:
+				# 80% female pool, 20% neutral for variety.
+				if randf() < 0.8:
+					return female[randi() % female.size()]
+				return neutral[randi() % neutral.size()]
+			Gender.MALE:
+				if randf() < 0.8:
+					return male[randi() % male.size()]
+				return neutral[randi() % neutral.size()]
+			_:
+				return neutral[randi() % neutral.size()]
+
 	static func random_staff(p_role: StaffRole) -> Actor:
 		var a := Actor.new()
 		a.role = Role.STAFF
 		a.staff_role = p_role
-		a.appearance = Appearance.random()
+		a.gender = _roll_gender()
+		# Staff roles set hair style manually per role, but bottom/top
+		# color palettes are still drawn from the gender pool via the
+		# random call below. Pass gender for consistency.
+		a.appearance = Appearance.random(a.gender)
 		a.energy = randf_range(0.7, 1.0)
 		a.hunger = randf_range(0.0, 0.3)
 		a.happiness = randf_range(0.5, 0.9)
@@ -549,6 +719,12 @@ class Actor:
 		a.appearance.hair.accessory = Accessory.none()
 		a.appearance.top.accessory = Accessory.none()
 		a.appearance.bottom.accessory = Accessory.none()
+
+		# Issue a staff card with credentials based on the role. Card
+		# level: 1 = floor staff, 2 = area lead, 3 = manager. Allowed
+		# areas come from a role-keyed default table; managers (level 3)
+		# bypass the table and can enter every registered staff area.
+		_assign_staff_card(a, p_role)
 
 		match p_role:
 			StaffRole.CASHIER:
@@ -657,6 +833,7 @@ class Actor:
 		a.role = Role.ROBOT
 		a.robot_type = rtype
 		a.robot_role = rrole
+		a.gender = _roll_gender()
 		a.energy = 1.0
 		a.happiness = 1.0
 		a.current_floor = 0
@@ -671,7 +848,7 @@ class Actor:
 
 		# Humanoid robots look like humans with subtle robot features
 		if rtype == RobotType.HUMANOID:
-			a.appearance = Appearance.random()
+			a.appearance = Appearance.random(a.gender)
 			# Give humanoid robot a synthetic skin tone and robot uniform
 			a.appearance.skin_tone = Color(0.82, 0.84, 0.88)  # slightly metallic skin
 			# Clear random civilian accessories — robot uniforms are role-controlled

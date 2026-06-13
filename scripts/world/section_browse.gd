@@ -57,6 +57,10 @@ var _last_mouse_y := 0.0
 
 func _ready() -> void:
 	visible = false
+	var kb := InputEventHandler.new()
+	add_child(kb)
+	kb.action_pressed.connect(_on_key_action)
+
 	var main = get_tree().get_first_node_in_group("main")
 	if main != null:
 		var po = main.get_node_or_null("PriceOverride")
@@ -67,10 +71,14 @@ func _on_price_changed(product_id: String, new_price: float) -> void:
 	if visible and _section_id != "":
 		_build()
 
-func open_section(section) -> void:
+func open_section(section, bay_index: int = -1) -> void:
 	var def = section.get_def()
 	var section_id = def.id
-	var products = section.get_all_products()
+	var products: Array
+	if bay_index >= 0 and section.has_method("get_bay_products"):
+		products = section.get_bay_products(bay_index)
+	else:
+		products = section.get_all_products()
 
 	var main = get_tree().root.get_node_or_null("Main")
 	if main != null:

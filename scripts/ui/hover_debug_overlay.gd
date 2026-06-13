@@ -1,5 +1,5 @@
 # hover_debug_overlay.gd
-# Visual debug aid for the hover picker. Toggle with F8.
+# Visual debug aid for the hover picker. Toggle with F3.
 #
 # On-screen elements while enabled:
 #   * Red crosshair + world-coord label following the mouse.
@@ -46,7 +46,7 @@ func _build_canvas() -> void:
 	add_child(_mouse_label)
 
 	_hint_label = _make_label()
-	_hint_label.text = "[F8] toggle hover debug"
+	_hint_label.text = "[F3] toggle hover debug"
 	_hint_label.add_theme_color_override("font_color", Color(0.7, 0.85, 1.0))
 	_hint_label.position = Vector2(8, 30)
 	add_child(_hint_label)

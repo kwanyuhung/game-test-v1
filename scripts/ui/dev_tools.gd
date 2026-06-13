@@ -1,7 +1,7 @@
 ﻿# dev_tools.gd
 
 # Developer tools panel — accessible only in DEV_MODE
-# Press F3 to toggle this panel
+# Press F1 to toggle this panel
 extends Control
 
 signal super_actor_spawned(actor)
@@ -39,7 +39,7 @@ func _custom_init() -> void:
 	add_child(title_bar)
 
 	var title_lbl := Label.new()
-	title_lbl.text = "DEV TOOLS  [F3] to close"
+	title_lbl.text = "DEV TOOLS  [F1] to close"
 	title_lbl.set_anchors_preset(Control.PRESET_CENTER)
 	title_lbl.anchor_left = 0.5; title_lbl.anchor_right = 0.5
 	title_lbl.offset_left = -120; title_lbl.offset_top = 4
@@ -147,7 +147,7 @@ func _input(event: InputEvent) -> void:
 	if not visible:
 		return
 	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_ESCAPE or event.keycode == KEY_F3:
+		if event.keycode == KEY_ESCAPE or event.keycode == KEY_F1:
 			close()
 
 func set_main(main_node: Node) -> void:

@@ -39,6 +39,9 @@ func _process(delta: float) -> void:
 	if _chat_check_timer <= 0.0:
 		_chat_check_timer = _chat_check_interval
 		_check_for_npc_chats()
+		# Phone calls are checked on the same cadence as proximity chats
+		# but are gated on each NPC's own should_initiate_call() roll.
+		_check_for_phone_calls()
 
 	for id in _chat_cooldowns.keys():
 		_chat_cooldowns[id] = maxf(0.0, _chat_cooldowns[id] - delta)
@@ -190,3 +193,128 @@ func _show_pair_bubble(npc_a: Node, npc_b: Node, text: String) -> void:
 	parent.add_child(bubble)
 	bubble.set_anchor_pair(npc_a, npc_b)
 	bubble.display(text, 3.5)
+
+# ─── Long-Range Phone Calls ────────────────────────────────────
+
+# Scan the floor for any two phone-equipped NPCs that aren't already in
+# a chat. Unlike proximity chats, this ignores CHAT_RANGE — the two
+# callers stay where they are, each facing the other (visually), and
+# a phone bubble connects them with a single line.
+func _check_for_phone_calls() -> void:
+	# Build the eligible candidate list up-front so both callers can
+	# share the same enumeration.
+	var candidates: Array = []
+	for n in _npcs:
+		if not is_instance_valid(n):
+			continue
+		if not (n.has_method("get_actor") and n.has_method("is_in_chat") \
+				and n.has_method("get_chat_brain")):
+			continue
+		var actor: ActorData.Actor = n.get_actor()
+		if actor == null or not actor.is_active:
+			continue
+		if not actor.has_item(ActorData.ItemType.PHONE):
+			continue
+		if n.is_in_chat():
+			continue
+		var brain: AIChatBrain = n.get_chat_brain()
+		if brain == null:
+			continue
+		if not brain.should_initiate_call():
+			continue
+		var id_a: int = n.get_instance_id()
+		if _chat_cooldowns.get(id_a, 0.0) > 0.0:
+			continue
+		candidates.append(n)
+	if candidates.size() < 2:
+		return
+	# Random pair
+	var a: Node = candidates[randi() % candidates.size()]
+	var b: Node = candidates[randi() % candidates.size()]
+	if a == b:
+		return
+	if not is_instance_valid(a) or not is_instance_valid(b):
+		return
+	_start_phone_call(a, b)
+
+# Phone call: both NPCs stay in place (no walk-together), face each
+# other, and a single bubble is anchored on the caller with a line
+# drawn to the receiver. Locked via set_in_chat so the body's
+# _update_behavior short-circuits and the player can't initiate
+# regular chat. ChatManager keeps the lock for 4s.
+func _start_phone_call(npc_a: Node, npc_b: Node) -> void:
+	if not is_instance_valid(npc_a) or not is_instance_valid(npc_b):
+		return
+	# Both must still have a phone and not be in a chat.
+	var actor_a: ActorData.Actor = npc_a.get_actor()
+	var actor_b: ActorData.Actor = npc_b.get_actor()
+	if actor_a == null or actor_b == null:
+		return
+	if not actor_a.has_item(ActorData.ItemType.PHONE):
+		return
+	if not actor_b.has_item(ActorData.ItemType.PHONE):
+		return
+	if npc_a.is_in_chat() or npc_b.is_in_chat():
+		return
+
+	# Lock both NPCs and have them face each other.
+	npc_a.set_in_chat(true)
+	npc_b.set_in_chat(true)
+	npc_a.face_towards(npc_b.global_position)
+	npc_b.face_towards(npc_a.global_position)
+
+	# Cooldown both so they don't immediately re-trigger.
+	var id_a: int = npc_a.get_instance_id()
+	var id_b: int = npc_b.get_instance_id()
+	_chat_cooldowns[id_a] = CHAT_INTERVAL
+	_chat_cooldowns[id_b] = CHAT_INTERVAL
+
+	# Show a single bubble anchored on the caller with a line to the
+	# receiver. The ChatBubble.set_anchor_single_with_line helper
+	# (added in chat_bubble.gd) repositions each frame.
+	var parent: Node = npc_a.get_parent()
+	if parent == null or npc_b.get_parent() != parent:
+		# Release the lock if we can't draw a bubble.
+		npc_a.set_in_chat(false)
+		npc_b.set_in_chat(false)
+		return
+	var bubble := ChatBubble.new()
+	parent.add_child(bubble)
+	bubble.set_anchor_single_with_line(npc_a, npc_b)
+
+	# Greeting: caller (A) speaks first.
+	var brain_a: AIChatBrain = npc_a.get_chat_brain()
+	var greeting := brain_a.trigger_autonomous_chat() if brain_a != null else "..."
+	bubble.display(greeting, 3.5)
+
+	# Receiver responds after a short delay.
+	await get_tree().create_timer(1.5).timeout
+	if not is_instance_valid(npc_a) or not is_instance_valid(npc_b):
+		if is_instance_valid(bubble): bubble.queue_free()
+		return
+	if not npc_a.is_in_chat() or not npc_b.is_in_chat():
+		# Lock was lifted (e.g. NPC freed) — drop the bubble.
+		if is_instance_valid(bubble): bubble.queue_free()
+		return
+	var brain_b: AIChatBrain = npc_b.get_chat_brain()
+	var response := brain_b.generate_response(greeting) if brain_b != null else "..."
+	bubble.display(response, 3.5)
+
+	# Optional extra exchange.
+	if randf() < 0.4:
+		await get_tree().create_timer(2.0).timeout
+		if not is_instance_valid(npc_a) or not is_instance_valid(npc_b):
+			if is_instance_valid(bubble): bubble.queue_free()
+			return
+		if not npc_a.is_in_chat() or not npc_b.is_in_chat():
+			if is_instance_valid(bubble): bubble.queue_free()
+			return
+		var brain_a2: AIChatBrain = npc_a.get_chat_brain()
+		var reply := brain_a2.generate_response(response) if brain_a2 != null else "..."
+		bubble.display(reply, 3.0)
+
+	# Final hold then release.
+	await get_tree().create_timer(1.5).timeout
+	if is_instance_valid(bubble): bubble.queue_free()
+	if is_instance_valid(npc_a): npc_a.set_in_chat(false)
+	if is_instance_valid(npc_b): npc_b.set_in_chat(false)

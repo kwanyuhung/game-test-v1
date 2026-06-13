@@ -373,7 +373,6 @@ func set_floor_bounds(floor_idx: int) -> void:
 	var CELL = 16
 	var FLOOR_Y_OFFSET = 10 * CELL  # 160 pixels per floor (vertical spacing between floors)
 	var FLOOR_0_BASE_Y = 32 * CELL  # 512 pixels for floor 0 base
-	var WORLD_W = 128 * CELL  # 2048 pixels
 
 	var floor_y = FLOOR_0_BASE_Y - (floor_idx * FLOOR_Y_OFFSET)
 
@@ -382,8 +381,12 @@ func set_floor_bounds(floor_idx: int) -> void:
 	var zone_min_y: float = zone_bounds.min_y * CELL  # tile to pixel
 	var zone_max_y: float = zone_bounds.max_y * CELL  # tile to pixel
 
+	var FloorConfig = preload("res://scripts/world/floor_config.gd")
+	var fd = FloorConfig.get_floor(floor_idx)
+	var width_tiles: int = fd.width_tiles if fd != null else 128
+
 	_min_x = CELL * 2.0
-	_max_x = WORLD_W - CELL * 2.0
+	_max_x = width_tiles * CELL - CELL * 2.0
 	# Use actual zone height for movement bounds
 	_min_y = floor_y + zone_min_y + CELL * 2.0
 	_max_y = floor_y + zone_max_y - CELL * 2.0

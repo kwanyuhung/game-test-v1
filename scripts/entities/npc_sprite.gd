@@ -14,17 +14,17 @@ const ActorData = preload("res://scripts/entities/actor_data.gd")
 # Per-NPC variance is controlled by:
 #   height_scale  — multiplies the texture size. 0.7 = 70% as tall.
 #                   1.0 = baseline. Drives actual on-screen height.
-#   has_phone     — TEEN only. Cosmetic accessory slot; future
-#                   "distracted phone" gameplay can hook into this flag.
-#   has_cane      — SENIOR only. Cosmetic accessory slot; future
-#                   "cane slow-turn" or mobility aids can hook in.
+#   inventory     — list of ActorData.ItemType the actor holds. Each
+#                   item draws an additional sprite (phone in hand,
+#                   skateboard at feet, laptop held in left arm,
+#                   earphones on head). Lives in addition to the
+#                   life-stage base sprite.
 static func make_actor_texture(
 		appearance: ActorData.Appearance,
 		scale: int = 16,
 		life_stage: int = -1,
 		height_scale: float = 1.0,
-		has_phone: bool = false,
-		has_cane: bool = false
+		inventory: Array = []
 ) -> Texture2D:
 	var sz: int = int(round(float(scale) * height_scale))
 	if sz < 4:
@@ -32,6 +32,10 @@ static func make_actor_texture(
 	var img := Image.create(sz, sz, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	_draw_shadow(img, sz, life_stage)
+	# Inventory-driven draw flags. Phone and cane both come from
+	# inventory now (added ItemType.CANE for the senior walking stick).
+	var has_phone: bool = inventory.has(ActorData.ItemType.PHONE)
+	var has_cane: bool = inventory.has(ActorData.ItemType.CANE)
 	if life_stage == ActorData.LifeStage.CHILD:
 		_draw_shoes_child(img, appearance.shoes_color, sz)
 		_draw_lower_body_child(img, appearance.bottom.color, appearance.bottom.style, sz)
@@ -66,6 +70,22 @@ static func make_actor_texture(
 		_draw_hair(img, appearance.hair.color, appearance.hair.style, sz)
 		_draw_accessory(img, appearance.top.accessory.type, appearance.top.color, appearance.top.accessory.color, sz)
 		_draw_makeup(img, appearance.skin_tone, appearance.makeup_intensity, sz)
+
+	# Inventory items: layer on top of the base sprite in draw order.
+	# Skateboard goes at the very bottom (under the body) so it looks
+	# like the actor is standing on it. Earphones and laptop come after
+	# the head/body so they're not occluded.
+	if inventory.has(ActorData.ItemType.SKATEBOARD):
+		_draw_skateboard(img, Color(0.22, 0.22, 0.28), sz)
+	if inventory.has(ActorData.ItemType.LAPTOP):
+		_draw_laptop_in_hand(img, Color(0.32, 0.32, 0.38), sz)
+	if inventory.has(ActorData.ItemType.EARPHONES):
+		_draw_earphones(img, Color(0.18, 0.18, 0.22), sz)
+	if inventory.has(ActorData.ItemType.STAFF_CARD):
+		# Card is a small badge on the right side of the chest. Drawn
+		# after body + face but before earphones are layered again, so
+		# the card sits on the uniform but doesn't fight with hair.
+		_draw_staff_card(img, Color(0.18, 0.32, 0.62), sz)
 	return ImageTexture.create_from_image(img)
 
 static func make_baby_texture(child: ActorData.ChildData, scale: int = 12) -> Texture2D:
@@ -234,6 +254,59 @@ static func _draw_hair(img: Image, col: Color, style: int, sz: int) -> void:
 		3:  # bald / buzz cut
 			_fill_img(img, int(4*sc), int(0*sc), int(8*sc), int(1*sc), h.darkened(0.05), sz)
 			_fill_img(img, int(4*sc), int(0*sc), int(8*sc), int(2*sc), col.darkened(0.15), sz)
+		4:  # ponytail — bob main + side ponytail
+			# Bob base (same as style 0 minus the side locks)
+			_fill_img(img, int(4*sc), int(0*sc), int(8*sc), int(1*sc), h, sz)
+			_fill_img(img, int(3*sc), int(1*sc), int(2*sc), int(2*sc), h, sz)
+			_fill_img(img, int(11*sc), int(1*sc), int(2*sc), int(2*sc), h, sz)
+			_fill_img(img, int(3*sc), int(1*sc), int(10*sc), int(1*sc), col.lightened(0.1), sz)
+			_fill_img(img, int(2*sc), int(2*sc), int(12*sc), int(3*sc), col, sz)
+			# Hair tie at side
+			_set_img(img, int(13*sc), int(4*sc), col.darkened(0.3), sz)
+			_set_img(img, int(14*sc), int(4*sc), col.darkened(0.3), sz)
+			# Tail
+			_fill_img(img, int(13*sc), int(5*sc), int(2*sc), int(5*sc), col, sz)
+			_set_img(img, int(13*sc), int(10*sc), col.darkened(0.1), sz)
+		5:  # braids — two braids hanging down both sides
+			# Top of head (same as bob top)
+			_fill_img(img, int(4*sc), int(0*sc), int(8*sc), int(1*sc), h, sz)
+			_fill_img(img, int(3*sc), int(1*sc), int(10*sc), int(1*sc), col.lightened(0.1), sz)
+			_fill_img(img, int(3*sc), int(1*sc), int(2*sc), int(2*sc), col, sz)
+			_fill_img(img, int(11*sc), int(1*sc), int(2*sc), int(2*sc), col, sz)
+			# Left braid
+			_fill_img(img, int(2*sc), int(3*sc), int(2*sc), int(6*sc), col, sz)
+			_set_img(img, int(2*sc), int(8*sc), col.darkened(0.2), sz)
+			_set_img(img, int(3*sc), int(8*sc), col.darkened(0.2), sz)
+			_set_img(img, int(2*sc), int(9*sc), col.darkened(0.2), sz)
+			_set_img(img, int(3*sc), int(9*sc), col.darkened(0.2), sz)
+			# Right braid
+			_fill_img(img, int(12*sc), int(3*sc), int(2*sc), int(6*sc), col, sz)
+			_set_img(img, int(12*sc), int(8*sc), col.darkened(0.2), sz)
+			_set_img(img, int(13*sc), int(8*sc), col.darkened(0.2), sz)
+			_set_img(img, int(12*sc), int(9*sc), col.darkened(0.2), sz)
+			_set_img(img, int(13*sc), int(9*sc), col.darkened(0.2), sz)
+		6:  # bun — small bun on top of head
+			# Bun (a 4x3 lump on top)
+			_fill_img(img, int(6*sc), int(0*sc), int(4*sc), int(1*sc), h, sz)
+			_fill_img(img, int(7*sc), int(0*sc), int(2*sc), int(1*sc), col.lightened(0.1), sz)
+			# Short back hair (under the bun)
+			_fill_img(img, int(3*sc), int(1*sc), int(10*sc), int(2*sc), col, sz)
+			# Hair band
+			_fill_img(img, int(5*sc), int(3*sc), int(6*sc), int(1*sc), col.darkened(0.3), sz)
+		7:  # curly — puffy with several 2x2 blobs
+			# Top puff
+			_fill_img(img, int(3*sc), int(0*sc), int(10*sc), int(1*sc), h, sz)
+			_fill_img(img, int(2*sc), int(1*sc), int(12*sc), int(2*sc), col, sz)
+			# Side puffs
+			_fill_img(img, int(2*sc), int(1*sc), int(2*sc), int(2*sc), col.lightened(0.1), sz)
+			_fill_img(img, int(12*sc), int(1*sc), int(2*sc), int(2*sc), col.lightened(0.1), sz)
+			# Texture dots for curl
+			_set_img(img, int(5*sc), int(2*sc), h, sz)
+			_set_img(img, int(8*sc), int(2*sc), h, sz)
+			_set_img(img, int(11*sc), int(2*sc), h, sz)
+			_set_img(img, int(4*sc), int(3*sc), h, sz)
+			_set_img(img, int(7*sc), int(3*sc), h, sz)
+			_set_img(img, int(10*sc), int(3*sc), h, sz)
 
 # ─── Accessory ─────────────────────────────────────────────
 
@@ -505,6 +578,80 @@ static func _draw_walking_stick(img: Image, col: Color, sz: int) -> void:
 	# Walking stick on the left side
 	_fill_img(img, int(1*sc), int(8*sc), int(1*sc), int(7*sc), col, sz)
 	_fill_img(img, int(0*sc), int(8*sc), int(2*sc), int(1*sc), col.darkened(0.2), sz)  # handle
+
+# ─── Inventory Items (drawn after the body) ───────────────────
+
+# Skateboard at the feet, deck plus two wheels. Drawn before the
+# body would normally be drawn, so the actor visually stands on it.
+# Caller invokes this AFTER the body draw for layering purposes.
+static func _draw_skateboard(img: Image, col: Color, sz: int) -> void:
+	var sc := float(sz) / 16.0
+	var deck := col
+	var wheels := Color(0.12, 0.12, 0.14)
+	# Deck (12 wide, 1 tall) at the very bottom of the sprite
+	_fill_img(img, int(2*sc), int(15*sc), int(12*sc), int(1*sc), deck, sz)
+	# Two wheels
+	_fill_img(img, int(3*sc), int(15*sc), int(2*sc), int(1*sc), wheels, sz)
+	_fill_img(img, int(11*sc), int(15*sc), int(2*sc), int(1*sc), wheels, sz)
+	# A bright stripe on the deck for color variety
+	_fill_img(img, int(4*sc), int(15*sc), int(8*sc), int(1*sc), deck.lightened(0.2), sz)
+
+# Laptop held in the left arm / hand area. Shows the back of the
+# screen and a small keyboard strip.
+static func _draw_laptop_in_hand(img: Image, col: Color, sz: int) -> void:
+	var sc := float(sz) / 16.0
+	var screen := col.lightened(0.1)
+	var kb := col.darkened(0.2)
+	# Screen back (rectangle on left)
+	_fill_img(img, int(0*sc), int(8*sc), int(3*sc), int(3*sc), screen, sz)
+	# Bezel
+	_set_img(img, int(0*sc), int(8*sc), kb, sz)
+	_set_img(img, int(2*sc), int(8*sc), kb, sz)
+	_set_img(img, int(0*sc), int(10*sc), kb, sz)
+	_set_img(img, int(2*sc), int(10*sc), kb, sz)
+	# Screen glow
+	_fill_img(img, int(1*sc), int(9*sc), int(1*sc), int(1*sc), Color(0.55, 0.75, 0.95), sz)
+	# Keyboard strip
+	_fill_img(img, int(0*sc), int(11*sc), int(4*sc), int(1*sc), kb, sz)
+	_set_img(img, int(0*sc), int(11*sc), Color(0.85, 0.85, 0.92), sz)
+	_set_img(img, int(1*sc), int(11*sc), Color(0.85, 0.85, 0.92), sz)
+	_set_img(img, int(2*sc), int(11*sc), Color(0.85, 0.85, 0.92), sz)
+
+# Over-ear headphones: a band over the top of the head plus two
+# earcups on either side. Drawn last so it sits on top of the hair.
+static func _draw_earphones(img: Image, col: Color, sz: int) -> void:
+	var sc := float(sz) / 16.0
+	var band := col
+	var cup := col.darkened(0.15)
+	# Band over the top of the head
+	_fill_img(img, int(4*sc), int(0*sc), int(8*sc), int(1*sc), band, sz)
+	# Left earcup
+	_fill_img(img, int(2*sc), int(3*sc), int(2*sc), int(2*sc), cup, sz)
+	_set_img(img, int(2*sc), int(3*sc), band, sz)
+	_set_img(img, int(3*sc), int(4*sc), band, sz)
+	# Right earcup
+	_fill_img(img, int(12*sc), int(3*sc), int(2*sc), int(2*sc), cup, sz)
+	_set_img(img, int(12*sc), int(3*sc), band, sz)
+	_set_img(img, int(13*sc), int(4*sc), band, sz)
+
+# Staff badge / ID card clipped to the right side of the chest. Tiny
+# 2x2 square + lanyard strap so it reads as "worn on shirt" at 16x16.
+# Caller invokes AFTER the upper-body draw so it sits on the uniform.
+static func _draw_staff_card(img: Image, col: Color, sz: int) -> void:
+	var sc := float(sz) / 16.0
+	var card := col
+	var bezel := Color(0.92, 0.92, 0.96)
+	var strap := Color(0.18, 0.18, 0.22)
+	# Lanyard strap going up to the neck
+	_fill_img(img, int(11*sc), int(5*sc), int(1*sc), int(2*sc), strap, sz)
+	# Card body (2x2 on the right chest)
+	_fill_img(img, int(10*sc), int(7*sc), int(2*sc), int(2*sc), card, sz)
+	# Bezel highlight
+	_set_img(img, int(10*sc), int(7*sc), bezel, sz)
+	_set_img(img, int(11*sc), int(7*sc), bezel, sz)
+	_set_img(img, int(10*sc), int(8*sc), bezel, sz)
+	# Photo dot inside the card
+	_set_img(img, int(10*sc), int(7*sc), Color(0.42, 0.32, 0.22), sz)
 
 # ─── Shadow (supports child scale) ───────────────────────────
 
